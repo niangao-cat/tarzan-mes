@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMiscOutHipsMapper">
+    <select id="costCenterLovQuery"
+            resultType="com.ruike.wms.api.dto.WmsCostCenterLovResponseDTO">
+        SELECT MC.COSTCENTER_ID,
+        MC.COSTCENTER_CODE,
+        MC.SITE_ID,
+        MC.DESCRIPTION AS COSTCENTER_DESCRIPTION
+        FROM mt_costcenter MC
+        <where>
+            AND MC.TENANT_ID = #{tenantId}
+            AND MC.SITE_ID= #{finalSiteId}
+
+            <if test="costCenterCode != null and costCenterCode != ''">
+                AND(
+                MC.COSTCENTER_CODE LIKE CONCAT('%',CONCAT(#{costCenterCode},'%'))
+                OR MC.DESCRIPTION LIKE CONCAT('%',CONCAT(#{costCenterCode},'%'))
+                )
+            </if>
+        </where>
+    </select>
+    <select id="getContainerByCode"
+            parameterType="com.ruike.wms.api.dto.WmsMiscOutBarcodeHipsRequestDTO"
+            resultType="com.ruike.wms.api.dto.WmsMiscOutBarcodeHipsResponseDTO">
+        SELECT
+        MC.CONTAINER_CODE AS BARCODE,
+        MC.CONTAINER_ID AS BARCODE_ID,
+        MC.SITE_ID ,
+        MMS.SITE_CODE,
+        MCC.COSTCENTER_ID,
+        MCC.COSTCENTER_CODE,
+        MCC.DESCRIPTION AS COSTCENTER_DESCRIPTION,
+        MC.LOCATOR_ID,
+        MML.LOCATOR_CODE,
+        MGS.DESCRIPTION AS STATUS
+        FROM
+        mt_container MC
+        LEFT JOIN mt_costcenter MCC ON MCC.COSTCENTER_ID = #{dto.costcenterId}
+        LEFT JOIN mt_mod_locator MML ON MML.LOCATOR_ID = MC.LOCATOR_ID
+        LEFT JOIN mt_mod_site MMS ON MMS.SITE_ID = MC.SITE_ID
+        LEFT JOIN mt_gen_status MGS ON MGS.STATUS_GROUP='CONTAINER_STATUS' AND MGS.STATUS_CODE = MC.STATUS
+        WHERE
+        MC.CONTAINER_CODE = #{dto.barcode}
+        AND MC.TENANT_ID = #{tenantId}
+    </select>
+    <select id="getByUserIdSiteId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM mt_user_organization MUO
+        WHERE MUO.ORGANIZATION_TYPE ='SITE'
+        AND MUO.USER_ID = #{userId}
+        AND MUO.ORGANIZATION_ID = #{siteId}
+        AND muo.ENABLE_FLAG = 'Y'
+    </select>
+    <select id="getMaterialLotByCode"
+            parameterType="com.ruike.wms.api.dto.WmsMiscOutBarcodeHipsRequestDTO"
+            resultType="com.ruike.wms.api.dto.WmsMiscOutBarcodeHipsResponseDTO">
+        SELECT
+        MML.MATERIAL_LOT_CODE AS BARCODE,
+        MML.MATERIAL_LOT_ID AS BARCODE_ID,
+        MML.SITE_ID,
+        MMS.SITE_CODE,
+        MML.ENABLE_FLAG,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MMLO.LOCATOR_ID,
+        MMLO.LOCATOR_CODE,
+        MML.PRIMARY_UOM_QTY AS QTY,
+        MGS.STATUS_CODE AS statusCode,
+        MGS.DESCRIPTION AS STATUS ,
+        MGSQ.DESCRIPTION AS QUALITY_STATUS,
+        MCC.COSTCENTER_ID,
+        MCC.COSTCENTER_CODE,
+        MCC.DESCRIPTION AS COSTCENTER_DESCRIPTION
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_costcenter MCC ON MCC.COSTCENTER_ID = #{dto.costcenterId}
+        LEFT JOIN mt_mod_site MMS ON MMS.SITE_ID = MML.SITE_ID
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_mod_locator MMLO ON MMLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_material_lot_attr MMLASTATUS ON MMLASTATUS.ATTR_NAME = 'STATUS' AND MMLASTATUS.MATERIAL_LOT_ID =
+        MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_gen_status MGS ON MGS.STATUS_GROUP = 'MATERIAL_LOT_STATUS' AND MGS.STATUS_CODE =
+        MMLASTATUS.ATTR_VALUE
+        LEFT JOIN mt_gen_status MGSQ ON MGSQ.STATUS_GROUP = 'QUALITY_STATUS' AND MGSQ.STATUS_CODE = MML.QUALITY_STATUS
+        WHERE
+        MML.MATERIAL_LOT_CODE = #{dto.barcode}
+        AND MCC.TENANT_ID = #{tenantId}
+    </select>
+    <select id="materialLotQuery" resultType="com.ruike.wms.api.dto.WmsInstructionCreationDTO">
+        SELECT
+        MML.SITE_ID,
+        MML.LOT,
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_ID,
+        MML.SITE_ID AS FROM_SITE_ID,
+        MML.LOCATOR_ID AS FROM_LOCATOR_ID,
+        MML.PRIMARY_UOM_QTY AS QUANTITY,
+        MML.PRIMARY_UOM_ID AS UOM_ID,
+        '' AS BUSINESS_TYPE,
+        'SHIP_TO_MISCELLANEOUS' AS INSTRUCTION_TYPE
+        FROM
+        mt_material_lot MML
+        <where>
+            <if test="materialLotList != null and materialLotList.size() != 0">
+                AND MML.MATERIAL_LOT_ID IN
+                <foreach collection="materialLotList" item="materialLotId" index="index" open="(" close=")"
+                         separator=",">
+                    #{materialLotId}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="getMaterialLotByStatusCode"
+            resultType="com.ruike.wms.api.dto.WmsMaterialLotByStatusCodeDTO">
+        SELECT
+        MGS.STATUS_CODE AS statusCode,
+        MGS.DESCRIPTION AS description
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr MMLASTATUS ON MMLASTATUS.ATTR_NAME = 'STATUS' AND MMLASTATUS.MATERIAL_LOT_ID =
+        MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_gen_status MGS ON MGS.STATUS_GROUP = 'MATERIAL_LOT_STATUS' AND MGS.STATUS_CODE =
+        MMLASTATUS.ATTR_VALUE
+        WHERE
+        MML.MATERIAL_LOT_ID = #{materialLotId}
+    </select>
+</mapper>

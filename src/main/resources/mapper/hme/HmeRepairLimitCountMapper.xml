@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeRepairLimitCountMapper">
+
+    <select id="queryRepairLimitCountList" resultType="com.ruike.hme.domain.vo.HmeRepairLimitCountVO">
+        SELECT
+        rlc.repair_limit_count_id,
+        rlc.material_id,
+        rlc.workcell_id,
+        rlc.limit_count,
+        rlc.enable_flag,
+        rlc.LAST_UPDATED_BY,
+        rlc.LAST_UPDATE_DATE,
+        u.real_name,
+        mmw.WORKCELL_CODE,
+        mmw.WORKCELL_NAME,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mma.AREA_ID AS department_id,
+        mma.AREA_CODE AS department_code,
+        mma.AREA_NAME AS department_name
+        FROM hme_repair_limit_count rlc
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = rlc.workcell_id
+        AND mmw.TENANT_ID = rlc.tenant_id
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = rlc.material_id
+        AND mm.TENANT_ID = rlc.tenant_id
+        LEFT JOIN hzero_platform.iam_user u ON u.id = rlc.LAST_UPDATED_BY
+        LEFT JOIN mt_mod_organization_rel org1 ON org1.ORGANIZATION_ID = rlc.workcell_id
+        AND org1.ORGANIZATION_TYPE = 'WORKCELL'
+        AND org1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_organization_rel org2 ON org2.ORGANIZATION_ID = org1.PARENT_ORGANIZATION_ID
+        AND org2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND org2.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel org3 ON org3.ORGANIZATION_ID = org2.PARENT_ORGANIZATION_ID
+        AND org3.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND org3.PARENT_ORGANIZATION_TYPE = 'AREA'
+        LEFT JOIN mt_mod_organization_rel org4 ON org4.ORGANIZATION_ID = org3.PARENT_ORGANIZATION_ID
+        AND org4.ORGANIZATION_TYPE = 'AREA'
+        AND org4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        LEFT JOIN mt_mod_area mma ON mma.AREA_ID = org4.PARENT_ORGANIZATION_ID
+        where rlc.tenant_id = #{tenantId}
+        <if test="dto.departmentId != null and dto.departmentId != ''">
+            AND mma.AREA_ID = #{dto.departmentId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND rlc.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            AND rlc.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.limitCount != null and dto.limitCount != ''">
+            AND rlc.limit_count = #{dto.limitCount}
+        </if>
+        <if test="dto.enableFlag != null and dto.enableFlag != ''">
+            AND rlc.enable_flag = #{dto.enableFlag}
+        </if>
+    </select>
+
+    <delete id="deleteRepairLimitCountByIds" >
+        DELETE FROM hme_repair_limit_count
+        WHERE tenant_id = #{tenantId}
+        AND repair_limit_count_id IN
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+</mapper>

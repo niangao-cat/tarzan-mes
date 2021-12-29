@@ -1,0 +1,1163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobDataRecordMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="JOB_RECORD_ID" property="jobRecordId" jdbcType="VARCHAR"/>
+        <result column="JOB_ID" property="jobId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="GROUP_PURPOSE" property="groupPurpose" jdbcType="VARCHAR"/>
+        <result column="RESULT" property="result" jdbcType="VARCHAR"/>
+        <result column="DATA_RECORD_ID" property="dataRecordId" jdbcType="VARCHAR"/>
+        <result column="IS_SUPPLEMENT" property="isSupplement" jdbcType="DECIMAL"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="supplementRecordQuery" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        hejdr.tenant_id,
+        hejdr.job_record_id,
+        hejdr.workcell_id,
+        hejdr.eo_id,
+        hejdr.job_id,
+        hejdr.tag_group_id,
+        hejdr.tag_id,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        hejdr.minimum_value,
+        mta.ATTR_VALUE AS STANDARD_VALUE,
+        hejdr.maximal_value,
+        hejdr.group_purpose,
+        hejdr.result
+    FROM
+        hme_eo_job_data_record hejdr,
+        mt_tag mt
+        LEFT JOIN mt_tag_attr mta ON mta.TENANT_ID = mt.TENANT_ID
+        AND mta.LANG = #{lang}
+        AND mta.ATTR_NAME = 'STANDARD'
+        AND mta.TAG_ID = mt.TAG_ID
+    WHERE
+        mt.ENABLE_FLAG = 'Y'
+        AND mt.TENANT_ID = hejdr.tenant_id
+        AND mt.TAG_ID = hejdr.tag_id
+        AND hejdr.tenant_id = #{tenantId}
+        AND hejdr.is_supplement = 1
+        AND hejdr.workcell_id = #{dto.workcellId}
+        AND hejdr.job_id = #{dto.jobId}
+    </select>
+
+    <insert id="batchInsertDataRecord" parameterType="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        INSERT INTO ${tableName}
+        ( tenant_id,
+        job_record_id,
+        job_id,
+        workcell_id,
+        eo_id,
+        tag_group_id,
+        tag_id,
+        minimum_value,
+        maximal_value,
+        group_purpose,
+        result,
+        data_record_id,
+        is_supplement,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date
+        )
+        VALUES
+        <foreach collection="dataRecordList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.jobRecordId},
+            #{item.jobId},
+            #{item.workcellId},
+            #{item.eoId},
+            #{item.tagGroupId},
+            #{item.tagId},
+            #{item.minimumValue},
+            #{item.maximalValue},
+            #{item.groupPurpose},
+            #{item.result},
+            #{item.dataRecordId},
+            #{item.isSupplement},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryResultWithOperationId" resultType="string">
+        select ejdr.result
+        from hme_eo_job_data_record ejdr,
+        hme_eo_job_sn ejs
+        where ejs.job_id = ejdr.job_id
+        and ejdr.eo_id = ejs.eo_id
+        and ejdr.tenant_id = ejs.tenant_id
+        <if test="dto.tagGroupId !=null and dto.tagGroupId != ''">
+            and ejdr.tag_group_id = #{dto.tagGroupId}
+        </if>
+        and ejdr.tag_id = #{dto.tagId}
+        and ejs.eo_id = #{eoId}
+        and ejs.operation_id = #{dto.operationId}
+        and ejs.tenant_id = #{tenantId}
+        order by ejdr.last_update_date desc
+        limit 1
+    </select>
+
+    <select id="batchQueryResultWithOperationId" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO5">
+        select ejdr.eo_id,
+                ejdr.tag_id,
+                ejdr.tag_group_id,
+                ejs.operation_id,
+                ejdr.result,
+                ejdr.last_update_date
+        from hme_eo_job_data_record ejdr,
+        hme_eo_job_sn ejs
+        where ejs.job_id = ejdr.job_id
+        and ejdr.eo_id = ejs.eo_id
+        and ejdr.tenant_id = ejs.tenant_id
+        AND ejdr.tag_id IN
+        <foreach collection="tagIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="tagGroupIdList != null and tagGroupIdList.size() > 0">
+            AND ejdr.tag_group_id IN
+            <foreach collection="tagGroupIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND ejs.operation_id IN
+        <foreach collection="operationIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and ejs.eo_id = #{eoId}
+        and ejs.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryResultWithoutOperationId" resultType="string">
+        select ejdr.result
+          from hme_eo_job_data_record ejdr
+         where ejdr.tag_id = #{dto.tagId}
+           and ejdr.eo_id = #{eoId}
+           and ejdr.tenant_id = #{tenantId}
+        <if test="dto.tagGroupId !=null and dto.tagGroupId != ''">
+            and ejdr.tag_group_id = #{dto.tagGroupId}
+        </if>
+         order by ejdr.last_update_date desc
+         limit 1
+    </select>
+
+    <select id="batchQueryResultWithoutOperationId" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO5">
+        select ejdr.eo_id,
+                ejdr.tag_id,
+                ejdr.tag_group_id,
+                ejdr.result,
+                ejdr.last_update_date
+        from hme_eo_job_data_record ejdr
+        where ejdr.tenant_id = #{tenantId}
+        and ejdr.eo_id = #{eoId}
+        AND ejdr.tag_id IN
+        <foreach collection="tagIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="tagGroupIdList != null and tagGroupIdList.size() > 0">
+            AND ejdr.tag_group_id IN
+            <foreach collection="tagGroupIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <update id="batchUpdateResult">
+        update hme_eo_job_data_record
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            result =
+            <foreach collection="dataRecordList" item="clause" index="index"
+                     separator=" " open="case job_record_id" close="end">
+                when #{clause.jobRecordId} then #{clause.result}
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and job_record_id in
+            <foreach collection="dataRecordList" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.jobRecordId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="queryCosFunctions" resultType="com.ruike.hme.domain.vo.HmeCosFunctionVO">
+    select sd.new_load,
+           substring_index(sd.new_load, ',' ,1) new_load_row,
+           substring_index(sd.new_load, ',' ,-1) new_load_column,
+           cf.cos_function_id,
+           cf.`current`,
+           cf.a01,
+           cf.a02,
+           cf.a03,
+           cf.a04,
+           cf.a05,
+           cf.a06,
+           cf.a07,
+           cf.a08,
+           cf.a09,
+           cf.a010,
+           cf.a011,
+           cf.a012,
+           cf.a013,
+           cf.a014,
+           sd.attribute2 FAC_COS_POS
+      from hme_virtual_num vn,
+           hme_selection_details sd,
+           hme_cos_function cf
+     where sd.tenant_id = vn.tenant_id
+       and sd.new_material_lot_id = vn.material_lot_id
+       and sd.virtual_num = vn.virtual_num
+       and cf.load_sequence = sd.load_sequence
+       and cf.tenant_id = sd.tenant_id
+       and cf.site_id = #{siteId}
+       AND cf.current IN
+       <foreach collection="currentList" item="clause" separator="," open="(" close=")">
+            #{clause}
+       </foreach>
+       and vn.tenant_id = #{tenantId}
+       and vn.eo_id = #{eoId}
+       and sd.new_load is not null
+       and sd.new_load != ''
+    </select>
+
+    <select id="queryCosFunctionMaterials" resultType="com.ruike.hme.domain.vo.HmeCosFunctionVO">
+        select sd.new_load,
+               substring_index(sd.new_load, ',' ,1) new_load_row,
+               substring_index(sd.new_load, ',' ,-1) new_load_column,
+               cf.`current`,
+               cf.a01,
+               cf.a02,
+               cf.a03,
+               cf.a04,
+               cf.a05,
+               cf.a06,
+               cf.a07,
+               cf.a08,
+               cf.a09,
+               cf.a010,
+               cf.a011,
+               cf.a012,
+               cf.a013,
+               cf.a014,
+               sd.attribute2 FAC_COS_POS
+        from hme_virtual_num vn,
+             hme_selection_details sd,
+             hme_cos_function_material cf
+        where sd.tenant_id = vn.tenant_id
+          and sd.new_material_lot_id = vn.material_lot_id
+          and sd.virtual_num = vn.virtual_num
+          and cf.load_sequence = sd.load_sequence
+          and cf.tenant_id = sd.tenant_id
+          and cf.site_id = #{siteId}
+          AND cf.current IN
+          <foreach collection="currentList" item="clause" separator="," open="(" close=")">
+              #{clause}
+          </foreach>
+          and vn.tenant_id = #{tenantId}
+          and vn.eo_id = #{eoId}
+          and sd.new_load is not null
+          and sd.new_load != ''
+    </select>
+
+    <select id="queryEoJobDataRecord" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO">
+    SELECT
+        t.*
+    FROM
+        (
+        SELECT
+        hejdr.creation_date,
+        hejdr.created_by,
+        hejdr.last_update_date,
+        hejdr.last_updated_by,
+        hejdr.object_version_number,
+        hejdr.tenant_id,
+        hejdr.job_record_id,
+        hejdr.workcell_id,
+        hejdr.eo_id,
+        hejdr.job_id,
+        hejdr.tag_group_id,
+        hejdr.tag_id,
+        hejdr.minimum_value,
+        hejdr.maximal_value,
+        dre.standard_value record_standard_value,
+        hejdr.group_purpose,
+        hejdr.result,
+        hejdr.data_record_id,
+    CASE
+            hejdr.is_supplement
+            WHEN 1 THEN
+            1 ELSE 0
+        END AS is_supplement,
+        hejdr.cid,
+        hejdr.remark,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        mt.VALUE_TYPE AS result_type,
+        mta.ATTR_VALUE AS tag_type,
+        htda.equipment_category,
+        htda.value_field,
+        htda.limit_cond1,
+        htda.cond1_value,
+        htda.limit_cond2,
+        htda.cond2_value,
+        IFNULL( mtga.SERIAL_NUMBER,- 99 ) AS SERIAL_NUMBER,
+        mtga.VALUE_ALLOW_MISSING,
+        mu.UOM_CODE,
+        mu.UOM_NAME,
+        mtas.ATTR_VALUE AS standard_value,
+        hejs.operation_id
+    FROM
+        hme_eo_job_data_record hejdr
+        LEFT JOIN hme_data_record_extend dre ON dre.job_record_id = hejdr.job_record_id
+        INNER JOIN hme_eo_job_sn hejs ON hejs.job_id = hejdr.job_id
+        INNER JOIN mt_tag mt ON mt.TAG_ID = hejdr.tag_id
+        AND mt.TENANT_ID = hejdr.tenant_id
+        LEFT JOIN mt_tag_attr mta ON mta.TENANT_ID = mt.TENANT_ID
+        AND mta.tag_id = mt.tag_id
+        AND mta.attr_name = 'TAG_TYPE'
+        LEFT JOIN mt_tag_attr mtas ON mtas.TENANT_ID = mt.TENANT_ID
+        AND mtas.tag_id = mt.tag_id
+        AND mtas.attr_name = 'STANDARD'
+        LEFT JOIN hme_tag_daq_attr htda ON htda.TENANT_ID = mt.TENANT_ID
+        AND htda.tag_id = mt.tag_id
+        LEFT JOIN mt_tag_group_assign mtga ON mtga.tag_group_id = hejdr.tag_group_id
+        AND mtga.tag_id = mt.tag_id
+        AND mtga.TENANT_ID = mt.TENANT_ID
+        LEFT JOIN mt_uom mu ON mu.TENANT_ID = mt.TENANT_ID
+        AND mu.UOM_ID = mt.UNIT
+    WHERE
+        1 = 1
+        <if test="ids != null and ids.size() > 0">
+            AND hejdr.job_record_id IN
+            <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        and hejdr.tenant_id = #{tenantId}
+        <if test="jobId !=null and jobId != ''">
+            AND hejdr.job_id = #{jobId}
+        </if>
+        <if test="workcellId !=null and workcellId != ''">
+            AND hejdr.workcell_id = #{workcellId}
+        </if>
+        ) t
+    ORDER BY
+        t.is_supplement,
+        t.result_type,
+        t.SERIAL_NUMBER
+    </select>
+
+    <select id="queryEoJobDataRecord2" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO">
+        SELECT
+        t.*
+        FROM
+        (
+        SELECT
+        hejdr.creation_date,
+        hejdr.created_by,
+        hejdr.last_update_date,
+        hejdr.last_updated_by,
+        hejdr.object_version_number,
+        hejdr.tenant_id,
+        hejdr.job_record_id,
+        hejdr.workcell_id,
+        hejdr.eo_id,
+        hejdr.job_id,
+        hejdr.tag_group_id,
+        hejdr.tag_id,
+        hejdr.minimum_value,
+        hejdr.maximal_value,
+        dre.standard_value record_standard_value,
+        hejdr.group_purpose,
+        hejdr.result,
+        hejdr.data_record_id,
+        CASE
+        hejdr.is_supplement
+        WHEN 1 THEN
+        1 ELSE 0
+        END AS is_supplement,
+        hejdr.cid,
+        hejdr.remark,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        mt.VALUE_TYPE AS result_type,
+        mta.ATTR_VALUE AS tag_type,
+        htda.equipment_category,
+        htda.value_field,
+        htda.limit_cond1,
+        htda.cond1_value,
+        htda.limit_cond2,
+        htda.cond2_value,
+        IFNULL( mtga.SERIAL_NUMBER,- 99 ) AS SERIAL_NUMBER,
+        mtga.VALUE_ALLOW_MISSING,
+        mu.UOM_CODE,
+        mu.UOM_NAME,
+        mtas.ATTR_VALUE AS standard_value,
+        hejs.operation_id
+        FROM
+        hme_eo_job_sn hejs,
+        hme_eo_job_data_record hejdr
+        LEFT JOIN hme_data_record_extend dre ON dre.job_record_id = hejdr.job_record_id
+        INNER JOIN mt_tag mt ON mt.TAG_ID = hejdr.tag_id
+        AND mt.TENANT_ID = hejdr.tenant_id
+        LEFT JOIN mt_tag_attr mta ON mta.TENANT_ID = mt.TENANT_ID
+        AND mta.tag_id = mt.tag_id
+        AND mta.attr_name = 'TAG_TYPE'
+        LEFT JOIN mt_tag_attr mtas ON mtas.TENANT_ID = mt.TENANT_ID
+        AND mtas.tag_id = mt.tag_id
+        AND mtas.attr_name = 'STANDARD'
+        LEFT JOIN hme_tag_daq_attr htda ON htda.TENANT_ID = mt.TENANT_ID
+        AND htda.tag_id = mt.tag_id
+        LEFT JOIN mt_tag_group_assign mtga ON mtga.tag_group_id = hejdr.tag_group_id
+        AND mtga.tag_id = mt.tag_id
+        AND mtga.TENANT_ID = mt.TENANT_ID
+        LEFT JOIN mt_uom mu ON mu.TENANT_ID = mt.TENANT_ID
+        AND mu.UOM_ID = mt.UNIT
+        WHERE
+        hejdr.tenant_id = hejs.tenant_id
+        AND hejdr.job_id = hejs.job_id
+        AND hejs.job_id IN
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND hejdr.workcell_id = #{workcellId}
+        ) t
+        ORDER BY
+        t.is_supplement,
+        t.result_type,
+        t.SERIAL_NUMBER
+    </select>
+
+    <select id="queryAllEoJobSnByJobContainerId" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO3">
+        select
+            ejs.job_id,
+            ejs.site_in_date,
+            ejs.job_container_id,
+            ejs.material_lot_id,
+            ejs.eo_id,
+            ejs.work_order_id,
+            ejs.sn_material_id,
+            ml.material_lot_code,
+            ejc.container_id,
+            ejc.container_code
+        from
+            hme_eo_job_sn ejs
+            left join mt_material_lot ml on ml.material_lot_id = ejs.material_lot_id,
+            hme_eo_job_container ejc
+        where
+            ejs.job_container_id = ejc.job_container_id
+            and ejs.workcell_id = #{workcellId}
+            and ejs.tenant_id = #{tenantId}
+            and ejs.site_out_date is null
+            and ejs.job_container_id = #{jobContainerId}
+    </select>
+
+    <select id="queryAllEoJobSnByJobId" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO3">
+        select
+            ejs.job_id,
+            ejs.site_in_date,
+            ejs.job_container_id,
+            ejs.material_lot_id,
+            ejs.eo_id,
+            ejs.work_order_id,
+            ejs.sn_material_id,
+            ml.material_lot_code,
+            '' container_id,
+            '' container_code
+        from
+            hme_eo_job_sn ejs
+            left join mt_material_lot ml on ml.material_lot_id = ejs.material_lot_id
+        where
+            ejs.tenant_id = #{tenantId}
+            and ejs.job_id = #{jobId}
+            and ejs.site_out_date is null
+    </select>
+
+    <select id="queryAllEoJobSnByCondition" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO3">
+        <if test="dto.materialLotCode !=null and dto.materialLotCode != ''">
+            <bind name="materialLotCodeLike" value="'%'+dto.materialLotCode+'%'"/>
+        select
+            ejs.job_id,
+            ejs.site_in_date,
+            ejs.job_container_id,
+            ejs.material_lot_id,
+            ejs.eo_id,
+            ejs.work_order_id,
+            ejs.sn_material_id,
+            ml.material_lot_code,
+            '' container_id,
+            '' container_code
+        from
+            hme_eo_job_sn ejs,
+            mt_material_lot ml
+        where
+            ml.material_lot_id = ejs.material_lot_id
+            and ml.material_lot_code like #{materialLotCodeLike}
+            and ejs.workcell_id = #{dto.workcellId}
+            and ejs.tenant_id = #{tenantId}
+            and ejs.site_out_date is null
+            and ( ejs.job_container_id is null or ejs.job_container_id = '' )
+
+        UNION ALL
+        </if>
+
+        select
+            ejsc.job_id,
+            ejsc.site_in_date,
+            ejsc.job_container_id,
+            ejsc.material_lot_id,
+            ejsc.eo_id,
+            ejsc.work_order_id,
+            ejsc.sn_material_id,
+            mlc.material_lot_code,
+            ejc.container_id,
+            ejc.container_code
+        from
+            hme_eo_job_sn ejsc
+            left join mt_material_lot mlc on mlc.material_lot_id = ejsc.material_lot_id,
+            hme_eo_job_container ejc
+        where
+            ejsc.job_container_id = ejc.job_container_id
+            and ejsc.tenant_id = #{tenantId}
+            and ejsc.site_out_date is null
+            and ejc.workcell_id = #{dto.workcellId}
+        <if test="dto.containerCode !=null and dto.containerCode != ''">
+            and ejc.container_code = #{dto.containerCode}
+        </if>
+        <if test="dto.materialLotCode !=null and dto.materialLotCode != ''">
+            <bind name="materialLotCodeLike" value="'%'+dto.materialLotCode+'%'"/>
+            and ejc.job_container_id in (
+                select
+                    ejs.job_container_id
+                from
+                    hme_eo_job_sn ejs,
+                    mt_material_lot ml
+                where
+                    ml.material_lot_id = ejs.material_lot_id
+                    and ml.material_lot_code like #{materialLotCodeLike}
+                    and ejs.workcell_id = #{dto.workcellId}
+                    and ejs.tenant_id = #{tenantId}
+                    and ejs.site_out_date is null )
+        </if>
+    </select>
+
+    <select id="queryEoJobSnByCondition" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO3">
+        select
+            ejs.job_id,
+            ejs.site_in_date,
+            ejs.job_container_id,
+            ejs.material_lot_id,
+            ejs.eo_id,
+            ejs.work_order_id,
+            ejs.sn_material_id,
+            ml.material_lot_code,
+            ejc.container_id,
+            ejc.container_code
+        from
+            hme_eo_job_sn ejs
+            left join mt_material_lot ml on ml.material_lot_id = ejs.material_lot_id
+            left join hme_eo_job_container ejc on ejs.job_container_id = ejc.job_container_id and ejs.workcell_id = ejc.workcell_id
+        where
+            ejs.tenant_id = 0
+            and ejs.site_out_date is null
+            and ejs.workcell_id = #{dto.workcellId}
+        <if test="dto.containerCode !=null and dto.containerCode != ''">
+            and ejc.container_code = #{dto.containerCode}
+        </if>
+        <if test="snList != null and snList.size() > 0">
+            and ml.material_lot_code in
+            <foreach collection="snList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.materialLotCode !=null and dto.materialLotCode != ''">
+            <bind name="materialLotCodeLike" value="dto.materialLotCode+'%'"/>
+            and ml.material_lot_code like #{materialLotCodeLike}
+        </if>
+    </select>
+
+    <select id="queryEoJobDataRecordByJobId" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO2">
+        select
+            ejdr.job_record_id,
+            ejdr.job_id,
+            ejdr.tag_id,
+            ejdr.tag_group_id,
+            ejdr.group_purpose,
+            ejdr.result,
+            case
+             when (ejdr.result is null or ejdr.result = '') then
+                'N'
+             else
+                'Y'
+             end has_result,
+            tga.tag_group_assign_id,
+            tga.minimum_value,
+            tga.maximal_value,
+            tga.value_allow_missing,
+            ( tga.minimum_value + tga.maximal_value ) / 2 standard_value,
+            tga.true_value,
+            tga.false_value,
+            tga.serial_number,
+            tga.unit,
+            mt.tag_code,
+            mt.tag_description,
+            mu.uom_code,
+            mt.value_type,
+            tg.business_type
+        from
+            hme_eo_job_data_record ejdr
+            left join mt_tag_group_assign tga on tga.tag_group_id = ejdr.tag_group_id
+            and tga.tag_id = ejdr.tag_id
+            and tga.tenant_id = ejdr.tenant_id
+            left join mt_tag_group tg on tg.tag_group_id = tga.tag_group_id
+            and tg.tenant_id = tga.tenant_id
+            left join mt_tag mt on mt.tag_id = tga.tag_id
+            and mt.tenant_id = tga.tenant_id
+            left join mt_uom mu on mu.uom_id = tga.unit
+        where
+            ejdr.tenant_id = #{tenantId}
+            and ejdr.job_id in
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="tagIdList != null and tagIdList.size() > 0">
+            and ejdr.tag_id in
+            <foreach collection="tagIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryEoJobDataRecords" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO">
+        SELECT
+        t.*
+        FROM
+        (
+        SELECT
+        hejdr.creation_date,
+        hejdr.created_by,
+        hejdr.last_update_date,
+        hejdr.last_updated_by,
+        hejdr.object_version_number,
+        hejdr.tenant_id,
+        hejdr.job_record_id,
+        hejdr.workcell_id,
+        hejdr.eo_id,
+        hejdr.job_id,
+        hejdr.tag_group_id,
+        hejdr.tag_id,
+        hejdr.minimum_value,
+        hejdr.maximal_value,
+        hejdr.group_purpose,
+        hejdr.result,
+        hejdr.data_record_id,
+        CASE
+        hejdr.is_supplement
+        WHEN 1 THEN
+        1 ELSE 0
+        END AS is_supplement,
+        hejdr.cid,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        mt.VALUE_TYPE AS result_type,
+        mta.ATTR_VALUE AS tag_type,
+        htda.equipment_category,
+        htda.value_field,
+        htda.limit_cond1,
+        htda.cond1_value,
+        htda.limit_cond2,
+        htda.cond2_value,
+        IFNULL( mtga.SERIAL_NUMBER,- 99 ) AS SERIAL_NUMBER,
+        mtga.VALUE_ALLOW_MISSING,
+        mu.UOM_CODE,
+        mu.UOM_NAME
+        FROM
+        hme_eo_job_data_record hejdr
+        INNER JOIN mt_tag mt ON mt.TENANT_ID = hejdr.tenant_id
+        AND mt.TAG_ID = hejdr.tag_id
+        LEFT JOIN mt_tag_attr mta ON mta.TENANT_ID = mt.TENANT_ID
+        AND mta.tag_id = mt.tag_id
+        AND mta.attr_name = 'TAG_TYPE'
+        LEFT JOIN hme_tag_daq_attr htda ON htda.TENANT_ID = mt.TENANT_ID
+        AND htda.tag_id = mt.tag_id
+        LEFT JOIN mt_tag_group_assign mtga ON mtga.TENANT_ID = mt.TENANT_ID
+        AND mtga.tag_id = mt.tag_id
+        AND mtga.tag_group_id = hejdr.tag_group_id
+        LEFT JOIN mt_uom mu ON mu.TENANT_ID = mt.TENANT_ID
+        AND mu.UOM_ID = mt.UNIT
+        WHERE
+        hejdr.tenant_id = #{tenantId}
+        <if test="workcellIdList != null and workcellIdList.size() > 0">
+            AND hejdr.workcell_id IN
+            <foreach collection="workcellIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="jobIdList != null and jobIdList.size() > 0">
+            AND hejdr.job_id IN
+            <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ) t
+        ORDER BY
+        t.is_supplement,
+        t.result_type,
+        t.SERIAL_NUMBER
+    </select>
+
+    <select id="queryEoJobDataRecords2" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO">
+        SELECT
+        t.*
+        FROM
+        (
+        SELECT
+        hejdr.creation_date,
+        hejdr.created_by,
+        hejdr.last_update_date,
+        hejdr.last_updated_by,
+        hejdr.object_version_number,
+        hejdr.tenant_id,
+        hejdr.job_record_id,
+        hejdr.workcell_id,
+        hejdr.eo_id,
+        hejdr.job_id,
+        hejdr.tag_group_id,
+        hejdr.tag_id,
+        hejdr.minimum_value,
+        hejdr.maximal_value,
+        hejdr.group_purpose,
+        hejdr.result,
+        hejdr.data_record_id,
+        CASE
+        hejdr.is_supplement
+        WHEN 1 THEN
+        1 ELSE 0
+        END AS is_supplement,
+        hejdr.cid,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        mt.VALUE_TYPE AS result_type,
+        mta.ATTR_VALUE AS tag_type,
+        htda.equipment_category,
+        htda.value_field,
+        htda.limit_cond1,
+        htda.cond1_value,
+        htda.limit_cond2,
+        htda.cond2_value,
+        IFNULL( mtga.SERIAL_NUMBER,- 99 ) AS SERIAL_NUMBER,
+        mtga.VALUE_ALLOW_MISSING,
+        mu.UOM_CODE,
+        mu.UOM_NAME
+        FROM
+        hme_eo_job_data_record hejdr
+        INNER JOIN mt_tag mt ON mt.TENANT_ID = hejdr.tenant_id
+        AND mt.TAG_ID = hejdr.tag_id
+        LEFT JOIN mt_tag_attr mta ON mta.TENANT_ID = mt.TENANT_ID
+        AND mta.tag_id = mt.tag_id
+        AND mta.attr_name = 'TAG_TYPE'
+        LEFT JOIN hme_tag_daq_attr htda ON htda.TENANT_ID = mt.TENANT_ID
+        AND htda.tag_id = mt.tag_id
+        LEFT JOIN mt_tag_group_assign mtga ON mtga.TENANT_ID = mt.TENANT_ID
+        AND mtga.tag_id = mt.tag_id
+        AND mtga.tag_group_id = hejdr.tag_group_id
+        LEFT JOIN mt_uom mu ON mu.TENANT_ID = mt.TENANT_ID
+        AND mu.UOM_ID = mt.UNIT
+        WHERE
+        hejdr.tenant_id = #{tenantId}
+        AND hejdr.workcell_id = #{workcellId}
+        <if test="jobIdList != null and jobIdList.size() > 0">
+            AND hejdr.job_id IN
+            <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ) t
+        ORDER BY
+        t.is_supplement,
+        t.result_type,
+        t.SERIAL_NUMBER
+    </select>
+    <select id="summaryAll" resultType="com.ruike.hme.api.dto.HmeEoJobDataRecordReturnDTO">
+        SELECT
+            hejs.sn_material_id,
+            mo.OPERATION_ID,
+            mo.OPERATION_NAME,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            count(1) inspection_num
+        FROM
+            hme_eo_job_sn hejs,
+            mt_operation mo,
+            mt_material mm
+        WHERE
+        1 = 1
+        <if test="materialId != null and materialId !=''">
+            AND hejs.sn_material_id = #{materialId}
+        </if>
+        AND mm.TENANT_ID = '0'
+        AND hejs.sn_material_id = mm.MATERIAL_ID
+        AND hejs.operation_id = mo.OPERATION_ID
+        and mo.OPERATION_NAME in
+        <foreach collection="operationCodes" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        GROUP BY
+            hejs.sn_material_id,
+            mo.OPERATION_ID,
+            mo.OPERATION_NAME,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME
+    </select>
+    <select id="summaryDetails" resultType="com.ruike.hme.api.dto.HmeEoJobDataRecordReturnDTO3">
+        SELECT
+            hejs.sn_material_id,
+            hejs.operation_id,
+            hejs.material_lot_id,
+            hejs.created_by,
+            hejs.job_id,
+            hejdr.maximal_value,
+            hejdr.minimum_value,
+            hejdr.result
+        FROM
+            hme_eo_job_sn hejs left join hme_eo_job_data_record hejdr on hejdr.job_id = hejs.job_id AND hejdr.group_purpose = 'DATA'
+        WHERE
+        1 = 1
+        AND hejs.sn_material_id IN
+        <foreach collection="materialIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        AND hejs.operation_id IN
+        <foreach collection="operationIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+    </select>
+    <select id="selsetCreate" resultType="com.ruike.hme.api.dto.HmeEoJobDataRecordReturnDTO3">
+        SELECT
+        hejs.sn_material_id,
+        hejs.operation_id,
+        hejs.created_by,
+        hejs.job_id
+        FROM
+        hme_eo_job_sn hejs
+        WHERE
+        1 = 1
+        AND hejs.sn_material_id IN
+        <foreach collection="materialIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        AND hejs.operation_id IN
+        <foreach collection="operationIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+    </select>
+
+    <delete id="deleteDataRecordById">
+        delete from hme_eo_job_data_record where job_record_id in
+        <foreach collection="jobDataRecordList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="queryTagInfoByTagId" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO4">
+        select
+            mt.tag_id,
+            mt.tag_code,
+            mta_pf.attr_value process_flag,
+            mta_s.attr_value standard,
+            tda.tag_daq_attr_id,
+            tda.equipment_category,
+            tda.value_field,
+            tda.limit_cond1,
+            tda.cond1_value,
+            tda.limit_cond2,
+            tda.cond2_value
+        from
+            mt_tag mt
+            left join mt_tag_attr mta_pf on mta_pf.tenant_id = mt.tenant_id and mta_pf.tag_id = mt.tag_id and mta_pf.attr_name = 'PROCESS_FLAG'
+            left join mt_tag_attr mta_s on mta_s.tenant_id = mt.tenant_id and mta_s.tag_id = mt.tag_id and mta_s.attr_name = 'STANDARD'
+            left join hme_tag_daq_attr tda on tda.tenant_id = mt.tenant_id and tda.tag_id = mt.tag_id
+        where mt.tag_id = #{tagId}
+          and mt.tenant_id = #{tenantId}
+    </select>
+
+    <select id="querySnFromItfTableByAssetEncoding" resultType="string">
+        select itf.sn
+        from ${tableName} itf
+        where itf.tenant_id = #{tenantId}
+          and itf.asset_encoding = #{equipmentCode}
+    </select>
+
+
+    <select id="selectDetailList" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordDetailVO">
+        select mml.material_lot_code
+             , mtg.tag_group_description
+             , tag.tag_description
+             , ejd.maximal_value
+             , ejd.minimum_value
+             , ejd.result
+             , usr.real_name        inspector_name
+             , ejd.last_update_date inspection_date
+        from hme_eo_job_sn ejs
+           , hme_eo_job_data_record ejd
+           , mt_material_lot mml
+           , mt_tag_group mtg
+           , mt_tag tag
+           , iam_user usr
+        where ejs.job_id = ejd.job_id
+          and ejs.material_lot_id = mml.material_lot_id
+          and ejd.tag_group_id = mtg.tag_group_id
+          and ejd.tag_id = tag.tag_id
+          and usr.id = ejd.last_updated_by
+          and ejd.group_purpose = 'DATA'
+          and ejs.tenant_id = #{tenantId}
+          and ejs.sn_material_id = #{snMaterialId}
+          and ejs.operation_id = #{operationId}
+    </select>
+
+    <select id="queryEoJobDataRecordOfJobId" resultType="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        SELECT
+        hejdr.job_record_id
+    FROM
+        hme_eo_job_data_record hejdr,
+        mt_tag_attr mta
+    WHERE
+        mta.TENANT_ID = hejdr.tenant_id
+        AND mta.TAG_ID = hejdr.tag_id
+        AND mta.ATTR_NAME = 'TAG_TYPE'
+        AND mta.ATTR_VALUE = 'YK'
+        AND hejdr.tenant_id  = #{tenantId}
+        AND hejdr.job_id = #{jobId}
+    </select>
+
+    <select id="queryMaterialLotIdFromItfTableByAssetEncoding" resultType="string">
+        select mml.material_lot_id
+          from ${tableName} itf,
+               mt_material_lot mml
+               left join mt_material_lot_attr mla on mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+         where mml.material_lot_code = itf.sn
+           and mml.tenant_id = itf.tenant_id
+           and (mla.attr_value is null or mla.attr_value != 'Y')
+           and itf.tenant_id = #{tenantId}
+           and itf.asset_encoding = #{equipmentCode}
+    </select>
+
+    <select id="queryAllMaterialLotIdInSameContainer" resultType="string">
+        select
+            ejsc.material_lot_id
+        from
+            hme_eo_job_sn ejsc
+        where
+            ejsc.tenant_id = #{tenantId}
+            and ejsc.site_out_date is null
+            and ejsc.job_type = #{jobType}
+            and (ejsc.rework_flag is null or ejsc.rework_flag != 'Y')
+            and ejsc.workcell_id = #{workcellId}
+            and (ejsc.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+                or ejsc.job_container_id in (
+                    select
+                        ejs.job_container_id
+                    from
+                        hme_eo_job_sn ejs
+                    where
+                        ejs.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+                        and ejs.workcell_id = #{workcellId}
+                        and ejs.tenant_id = #{tenantId}
+                        and ejs.site_out_date is null
+                        and ejs.job_type = #{jobType}
+                        and ejs.job_container_id is not null))
+    </select>
+
+    <select id="queryForNcRecordValidate" resultMap="BaseResultMap">
+        select
+            ejdr.job_record_id,
+            ejdr.job_id,
+            ejdr.result,
+            ejdr.tag_id,
+            ejdr.tag_group_id
+        from
+            hme_eo_job_data_record ejdr,
+            mt_tag mt
+        where
+            mt.tag_id = ejdr.tag_id
+            and ejdr.workcell_id = #{workcellId}
+            and ejdr.tenant_id = #{tenantId}
+            and ejdr.job_id = #{jobId}
+            and ejdr.result != ''
+            and ejdr.result is not null
+            and mt.value_type IN ('VALUE','FORMULA')
+    </select>
+
+    <select id="queryNcRecord" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO2">
+        SELECT
+            hejdr.job_record_id,
+            hejdr.job_id,
+            hejdr.tag_id,
+            mt.TAG_CODE
+        FROM
+            hme_eo_job_data_record hejdr,
+            mt_tag mt
+        WHERE
+              mt.ENABLE_FLAG = 'Y'
+          AND mt.TAG_ID = hejdr.tag_id
+          AND hejdr.tenant_id = #{tenantId}
+          AND hejdr.job_id IN
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQueryForNcRecordValidate" resultMap="BaseResultMap">
+        select
+            ejdr.job_record_id,
+            ejdr.job_id,
+            ejdr.result,
+            ejdr.tag_id,
+            ejdr.tag_group_id
+        from
+            hme_eo_job_data_record ejdr,
+            mt_tag mt
+        where
+            mt.tag_id = ejdr.tag_id
+            and ejdr.workcell_id = #{workcellId}
+            and ejdr.tenant_id = #{tenantId}
+            and ejdr.job_id in
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and (ejdr.result != '' or ejdr.result is not null)
+            and mt.value_type IN ('VALUE','FORMULA')
+    </select>
+
+    <select id="queryEoJobDataRecordList" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO2">
+        select
+            ejdr.job_record_id,
+            ejdr.job_id,
+            ejdr.result,
+            ejdr.tag_id,
+			mt.tag_code,
+            ejdr.tag_group_id,
+            dre.data_record_extend_id
+        from
+            hme_eo_job_data_record ejdr
+            LEFT JOIN hme_data_record_extend dre ON dre.job_record_id = ejdr.job_record_id,
+            mt_tag mt
+		WHERE
+		    mt.tag_id = ejdr.tag_id
+        and ejdr.tenant_id = #{tenantId}
+        and ejdr.job_id  = #{jobId}
+    </select>
+
+    <select id="queryJudgmentRecord" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO2">
+        SELECT
+        	rd.job_record_id,
+          	rd.job_id,
+          	rd.result,
+          	rd.minimum_value,
+          	dre.standard_value,
+			dre.data_record_extend_id
+        FROM
+        	hme_eo_job_data_record rd
+        	LEFT JOIN hme_data_record_extend dre ON dre.job_record_id = rd.job_record_id
+        WHERE rd.tenant_id = #{tenantId}
+        AND rd.job_id = #{jobId}
+        AND dre.ATTRIBUTE1 = 'Y'
+    </select>
+
+    <update id="batchUpdateStandardOrMinimumValue">
+        update hme_eo_job_data_record
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            minimum_value =
+            <foreach collection="dataRecordList" item="clause" index="index"
+                     separator=" " open="case job_record_id" close="end">
+                <choose>
+                    <when test="clause.minimumValue != null">
+                        when #{clause.jobRecordId} then #{clause.minimumValue}
+                    </when>
+                    <otherwise>
+                        when #{clause.jobRecordId} then minimum_value
+                    </otherwise>
+                </choose>
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and job_record_id in
+            <foreach collection="dataRecordList" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.jobRecordId}
+            </foreach>
+        </where>
+    </update>
+
+
+    <select id="queryFilterPower" resultType="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        SELECT
+			rd.job_record_id,
+			rd.tag_id,
+          	rd.job_id,
+          	rd.result,
+          	rd.minimum_value
+        FROM
+        	hme_eo_job_data_record rd
+        WHERE rd.tenant_id = #{tenantId}
+        AND rd.job_id = #{firstProcessJobId}
+		AND rd.tag_id IN
+		<foreach collection="tagIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryOldEoByEoId" resultType="java.lang.String">
+        SELECT
+        	me.EO_ID
+        FROM
+        	mt_eo_attr attr,
+        	mt_eo me
+        WHERE
+        attr.TENANT_ID = #{tenantId}
+        AND attr.EO_ID = #{eoId}
+        AND me.IDENTIFICATION = attr.ATTR_VALUE
+        AND me.TENANT_ID = #{tenantId}
+    </select>
+</mapper>

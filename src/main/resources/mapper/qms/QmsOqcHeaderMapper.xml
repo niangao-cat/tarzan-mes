@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsOqcHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsOqcHeader">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="OQC_HEADER_ID" property="oqcHeaderId" jdbcType="VARCHAR"/>
+        <result column="OQC_NUMBER" property="oqcNumber" jdbcType="VARCHAR"/>
+        <result column="WO_ID" property="woId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="SO_NUMBER" property="soNumber" jdbcType="VARCHAR"/>
+        <result column="SO_LINE_NUMBER" property="soLineNumber" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="QC_BY" property="qcBy" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_VERSION" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_STATUS" property="inspectionStatus" jdbcType="VARCHAR"/>
+        <result column="CREATED_DATE" property="createdDate" jdbcType="DATE"/>
+        <result column="INSPECTION_TIME" property="inspectionTime" jdbcType="DECIMAL"/>
+        <result column="INSPECTION_FINISH_DATE" property="inspectionFinishDate" jdbcType="DATE"/>
+        <result column="INSPECTION_RESULT" property="inspectionResult" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="attribute_category" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="attribute1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="attribute2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="attribute3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="attribute4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="attribute5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="attribute6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="attribute7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="attribute8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="attribute9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="attribute10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <resultMap id="HeadResultMap" type="com.ruike.qms.domain.vo.QmsOqcHeaderVO">
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="OQC_HEADER_ID" property="oqcHeaderId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_VERSION" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="OQC_NUMBER" property="oqcNumber" jdbcType="VARCHAR"/>
+        <result column="WO_ID" property="woId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="EO_NUM" property="eoNum" jdbcType="VARCHAR"/>
+        <result column="SO_NUMBER" property="soNumber" jdbcType="VARCHAR"/>
+        <result column="SO_LINE_NUMBER" property="soLineNumber" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_STATUS" property="inspectionStatus" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_TIME" property="inspectionTime" jdbcType="DECIMAL"/>
+        <result column="INSPECTION_FINISH_DATE" property="inspectionFinishDate" jdbcType="DATE"/>
+        <result column="INSPECTION_RESULT" property="inspectionResult" jdbcType="VARCHAR"/>
+        <result column="CREATED_DATE" property="createdDate" jdbcType="DATE"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <collection property="lineList" resultMap="LineResultMap"/>
+    </resultMap>
+    <resultMap id="LineResultMap" type="com.ruike.qms.domain.vo.QmsOqcLineVO">
+        <result column="OQC_LINE_ID" property="oqcLineId" jdbcType="VARCHAR"/>
+        <result column="NUMBER" property="number" jdbcType="DECIMAL"/>
+        <result column="INSPECTION_TYPE" property="inspectionType" jdbcType="VARCHAR"/>
+        <result column="INSPECTION" property="inspection" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_DESC" property="inspectionDesc" jdbcType="VARCHAR"/>
+        <result column="STANDARD_TYPE" property="standardType" jdbcType="VARCHAR"/>
+        <result column="STANDARD_TEXT" property="standardText" jdbcType="VARCHAR"/>
+        <result column="STANDARD_FROM" property="standardFrom" jdbcType="DECIMAL"/>
+        <result column="STANDARD_TO" property="standardTo" jdbcType="DECIMAL"/>
+        <result column="ACCURACY" property="accuracy" jdbcType="DECIMAL"/>
+        <result column="UOM_CODE" property="standardUom" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_TOOL" property="inspectionTool" jdbcType="VARCHAR"/>
+        <result column="LINE_INSPECTION_RESULT" property="inspectionResult" jdbcType="VARCHAR"/>
+        <result column="ATTACHMENT_UUID" property="attachmentUuid" jdbcType="VARCHAR"/>
+        <collection property="detailList" resultMap="DetailResultMap"/>
+    </resultMap>
+    <resultMap id="DetailResultMap" type="com.ruike.qms.domain.vo.QmsOqcDetailsVO">
+        <result column="OQC_DETAILS_ID" property="oqcDetailsId" jdbcType="VARCHAR"/>
+        <result column="DETAIL_NUMBER" property="number" jdbcType="DECIMAL"/>
+        <result column="RESULT" property="result" jdbcType="VARCHAR"/>
+        <result column="DETAIL_REMARK" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryLastOqcData" resultMap="BaseResultMap">
+        select oh.oqc_header_id, oh.material_lot_id
+          from qms_oqc_header oh,
+               mt_material_lot ml
+         where oh.material_lot_id = ml.material_lot_id
+           and ml.material_lot_code = #{materialLotCode}
+           and oh.tenant_id = #{tenantId}
+         order by oh.created_date desc
+         limit 1
+    </select>
+
+    <select id="queryOqcDataByHeadId" resultMap="HeadResultMap" parameterType="string">
+        select
+            oh.oqc_header_id,
+            oh.oqc_number,
+            oh.material_lot_id,
+            oh.material_id,
+            mm.material_code,
+            mm.material_name,
+            oh.material_version,
+            oh.quantity,
+            oh.wo_id,
+            wo.work_order_num,
+            oh.eo_id,
+            me.eo_num,
+            oh.so_number,
+            oh.so_line_number,
+            oh.created_date,
+            oh.inspection_status,
+            oh.inspection_finish_date,
+            oh.inspection_result,
+            oh.remark,
+            ol.oqc_line_id,
+            ol.number,
+            ol.inspection,
+            ol.inspection_desc,
+            ol.inspection_type,
+            ol.standard_type,
+            ol.accuracy,
+            ol.standard_from,
+            ol.standard_to,
+            mu.uom_code,
+            ol.standard_text,
+            ol.inspection_tool,
+            ol.inspection_result line_inspection_result,
+            ol.attachment_uuid,
+            od.oqc_details_id,
+            od.number detail_number,
+            od.result,
+            od.remark detail_remark
+        from
+            qms_oqc_header oh
+            left join mt_material mm on mm.material_id = oh.material_id
+            left join mt_work_order wo on wo.work_order_id = oh.wo_id
+            and wo.tenant_id = oh.tenant_id
+            left join mt_eo me on me.eo_id = oh.eo_id
+            and me.tenant_id = oh.tenant_id
+            left join qms_oqc_line ol on ol.oqc_header_id = oh.oqc_header_id
+            and ol.tenant_id = oh.tenant_id
+            left join mt_uom mu on mu.uom_id = ol.standard_uom
+            and mu.tenant_id = oh.tenant_id
+            left join qms_oqc_details od on od.oqc_line_id = ol.oqc_line_id
+            and od.oqc_header_id = oh.oqc_header_id
+            and od.tenant_id = oh.tenant_id
+        where
+            oh.oqc_header_id = #{oqcHeaderId}
+        order by ol.number, od.number
+    </select>
+
+    <select id="queryBaseDataForOqc" resultMap="HeadResultMap">
+         select ml.material_lot_id,
+                ml.material_id,
+                mm.material_code,
+                mm.material_name,
+                mla.attr_value material_version,
+                ml.primary_uom_qty quantity,
+                ml.eo_id,
+                me.eo_num,
+                wo.work_order_id wo_id,
+                wo.work_order_num,
+                ml.site_id
+           from mt_material_lot ml
+           left join mt_material mm on ml.material_id = mm.material_id
+           left join mt_eo me on me.eo_id = ml.eo_id
+           left join mt_work_order wo on wo.work_order_id = me.work_order_id
+           left join mt_material_lot_attr mla on mla.material_lot_id = ml.material_lot_id
+            and upper(mla.attr_name) = 'MATERIAL_VERSION'
+          where ml.material_lot_code = #{materialLotCode}
+            and ml.tenant_id = #{tenantId}
+    </select>
+
+    <select id="checkProcessing" resultType="int">
+        select 1
+          from qms_oqc_header oh,
+               mt_material_lot ml
+         where oh.material_lot_id = ml.material_lot_id
+           and ml.material_lot_code = #{materialLotCode}
+           and oh.tenant_id = #{tenantId}
+           and oh.inspection_status != 'COMPLETED'
+         limit 1
+    </select>
+
+    <select id="queryInspectionSchemeIdByBarcode" resultType="string">
+        select pis.inspection_scheme_id
+          from qms_pqc_inspection_scheme pis,
+               mt_material_lot ml,
+               mt_material_lot_attr mla
+         where mla.material_lot_id = ml.material_lot_id
+        and mla.attr_name = 'material_version'
+        and mla.attr_value = pis.material_version
+        and pis.material_id = ml.material_id
+        and pis.site_id = ml.site_id
+        and pis.tenant_id = ml.tenant_id
+        and pis.inspection_type = 'OQC'
+        and ml.material_lot_code = #{materialLotCode}
+        and ml.tenant_id = #{tenantId}
+        limit 1
+    </select>
+</mapper>

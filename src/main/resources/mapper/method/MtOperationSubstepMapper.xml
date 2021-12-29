@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtOperationSubstepMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtOperationSubstep">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OPERATION_SUBSTEP_ID" property="operationSubstepId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_ID" property="substepId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+
+    <resultMap id="OperationSubstepResultMap" type="tarzan.method.api.dto.MtOperationSubstepDTO">
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="OPERATION_SUBSTEP_ID" property="operationSubstepId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_ID" property="substepId" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_NAME" property="substepName" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_DESCRIPTION" property="substepDescription" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_LONG_DESCRIPTION" property="substepLongDescription" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryOperationSubstepForUi" resultMap="OperationSubstepResultMap">
+        select
+        mos.SEQUENCE,
+        mos.OPERATION_SUBSTEP_ID,
+        mos.OPERATION_ID,
+        ms.SUBSTEP_ID,
+        ms.SUBSTEP_NAME,
+        ms.DESCRIPTION SUBSTEP_DESCRIPTION,
+        ms.LONG_DESCRIPTION SUBSTEP_LONG_DESCRIPTION
+        from mt_operation_substep mos
+        join mt_substep ms on mos.SUBSTEP_ID = ms.SUBSTEP_ID
+        where mos.TENANT_ID = ${tenantId}
+        and ms.TENANT_ID = ${tenantId}
+        and mos.OPERATION_ID = #{operationId}
+    </select>
+</mapper>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeFinishProductsInStorageMapper">
+
+    <!--查询物料批中物料信息-->
+    <select id="queryMaterialLot" resultType="com.ruike.hme.domain.vo.HmeInStorageMaterialVO">
+        SELECT
+            MML.MATERIAL_LOT_ID,
+            MML.MATERIAL_LOT_CODE,
+            MML.SITE_ID,
+            MML.LOCATOR_ID,
+            MML.PRIMARY_UOM_ID,
+            MML.PRIMARY_UOM_QTY PRIMARY_UOM_QTY,
+            MML.QUALITY_STATUS,
+            MM.MATERIAL_ID,
+            MM.MATERIAL_CODE,
+            MM.MATERIAL_NAME,
+            MWO.WORK_ORDER_NUM,
+            MH.LOCATOR_ID WAREHOUSE_ID
+        FROM MT_MATERIAL_LOT MML
+        LEFT JOIN MT_MATERIAL MM ON MML.MATERIAL_ID=MM.MATERIAL_ID
+        LEFT JOIN MT_EO ME ON MML.EO_ID=ME.EO_ID
+        LEFT JOIN MT_WORK_ORDER MWO ON ME.WORK_ORDER_ID=MWO.WORK_ORDER_ID
+        LEFT JOIN mt_mod_locator ML ON ML.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator MH ON MH.LOCATOR_ID = ML.PARENT_LOCATOR_ID
+        WHERE 1=1
+        <if test="materialLotList != null and materialLotList.size > 0 ">
+            AND MML.MATERIAL_LOT_ID IN
+            <foreach collection="materialLotList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryLocatorList" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT
+            LOCATOR_ID,
+            LOCATOR_CODE,
+            LOCATOR_NAME,
+            LOCATOR_TYPE
+        FROM
+	        mt_mod_locator
+        WHERE
+	        TENANT_ID = #{tenantId}
+        AND ENABLE_FLAG = "Y"
+	    AND LOCATOR_ID IN
+        <foreach collection="organizationIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryLocatorAttr" resultType="java.lang.String">
+        SELECT
+	        ATTR_VALUE
+        FROM
+	        mt_mod_locator_attr
+        WHERE
+            TENANT_ID = #{tenantId}
+	    AND ATTR_NAME = "DIRECT_POST_FLAG"
+	    AND LOCATOR_ID = #{locatorId}
+    </select>
+
+    <select id="queryLocatorCodeByLocatorId" resultType="java.lang.String">
+        SELECT
+	        mml.LOCATOR_ID
+        FROM
+	        mt_mod_locator ml,
+	        mt_mod_locator mml
+        WHERE
+            ml.PARENT_LOCATOR_ID = mml.LOCATOR_ID
+        AND ml.TENANT_ID = #{tenantId}
+        AND  ml.LOCATOR_ID = #{locatorId}
+    </select>
+
+    <select id="queryMaterialLotNcCount" resultType="java.lang.Integer">
+        SELECT
+            COUNT(nl.nc_load_id)
+        FROM
+	        hme_material_lot_load ml,
+	        hme_material_lot_nc_load nl
+	    WHERE
+	        ml.load_sequence = nl.load_sequence
+	        AND ml.tenant_id = #{tenantId}
+	        AND ml.material_lot_id = #{materialLotId}
+    </select>
+
+    <select id="queryMaterialLotLoadList" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        SELECT
+	        *
+        FROM
+	        hme_material_lot_load
+        WHERE tenant_id = #{tenantId}
+        AND material_lot_id = #{materialLotId}
+        AND cos_num <![CDATA[<>]]> '1'
+    </select>
+
+    <select id="queryLocatorByWorkCell" resultType="java.lang.String">
+        SELECT
+	        lor.LOCATOR_ID
+        FROM
+		    mt_mod_locator ml LEFT JOIN mt_mod_locator_org_rel lor ON ml.locator_id = lor.locator_id,
+	    (
+	    SELECT
+		    mor2.ORGANIZATION_ID
+	    FROM
+		    mt_mod_organization_rel mor
+		    LEFT JOIN mt_mod_organization_rel mor1 ON mor1.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+		    AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+		    LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+		    AND mor1.ORGANIZATION_TYPE = 'WORKCELL'
+		    AND mor2.PARENT_ORGANIZATION_TYPE = "PROD_LINE"
+	    WHERE
+		    mor.ORGANIZATION_ID = #{workcellId}
+		AND mor2.ORGANIZATION_ID IS NOT NULL
+		AND mor1.ORGANIZATION_ID IS NOT NULL
+	    ) org
+        WHERE
+	        lor.TENANT_ID = #{tenantId}
+	    AND lor.ORGANIZATION_TYPE = "WORKCELL"
+	    AND lor.ORGANIZATION_ID = org.ORGANIZATION_ID
+	    AND ml.LOCATOR_TYPE= 'DEFAULT_STORAGE'
+		AND ml.LOCATOR_CATEGORY = 'INVENTORY'
+    </select>
+
+    <select id="queryOperationSequence" resultType="java.lang.String">
+        SELECT
+	        rs.SEQUENCE
+        FROM
+	        mt_work_order wo
+	    LEFT JOIN mt_router_step rs ON rs.ROUTER_ID = wo.ROUTER_ID
+    	LEFT JOIN mt_router_operation ro ON ro.ROUTER_STEP_ID = rs.ROUTER_STEP_ID
+	    WHERE
+	        rs.TENANT_ID = #{tenantId}
+	    AND wo.WORK_ORDER_ID = #{workOrderId}
+	    AND ro.OPERATION_ID = #{operationId}
+    </select>
+
+    <select id="queryLocatorListPermission" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT
+            loc.locator_id,
+            loc.locator_code,
+            loc.LOCATOR_NAME
+        FROM
+            mt_user_organization muo,
+            wms_doc_privilege wdp,
+            mt_mod_locator loc,
+            mt_mod_locator_org_rel mlor,
+            mt_mod_organization_rel mor
+        WHERE
+            muo.TENANT_ID = #{tenantId}
+            AND muo.ORGANIZATION_TYPE = 'LOCATOR'
+            AND muo.ENABLE_FLAG = 'Y'
+            AND muo.ORGANIZATION_ID = loc.LOCATOR_ID
+            AND muo.USER_ORGANIZATION_ID = wdp.user_organization_id
+            AND mlor.locator_id = loc.LOCATOR_ID
+            AND mlor.organization_id = mor.organization_id
+            AND mlor.organization_type = mor.organization_type
+            AND mor.TOP_SITE_ID IN
+            <foreach collection="organizationIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            AND muo.USER_ID = #{userId}
+            AND wdp.doc_type = 'PRODUCT_RECEIPT'
+            AND wdp.operation_type = 'CREATE'
+        GROUP BY
+            loc.locator_id,
+            loc.locator_code,
+            loc.LOCATOR_NAME
+    </select>
+</mapper>

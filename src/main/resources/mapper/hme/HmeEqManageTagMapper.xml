@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEqManageTagMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEqManageTag">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="manage_tag_id" property="manageTagId" jdbcType="VARCHAR"/>
+        <result column="manage_taggroup_id" property="manageTagGroupId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="serial_number" property="serialNumber" jdbcType="DECIMAL"/>
+        <result column="tag_group_id" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="tag_id" property="tagId" jdbcType="VARCHAR"/>
+        <result column="tag_code" property="tagCode" jdbcType="VARCHAR"/>
+        <result column="tag_descriptions" property="tagDescriptions" jdbcType="VARCHAR"/>
+        <result column="value_type" property="valueType" jdbcType="VARCHAR"/>
+        <result column="collection_method" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="check_flag" property="checkFlag" jdbcType="VARCHAR"/>
+        <result column="maintain_flag" property="maintainFlag" jdbcType="VARCHAR"/>
+        <result column="check_cycle" property="checkCycle" jdbcType="VARCHAR"/>
+        <result column="maintain_cycle" property="maintainCycle" jdbcType="VARCHAR"/>
+        <result column="accuracy" property="accuracy" jdbcType="DECIMAL"/>
+        <result column="minimum_value" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="maximal_value" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="standard" property="standardValue" jdbcType="DECIMAL"/>
+        <result column="unit" property="uomId" jdbcType="VARCHAR"/>
+        <result column="maintain_leadtime" property="maintainLeadtime" jdbcType="VARCHAR"/>
+        <result column="tool" property="tool" jdbcType="VARCHAR"/>
+        <result column="responsible" property="responsible" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <update id="batchLineUpdate">
+        UPDATE hme_eq_manage_tag
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            serial_number =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.serialNumber}
+            </foreach>,
+            value_type =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.valueType}
+            </foreach>,
+            collection_method =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.collectionMethod}
+            </foreach>,
+            manage_cycle =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.manageCycle}
+            </foreach>,
+            accuracy =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.accuracy}
+            </foreach>,
+            minimum_value =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.minimumValue}
+            </foreach>,
+            maximal_value =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.maximalValue}
+            </foreach>,
+            standard_value =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.standardValue}
+            </foreach>,
+            uom_id =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.uomId}
+            </foreach>,
+            false_value =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.falseValue}
+            </foreach>,
+            true_value =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.trueValue}
+            </foreach>,
+            remark =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.remark}
+            </foreach>,
+            enable_flag =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_id" close="end">
+                when #{item.manageTagId} then #{item.enableFlag}
+            </foreach>
+        </set>
+        <where>
+            manage_tag_id in
+            <foreach collection="dto" item="item"
+                     separator="," open="(" close=")">
+                #{item.manageTagId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

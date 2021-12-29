@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosSelectionCurrentMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosSelectionCurrent">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cos_id" property="cosId" jdbcType="VARCHAR"/>
+        <result column="cos_type" property="cosType" jdbcType="VARCHAR"/>
+        <result column="current" property="current" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="enbale_flag" property="enbaleFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="cosSelectionCurrentPageQuery" resultType="com.ruike.hme.domain.vo.HmeCosSelectionCurrentVO">
+        SELECT
+            hcsc.cos_id,
+            hcsc.cos_type,
+            hcsc.current,
+            hcsc.remark,
+            hcsc.enbale_flag
+        FROM
+            hme_cos_selection_current hcsc
+        WHERE
+            hcsc.tenant_id = #{tenantId}
+        <if test="dto.cosTypeList != null and dto.cosTypeList.size() > 0">
+            AND hcsc.cos_type IN
+            <foreach collection="dto.cosTypeList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY hcsc.last_update_date DESC
+    </select>
+
+    <select id="cosSelectionCurrentHisPageQuery" resultType="com.ruike.hme.domain.vo.HmeCosSelectionCurrentVO2">
+        SELECT
+            hcsch.cos_his_id,
+            hcsch.cos_id,
+            hcsch.cos_type,
+            hcsch.current,
+            hcsch.remark,
+            hcsch.enbale_flag,
+            hcsch.created_by,
+            hcsch.creation_date,
+            hcsch.last_updated_by,
+            hcsch.last_update_date
+        FROM
+            hme_cos_selection_current_his hcsch
+        WHERE hcsch.cos_id = #{cosId}
+        AND hcsch.tenant_id = #{tenantId}
+        ORDER BY hcsch.last_update_date DESC
+    </select>
+</mapper>

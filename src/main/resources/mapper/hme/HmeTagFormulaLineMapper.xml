@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeTagFormulaLineMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeTagFormulaLine">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_FORMULA_HEAD_ID" property="tagFormulaHeadId" jdbcType="VARCHAR"/>
+        <result column="TAG_FORMULA_LINE_ID" property="tagFormulaLineId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="PARAMETER_CODE" property="parameterCode" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <!--获取行信息-->
+    <select id="getTagLineList" resultType="com.ruike.hme.domain.vo.HmeTagFormulaLineVO">
+        SELECT
+        htfl.tenant_id,
+        htfl.tag_formula_head_id,
+        htfl.tag_formula_line_id,
+        htfl.operation_id,
+        mo.OPERATION_NAME,
+        mo.DESCRIPTION OPERATION_DESC,
+        mtg.TAG_GROUP_ID,
+        mtg.TAG_GROUP_CODE,
+        mtg.TAG_GROUP_DESCRIPTION,
+        mt.TAG_ID,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        htfl.parameter_code
+    FROM
+        hme_tag_formula_line htfl
+        LEFT JOIN mt_operation mo ON htfl.operation_id = mo.OPERATION_ID
+        LEFT JOIN mt_tag_group mtg ON htfl.tag_group_id = mtg.tag_group_id
+        LEFT JOIN mt_tag mt ON htfl.tag_id = mt.TAG_ID
+    WHERE
+        1 = 1
+        AND htfl.tenant_id = #{tenantId}
+        <if test="tagFormulaHeadId != null">
+            AND htfl.tag_formula_head_id = #{tagFormulaHeadId}
+        </if>
+    </select>
+
+    <!--获取行信息-->
+    <delete id="deleteByHeadId" parameterType="string">
+        DELETE
+        FROM
+            hme_tag_formula_line
+        WHERE
+            tag_formula_head_id = #{tagFormulaHeadId}
+    </delete>
+
+</mapper>

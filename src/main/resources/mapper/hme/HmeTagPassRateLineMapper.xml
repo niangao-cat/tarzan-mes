@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeTagPassRateLineMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeTagPassRateLine">
+                    <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+                    <result column="header_id" property="headerId" jdbcType="VARCHAR"/>
+                    <result column="line_id" property="lineId" jdbcType="VARCHAR"/>
+                    <result column="add_pass_rate" property="addPassRate" jdbcType="DECIMAL"/>
+                    <result column="test_sum_qty" property="testSumQty" jdbcType="DECIMAL"/>
+                    <result column="priority" property="priority" jdbcType="DECIMAL"/>
+                    <result column="remark" property="remark" jdbcType="VARCHAR"/>
+                    <result column="cid" property="cid" jdbcType="DECIMAL"/>
+                    <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+                    <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+                    <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+                    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+                    <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+                    <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+            </resultMap>
+
+    <select id="queryTagPassRateLine" resultType="com.ruike.hme.domain.vo.HmeTagPassRateLineVO">
+        SELECT
+                htprl.line_id,
+                htprl.header_id,
+                htprl.add_pass_rate,
+                htprl.test_sum_qty,
+                htprl.priority,
+                htprl.remark
+        FROM
+                hme_tag_pass_rate_line htprl
+        WHERE
+                htprl.tenant_id =#{tenantId}
+                AND htprl.header_id =#{heardId}
+        ORDER BY htprl.priority asc
+    </select>
+</mapper>

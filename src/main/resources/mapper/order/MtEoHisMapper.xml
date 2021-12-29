@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.order.infra.mapper.MtEoHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.order.domain.entity.MtEoHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_HIS_ID" property="eoHisId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="EO_NUM" property="eoNum" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="LAST_EO_STATUS" property="lastEoStatus" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_LINE_ID" property="productionLineId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="PLAN_START_TIME" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="PLAN_END_TIME" property="planEndTime" jdbcType="TIMESTAMP"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="EO_TYPE" property="eoType" jdbcType="VARCHAR"/>
+        <result column="VALIDATE_FLAG" property="validateFlag" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="TRX_QTY" property="trxQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByConditionCustom" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_eo_his t,
+        mt_event e
+        WHERE
+        t.EVENT_ID = e.EVENT_ID
+        AND t.TENANT_ID=${tenantId}
+        AND e.TENANT_ID=${tenantId}
+        <if test="condition.eoId!=null">
+            and t.EO_ID = #{condition.eoId}
+        </if>
+        <if test="condition.eventId!=null">
+            and t.EVENT_ID = #{condition.eventId}
+        </if>
+        <if test="condition.eventTimeFrom!=null">
+            and DATE_FORMAT(e.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &gt;= DATE_FORMAT(#{condition.eventTimeFrom},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="condition.eventTimeTo!=null">
+            and DATE_FORMAT(e.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &lt;= DATE_FORMAT(#{condition.eventTimeTo},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="condition.eventBy!=null">
+            and e.EVENT_BY = #{condition.eventBy}
+        </if>
+    </select>
+
+    <select id="selectByEventIds" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        mt_eo_his t
+        WHERE
+        t.TENANT_ID=${tenantId}
+        AND t.EVENT_ID IN
+        <foreach collection="eventIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRecent" resultType="tarzan.order.domain.vo.MtEoHisVO2">
+        SELECT
+            his.EO_HIS_ID,
+            his.EVENT_ID
+        FROM
+            mt_eo_his his
+        WHERE
+            his.EO_ID= #{eoId}
+            and his.TENANT_ID = #{tenantId}
+        ORDER BY
+            CAST( his.EO_HIS_ID AS DECIMAL ( 36 ) ) DESC
+            LIMIT 1
+    </select>
+</mapper>

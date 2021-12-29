@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfMesOnHandMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <select id="selectOnHand" resultType="com.ruike.itf.domain.vo.MesOnHandVO"
+            parameterType="com.ruike.itf.api.dto.ItfOnHandDTO">
+        SELECT
+        t.SITE_ID AS siteId,
+        t.MATERIAL_CODE AS materialCode,
+        t.LOCATOR_CODE AS locatorCode,
+        ifnull( t.ONHAND_QUANTITY, 0 )  AS mesOnHandQty,
+        sum( t.qty261 ) AS qty261,
+        sum( t.qty262 ) AS qty262,
+        sum( t.qty102 ) AS qty102,
+        sum( t.qty101 ) AS qty101,
+        sum( ( t.qty261 + t.qty102 - t.qty262 - t.qty101 ) ) AS interfaceQty,
+        (ifnull( t.ONHAND_QUANTITY, 0 ) +sum( t.qty261 + t.qty102 - t.qty262 - t.qty101 )) AS mesCountQty
+        FROM
+        (
+        SELECT
+        t1.SITE_ID,
+        t1.MATERIAL_CODE,
+        t1.LOCATOR_CODE,
+        t1.ONHAND_QUANTITY,
+        IFNULL( CASE t2.move_type WHEN '261' THEN t2.qty END, 0 ) qty261,
+        IFNULL( CASE t2.move_type WHEN '262' THEN t2.qty END, 0 ) qty262,
+        IFNULL( CASE t2.move_type WHEN '102' THEN t2.qty END, 0 ) qty102,
+        IFNULL( CASE t2.move_type WHEN '101' THEN t2.qty END, 0 ) qty101
+        FROM
+        (
+        SELECT
+        mioq.SITE_ID,
+        mm.MATERIAL_CODE,
+        mml1.LOCATOR_CODE,
+        sum( mioq.ONHAND_QUANTITY ) ONHAND_QUANTITY
+        FROM
+        mt_inv_onhand_quantity mioq,
+        mt_mod_locator mml,
+        mt_mod_locator mml1,
+        mt_material mm,
+        mt_site_plant_releation msplr
+        WHERE
+        mioq.LOCATOR_ID = mml.LOCATOR_ID
+        AND mml.PARENT_LOCATOR_ID = mml1.LOCATOR_ID
+        AND mm.MATERIAL_ID = mioq.MATERIAL_ID
+        AND msplr.SITE_ID = mioq.SITE_ID
+        GROUP BY
+        mioq.SITE_ID,
+        mm.MATERIAL_CODE,
+        mml1.LOCATOR_CODE
+        ) t1
+        LEFT JOIN (
+        SELECT
+        msplr.SITE_ID,
+        ioti.MATERIAL_CODE,
+        ioti.WAREHOUSE_CODE,
+        SUM( ioti.TRANSACTION_QTY ) qty,
+        ioti.move_type
+        FROM
+        itf_object_transaction_iface ioti,
+        mt_site_plant_releation msplr
+        WHERE
+        ioti.PROCESS_STATUS IN ( 'E', 'P' )
+        AND ioti.move_type IN ( 101, 102, 261, 262 )
+        AND msplr.PLANT_CODE = ioti.PLANT_CODE
+        GROUP BY
+        msplr.SITE_ID,
+        ioti.MATERIAL_CODE,
+        ioti.WAREHOUSE_CODE,
+        ioti.move_type
+        ) t2 ON t1.MATERIAL_CODE = t2.MATERIAL_CODE
+        AND t1.LOCATOR_CODE = t2.WAREHOUSE_CODE
+        AND t1.SITE_ID = t2.SITE_ID UNION
+        SELECT
+        t2.SITE_ID,
+        t2.MATERIAL_CODE,
+        t2.WAREHOUSE_CODE,
+        t1.ONHAND_QUANTITY,
+        IFNULL( CASE t2.move_type WHEN '261' THEN t2.qty END, 0 ) qty261,
+        IFNULL( CASE t2.move_type WHEN '262' THEN t2.qty END, 0 ) qty262,
+        IFNULL( CASE t2.move_type WHEN '102' THEN t2.qty END, 0 ) qty102,
+        IFNULL( CASE t2.move_type WHEN '101' THEN t2.qty END, 0 ) qty101
+        FROM
+        (
+        SELECT
+        msplr.SITE_ID,
+        ioti.MATERIAL_CODE,
+        ioti.WAREHOUSE_CODE,
+        SUM( ioti.TRANSACTION_QTY ) qty,
+        ioti.move_type
+        FROM
+        itf_object_transaction_iface ioti,
+        mt_site_plant_releation msplr
+        WHERE
+        ioti.PROCESS_STATUS IN ( 'E', 'P' )
+        AND ioti.move_type IN ( 101, 102, 261, 262 )
+        GROUP BY
+        msplr.SITE_ID,
+        ioti.MATERIAL_CODE,
+        ioti.WAREHOUSE_CODE,
+        ioti.move_type
+        ) t2
+        LEFT JOIN (
+        SELECT
+        mioq.SITE_ID,
+        mm.MATERIAL_CODE,
+        mml1.LOCATOR_CODE,
+        sum( mioq.ONHAND_QUANTITY ) ONHAND_QUANTITY
+        FROM
+        mt_inv_onhand_quantity mioq,
+        mt_mod_locator mml,
+        mt_mod_locator mml1,
+        mt_material mm,
+        mt_site_plant_releation msplr
+        WHERE
+        mioq.LOCATOR_ID = mml.LOCATOR_ID
+        AND mml.PARENT_LOCATOR_ID = mml1.LOCATOR_ID
+        AND mm.MATERIAL_ID = mioq.MATERIAL_ID
+        AND msplr.SITE_ID = mioq.SITE_ID
+        GROUP BY
+        mioq.SITE_ID,
+        mm.MATERIAL_CODE,
+        mml1.LOCATOR_CODE
+        ) t1 ON t1.MATERIAL_CODE = t2.MATERIAL_CODE
+        AND t1.LOCATOR_CODE = t2.WAREHOUSE_CODE
+        AND t1.SITE_ID = t2.SITE_ID
+        ) t
+        WHERE
+        1 = 1
+        and t.site_id = ${siteId}
+        <if test="materialCode != null">
+            and t.material_code = ${materialCode}
+        </if>
+        <if test="locatorCode != null">
+            and t.locator_code = ${locatorCode}
+        </if>
+        GROUP BY
+        t.SITE_ID,
+        t.MATERIAL_CODE,
+        t.LOCATOR_CODE,
+        t.ONHAND_QUANTITY
+    </select>
+</mapper>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.reports.infra.mapper.ReportDispatchDetailsMapper">
+
+    <select id="selectDispatchDetails" resultType="com.ruike.reports.domain.vo.ReportDispatchDetailsVO">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        pl.PROD_LINE_CODE as prodLineCode,
+        plt.PROD_LINE_NAME as prodLineName,
+        wo.WORK_ORDER_NUM as workOrderNum,
+        wo_text.ATTR_VALUE as attribute8,
+        wo_re.ATTR_VALUE as woRemark,
+        mm.MATERIAL_CODE as materialCode,
+        mmt.MATERIAL_NAME as materialName,
+        wo.PRODUCTION_VERSION as productionVersion,
+        mmw.WORKCELL_CODE as workcellCode,
+        mmwt.WORKCELL_NAME as workcellName,
+        mcs.SHIFT_DATE as shiftDate,
+        mcs.SHIFT_CODE as shiftCode,
+        dr.DISPATCH_QTY as dispatchQty,
+        iu.real_name as realName,
+        date_format(dr.LAST_UPDATE_DATE, '%Y-%m-%d %H:%i:%S')  as lastUpdateDate,
+        wo.QTY,
+        (
+        SELECT
+        sum(dri.DISPATCH_QTY)
+        FROM
+        hme_wo_dispatch_recode dri
+        WHERE
+        dri.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND dri.WORKCELL_ID = mmw.WORKCELL_ID
+        ) dispatch_code_qty,
+        (
+        wo.QTY - (
+        SELECT
+        sum(dri.DISPATCH_QTY)
+        FROM
+        hme_wo_dispatch_recode dri
+        WHERE
+        dri.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND dri.WORKCELL_ID = mmw.WORKCELL_ID
+        )
+        ) rest_qty,
+        ciu.real_name CREATED_BY_NAME,
+        date_format(dr.CREATION_DATE, '%Y-%m-%d %H:%i:%S') CREATION_DATE
+        FROM
+        hme_wo_dispatch_recode dr
+        JOIN mt_work_order wo ON wo.WORK_ORDER_ID = dr.WORK_ORDER_ID
+        JOIN mt_mod_production_line pl ON pl.PROD_LINE_ID = wo.PRODUCTION_LINE_ID
+        JOIN mt_mod_production_line_tl plt ON plt.PROD_LINE_ID = pl.PROD_LINE_ID
+        AND plt.LANG = #{lang}
+        LEFT JOIN mt_work_order_attr wo_text ON wo_text.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND wo_text.ATTR_NAME = 'attribute8'
+        LEFT JOIN mt_work_order_attr wo_re ON wo_re.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND wo_re.ATTR_NAME = 'wo_remark'
+        JOIN mt_material mm ON mm.MATERIAL_ID = wo.MATERIAL_ID
+        JOIN mt_material_tl mmt ON mmt.MATERIAL_ID = mm.MATERIAL_ID
+        AND mmt.LANG = #{lang}
+        JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = dr.WORKCELL_ID
+        JOIN mt_mod_workcell_tl mmwt ON mmwt.WORKCELL_ID = mmw.WORKCELL_ID
+        AND mmwt.LANG = #{lang}
+        LEFT JOIN mt_calendar_shift mcs ON mcs.CALENDAR_SHIFT_ID = dr.CALENDAR_SHIFT_ID
+        JOIN iam_user iu ON iu.id = dr.LAST_UPDATED_BY
+        JOIN iam_user ciu ON ciu.id = dr.CREATED_BY
+        WHERE 1=1
+        and wo.site_id = #{dto.siteId}
+        <if test="dto.prodLineIdList != null and dto.prodLineIdList.size() > 0">
+            and pl.PROD_LINE_ID IN
+            <foreach collection="dto.prodLineIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.workOrderNum!=null">
+            AND wo.work_order_num IN (
+            <foreach collection="dto.workOrderNum" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.materialId!=null">
+            AND mm.MATERIAL_CODE IN (
+            <foreach collection="dto.materialId" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.lineWorkcellIdList != null and dto.lineWorkcellIdList.size() > 0">
+            and mmw.WORKCELL_ID IN
+            <foreach collection="dto.lineWorkcellIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.shiftDate != null and dto.shiftDate != ''">
+            and mcs.shift_date = #{dto.shiftDate}
+        </if>
+        <if test="dto.shiftCode != null and dto.shiftCode != ''">
+            and mcs.shift_code like CONCAT('%',#{dto.shiftCode},'%')
+        </if>
+        <if test="dto.startDate != null and dto.startDate != ''">
+            and dr.LAST_UPDATE_DATE >= #{dto.startDate}
+        </if>
+        <if test="dto.endDate != null and dto.endDate != ''">
+            and dr.LAST_UPDATE_DATE &lt;= #{dto.endDate}
+        </if>
+        <if test="dto.startWocellDate != null and dto.startWocellDate != ''">
+            and mcs.SHIFT_DATE >= #{dto.startWocellDate}
+        </if>
+        <if test="dto.endWocellDate != null and dto.endWocellDate != ''">
+            and mcs.SHIFT_DATE &lt;= #{dto.endWocellDate}
+        </if>
+        <if test="dto.userId != null and dto.userId != ''">
+            and dr.LAST_UPDATED_BY = #{dto.userId}
+        </if>
+        ORDER BY
+        WO.WORK_ORDER_NUM,
+        mmw.WORKCELL_CODE,
+        mcs.SHIFT_DATE,
+        MCS.SEQUENCE
+    </select>
+
+</mapper>

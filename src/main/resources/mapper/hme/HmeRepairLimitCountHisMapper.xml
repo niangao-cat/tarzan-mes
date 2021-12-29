@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeRepairLimitCountHisMapper">
+    <select id="list" resultType="com.ruike.hme.domain.vo.HmeRepairLimitCountHisVO">
+        SELECT
+            rh.repair_limit_count_his_id,
+            rh.repair_limit_count_id,
+            rh.material_id,
+            rh.workcell_id,
+            rh.limit_count,
+            rh.enable_flag,
+            rh.last_updated_by,
+            rh.last_update_date,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            iu.real_name,
+            mma.AREA_ID AS department_id,
+            mma.AREA_CODE AS department_code,
+            mma.AREA_NAME AS department_name
+        FROM
+            hme_repair_limit_count_his rh
+                LEFT JOIN mt_material mm ON mm.MATERIAL_ID = rh.material_id
+                LEFT JOIN hzero_platform.iam_user iu ON iu.id = rh.last_updated_by
+                LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = rh.workcell_id
+                LEFT JOIN mt_mod_organization_rel org1 ON org1.ORGANIZATION_ID = rh.workcell_id
+                AND org1.ORGANIZATION_TYPE = 'WORKCELL'
+                AND org1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+                LEFT JOIN mt_mod_organization_rel org2 ON org2.ORGANIZATION_ID = org1.PARENT_ORGANIZATION_ID
+                AND org2.ORGANIZATION_TYPE = 'WORKCELL'
+                AND org2.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+                LEFT JOIN mt_mod_organization_rel org3 ON org3.ORGANIZATION_ID = org2.PARENT_ORGANIZATION_ID
+                AND org3.ORGANIZATION_TYPE = 'PROD_LINE'
+                AND org3.PARENT_ORGANIZATION_TYPE = 'AREA'
+                LEFT JOIN mt_mod_organization_rel org4 ON org4.ORGANIZATION_ID = org3.PARENT_ORGANIZATION_ID
+                AND org4.ORGANIZATION_TYPE = 'AREA'
+                AND org4.PARENT_ORGANIZATION_TYPE = 'AREA'
+                LEFT JOIN mt_mod_area mma ON mma.AREA_ID = org4.PARENT_ORGANIZATION_ID
+        WHERE rh.tenant_id = #{tenantId}
+          AND rh.repair_limit_count_id = #{repairLimitCountId}
+        ORDER BY rh.last_update_date DESC
+    </select>
+</mapper>

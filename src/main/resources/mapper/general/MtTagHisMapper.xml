@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtTagHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtTagHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_HIS_ID" property="tagHisId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="TAG_CODE" property="tagCode" jdbcType="VARCHAR"/>
+        <result column="TAG_DESCRIPTION" property="tagDescription" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_METHOD" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="VALUE_TYPE" property="valueType" jdbcType="VARCHAR"/>
+        <result column="TRUE_VALUE" property="trueValue" jdbcType="VARCHAR"/>
+        <result column="FALSE_VALUE" property="falseValue" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="VALUE_ALLOW_MISSING" property="valueAllowMissing" jdbcType="VARCHAR"/>
+        <result column="MANDATORY_NUM" property="mandatoryNum" jdbcType="DECIMAL"/>
+        <result column="OPTIONAL_NUM" property="optionalNum" jdbcType="DECIMAL"/>
+        <result column="API_ID" property="apiId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="HistoryResultMap" type="tarzan.general.api.dto.MtTagHisDTO">
+        <result column="TAG_HIS_ID" property="tagHisId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="TAG_CODE" property="tagCode" jdbcType="VARCHAR"/>
+        <result column="TAG_DESCRIPTION" property="tagDescription" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_METHOD" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="VALUE_TYPE" property="valueType" jdbcType="VARCHAR"/>
+        <result column="TRUE_VALUE" property="trueValue" jdbcType="VARCHAR"/>
+        <result column="FALSE_VALUE" property="falseValue" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="VALUE_ALLOW_MISSING" property="valueAllowMissing" jdbcType="VARCHAR"/>
+        <result column="MANDATORY_NUM" property="mandatoryNum" jdbcType="DECIMAL"/>
+        <result column="OPTIONAL_NUM" property="optionalNum" jdbcType="DECIMAL"/>
+        <result column="API_ID" property="apiId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="UOM_CODE" property="uomCode" jdbcType="VARCHAR"/>
+        <result column="API_NAME" property="apiName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryTagHistory" resultMap="HistoryResultMap">
+        SELECT
+        his.TAG_HIS_ID,
+        his.TAG_ID,
+        his.TAG_CODE,
+        his.TAG_DESCRIPTION,
+        his.REMARK,
+        his.ENABLE_FLAG,
+        his.COLLECTION_METHOD,
+        his.VALUE_TYPE,
+        his.TRUE_VALUE,
+        his.FALSE_VALUE,
+        his.MINIMUM_VALUE,
+        his.MAXIMAL_VALUE,
+        his.UNIT,
+        his.VALUE_ALLOW_MISSING,
+        his.MANDATORY_NUM,
+        his.OPTIONAL_NUM,
+        his.API_ID,
+        his.EVENT_ID,
+        e.EVENT_BY,
+        e.EVENT_TIME,
+        mta.API_NAME,
+        mub.UOM_CODE
+        FROM mt_tag_his his
+        join mt_event e on his.EVENT_ID = e.EVENT_ID
+        left join mt_tag_api mta on his.API_ID = mta.API_ID
+        left join mt_uom mub on his.UNIT = mub.UOM_ID
+        WHERE
+        his.TENANT_ID=#{tenantId}
+        and his.TAG_ID = #{his.tagId}
+        <if test="his.startTime != null">
+            and e.EVENT_TIME &gt;= DATE_FORMAT(#{his.startTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="his.endTime != null">
+            and e.EVENT_TIME &lt;= DATE_FORMAT(#{his.endTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        ORDER BY his.CREATION_DATE DESC
+    </select>
+</mapper>

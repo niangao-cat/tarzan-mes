@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsProductionFlowQueryReportMapper">
+
+    <select id="eoWorkcellQuery" resultType="com.ruike.wms.domain.vo.WmsProductionFlowQueryReportVO">
+		SELECT
+			mmpl.PROD_LINE_CODE,
+			wo.WORK_ORDER_NUM,
+			wo.PRODUCTION_VERSION,
+			mm.MATERIAL_CODE,
+			mm.MATERIAL_NAME,
+			he.job_id,
+			me.EO_ID,
+			me.EO_NUM,
+			mml.MATERIAL_LOT_CODE,
+			mrs.DESCRIPTION,
+			mrs.ROUTER_STEP_ID AS parent_workcell_id,
+			mrs.STEP_NAME AS parent_workcell_code,
+			mrs.DESCRIPTION AS parent_workcell_name,
+			he.WORKCELL_ID,
+			cell.WORKCELL_CODE,
+			cell.WORKCELL_NAME,
+			he.site_in_date,
+			he.site_out_date,
+			he.site_in_by AS created_by,
+			he.site_out_by AS operator_id,
+			he.rework_flag AS is_rework_flag,
+			he.job_type,
+			wks.SHIFT_DATE,
+			wks.SHIFT_CODE,
+			(
+				SELECT
+					llc.lab_code
+				FROM
+					hme_material_lot_lab_code llc
+				WHERE
+					llc.tenant_id = 0
+				AND llc.material_lot_id = mml.MATERIAL_LOT_id
+				AND llc.router_step_id = he.eo_step_id
+				LIMIT 1
+			) try_code,
+			MMW_P.WORKCELL_NAME workpro_name,
+			MMW_U.WORKCELL_NAME workshop_name,
+			(
+				SELECT
+					GROUP_CONCAT(heq.ASSET_ENCODING)
+				FROM
+					hme_eo_job_equipment eje,
+					hme_equipment heq
+				WHERE
+					eje.job_id = he.job_id
+				AND heq.equipment_id = eje.equipment_id
+			) ASSET_ENCODING,
+			(
+				SELECT
+					GROUP_CONCAT(heq.ASSET_NAME)
+				FROM
+					hme_eo_job_equipment eje,
+					hme_equipment heq
+				WHERE
+					eje.job_id = he.job_id
+				AND heq.equipment_id = eje.equipment_id
+			) ASSET_NAME
+		FROM
+			mt_material_lot mml
+		LEFT JOIN mt_eo me ON mml.EO_ID = me.EO_ID
+		LEFT JOIN mt_material mm ON me.MATERIAL_ID = mm.MATERIAL_ID
+		LEFT JOIN hme_eo_job_sn he ON me.EO_ID = he.eo_id
+		LEFT JOIN mt_router_step mrs ON he.eo_step_id = mrs.ROUTER_STEP_ID
+		LEFT JOIN mt_mod_workcell cell ON he.WORKCELL_ID = cell.WORKCELL_ID
+		LEFT JOIN mt_work_order wo ON me.WORK_ORDER_ID = wo.WORK_ORDER_ID
+		LEFT JOIN mt_mod_production_line mmpl ON wo.PRODUCTION_LINE_ID = mmpl.PROD_LINE_ID
+		LEFT JOIN mt_wkc_shift wks ON he.shift_id = wks.WKC_SHIFT_ID
+		LEFT JOIN mt_mod_organization_rel mor4 ON cell.workcell_id = mor4.ORGANIZATION_ID
+		AND mor4.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor4.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor4.top_site_id = mml.SITE_ID
+		LEFT JOIN mt_mod_workcell MMW_P ON MMW_P.WORKCELL_ID = mor4.PARENT_ORGANIZATION_ID
+		LEFT JOIN mt_mod_organization_rel mor5 ON mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+		AND mor5.ORGANIZATION_TYPE = 'WORKCELL'
+		AND MOR5.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor5.top_site_id = mml.SITE_ID
+		LEFT JOIN mt_mod_workcell MMW_U ON MMW_U.WORKCELL_ID = mor5.PARENT_ORGANIZATION_ID
+		WHERE
+			mml.TENANT_ID = #{tenantId}
+		<if test="dto.prodLineId!=null">
+			AND wo.PRODUCTION_LINE_ID = #{dto.prodLineId}
+		</if>
+		<if test="dto.workcellList != null and dto.workcellList.size() > 0">
+			AND MMW_U.WORKCELL_CODE IN
+			<foreach collection="dto.workcellList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.workshopList != null and dto.workshopList.size() > 0">
+			AND MMW_P.WORKCELL_CODE IN
+			<foreach collection="dto.workshopList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.workproList != null and dto.workproList.size() > 0">
+			AND cell.WORKCELL_CODE IN
+			<foreach collection="dto.workproList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.department != null and dto.department != ''">
+			AND EXISTS(
+			select
+			heq.ASSET_ENCODING,heq.ASSET_NAME
+			from
+			hme_eo_job_equipment eje,
+			hme_equipment heq
+			where
+			eje.job_id = he.job_id
+			and heq.equipment_id = eje.equipment_id
+			and heq.ASSET_ENCODING LIKE CONCAT("%",#{dto.department},"%")
+			)
+		</if>
+		<if test="dto.workOrderList != null and dto.workOrderList.size() > 0">
+			AND wo.WORK_ORDER_NUM IN
+			<foreach collection="dto.workOrderList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productionList != null and dto.productionList.size() > 0">
+			AND mm.MATERIAL_CODE IN
+			<foreach collection="dto.productionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.prodSerialList != null and dto.prodSerialList.size() > 0">
+			AND mml.MATERIAL_LOT_CODE IN
+			<foreach collection="dto.prodSerialList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.identification != null and dto.identification != ''">
+			AND EXISTS(
+			SELECT
+			llc.lab_code
+			FROM
+			hme_material_lot_lab_code llc
+			WHERE
+			llc.tenant_id = 0
+			AND llc.material_lot_id = mml.MATERIAL_LOT_id
+			AND llc.router_step_id = he.eo_step_id
+			and llc.lab_code LIKE CONCAT("%",#{dto.identification},"%")
+			)
+		</if>
+		<if test="dto.badFlag != null and dto.badFlag == 'Y'.toString()">
+			AND EXISTS(
+			select 'A'
+			from mt_nc_record mnr
+			where mnr.TENANT_ID = #{tenantId}
+			and mnr.WORKCELL_ID = he.WORKCELL_ID
+			and mnr.EO_ID = me.EO_ID
+			and (mnr.PARENT_NC_RECORD_ID IS NULL or mnr.PARENT_NC_RECORD_ID = '')
+			)
+		</if>
+		<if test="dto.badFlag != null and dto.badFlag == 'N'.toString()">
+			AND NOT EXISTS(
+			select 'A'
+			from mt_nc_record mnr
+			where mnr.TENANT_ID = #{tenantId}
+			and mnr.WORKCELL_ID = he.WORKCELL_ID
+			and mnr.EO_ID = me.EO_ID
+			and (mnr.PARENT_NC_RECORD_ID IS NULL or mnr.PARENT_NC_RECORD_ID = '')
+			)
+		</if>
+		<if test="dto.reFlag!=null">
+			AND he.rework_flag = #{dto.reFlag}
+		</if>
+		<if test="dto.shiftDate != null">
+			and STR_TO_DATE(wks.SHIFT_DATE,'%Y-%m-%d') = STR_TO_DATE(#{dto.shiftDate},'%Y-%m-%d')
+		</if>
+		<if test="dto.shiftCode!=null">
+			AND wks.SHIFT_CODE like CONCAT('%',#{dto.shiftCode},'%')
+		</if>
+		<if test="dto.userInId!=null">
+			AND he.site_in_by = #{dto.userInId}
+		</if>
+		<if test="dto.userOutId!=null">
+			AND he.site_out_by = #{dto.userOutId}
+		</if>
+		<if test="dto.workType!=null">
+			AND he.job_type = #{dto.workType}
+		</if>
+		<if test="dto.workStartFrom != null">
+			and STR_TO_DATE(he.site_in_date,'%Y-%m-%d') &gt;= STR_TO_DATE(#{dto.workStartFrom},'%Y-%m-%d')
+		</if>
+		<if test="dto.workStartTo != null">
+			and STR_TO_DATE(he.site_in_date,'%Y-%m-%d') &lt;= STR_TO_DATE(#{dto.workStartTo},'%Y-%m-%d')
+		</if>
+		<if test="dto.workEndFrom != null">
+			and STR_TO_DATE(he.site_out_date,'%Y-%m-%d') &gt;= STR_TO_DATE(#{dto.workEndFrom},'%Y-%m-%d')
+		</if>
+		<if test="dto.workEndTo != null">
+			and STR_TO_DATE(he.site_out_date,'%Y-%m-%d') &lt;= STR_TO_DATE(#{dto.workEndTo},'%Y-%m-%d')
+		</if>
+		AND me.EO_ID is not null
+		ORDER BY
+			he.creation_date
+    </select>
+
+    <select id="ncInfoFlagQuery" resultType="java.lang.Long">
+		select count(*)
+		from mt_nc_record mnr
+		where mnr.TENANT_ID = #{tenantId}
+		and mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+		and mnr.EO_ID = #{eoId}
+		and (mnr.PARENT_NC_RECORD_ID IS NULL or mnr.PARENT_NC_RECORD_ID = '')
+	</select>
+
+</mapper>

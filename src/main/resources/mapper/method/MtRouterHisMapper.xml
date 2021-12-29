@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_HIS_ID" property="routerHisId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_TYPE" property="routerType" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STATUS" property="routerStatus" jdbcType="VARCHAR"/>
+        <result column="ORIGINAL_STATUS" property="originalStatus" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="TEMPORARY_ROUTER_FLAG" property="temporaryRouterFlag" jdbcType="VARCHAR"/>
+        <result column="RELAXED_FLOW_FLAG" property="relaxedFlowFlag" jdbcType="VARCHAR"/>
+        <result column="HAS_BEEN_RELEASED_FLAG" property="hasBeenReleasedFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_ROUTER_ID" property="copiedFromRouterId" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_ID" property="dispositionGroupId" jdbcType="VARCHAR"/>
+        <result column="HOLD_ID" property="holdId" jdbcType="VARCHAR"/>
+        <result column="AUTO_REVISION_FLAG" property="autoRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

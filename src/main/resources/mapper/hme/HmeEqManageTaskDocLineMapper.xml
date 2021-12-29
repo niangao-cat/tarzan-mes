@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEqManageTaskDocLineMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEqManageTaskDocLine">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="task_doc_line_id" property="taskDocLineId" jdbcType="VARCHAR"/>
+        <result column="task_doc_id" property="taskDocId" jdbcType="VARCHAR"/>
+        <result column="manage_tag_id" property="manageTagId" jdbcType="VARCHAR"/>
+        <result column="check_value" property="checkValue" jdbcType="VARCHAR"/>
+        <result column="result" property="result" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryTaskDocLineList" resultType="com.ruike.hme.api.dto.HmeEqTaskDocLineQueryDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        td.doc_num,
+        he.ASSET_ENCODING,
+        tdl.task_doc_id,
+        tdl.task_doc_line_id,
+        tdl.manage_tag_id,
+        tag.serial_number,
+        tag.tag_code,
+        tag.tag_descriptions AS tag_desc,
+        tag.value_type,
+        tag.accuracy,
+        tag.minimum_value,
+        tag.standard_value,
+        tag.maximal_value,
+        tag.uom_id,
+        uom.uom_code,
+        uom_tl.uom_name,
+        tdl.check_value,
+        tdl.result,
+        tag.tool,
+        tag.responsible,
+        tdl.check_date,
+        tdl.check_by,
+        tdl.wkc_id,
+        mmw.WORKCELL_CODE wkc_code,
+        mmw.WORKCELL_NAME wkc_name,
+        tdl.remark
+        FROM
+        hme_eq_manage_task_doc_line tdl
+        JOIN hme_eq_manage_tag tag ON tag.manage_tag_id = tdl.manage_tag_id
+        LEFT JOIN mt_uom uom ON tag.uom_id = uom.uom_id
+        LEFT JOIN mt_uom_tl uom_tl ON uom.uom_id = uom_tl.uom_id AND uom_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = tdl.wkc_id
+        LEFT JOIN hme_eq_manage_task_doc td ON td.task_doc_id = tdl.task_doc_id
+        LEFT JOIN hme_equipment he ON he.equipment_id = td.equipment_id
+        WHERE
+        tdl.tenant_id = #{tenantId}
+        <if test="taskDocId != null and taskDocId != ''">
+            and tdl.task_doc_id = #{taskDocId}
+        </if>
+        ORDER BY tag.serial_number
+    </select>
+
+    <select id="taskHistoryListQuery" resultType="com.ruike.hme.domain.vo.HmeEqTaskHisVO">
+        SELECT
+            td.doc_num,
+            mt.TAG_CODE,
+            mt.TAG_DESCRIPTION,
+            mt.VALUE_TYPE,
+            mt.MINIMUM_VALUE,
+            mt.MAXIMAL_VALUE,
+            mt.UNIT,
+            mu.UOM_NAME,
+            attr.ATTR_VALUE,
+            tlh.task_doc_his_id,
+            tlh.check_value,
+            tlh.result,
+            tlh.check_by,
+            tlh.check_date,
+            tlh.wkc_id,
+            tlh.last_update_date,
+            tlh.last_updated_by,
+            tlh.event_id,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME,
+            attr2.ATTR_VALUE standard
+        FROM
+        hme_eq_manage_task_doc_line_his tlh
+        LEFT JOIN	mt_mod_workcell mmw ON mmw.WORKCELL_ID = tlh.wkc_id AND mmw.TENANT_ID = tlh.TENANT_ID
+        LEFT JOIN mt_tag mt ON mt.TAG_ID = tlh.manage_tag_id
+        LEFT JOIN mt_tag_attr attr ON attr.tag_id = mt.tag_id
+        AND attr.ATTR_NAME = 'ACCURACY'
+        LEFT JOIN mt_tag_attr attr2 ON attr2.tag_id = mt.tag_id
+        AND attr2.ATTR_NAME = 'STANDARD'
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = mt.UNIT,
+        hme_eq_manage_task_doc td
+        WHERE
+            tlh.TENANT_ID = #{tenantId}
+        AND tlh.tenant_id = td.tenant_id
+        AND td.task_doc_id = tlh.task_doc_id
+        AND tlh.task_doc_line_id = #{taskDocLineId}
+        ORDER BY tlh.creation_date DESC
+    </select>
+
+    <select id="queryTaskDocLineListBatchGet" resultType="com.ruike.hme.api.dto.HmeEqTaskDocLineQueryDTO">
+        SELECT
+        td.doc_num,
+        he.ASSET_ENCODING,
+        tdl.task_doc_id,
+        tdl.task_doc_line_id,
+        tdl.manage_tag_id,
+        tag.serial_number,
+        tag.tag_code,
+        tag.tag_descriptions AS tag_desc,
+        tag.value_type,
+        tag.accuracy,
+        tag.minimum_value,
+        tag.standard_value,
+        tag.maximal_value,
+        tag.uom_id,
+        uom.uom_code,
+        uom_tl.uom_name,
+        tdl.check_value,
+        tdl.result,
+        tag.tool,
+        tag.responsible,
+        tdl.check_date,
+        tdl.check_by,
+        tdl.wkc_id,
+        mmw.WORKCELL_CODE wkc_code,
+        mmw.WORKCELL_NAME wkc_name,
+        tdl.remark
+        FROM
+        hme_eq_manage_task_doc_line tdl
+        JOIN hme_eq_manage_tag tag ON tag.manage_tag_id = tdl.manage_tag_id
+        LEFT JOIN mt_uom uom ON tag.uom_id = uom.uom_id
+        LEFT JOIN mt_uom_tl uom_tl ON uom.uom_id = uom_tl.uom_id AND uom_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = tdl.wkc_id
+        LEFT JOIN hme_eq_manage_task_doc td ON td.task_doc_id = tdl.task_doc_id
+        LEFT JOIN hme_equipment he ON he.equipment_id = td.equipment_id
+        WHERE
+        tdl.tenant_id = #{tenantId}
+        and tdl.task_doc_id in
+        <foreach collection="taskDocIds" item="item" index="index" open="(" close=")" separator="," >
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

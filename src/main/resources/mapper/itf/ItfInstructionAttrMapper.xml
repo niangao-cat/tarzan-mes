@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfInstructionAttrMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfInstructionAttr">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ATTR_ID" property="attrId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="attrValue" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+    <delete id="deleteByDocId">
+        DELETE
+        FROM
+            mt_instruction_attr
+        WHERE
+            INSTRUCTION_ID IN
+            (
+                SELECT INSTRUCTION_ID FROM mt_instruction WHERE SOURCE_INSTRUCTION_ID IN
+                (
+                    SELECT INSTRUCTION_ID FROM mt_instruction WHERE SOURCE_DOC_ID = ${instructionDocId}
+                )
+            )
+    </delete>
+
+    <delete id="deleteByIds">
+         DELETE
+        FROM
+            mt_instruction_attr
+        WHERE
+        attr_id in
+        <foreach collection="attrIds" index="index" item="attrId" open="(" close=")" separator=",">
+            #{attrId}
+        </foreach>
+    </delete>
+
+    <select id="selectByDocId" resultType="java.lang.String">
+        SELECT
+         attr_id
+        FROM
+            mt_instruction_attr
+        WHERE
+            INSTRUCTION_ID IN
+            (
+                SELECT INSTRUCTION_ID FROM mt_instruction WHERE SOURCE_INSTRUCTION_ID =${instructionId}
+            )
+    </select>
+</mapper>

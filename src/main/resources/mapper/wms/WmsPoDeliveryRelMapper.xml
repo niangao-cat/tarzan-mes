@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsPoDeliveryRelMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsPoDeliveryRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="po_delivery_rel_id" property="poDeliveryRelId" jdbcType="VARCHAR"/>
+        <result column="delivery_doc_id" property="deliveryDocId" jdbcType="VARCHAR"/>
+        <result column="delivery_doc_line_id" property="deliveryDocLineId" jdbcType="VARCHAR"/>
+        <result column="po_id" property="poId" jdbcType="VARCHAR"/>
+        <result column="po_line_id" property="poLineId" jdbcType="VARCHAR"/>
+        <result column="bom_type" property="bomType" jdbcType="VARCHAR"/>
+        <result column="quantity" property="quantity" jdbcType="DECIMAL"/>
+        <result column="received_qty" property="receivedQty" jdbcType="DECIMAL"/>
+        <result column="po_stock_in_qty" property="poStockInQty" jdbcType="DECIMAL"/>
+
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="selectPoDeliveryByCondition" resultType="com.ruike.wms.domain.vo.WmsPoDeliveryVO2"
+            parameterType="com.ruike.wms.domain.vo.WmsPoDeliveryVO">
+        SELECT mid.INSTRUCTION_DOC_ID,
+        mid.INSTRUCTION_DOC_NUM,
+        mid.INSTRUCTION_DOC_STATUS,
+        mid.SUPPLIER_ID,
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        mid.DEMAND_TIME,
+        mid.REMARK,
+        mi.material_id,
+        mm.material_code,
+        mm.MATERIAL_NAME,
+        mi.material_version,
+        mi.QUANTITY,
+        mu.uom_code,
+        mi.INSTRUCTION_STATUS,
+        mi.EXCHANGE_QTY,
+        pol.INSTRUCTION_NUM 'po_line_num',
+        mi.UAI_FLAG
+        FROM
+        mt_uom mu,
+        mt_material mm,
+        mt_supplier ms,
+        mt_instruction pol,
+        mt_instruction_doc poh,
+        mt_po_delivery_rel pdr,
+        mt_instruction_doc mid,
+        mt_instruction mi
+        where mid.TENANT_ID = #{tenant_id}
+        and pol.SOURCE_DOC_ID = poh.INSTRUCTION_DOC_ID
+        and pol.INSTRUCTION_ID = pdr.po_line_id
+        and pdr.po_line_id = mi.INSTRUCTION_ID
+        and mu.uom_id = mi.uom_id
+        and mid.INSTRUCTION_DOC_ID = mi.SOURCE_DOC_ID
+        and mid.SUPPLIER_ID = ms.SUPPLIER_ID
+        and mid.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+        <if test="instructionNum != null and instructionNum != ''">
+            and mid.INSTRUCTION_DOC_NUM like CONCAT(CONCAT('%',#{instructionNum}),'%')
+        </if>
+        <if test="instructionStatus != null and instructionStatus != ''">
+            and mid.INSTRUCTION_DOC_STATUS = #{instructionStatus}
+        </if>
+        <if test="supplierId != null and supplierId != ''">
+            and mid.SUPPLIER_ID = #{supplierId}
+        </if>
+        <if test="materialId != null and materialId != ''">
+            and mi.MATERIAL_ID = #{materialId}
+        </if>
+        <if test="poNum != null and poNum != ''">
+            and poh.INSTRUCTION_DOC_NUM like CONCAT(CONCAT('%',#{poNum}),'%')
+        </if>
+        <if test="demandTimeFrom != null and demandTimeFrom != ''">
+            and mid.DEMAND_TIME <![CDATA[ >= ]]> STR_TO_DATE(#{demandTimeFrom},'%Y-%m-%d %H:%i:%s')
+        </if>
+        <if test="demandTimeTo != null and demandTimeTo != ''">
+            and mid.DEMAND_TIME <![CDATA[ <= ]]> STR_TO_DATE(#{demandTimeTo},'%Y-%m-%d %H:%i:%s')
+        </if>
+    </select>
+
+    <select id="selectPoNumbers" resultType="java.lang.String">
+        SELECT
+        CASE
+        WHEN mia1.ATTR_VALUE IS NULL THEN
+            CONCAT(
+            mid.INSTRUCTION_DOC_NUM,
+            '#',
+            mia.ATTR_VALUE
+            )
+        ELSE
+            CONCAT(
+            mid.INSTRUCTION_DOC_NUM,
+            '#',
+            mia.ATTR_VALUE,
+            '#',
+            mia1.ATTR_VALUE
+            )
+        END
+        FROM
+        wms_po_delivery_rel rel
+        LEFT JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = rel.po_id
+        LEFT JOIN mt_instruction mi ON mi.INSTRUCTION_ID = rel.po_line_id
+        LEFT JOIN mt_instruction_attr mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        AND mia.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr mia1 ON mia1.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        AND mia1.ATTR_NAME = 'SAMPLE_FLAG'
+        WHERE
+        rel.delivery_doc_id = #{dto.deliveryDocId}
+        AND rel.delivery_doc_line_id = #{dto.deliveryDocLineId}
+        AND rel.tenant_id = #{tenantId}
+        <if test="dto.typeList != null and dto.typeList.size() != 0">
+            AND mid.INSTRUCTION_DOC_TYPE IN
+            <foreach collection="dto.typeList" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectPoQuantity" resultType="java.lang.Double">
+        SELECT
+        sum( wpdl.quantity )
+        FROM
+        wms_po_delivery_rel wpdl
+        JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = wpdl.delivery_doc_id
+        AND mid.INSTRUCTION_DOC_STATUS in ('RELEASED','RECEIVE_EXECUTE')
+        WHERE
+        wpdl.po_line_id = #{poLineId}
+        <if test="poId !=null and poId != ''">
+            and wpdl.po_id = #{poId}
+        </if>
+
+    </select>
+
+
+    <select id="selectLot" resultType="java.lang.String">
+        SELECT wdlr.LOT
+        FROM wms_doc_lot_rel wdlr
+        WHERE wdlr.DOC_ID = #{dto.docId}
+          AND wdlr.DOC_TYPE = 'DELIVERY_DOC'
+          AND wdlr.TENANT_ID = #{tenantId}
+          AND wdlr.creation_date &gt;= #{dto.nowDateFrom}
+          AND wdlr.creation_date &lt;= #{dto.nowDateTo}
+        LIMIT 1
+    </select>
+
+    <select id="selectPoQuantityOfReleaseReceive" resultType="java.lang.Double">
+        SELECT
+        sum( IFNULL( wpdl.quantity, 0 ) )
+        FROM
+        wms_po_delivery_rel wpdl
+        JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = wpdl.delivery_doc_id
+        AND mid.INSTRUCTION_DOC_STATUS in ('RELEASED','RECEIVE_EXECUTE','RECEIVE_COMPLETE')
+        WHERE
+        wpdl.po_line_id = #{poLineId}
+        <if test="poId !=null and poId != ''">
+            and wpdl.po_id = #{poId}
+        </if>
+    </select>
+
+    <select id="selectPoQuantityOfStockInComplete" resultType="java.lang.Double">
+        SELECT
+        IFNULL(sum(wpdl.po_stock_in_qty),0)
+        FROM
+        wms_po_delivery_rel wpdl
+        JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = wpdl.delivery_doc_id
+        AND mid.INSTRUCTION_DOC_STATUS in ('STOCK_IN_COMPLETE')
+        WHERE
+        wpdl.po_line_id = #{poLineId}
+        <if test="poId !=null and poId != ''">
+            and wpdl.po_id = #{poId}
+        </if>
+    </select>
+
+    <select id="selectPoQuantityOfReceiveComplete" resultType="java.lang.Double">
+        SELECT
+        IFNULL(sum(wpdl.quantity),0)
+        FROM
+        wms_po_delivery_rel wpdl
+        JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = wpdl.delivery_doc_id
+        AND mid.INSTRUCTION_DOC_STATUS in ('RELEASED', 'RECEIVE_EXECUTE')
+        WHERE
+            mid.INSTRUCTION_DOC_TYPE IN
+            <foreach collection="typeList" index="index" open="(" close=")" separator="," item="item">
+                #{item}
+            </foreach>
+        AND wpdl.po_line_id = #{poLineId}
+        <if test="poId !=null and poId != ''">
+            and wpdl.po_id = #{poId}
+        </if>
+    </select>
+
+    <select id="selectPoQuantityOfComplete" resultType="java.lang.Double">
+        SELECT
+        IFNULL(sum(wpdl.received_qty),0)
+        FROM
+        wms_po_delivery_rel wpdl
+        JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = wpdl.delivery_doc_id
+        AND mid.INSTRUCTION_DOC_STATUS  = 'RECEIVE_COMPLETE'
+        WHERE
+        wpdl.po_line_id = #{poLineId}
+        <if test="poId !=null and poId != ''">
+            and wpdl.po_id = #{poId}
+        </if>
+    </select>
+
+    <select id="queryReceiveQty" resultMap="BaseResultMap">
+        select pdr.delivery_doc_id,
+        pdr.delivery_doc_line_id,
+        pdr.po_delivery_rel_id,
+        pdr.quantity,
+        case
+        when pdr.received_qty is null
+        then 0
+        else pdr.received_qty
+        end received_qty,
+        pdr.po_id,
+        pdr.po_line_id
+        from wms_po_delivery_rel pdr,
+        mt_instruction_doc mid,
+        mt_instruction mi
+        left join mt_instruction_attr mia on mi.instruction_id = mia.instruction_id
+        and mia.attr_name = 'INSTRUCTION_LINE_NUM'
+        where pdr.po_id = mid.instruction_doc_id
+        and pdr.po_line_id = mi.instruction_id
+        and pdr.tenant_id = #{tenantId}
+        and pdr.delivery_doc_id = #{deliveryDocId}
+        and pdr.delivery_doc_line_id in
+        <foreach collection="deliveryDocLineIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        order by pdr.delivery_doc_id,
+        pdr.delivery_doc_line_id,
+        mid.creation_date,
+        (mia.attr_value+0) asc
+    </select>
+
+    <select id="queryActualQty" resultType="tarzan.actual.domain.entity.MtInstructionActual">
+        select ia.instruction_id,
+        sum(ia.actual_qty) actual_qty
+        from mt_instruction_actual ia
+        where ia.instruction_type = #{instructionType}
+        and ia.tenant_id = #{tenantId}
+        and ia.instruction_id in
+        <foreach collection="instructionIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        group by ia.instruction_id
+    </select>
+
+    <update id="batchUpdateReceivedQty">
+        update wms_po_delivery_rel
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            received_qty =
+            <foreach collection="updateList" item="item" index="index"
+                     separator=" " open="case po_delivery_rel_id" close="end">
+                when #{item.poDeliveryRelId} then #{item.receivedQty}
+            </foreach>
+        </set>
+        <where>
+            po_delivery_rel_id in
+            <foreach collection="updateList" item="item"
+                     separator="," open="(" close=")">
+                #{item.poDeliveryRelId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="detailQuery" resultType="com.ruike.wms.domain.vo.WmsDeliveryDocVO">
+        select miad.ACTUAL_DETAIL_ID,
+               miad.MATERIAL_LOT_ID,
+               mml.MATERIAL_LOT_CODE,
+               miad.ACTUAL_QTY,
+               miad.CREATION_DATE,
+               miad.CREATED_BY,
+               mmla.ATTR_VALUE as status
+        from mt_instruction_actual mia
+                 left join mt_instruction_actual_detail miad
+                           on miad.ACTUAL_ID = mia.ACTUAL_ID
+                               and miad.TENANT_ID = mia.TENANT_ID
+                 left join mt_material_lot mml
+                           on mml.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+                 left join mt_material_lot_attr mmla
+                           on mmla.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+                               and mmla.ATTR_NAME = 'STATUS'
+        where mia.TENANT_ID = #{tenantId}
+          and mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+          and mia.INSTRUCTION_ID = #{instructionId}
+          and miad.ACTUAL_DETAIL_ID is not null
+    </select>
+
+    <select id="propertyLimitSumOnhandQtyGet" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(ONHAND_QUANTITY), 0) AS qty
+        FROM mt_inv_onhand_quantity
+        WHERE TENANT_ID = #{tenantId}
+          AND MATERIAL_ID = #{materialId}
+          AND OWNER_ID = #{supplierId}
+          AND LOCATOR_ID = #{locatorId}
+          AND LOT_CODE = #{lotCode}
+    </select>
+
+    <select id="queryModeQty" resultType="java.math.BigDecimal">
+        SELECT
+        IFNULL(SUM(ATTR_VALUE),0) AS qty
+        FROM
+        mt_instruction_attr
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND ATTR_NAME = "EXCHANGE_QTY"
+        AND INSTRUCTION_ID IN
+        <foreach collection="instructionIdList" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryExchangedQty" resultType="java.math.BigDecimal">
+        SELECT
+        IFNULL(SUM(ATTR_VALUE),0) AS qty
+        FROM
+        mt_instruction_actual_attr
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND ATTR_NAME = "EXCHANGED_QTY"
+        AND ACTUAL_ID IN
+        <foreach collection="actualIdList" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="propertyInstructionListQuery" resultType="java.lang.String">
+        SELECT
+        mi.INSTRUCTION_ID
+        FROM
+        mt_instruction mi
+        LEFT JOIN mt_instruction_attr ia ON ia.INSTRUCTION_ID = mi.INSTRUCTION_ID AND ia.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE mi.TENANT_ID = #{tenantId}
+        AND mi.SOURCE_DOC_ID IN
+        <foreach collection="docIdList" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND mi.MATERIAL_ID = #{materialId}
+        <choose>
+            <when test='materialVersion !="" and materialVersion != null'>
+                AND ia.ATTR_VALUE = #{materialVersion}
+            </when>
+            <otherwise>
+                AND (ia.ATTR_VALUE is NULL OR ia.ATTR_VALUE = '')
+            </otherwise>
+        </choose>
+        AND mi.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        AND mi.INSTRUCTION_STATUS <![CDATA[<>]]> 'COMPLETED'
+        AND mi.INSTRUCTION_STATUS <![CDATA[<>]]> 'CANCEL'
+    </select>
+
+    <select id="propertyActualListQuery" resultType="java.lang.String">
+        SELECT
+        mia.ACTUAL_ID
+        FROM
+        mt_instruction_actual mia
+        LEFT JOIN (
+        SELECT mid.INSTRUCTION_DOC_ID ,mir.INSTRUCTION_ID,mir.MATERIAL_ID FROM mt_instruction_doc mid LEFT JOIN
+        mt_instruction mir ON mir.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND mir.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER' AND mir.INSTRUCTION_STATUS = 'COMPLETED'
+        LEFT JOIN mt_instruction mit ON mit.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID AND mit.INSTRUCTION_TYPE =
+        'TRANSFER_OVER_LOCATOR' AND mit.INSTRUCTION_STATUS != 'COMPLETED'
+        WHERE mir.INSTRUCTION_ID IS NOT NULL AND mit.INSTRUCTION_ID IS NOT NULL
+        AND mir.MATERIAL_ID = mit.MATERIAL_ID
+        ) mi ON mi.INSTRUCTION_ID = mia.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_attr ia ON ia.INSTRUCTION_ID = mi.INSTRUCTION_ID AND ia.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE mia.TENANT_ID = #{tenantId}
+        AND mi.INSTRUCTION_DOC_ID IN
+        <foreach collection="docIdList" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND mi.MATERIAL_ID = #{materialId}
+        <choose>
+            <when test='materialVersion !="" and materialVersion != null'>
+                AND ia.ATTR_VALUE = #{materialVersion}
+            </when>
+            <otherwise>
+                AND (ia.ATTR_VALUE is NULL OR ia.ATTR_VALUE = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectDocInfoByNum" resultType="com.ruike.wms.api.dto.WmsPoDeliveryScanReturnDTO">
+        select doc.*
+             , ms.SUPPLIER_CODE
+             , ms.SUPPLIER_NAME
+             , mcs.DESCRIPTION CUSTOMER_SITE_DESCRIPTION
+             , doca.ATTR_VALUE urgent_flag
+             , (SELECT wdlr.LOT
+                FROM wms_doc_lot_rel wdlr
+                WHERE wdlr.DOC_ID = doc.INSTRUCTION_DOC_ID
+                  AND wdlr.DOC_TYPE = 'DELIVERY_DOC'
+                  AND wdlr.TENANT_ID = #{tenantId}
+                  AND wdlr.creation_date between DATE_FORMAT(CURDATE(), '%Y-%m-%d %H:%i:%s') and DATE_SUB(DATE_ADD(CURDATE(), INTERVAL 1 DAY), INTERVAL 1 SECOND)
+                LIMIT 1)       number
+        from mt_instruction_doc doc
+                 left join mt_instruction_doc_attr doca
+                           on doca.INSTRUCTION_DOC_ID = doc.INSTRUCTION_DOC_ID and doca.attr_name = 'URGENT_FLAG'
+                 left join mt_supplier ms on doc.SUPPLIER_ID = ms.SUPPLIER_ID
+                 left join mt_customer_site mcs on doc.CUSTOMER_SITE_ID = mcs.CUSTOMER_SITE_ID
+        where doc.TENANT_ID = #{tenantId}
+          and doc.INSTRUCTION_DOC_NUM = #{instructionDocNum}
+    </select>
+
+    <select id="selectLineByDocId" resultType="com.ruike.wms.api.dto.WmsPoDeliveryScanLineReturnDTO">
+        select ins.*
+             , mm.MATERIAL_CODE
+             , mm.MATERIAL_NAME
+             , uom.UOM_CODE
+             , loc.LOCATOR_CODE                                           to_LOCATOR_CODE
+             , loc.LOCATOR_NAME                                           to_LOCATOR_NAME
+             , ifnull(mia_exq.ATTR_VALUE + 0, 0)                          EXCHANGE_QTY
+             , ifnull((select miaa.ATTR_VALUE
+                       from mt_instruction_actual mia
+                          , mt_instruction_actual_attr miaa
+                       where mia.ACTUAL_ID = miaa.ACTUAL_ID
+                         and miaa.ATTR_NAME = 'EXCHANGED_QTY'
+                         and mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+                         and mia.BUSINESS_TYPE = 'PO_RECEIVING'
+                         and mia.INSTRUCTION_ID = ins.INSTRUCTION_ID
+                       limit 1), 0)                                       EXCHANGED_QTY
+             , mia_uai.ATTR_VALUE                                         UAI_FLAG
+             , mia_exf.ATTR_VALUE                                         EXCHANGE_FLAG
+             , mia_ver.ATTR_VALUE                                         MATERIAL_VERSION
+             , ifnull((select count(miad.MATERIAL_LOT_ID)
+                       from mt_instruction_actual mia
+                          , mt_instruction_actual_detail miad
+                       where mia.ACTUAL_ID = miad.ACTUAL_ID
+                         and mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+                         and mia.BUSINESS_TYPE = 'PO_RECEIVING'
+                         and mia.INSTRUCTION_ID = ins.INSTRUCTION_ID), 0) code_qty
+             , ins.INSTRUCTION_STATUS                                     INSTRUCTION_STATUS1
+             , ifnull((select ACTUAL_QTY
+                       from mt_instruction_actual mia
+                       where mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+                         and mia.BUSINESS_TYPE = 'PO_RECEIVING'
+                         and mia.INSTRUCTION_ID = ins.INSTRUCTION_ID
+                       limit 1), 0)                                       ACTUAL_QTY
+             , case
+                   when exists(select 1
+                               from mt_instruction_doc doc
+                                  , qms_material_insp_exempt qmie
+                               where doc.SUPPLIER_ID = qmie.SUPPLIER_ID
+                                 and doc.SITE_ID = qmie.SITE_ID
+                                 and ins.MATERIAL_ID = qmie.MATERIAL_ID
+                                 and qmie.TYPE = 'PO_RECEIVING'
+                                 and qmie.ENABLE_FLAG = 'Y'
+                                 and doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID) then 'Y'
+                   else 'N' end                                           exemption_flag
+        from mt_instruction ins
+                 left join mt_mod_locator loc on loc.LOCATOR_ID = ins.TO_LOCATOR_ID
+                 left join mt_instruction_attr mia_exq
+                           on ins.INSTRUCTION_ID = mia_exq.INSTRUCTION_ID and mia_exq.ATTR_NAME = 'EXCHANGE_QTY'
+                 left join mt_instruction_attr mia_uai
+                           on ins.INSTRUCTION_ID = mia_uai.INSTRUCTION_ID and mia_uai.ATTR_NAME = 'UAI_FLAG'
+                 left join mt_instruction_attr mia_exf
+                           on ins.INSTRUCTION_ID = mia_exf.INSTRUCTION_ID and mia_exf.ATTR_NAME = 'EXCHANGE_FLAG'
+                 left join mt_instruction_attr mia_ver
+                           on ins.INSTRUCTION_ID = mia_ver.INSTRUCTION_ID and mia_ver.ATTR_NAME = 'MATERIAL_VERSION'
+           , mt_material mm
+           , mt_uom uom
+        where ins.MATERIAL_ID = mm.MATERIAL_ID
+          and ins.UOM_ID = uom.UOM_ID
+          and ins.instruction_type = 'RECEIVE_FROM_SUPPLIER'
+          and ins.SOURCE_DOC_ID = #{instructionDocId}
+          and ins.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="getFreeCheckFlag" resultType="java.lang.String">
+        SELECT
+	        attr.ATTR_VALUE
+        FROM
+	        mt_material_site ms,
+	        mt_material_site_attr attr
+        WHERE
+	        ms.TENANT_ID = #{tenantId}
+        AND ms.MATERIAL_SITE_ID = attr.MATERIAL_SITE_ID
+        AND attr.ATTR_NAME = 'attribute19'
+        AND ms.SITE_ID = #{siteId}
+        AND ms.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="selectLineByBarcodeAndDocNum" resultType="com.ruike.wms.domain.vo.WmsInstructionAttrVO">
+        select ins.*
+        , doc.INSTRUCTION_DOC_NUM
+        , mia_ver.attr_value material_version
+        , mia_exq.ATTR_VALUE EXCHANGE_QTY
+        , mia_exf.ATTR_VALUE EXCHANGE_FLAG
+        , doc.INSTRUCTION_DOC_TYPE
+        ,(select mia.ACTUAL_QTY
+        from mt_instruction_actual mia
+        where ins.instruction_id = mia.INSTRUCTION_ID
+        and mia.BUSINESS_TYPE = 'PO_RECEIVING'
+        and mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        limit 1) actual_qty
+        ,(select miaa.ATTR_VALUE
+        from mt_instruction_actual mia
+        ,mt_instruction_actual_attr miaa
+        where ins.instruction_id = mia.INSTRUCTION_ID
+        and mia.ACTUAL_ID = miaa.ACTUAL_ID
+        and miaa.ATTR_NAME = 'EXCHANGED_QTY'
+        and mia.BUSINESS_TYPE = 'PO_RECEIVING'
+        and mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        limit 1) EXCHANGED_QTY
+        ,exists (select 1
+        from mt_instruction_actual mia
+        ,mt_instruction_actual_detail miad
+        where mia.actual_id = miad.actual_id
+        and mia.instruction_id = ins.instruction_id
+        and miad.material_lot_id = #{materialLotId}) lot_flag
+        from mt_instruction ins
+        left join mt_instruction_attr mia_ver on ins.INSTRUCTION_ID = mia_ver.INSTRUCTION_ID
+        and mia_ver.ATTR_NAME = 'MATERIAL_VERSION'
+        left join mt_instruction_attr mia_exq on ins.INSTRUCTION_ID = mia_exq.INSTRUCTION_ID
+        and mia_exq.ATTR_NAME = 'EXCHANGE_QTY'
+        left join mt_instruction_attr mia_exf on ins.INSTRUCTION_ID = mia_exf.INSTRUCTION_ID
+        and mia_exf.ATTR_NAME = 'EXCHANGE_FLAG'
+        ,mt_instruction_doc doc
+        where doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        and ins.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        and ins.BUSINESS_TYPE = 'PO_RECEIVING'
+        and doc.TENANT_ID = #{tenantId}
+        <if test="instructionDocNum != null and instructionDocNum != ''">
+            and doc.INSTRUCTION_DOC_NUM = #{instructionDocNum}
+        </if>
+        <choose>
+            <when test="instructionDocNum != null and instructionDocNum != ''">
+                and exists (select 1
+                from mt_material_lot mml
+                left join mt_material_lot_attr mmla on mmla.material_lot_id = mml.material_lot_id and
+                mmla.attr_name ='MATERIAL_VERSION'
+                where mml.material_id = ins.material_id
+                and case when ifnull(mmla.attr_value,'') != '' then ifnull(mmla.attr_value,'') = ifnull(mia_ver.attr_value,'')
+                else 1=1 end
+                and mml.material_lot_id = #{materialLotId})
+            </when>
+            <otherwise>
+                and exists (select 1
+                from mt_instruction_actual mia
+                ,mt_instruction_actual_detail miad
+                where mia.actual_id = miad.actual_id
+                and mia.instruction_id = ins.instruction_id
+                and miad.material_lot_id = #{materialLotId})
+            </otherwise>
+        </choose>
+        limit 1
+    </select>
+
+    <select id="instructionMaterialLotQuery" resultType="com.ruike.wms.domain.vo.WmsMaterialLotLineVO">
+        SELECT
+	        miad.MATERIAL_LOT_ID,
+	        mml.MATERIAL_LOT_CODE,
+	        mmla.ATTR_VALUE AS MATERIAL_LOT_STATUS,
+	        mml.PRIMARY_UOM_QTY,
+	        mml.lot,
+	        mml.ENABLE_FLAG,
+	        mml.LOCATOR_ID MATERIAL_LOT_LOCATOR_ID,
+	        ml.MATERIAL_NAME,
+	        ml.MATERIAL_CODE,
+	        ml.MATERIAL_ID,
+	        loc.LOCATOR_CODE MATERIAL_LOT_LOCATOR_CODE,
+	        loc2.LOCATOR_CODE WAREHOUSE_CODE,
+	        loc2.LOCATOR_ID WAREHOUSE_ID,
+            attr.ATTR_VALUE SUPPLIER_LOT,
+	        la.ATTR_VALUE ACTUAL_LOCATOR_CODE,
+	        loc3.LOCATOR_NAME actualLocatorName
+        FROM
+	        mt_instruction_actual mia
+	    LEFT JOIN mt_instruction_actual_detail miad ON miad.ACTUAL_ID = mia.ACTUAL_ID
+	    AND miad.TENANT_ID = mia.TENANT_ID
+	    LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+	    LEFT JOIN mt_material ml ON ml.MATERIAL_ID = mml.MATERIAL_ID
+	    LEFT JOIN mt_mod_locator loc ON loc.LOCATOR_ID = mml.LOCATOR_ID
+	    LEFT JOIN mt_mod_locator loc2 ON loc2.LOCATOR_ID = loc.PARENT_LOCATOR_ID
+	    LEFT JOIN mt_material_lot_attr mmla ON mmla.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+	    AND mmla.ATTR_NAME = 'STATUS'
+	    LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+	    AND attr.ATTR_NAME = 'SUPPLIER_LOT'
+	    LEFT JOIN mt_material_lot_attr la ON la.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND la.ATTR_NAME = 'ACTUAL_LOCATOR'
+	    LEFT JOIN mt_mod_locator loc3 ON loc3.LOCATOR_CODE = la.ATTR_VALUE AND loc3.LOCATOR_CATEGORY = 'INVENTORY' AND loc3.TENANT_ID = #{tenantId}
+        WHERE
+	        mia.TENANT_ID = #{tenantId}
+	    AND mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+	    AND mia.INSTRUCTION_ID = #{docLineId}
+	    AND miad.ACTUAL_DETAIL_ID IS NOT NULL
+    </select>
+
+    <select id="selectNgQty" resultType="java.lang.Double">
+        SELECT
+	        IFNULL(SUM(mi.QUANTITY),0)
+        FROM
+	        wms_po_delivery_rel wpdl
+	    JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = wpdl.delivery_doc_id
+	    AND mid.INSTRUCTION_DOC_STATUS = 'RECEIVE_COMPLETE'
+	    JOIN mt_instruction mi ON mi.INSTRUCTION_ID = wpdl.delivery_doc_line_id,
+	    qms_iqc_header qih
+        WHERE
+            wpdl.tenant_id = #{tenantId}
+	    AND wpdl.delivery_doc_line_id = qih.DOC_LINE_ID
+	    AND wpdl.po_line_id = #{instructionId}
+	    AND qih.INSPECTION_RESULT = 'NG'
+        AND CASE qih.FINAL_DECISION WHEN 'TX' THEN (SELECT 1 FROM qms_iqc_header qh WHERE
+			 qh.DOC_HEADER_ID = qih.IQC_HEADER_ID
+		AND qh.INSPECTION_RESULT = 'NG'
+	        ) ELSE 1=1 END
+    </select>
+    <select id="queryLocatorBySite" resultType="java.lang.String">
+        SELECT
+            l.LOCATOR_ID
+        FROM
+            mt_mod_locator l,
+            mt_mod_locator_org_rel r
+        WHERE
+            l.PARENT_LOCATOR_ID = r.LOCATOR_ID
+          AND r.ORGANIZATION_Type = 'SITE'
+          AND l.LOCATOR_TYPE = #{locatorType}
+          AND r.ORGANIZATION_ID = #{siteId}
+          AND r.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="selectByDeliveryDocLineId" resultType="com.ruike.wms.domain.vo.WmsPoDeliveryRelVO">
+        SELECT
+            pdr.delivery_doc_line_id,
+            count(*) as count
+        FROM
+            wms_po_delivery_rel pdr
+        WHERE
+            pdr.tenant_id = #{tenantId}
+        AND pdr.delivery_doc_line_id IN
+        <foreach collection="instructionIdList" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        GROUP BY pdr.delivery_doc_line_id
+    </select>
+</mapper>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtInvOnhandHoldMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtInvOnhandHold">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ONHAND_HOLD_ID" property="onhandHoldId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOT_CODE" property="lotCode" jdbcType="VARCHAR"/>
+        <result column="HOLD_QUANTITY" property="holdQuantity" jdbcType="DECIMAL"/>
+        <result column="HOLD_TYPE" property="holdType" jdbcType="VARCHAR"/>
+        <result column="ORDER_TYPE" property="orderType" jdbcType="VARCHAR"/>
+        <result column="ORDER_ID" property="orderId" jdbcType="VARCHAR"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+
+    <select id="selectInvOnhandHolds" resultMap="BaseResultMap">
+        select t.* from mt_inv_onhand_hold t
+        where
+        t.TENANT_ID = #{tenantId}
+        <if test="dto.siteId != null">
+            AND t.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.materialId != null">
+            AND t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.locatorId != null">
+            AND t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.lotCode != null">
+            AND t.LOT_CODE = #{dto.lotCode}
+        </if>
+        <if test='dto.lotCode == null or dto.lotCode == ""'>
+            AND t.LOT_CODE = ''
+        </if>
+        <if test="dto.ownerType != null">
+            AND t.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test='dto.ownerType == null or dto.ownerType == ""'>
+            AND t.OWNER_TYPE = ''
+        </if>
+        <if test="dto.ownerId != null">
+            AND t.OWNER_ID = #{dto.ownerId}
+        </if>
+        <if test='dto.ownerId == null or dto.ownerId == ""'>
+            AND t.OWNER_ID = ''
+        </if>
+    </select>
+
+    <select id="selectInvOnhandHold" resultMap="BaseResultMap">
+        select t.* from mt_inv_onhand_hold t
+        where
+        t.TENANT_ID = #{tenantId}
+        <if test="dto.siteId != null">
+            AND t.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.materialId != null">
+            AND t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.locatorId != null">
+            AND t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.lotCode != null">
+            AND t.LOT_CODE = #{dto.lotCode}
+        </if>
+        <if test='dto.lotCode == null or dto.lotCode == ""'>
+            AND t.LOT_CODE = ''
+        </if>
+        <if test="dto.holdType != null">
+            AND t.HOLD_TYPE = #{dto.holdType}
+        </if>
+        <if test="dto.orderType != null">
+            AND t.ORDER_TYPE = #{dto.orderType}
+        </if>
+        <if test='dto.orderType == null or dto.orderType == ""'>
+            AND t.ORDER_TYPE = ''
+        </if>
+        <if test="dto.orderId != null">
+            AND t.ORDER_ID = #{dto.orderId}
+        </if>
+        <if test='dto.orderId == null or dto.orderId == ""'>
+            AND t.ORDER_ID = ''
+        </if>
+        <if test="dto.ownerType != null">
+            AND t.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test='dto.ownerType == null or dto.ownerType == ""'>
+            AND t.OWNER_TYPE = ''
+        </if>
+        <if test="dto.ownerId != null">
+            AND t.OWNER_ID = #{dto.ownerId}
+        </if>
+        <if test='dto.ownerId == null or dto.ownerId == ""'>
+            AND t.OWNER_ID = ''
+        </if>
+    </select>
+
+    <select id="onhandHoldBatchGet" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        mt_inv_onhand_hold t
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        AND t.ONHAND_HOLD_ID IN
+        <foreach collection="onhandHoldIds" separator="," open="(" close=")" item="item" index="index">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="propertyLimitOnhandReserveQuery" resultType="java.lang.String">
+        SELECT
+        t.ONHAND_HOLD_ID
+        FROM
+        mt_inv_onhand_hold t
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        <if test="dto.siteId != null">
+            AND t.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.materialId != null">
+            AND t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.locatorId != null">
+            AND t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.lotCode != null">
+            AND t.LOT_CODE = #{dto.lotCode}
+        </if>
+        <if test="dto.holdQuantity != null">
+            AND t.HOLD_QUANTITY = #{dto.holdQuantity}
+        </if>
+        <if test="dto.holdType != null">
+            AND t.HOLD_TYPE = #{dto.holdType}
+        </if>
+        <if test="dto.orderType != null">
+            AND t.ORDER_TYPE = #{dto.orderType}
+        </if>
+        <if test="dto.orderId != null">
+            AND t.ORDER_ID = #{dto.orderId}
+        </if>
+        <if test="dto.ownerType != null">
+            AND t.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test="dto.ownerId != null">
+            AND t.OWNER_ID = #{dto.ownerId}
+        </if>
+    </select>
+
+
+</mapper>

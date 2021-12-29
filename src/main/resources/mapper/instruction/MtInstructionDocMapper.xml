@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.instruction.infra.mapper.MtInstructionDocMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.instruction.domain.entity.MtInstructionDoc">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="INSTRUCTION_DOC_ID" property="instructionDocId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_NUM" property="instructionDocNum" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_TYPE" property="instructionDocType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_STATUS" property="instructionDocStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_TYPE" property="sourceOrderType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_ID" property="sourceOrderId" jdbcType="VARCHAR"/>
+        <result column="DEMAND_TIME" property="demandTime" jdbcType="TIMESTAMP"/>
+        <result column="EXPECTED_ARRIVAL_TIME" property="expectedArrivalTime" jdbcType="TIMESTAMP"/>
+        <result column="COST_CENTER_ID" property="costCenterId" jdbcType="VARCHAR"/>
+        <result column="PERSON_ID" property="personId" jdbcType="DECIMAL"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="REASON" property="reason" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="MARK" property="mark" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+        <!--
+            添加字段
+            alter table mt_instruction_doc add column interface_flag VARCHAR(10) null COMMENT '接口状态，成功或者失败';
+            alter table mt_instruction_doc add column interface_msg VARCHAR(50) null COMMENT '接口信息，成功或者失败';
+            -->
+        <result column="INTERFACE_FLAG" property="interfaceFlag" jdbcType="VARCHAR"/>
+        <result column="INTERFACE_MSG" property="interfaceMsg" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectMaxNum" resultType="java.lang.Integer">
+        SELECT
+            MAX( SUBSTR( t.INSTRUCTION_DOC_NUM, 15 ) + 0 )
+        FROM
+            mt_instruction_doc t
+        WHERE 
+            t.TENANT_ID = #{tenantId}
+            AND t.INSTRUCTION_DOC_NUM LIKE #{siteDateStr} || '%'
+            AND length( SUBSTR( t.INSTRUCTION_DOC_NUM, 15 ) ) = 4
+            AND REGEXP_LIKE(SUBSTR( t.INSTRUCTION_DOC_NUM, 15 ),'^[0-9]*$')            
+    </select>
+
+    <select id="selectByIdList" resultMap="BaseResultMap">
+        select
+        *
+        from
+        mt_instruction_doc
+        where
+        TENANT_ID = #{tenantId}
+        and INSTRUCTION_DOC_ID IN
+        <foreach collection="instructionDocIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByUnique" resultMap="BaseResultMap">
+        select 
+        	* 
+        from 
+        	mt_instruction_doc
+        where 
+	        TENANT_ID  = #{tenantId}
+	        and (INSTRUCTION_DOC_NUM = #{instructionDoc.instructionDocNum}
+	        or IDENTIFICATION = #{instructionDoc.identification})
+    </select>
+
+    <select id="selectDocByTypes" parameterType="tarzan.instruction.domain.entity.MtInstructionDoc" resultType="tarzan.instruction.domain.entity.MtInstructionDoc">
+        SELECT
+            MID.*
+        FROM
+            mt_instruction_doc MID
+            JOIN mt_instruction_doc_attr midt ON midt.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID
+        WHERE
+            midt.ATTR_NAME = 'SRM_FLAG'
+            AND midt.ATTR_VALUE = 'SRM'
+            AND MID.INSTRUCTION_DOC_TYPE IN ${instructionDocType}
+            AND MID.INSTRUCTION_DOC_STATUS IN ${instructionDocStatus}
+	        AND MID.interface_flag != 'S'
+    </select>
+    <select id="selectMtInstructionDocIds" resultType="java.lang.String">
+        select
+        t.INSTRUCTION_DOC_ID
+        from
+        mt_instruction_doc t
+        where
+        t.TENANT_ID= #{tenantId}
+
+        <if test="property.instructionDocId != null">
+            and t.instruction_doc_id = #{property.instructionDocId}
+        </if>
+        <if test="property.instructionDocNum != null">
+            and t.INSTRUCTION_DOC_NUM = #{property.instructionDocNum}
+        </if>
+        <if test="property.instructionDocType != null">
+            and t.INSTRUCTION_DOC_TYPE = #{property.instructionDocType}
+        </if>
+        <if test="property.instructionDocStatus != null">
+            and t.INSTRUCTION_DOC_STATUS = #{property.instructionDocStatus}
+        </if>
+        <if test="property.siteId != null">
+            and t.SITE_ID = #{property.siteId}
+        </if>
+        <if test="property.supplierId != null">
+            and t.SUPPLIER_ID = #{property.supplierId}
+        </if>
+        <if test="property.supplierSiteId != null">
+            and t.SUPPLIER_SITE_ID = #{property.supplierSiteId}
+        </if>
+        <if test="property.customerId != null">
+            and t.CUSTOMER_ID = #{property.customerId}
+        </if>
+        <if test="property.customerSiteId != null">
+            and t.CUSTOMER_SITE_ID = #{property.customerSiteId}
+        </if>
+        <if test="property.sourceOrderType != null">
+            and t.SOURCE_ORDER_TYPE = #{property.sourceOrderType}
+        </if>
+        <if test="property.sourceOrderId != null">
+            and t.SOURCE_ORDER_ID = #{property.sourceOrderId}
+        </if>
+        <if test="property.costCenterId != null">
+            and t.COST_CENTER_ID = #{property.costCenterId}
+        </if>
+        <if test="property.personId != null">
+            and t.PERSON_ID = #{property.personId}
+        </if>
+        <if test="property.identification != null">
+            and t.IDENTIFICATION = #{property.identification}
+        </if>
+        <if test="property.remark != null">
+            and t.REMARK = #{property.remark}
+        </if>
+        <if test="property.reason != null">
+            and t.REASON = #{property.reason}
+        </if>
+        <if test="property.demandTimeFrom != null">
+            and t.DEMAND_TIME &gt;= #{property.demandTimeFrom,jdbcType=TIMESTAMP}
+        </if> 
+        <if test="property.demandTimeTo != null">
+            and t.DEMAND_TIME &lt;= #{property.demandTimeTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="property.expectedArrivalTimeFrom != null">
+            and t.EXPECTED_ARRIVAL_TIME &gt;= #{property.expectedArrivalTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="property.expectedArrivalTimeTo != null">
+            and t.EXPECTED_ARRIVAL_TIME &lt;= #{property.expectedArrivalTimeTo,jdbcType=TIMESTAMP}
+        </if>
+    </select>
+
+    <select id="selectAttrValue" resultType="java.lang.String">
+        SELECT
+            mida.ATTR_VALUE
+        FROM
+            mt_instruction_doc_attr mida
+        WHERE
+            mida.TENANT_ID = #{tenantId}
+        and mida.INSTRUCTION_DOC_ID = #{instructionDocId}
+        and mida.ATTR_NAME = #{attrName}
+    </select>
+
+    <select id="selectByNum" resultMap="BaseResultMap">
+        SELECT
+            *
+        FROM
+            mt_instruction_doc mid
+        WHERE
+            mid.TENANT_ID = #{tenantId}
+            AND mid.INSTRUCTION_DOC_NUM = #{docNum}
+    </select>
+</mapper>

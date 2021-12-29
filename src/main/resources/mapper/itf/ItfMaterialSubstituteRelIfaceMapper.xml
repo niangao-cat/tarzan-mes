@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfMaterialSubstituteRelIfaceMapper">
+
+    <insert id="batchInsertMaterialSubstituteRelIface" parameterType="com.ruike.itf.domain.entity.ItfMaterialSubstituteRelIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="itfMaterialSubstituteRelIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.substituteId},
+            #{item.sequence},
+            #{item.siteId},
+            #{item.plant},
+            #{item.substituteGroup},
+            #{item.materialId},
+            #{item.materialCode},
+            #{item.mainMaterialId},
+            #{item.mainMaterialCode},
+            #{item.startDate},
+            #{item.endDate},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15},
+            #{item.batchId},
+            #{item.batchDate},
+            #{item.status},
+            #{item.message},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+    <insert id="batchInsertMaterialSubstituteRel" parameterType="com.ruike.itf.domain.entity.ItfMaterialSubstituteRelIface">
+        INSERT INTO wms_material_substitute_rel (
+        TENANT_ID
+        ,SUBSTITUTE_ID
+        ,SEQUENCE
+        ,SITE_ID
+        ,PLANT
+        ,SUBSTITUTE_GROUP
+        ,MATERIAL_ID
+        ,MATERIAL_CODE
+        ,MAIN_MATERIAL_ID
+        ,MAIN_MATERIAL_CODE
+        ,START_DATE
+        ,END_DATE
+        ,ATTRIBUTE1
+        ,ATTRIBUTE2
+        ,ATTRIBUTE3
+        ,ATTRIBUTE4
+        ,ATTRIBUTE5
+        ,ATTRIBUTE6
+        ,ATTRIBUTE7
+        ,ATTRIBUTE8
+        ,ATTRIBUTE9
+        ,ATTRIBUTE10
+        ,ATTRIBUTE11
+        ,ATTRIBUTE12
+        ,ATTRIBUTE13
+        ,ATTRIBUTE14
+        ,ATTRIBUTE15
+        ,BATCH_ID
+        ,STATUS
+        ,MESSAGE
+        ,BATCH_DATE
+        ,CID
+        ,OBJECT_VERSION_NUMBER
+        ,CREATED_BY
+        ,CREATION_DATE
+        ,LAST_UPDATED_BY
+        ,LAST_UPDATE_DATE )
+        VALUES
+        <foreach collection="itfMaterialSubstituteRelIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.substituteId},
+            #{item.sequence},
+            #{item.siteId},
+            #{item.plant},
+            #{item.substituteGroup},
+            #{item.materialId},
+            #{item.materialCode},
+            #{item.mainMaterialId},
+            #{item.mainMaterialCode},
+            #{item.startDate},
+            #{item.endDate},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15},
+            #{item.batchId},
+            #{item.status},
+            #{item.message},
+            #{item.batchDate},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <update id="truncateAll">
+        truncate table wms_material_substitute_rel
+    </update>
+
+</mapper>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfCosaCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfCosaCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="VIRTUAL_NUM" property="virtualNum" jdbcType="VARCHAR"/>
+        <result column="SOURCE_MATERIAL_LOT_CODE" property="sourceMaterialLotCode" jdbcType="VARCHAR"/>
+        <result column="SOURCE_LOAD" property="sourceLoad" jdbcType="VARCHAR"/>
+        <result column="TARGET_MATERIAL_LOT_CODE" property="targetMaterialLotCode" jdbcType="VARCHAR"/>
+        <result column="TARGET_LOAD" property="targetLoad" jdbcType="VARCHAR"/>
+        <result column="TARGET_COS_POS" property="targetCosPos" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE1" property="cosaAttribute1" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE2" property="cosaAttribute2" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE3" property="cosaAttribute3" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE4" property="cosaAttribute4" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE5" property="cosaAttribute5" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE6" property="cosaAttribute6" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE7" property="cosaAttribute7" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE8" property="cosaAttribute8" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE9" property="cosaAttribute9" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE10" property="cosaAttribute10" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE11" property="cosaAttribute11" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE12" property="cosaAttribute12" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE13" property="cosaAttribute13" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE14" property="cosaAttribute14" jdbcType="VARCHAR"/>
+        <result column="COSA_ATTRIBUTE15" property="cosaAttribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_cosa_collect_iface
+        (
+        INTERFACE_ID,
+        VIRTUAL_NUM,
+        SOURCE_MATERIAL_LOT_CODE,
+        SOURCE_LOAD,
+        TARGET_MATERIAL_LOT_CODE,
+        TARGET_LOAD,
+        TARGET_COS_POS,
+        PRIMARY_KEY,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        cosa_ATTRIBUTE1,
+        cosa_ATTRIBUTE2,
+        cosa_ATTRIBUTE3,
+        cosa_ATTRIBUTE4,
+        cosa_ATTRIBUTE5,
+        cosa_ATTRIBUTE6,
+        cosa_ATTRIBUTE7,
+        cosa_ATTRIBUTE8,
+        cosa_ATTRIBUTE9,
+        cosa_ATTRIBUTE10
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.interfaceId},
+            #{item.virtualNum},
+            #{item.sourceMaterialLotCode},
+            #{item.sourceLoad},
+            #{item.targetMaterialLotCode},
+            #{item.targetLoad},
+            #{item.targetCosPos},
+            #{item.primaryKey},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.cosaAttribute1},
+            #{item.cosaAttribute2},
+            #{item.cosaAttribute3},
+            #{item.cosaAttribute4},
+            #{item.cosaAttribute5},
+            #{item.cosaAttribute6},
+            #{item.cosaAttribute7},
+            #{item.cosaAttribute8},
+            #{item.cosaAttribute9},
+            #{item.cosaAttribute10}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateIface">
+        UPDATE itf_cosa_collect_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = -1,
+            last_update_date = CURRENT_TIMESTAMP,
+            process_date=CURRENT_TIMESTAMP,
+            process_message =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processMessage}
+            </foreach>,
+            process_status =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processStatus}
+            </foreach>
+        </set>
+        <where>
+            interface_id in
+            <foreach collection="domains" item="item"
+                     separator="," open="(" close=")">
+                #{item.interfaceId}
+            </foreach>
+        </where>
+
+    </update>
+
+    <select id="targerSelectionLotQuery" resultType="java.lang.String">
+        select hps.ATTRIBUTE1
+        from hme_material_lot_load hmll,
+        hme_selection_details hsd,
+        hme_pre_selection hps
+        where hmll.material_lot_id = #{materialLotId}
+        and hmll.tenant_id = #{tenantId}
+        and hsd.load_sequence = hmll.load_sequence
+        and hsd.tenant_id = hsd.tenant_id
+        and hps.pre_selection_id = hsd.pre_selection_id
+        and hps.ATTRIBUTE1 is not null
+    </select>
+</mapper>

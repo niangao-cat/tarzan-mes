@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeMaterialTransferMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+
+    <select id="materialLotGet" resultType="com.ruike.hme.api.dto.HmeMaterialTransferDTO7">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mml.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        mml.LOT,
+        mml.SUPPLIER_ID,
+        supp.SUPPLIER_CODE,
+        supp_tl.SUPPLIER_NAME,
+        mml.PRIMARY_UOM_ID AS UOM_ID,
+        mu.UOM_CODE,
+        mutl.UOM_NAME,
+        la.ATTR_VALUE supplier_lot
+        FROM
+        mt_material_lot mml
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = mml.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        JOIN mt_uom mu ON mu.uom_id = mml.PRIMARY_UOM_ID
+        JOIN mt_uom_tl mutl ON mutl.uom_id = mu.uom_id
+        AND mutl.LANG = #{lang}
+        LEFT JOIN mt_supplier supp ON supp.SUPPLIER_ID = mml.SUPPLIER_ID
+        LEFT JOIN mt_supplier_tl supp_tl ON supp_tl.SUPPLIER_ID = supp.SUPPLIER_ID
+        AND supp_tl.LANG = #{lang}
+        LEFT JOIN mt_material_lot_attr la ON la.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND la.ATTR_NAME = 'SUPPLIER_LOT'
+        WHERE
+        mml.TENANT_ID = #{tenantId}
+        <if test="materialLotCode != null">
+            and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+        </if>
+    </select>
+
+    <select id="materialSiteAttrGet" resultType="java.lang.String">
+        SELECT
+        msa.ATTR_VALUE
+        FROM
+        mt_material_site mms,
+        mt_material_site_attr msa
+        WHERE mms.TENANT_ID = #{tenantId}
+        AND mms.MATERIAL_SITE_ID = msa.MATERIAL_SITE_ID
+        AND mms.TENANT_ID = msa.TENANT_ID
+        AND msa.ATTR_NAME = 'attribute14'
+        <if test="siteId != null">
+            AND mms.site_id = #{siteId}
+        </if>
+        <if test="materialId != null">
+            AND mms.MATERIAL_ID = #{materialId}
+        </if>
+    </select>
+
+    <select id="queryDocPrivilegeByWarehouse" resultType="java.lang.String">
+        SELECT
+        	wdp.privilege_id
+        FROM
+         mt_user_organization muo,
+         wms_doc_privilege wdp
+        WHERE
+            muo.USER_ID = #{userId}
+        AND muo.ORGANIZATION_TYPE = 'LOCATOR'
+        AND muo.ORGANIZATION_ID = #{warehouseId}
+        AND muo.TENANT_ID = #{tenantId}
+        AND muo.ENABLE_FLAG = 'Y'
+        AND wdp.tenant_id = muo.TENANT_ID
+        AND wdp.user_organization_id = muo.USER_ORGANIZATION_ID
+        AND wdp.doc_type = 'MATERIAL_TRANSFER'
+        AND wdp.operation_type = 'EXECUTE'
+        AND wdp.enable_flag = 'Y'
+    </select>
+
+    <select id="queryEoJobLotMaterialList" resultType="com.ruike.hme.domain.entity.HmeEoJobLotMaterial">
+        SELECT
+        	jlm.job_material_id,
+        	jlm.workcell_id,
+        	jlm.material_lot_id
+        FROM
+        	hme_eo_job_lot_material jlm
+        WHERE jlm.material_lot_id = #{materialLotId}
+        AND jlm.tenant_id = #{tenantId}
+    </select>
+</mapper>

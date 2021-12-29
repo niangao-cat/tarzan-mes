@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtInvOnhandHoldJournalMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtInvOnhandHoldJournal">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ONHAND_HOLD_JOURNAL_ID" property="onhandHoldJournalId" jdbcType="VARCHAR"/>
+        <result column="ONHAND_HOLD_ID" property="onhandHoldId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOT_CODE" property="lotCode" jdbcType="VARCHAR"/>
+        <result column="HOLD_QUANTITY" property="holdQuantity" jdbcType="DECIMAL"/>
+        <result column="HOLD_TYPE" property="holdType" jdbcType="VARCHAR"/>
+        <result column="ORDER_TYPE" property="orderType" jdbcType="VARCHAR"/>
+        <result column="ORDER_ID" property="orderId" jdbcType="VARCHAR"/>
+        <result column="CHANGE_QUANTITY" property="changeQuantity" jdbcType="DECIMAL"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.inventory.api.dto.MtInvOnhandHoldJournalDTO2">
+        <result column="ONHAND_HOLD_JOURNAL_ID" property="onhandHoldJournalId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOT_CODE" property="lotCode" jdbcType="VARCHAR"/>
+        <result column="HOLD_QUANTITY" property="holdQuantity" jdbcType="DECIMAL"/>
+        <result column="HOLD_TYPE" property="holdType" jdbcType="VARCHAR"/>
+        <result column="ORDER_TYPE" property="orderType" jdbcType="VARCHAR"/>
+        <result column="ORDER_ID" property="orderId" jdbcType="VARCHAR"/>
+        <result column="CHANGE_QUANTITY" property="changeQuantity" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="onhandHoldJournalBatchGet" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_inv_onhand_hold_journal t
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        AND t.ONHAND_HOLD_JOURNAL_ID IN
+        <foreach collection="onhandHoldJournalIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="propertyLimitOnhandHoldJournalQuery" resultType="java.lang.String">
+        SELECT
+        t.ONHAND_HOLD_JOURNAL_ID
+        FROM
+        mt_inv_onhand_hold_journal t
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        <if test="dto.onhandHoldId != null">
+            AND t.ONHAND_HOLD_ID = #{dto.onhandHoldId}
+        </if>
+        <if test="dto.siteId != null">
+            AND t.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.materialId != null">
+            AND t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.locatorId != null">
+            AND t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.lotCode != null">
+            AND t.LOT_CODE = #{dto.lotCode}
+        </if>
+        <if test="dto.ownerType != null">
+            AND t.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test="dto.ownerId != null">
+            AND t.OWNER_ID = #{dto.ownerId}
+        </if>
+        <if test="dto.holdType != null">
+            AND t.HOLD_TYPE = #{dto.holdType}
+        </if>
+        <if test="dto.orderType != null">
+            AND t.ORDER_TYPE = #{dto.orderType}
+        </if>
+        <if test="dto.orderId != null">
+            AND t.ORDER_ID = #{dto.orderId}
+        </if>
+        <if test="dto.eventId != null">
+            AND t.EVENT_ID = #{dto.eventId}
+        </if>
+        <if test="dto.eventBy != null">
+            AND t.EVENT_BY = #{dto.eventBy}
+        </if>
+        <if test="dto.eventStartTime != null">
+            AND DATE_FORMAT(t.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &gt;= #{dto.eventStartTime}
+        </if>
+        <if test="dto.eventEndTime != null">
+            AND DATE_FORMAT(t.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &lt;= #{dto.eventEndTime}
+        </if>
+    </select>
+
+    <select id="queryInvOnhandHoldJournalForUi" resultMap="DtoResultMap">
+        select
+        t.ONHAND_HOLD_JOURNAL_ID,
+        t.SITE_ID,
+        t.MATERIAL_ID,
+        t.EVENT_TIME,
+        t.LOCATOR_ID,
+        t.HOLD_QUANTITY,
+        t.CHANGE_QUANTITY,
+        t.LOT_CODE,
+        t.HOLD_TYPE,
+        t.ORDER_TYPE,
+        t.ORDER_ID,
+        t.EVENT_ID,
+        t.EVENT_BY,
+        t.OWNER_ID,
+        t.OWNER_TYPE
+        from
+        mt_inv_onhand_hold_journal t
+        where t.TENANT_ID = #{tenantId}
+        <if test="dto.startTime!=null">
+            and t.EVENT_TIME &gt;= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.endTime!=null">
+            and t.EVENT_TIME &lt;= DATE_FORMAT(#{dto.endTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.siteId!=null">
+            and t.SITE_ID =#{dto.siteId}
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID =#{dto.materialId}
+        </if>
+        <if test="dto.holdType!=null">
+            and t.HOLD_TYPE =#{dto.holdType}
+        </if>
+        <if test="dto.orderType!=null">
+            and t.ORDER_TYPE =#{dto.orderType}
+        </if>
+        <if test="dto.orderId!=null">
+            and t.ORDER_ID =#{dto.orderId}
+        </if>
+        <if test="dto.lotCode!=null">
+            and t.LOT_CODE =#{dto.lotCode}
+        </if>
+        <if test="locatorIdList != null and locatorIdList.size() != 0">
+            and t.LOCATOR_ID in
+            <foreach collection="locatorIdList" item="item" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.ownerId!=null">
+            and t.OWNER_ID =#{dto.ownerId}
+        </if>
+        <if test="dto.ownerType!=null">
+            and t.OWNER_TYPE =#{dto.ownerType}
+        </if>
+    </select>
+
+</mapper>

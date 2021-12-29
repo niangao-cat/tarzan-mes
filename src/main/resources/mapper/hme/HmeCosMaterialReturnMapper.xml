@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosMaterialReturnMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.vo.HmeCosMaterialReturnVO">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_LINE_ID" property="productionLineId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_TYPE" property="workOrderType" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="VARCHAR"/>
+        <result column="UOM_CODE" property="uomCode" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_CODE" property="productionLineCode" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_NAME" property="productionLineName" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_NAME" property="locatorName" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="scanWorkOrderNum" resultMap="BaseResultMap">
+        SELECT mwo.TENANT_ID,
+               mwo.WORK_ORDER_ID,
+               mwo.SITE_ID,
+               mwo.PRODUCTION_LINE_ID,
+               mwo.MATERIAL_ID,
+               mwo.UOM_ID,
+               mwo.BOM_ID,
+               mwo.ROUTER_ID,
+               mwo.WORK_ORDER_NUM,
+               mms.SITE_CODE,
+               mms.SITE_NAME,
+               mwo.WORK_ORDER_TYPE,
+               mwo.`STATUS`,
+               mm.MATERIAL_CODE,
+               mm.MATERIAL_NAME,
+               mwo.QTY,
+               mu.UOM_CODE,
+               mmpl.PROD_LINE_CODE,
+               mmpl.PROD_LINE_NAME,
+               mb.BOM_NAME,
+               mr.ROUTER_NAME,
+               mml.LOCATOR_CODE,
+               mml.LOCATOR_NAME
+        FROM mt_work_order mwo
+                 JOIN mt_mod_site mms ON mms.SITE_ID = mwo.SITE_ID
+                 JOIN mt_material mm ON mm.MATERIAL_ID = mwo.MATERIAL_ID
+                 JOIN mt_uom mu ON mu.UOM_ID = mwo.UOM_ID
+                 JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_ID = mwo.PRODUCTION_LINE_ID
+                 JOIN mt_bom mb ON mb.BOM_ID = mwo.BOM_ID
+                 JOIN mt_router mr ON mr.ROUTER_ID = mwo.ROUTER_ID
+                 JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mwo.LOCATOR_ID
+        WHERE mwo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+
+    <select id="selectCosBomLine" resultType="com.ruike.hme.domain.vo.HmeCosMaterialReturnLineVO">
+        select mbc.bom_component_id,
+               mbc.line_number,
+               mm.material_id,
+               mm.material_code,
+               mm.material_name,
+               mu.uom_id,
+               mu.uom_code,
+               mu.uom_name,
+               mmb.item_group,
+               round(mbc.qty, 3)                            qty,
+               attr.attr_value                              demand_qty,
+               round(ifnull(sum(mwoca.assemble_qty), 0), 3) assemble_qty,
+               (select ifnull(sum(completed_qty), 0)
+                from mt_work_order_actual
+                where work_order_id = mwo.work_order_id)    completed_qty,
+               round((ifnull(sum(mwoca.assemble_qty), 0) -
+                      ((select ifnull(sum(completed_qty), 0)
+                        from mt_work_order_actual
+                        where work_order_id = mwo.work_order_id
+                       ) * mbc.qty)), 3)                    return_qty
+        from mt_work_order mwo
+                 join mt_mod_site mms on mms.site_id = mwo.site_id
+                 join mt_bom mb on mb.bom_id = mwo.bom_id
+                 join mt_bom_component mbc on mbc.bom_id = mb.bom_id
+                 left join mt_bom_component_attr attr
+                           on mbc.bom_component_id = attr.bom_component_id and attr.attr_name = 'lineAttribute4'
+                 join mt_material mm on mm.material_id = mbc.material_id
+                 join mt_uom mu on mu.uom_id = mm.primary_uom_id
+                 left join mt_work_order_component_actual mwoca on mwoca.work_order_id = mwo.work_order_id
+            and mwoca.material_id = mbc.material_id
+                 join mt_material_site ms on ms.material_id = mbc.material_id and ms.site_id = mwo.site_id
+                 join mt_material_basic mmb on mmb.material_site_id = ms.material_site_id
+        where mwo.work_order_id = #{workOrderId}
+        group by mbc.bom_component_id,
+                 mbc.line_number,
+                 mm.material_id,
+                 mm.material_code,
+                 mm.material_name,
+                 mu.uom_id,
+                 mu.uom_code,
+                 mu.uom_name,
+                 mbc.qty,
+                 mmb.item_group,
+                 attr.attr_value
+    </select>
+
+    <select id="queryMaterialIdByWorkOrderId" resultType="java.lang.String">
+        SELECT bm.MATERIAL_ID
+        FROM mt_work_order wo,
+             mt_bom_component bm,
+             mt_material_site ms,
+             mt_material_basic mb
+        WHERE wo.TENANT_ID = #{tenantId}
+          AND mb.TENANT_ID = #{tenantId}
+          AND wo.BOM_ID = bm.BOM_ID
+          AND bm.MATERIAL_ID = ms.MATERIAL_ID
+          AND wo.SITE_ID = ms.SITE_ID
+          AND ms.MATERIAL_SITE_ID = mb.MATERIAL_SITE_ID
+          AND wo.WORK_ORDER_ID = #{workOrderId}
+          AND mb.ITEM_GROUP = #{chipItemGroup}
+    </select>
+
+    <select id="queryLocatorIdByWorkcellId" resultType="java.lang.String">
+        SELECT lor.LOCATOR_ID
+        FROM mt_mod_organization_rel mor,
+             mt_mod_organization_rel mor2,
+             mt_mod_locator_org_rel lor
+        WHERE mor2.PARENT_ORGANIZATION_ID = lor.ORGANIZATION_ID
+          AND mor.PARENT_ORGANIZATION_ID = mor2.ORGANIZATION_ID
+          AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+          AND mor.TENANT_ID = #{tenantId}
+          AND mor.ORGANIZATION_ID = #{workcellId}
+          AND lor.ORGANIZATION_TYPE = 'WORKCELL'
+          AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+    </select>
+
+    <select id="selectHotSinkListByMaterialLot" resultType="com.ruike.hme.domain.vo.HmeCosReturnScanLineVO">
+        select mm.material_id
+             , mm.material_code
+             , mm.material_name
+             , mm.primary_uom_id                      uom_id
+             , uom.uom_code
+             , ifnull(sum(hmll.cos_num), 0)  total_cos_num
+             , hmll.attribute5                        supplier_id
+             , hmll.attribute6                        supplier_lot
+             , ms.supplier_code
+             , ms.supplier_name
+        from hme_material_lot_load hmll
+        left join mt_supplier ms on hmll.attribute5 = ms.supplier_id
+           , mt_material mm
+           , mt_uom uom
+        where hmll.attribute11 = mm.material_id
+          and mm.primary_uom_id = uom.uom_id
+          and hmll.tenant_id = #{tenantId}
+          and hmll.material_lot_id = #{materialLotId}
+          and EXISTS (
+			 SELECT
+			    1
+			 FROM
+			 wms_material_substitute_rel wms
+			 , wms_material_substitute_rel wmr
+			 WHERE
+				wms.TENANT_ID = #{tenantId}
+		        and wms.MATERIAL_ID = mm.material_id
+		        and wmr.SUBSTITUTE_GROUP = wms.SUBSTITUTE_GROUP
+		        and wmr.TENANT_ID = #{tenantId}
+		        and wmr.MATERIAL_ID != wms.material_id
+			)
+        group by mm.material_id
+               , mm.material_code
+               , mm.material_name
+               , mm.primary_uom_id
+               , uom.uom_code
+               , hmll.attribute5
+               , hmll.attribute6
+               , ms.supplier_code
+               , ms.supplier_name
+    </select>
+
+    <select id="selectHotSinkListByMaterialLot2" resultType="com.ruike.hme.domain.vo.HmeCosReturnScanLineVO">
+          select mm.material_id
+             , mm.material_code
+             , mm.material_name
+             , mm.primary_uom_id                      uom_id
+             , uom.uom_code
+             , ifnull(sum(hmll.cos_num), 0)  total_cos_num
+             , hmll.attribute5                        supplier_id
+             , hmll.attribute6                        supplier_lot
+             , ms.supplier_code
+             , ms.supplier_name
+        from hme_material_lot_load hmll
+        left join mt_supplier ms on hmll.attribute5 = ms.supplier_id
+           , mt_material mm
+           , mt_uom uom
+        where hmll.attribute11 = mm.material_id
+          and mm.primary_uom_id = uom.uom_id
+          and hmll.tenant_id = #{tenantId}
+          and hmll.material_lot_id = #{materialLotId}
+        group by mm.material_id
+               , mm.material_code
+               , mm.material_name
+               , mm.primary_uom_id
+               , uom.uom_code
+               , hmll.attribute5
+               , hmll.attribute6
+               , ms.supplier_code
+               , ms.supplier_name
+    </select>
+
+    <select id="selectWireBondListByMaterialLot" resultType="com.ruike.hme.domain.vo.HmeCosReturnScanLineVO">
+        select mm.material_id
+             , mm.material_code
+             , mm.material_name
+             , mm.primary_uom_id                      uom_id
+             , uom.uom_code
+             , mbc.qty                                usage_qty
+             , ifnull(sum(hmll.cos_num), 0) * mbc.qty return_qty
+             , hmll.attribute8                        supplier_id
+             , hmll.attribute9                        supplier_lot
+             , ms.supplier_code
+             , ms.supplier_name
+        from hme_material_lot_load hmll
+                 left join mt_supplier ms on hmll.attribute8 = ms.supplier_id
+           , mt_material mm
+           , mt_uom uom
+           , mt_work_order mwo
+           , mt_bom_component mbc
+        where hmll.attribute12 = mm.material_id
+          and mm.primary_uom_id = uom.uom_id
+          and mwo.bom_id = mbc.bom_id
+          and mbc.material_id = mm.material_id
+          and mwo.work_order_id = #{workOrderId}
+          and hmll.tenant_id = #{tenantId}
+          and hmll.material_lot_id = #{materialLotId}
+        group by mm.material_id
+               , mm.material_code
+               , mm.material_name
+               , mm.primary_uom_id
+               , uom.uom_code
+               , mbc.qty
+               , hmll.attribute8
+               , hmll.attribute9
+               , ms.supplier_code
+               , ms.supplier_name
+    </select>
+
+    <select id="selectCosReturnByMaterialLot" resultType="com.ruike.hme.domain.vo.HmeCosReturnScanLineVO">
+        select
+               mbc.line_number sequence_num,
+               mm.material_id,
+               mm.material_code,
+               mm.material_name,
+               mu.uom_id,
+               mu.uom_code,
+               mu.uom_name,
+               round(mbc.qty, 3) usage_qty,
+               round((ifnull(sum(mwoca.assemble_qty), 0) -
+                      ((select ifnull(sum(completed_qty), 0)
+                        from mt_work_order_actual
+                        where work_order_id = mwo.work_order_id
+                       ) * mbc.qty)), 3)  availableQty
+        from mt_work_order mwo
+        join mt_mod_site mms on mms.site_id = mwo.site_id
+        join mt_bom mb on mb.bom_id = mwo.bom_id
+        join mt_bom_component mbc on mbc.bom_id = mb.bom_id
+        left join mt_bom_component_attr attr on mbc.bom_component_id = attr.bom_component_id and attr.attr_name = 'lineAttribute4'
+        join mt_material mm on mm.material_id = mbc.material_id
+        join mt_uom mu on mu.uom_id = mm.primary_uom_id
+        left join mt_work_order_component_actual mwoca on mwoca.work_order_id = mwo.work_order_id
+        and mwoca.material_id = mbc.material_id
+        join mt_material_site ms on ms.material_id = mbc.material_id and ms.site_id = mwo.site_id
+        join mt_material_basic mmb on mmb.material_site_id = ms.material_site_id
+        where mwo.work_order_id = #{workOrderId}
+        and mwo.tenant_id = #{tenantId}
+        and mm.material_id = #{materialId}
+        group by mbc.bom_component_id,
+                 mbc.line_number,
+                 mm.material_id,
+                 mm.material_code,
+                 mm.material_name,
+                 mu.uom_id,
+                 mu.uom_code,
+                 mu.uom_name,
+                 mbc.qty,
+                 mmb.item_group,
+                 attr.attr_value
+    </select>
+
+    <select id="queryWillScrappedBarcode" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+            SELECT
+            	mml.MATERIAL_lOT_ID,
+                mml.MATERIAL_LOT_CODE,
+                mml.ENABLE_FLAG,
+                mml.FREEZE_FLAG,
+                mml.STOCKTAKE_FLAG,
+                mml.PRIMARY_UOM_QTY,
+                mml.SITE_ID,
+                mml.LOT,
+                mml.LOCATOR_ID
+            FROM
+            	mt_material_lot mml
+            LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'COS_TYPE'
+            LEFT JOIN mt_material_lot_attr attr2 ON attr2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr2.ATTR_NAME = 'WAFER_NUM'
+            LEFT JOIN mt_material_lot_attr attr3 ON attr3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr3.ATTR_NAME = 'WORK_ORDER_ID'
+            LEFT JOIN mt_material_lot_attr attr4 ON attr4.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr4.ATTR_NAME = 'MF_FLAG'
+            WHERE
+                1 = 1
+            AND mml.ENABLE_FLAG = 'Y'
+            AND mml.MATERIAL_ID = #{materialId}
+            AND attr1.ATTR_VALUE = #{cosType}
+            AND attr2.ATTR_VALUE = #{wafer}
+            AND attr3.ATTR_VALUE = #{workOrderId}
+            AND attr4.ATTR_VALUE = 'Y'
+            AND mml.FREEZE_FLAG != 'Y'
+            AND mml.STOCKTAKE_FLAG != 'Y'
+    </select>
+
+    <select id="queryHotSinkScrappedBarcode" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        SELECT
+            mml.MATERIAL_lOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mml.ENABLE_FLAG,
+            mml.FREEZE_FLAG,
+            mml.STOCKTAKE_FLAG,
+            mml.PRIMARY_UOM_QTY,
+            mml.SITE_ID,
+            mml.LOT,
+            mml.LOCATOR_ID
+        FROM
+        	hme_material_lot_load mll,
+        	mt_material_lot mml
+        WHERE mll.MATERIAL_LOT_ID = #{materialLotId}
+        AND mll.ATTRIBUTE11 = #{materialId}
+        AND mll.TENANT_ID = #{tenantId}
+        AND mml.MATERIAL_LOT_CODE = mll.ATTRIBUTE4
+        AND mml.TENANT_ID = #{tenantId}
+        LIMIT 1
+    </select>
+
+    <select id="queryWireBondScrappedBarcode" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        SELECT
+            mml.MATERIAL_lOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mml.ENABLE_FLAG,
+            mml.FREEZE_FLAG,
+            mml.STOCKTAKE_FLAG,
+            mml.PRIMARY_UOM_QTY,
+            mml.SITE_ID,
+            mml.LOT,
+            mml.LOCATOR_ID
+        FROM
+        	hme_material_lot_load mll,
+        	mt_material_lot mml
+        WHERE mll.MATERIAL_LOT_ID = #{materialLotId}
+        AND mll.ATTRIBUTE12 = #{materialId}
+        AND mll.TENANT_ID = #{tenantId}
+        AND mml.MATERIAL_LOT_CODE = mll.ATTRIBUTE7
+        AND mml.TENANT_ID = #{tenantId}
+        LIMIT 1
+    </select>
+
+    <select id="queryRouterStepId" resultType="java.lang.String">
+        SELECT
+        	mro.ROUTER_STEP_ID
+        FROM
+        	mt_router_operation mro
+        WHERE mro.TENANT_ID = #{tenantId}
+        AND mro.OPERATION_ID = #{operationId}
+        AND mro.ROUTER_STEP_ID IN (
+        	SELECT mrs.ROUTER_STEP_ID
+        	FROM mt_router_step mrs
+        	WHERE
+        		mrs.ROUTER_ID = #{routerId}
+            AND mrs.TENANT_ID = #{tenantId}
+        )
+        Limit 1
+    </select>
+
+    <select id="queryCosNumByMaterialLotId" resultType="java.lang.Long">
+        SELECT
+        	count(1)
+        FROM
+        	hme_material_lot_load mll
+        WHERE
+        	mll.MATERIAL_LOT_ID = #{materialLotId}
+        AND mll.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryMaterialSubstitute" resultType="java.lang.String">
+        SELECT
+        	 wms.material_id
+        FROM
+        	wms_material_substitute_rel msr,
+			wms_material_substitute_rel wms
+        WHERE
+         msr.TENANT_ID = #{tenantId}
+         AND msr.MATERIAL_ID IN (
+            SELECT
+                mll.attribute11
+            FROM hme_material_lot_load mll
+            WHERE mll.tenant_id = #{tenantId}
+            AND mll.material_lot_id = #{materialLotId}
+         )
+		 AND wms.SUBSTITUTE_GROUP = msr.SUBSTITUTE_GROUP
+		 AND wms.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryBomComponentByMaterialAndBomId" resultType="tarzan.method.domain.entity.MtBomComponent">
+        select
+            mbc.qty,
+            mbc.bom_component_id
+        from
+             mt_work_order mwo
+           , mt_bom_component mbc
+        where 1=1
+		and mbc.MATERIAL_ID IN
+		<foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+		and mbc.bom_id = mwo.bom_id
+		and mbc.TENANT_ID = #{tenantId}
+        and mwo.work_order_id = #{workOrderId}
+        limit 1
+    </select>
+
+    <select id="queryBomComponentByMaterialLotIdAndBomId" resultType="tarzan.method.domain.entity.MtBomComponent">
+        select
+            mbc.qty,
+            mbc.bom_component_id
+        from hme_material_lot_load hmll
+           , mt_work_order mwo
+           , mt_bom_component mbc
+        where 1=1
+		and mbc.MATERIAL_ID  = hmll.attribute11
+		and mbc.bom_id = mwo.bom_id
+		and mbc.TENANT_ID = #{tenantId}
+        and mwo.work_order_id = #{workOrderId}
+        and hmll.tenant_id = #{tenantId}
+        and hmll.material_lot_id = #{materialLotId}
+        limit 1
+    </select>
+</mapper>

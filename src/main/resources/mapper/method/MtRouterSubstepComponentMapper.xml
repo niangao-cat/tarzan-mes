@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterSubstepComponentMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterSubstepComponent">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_SUBSTEP_COMPONENT_ID" property="routerSubstepComponentId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_SUBSTEP_ID" property="routerSubstepId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResult" type="tarzan.method.api.dto.MtRouterSubstepComponentDTO">
+        <result column="ROUTER_SUBSTEP_COMPONENT_ID" property="routerSubstepComponentId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_SUBSTEP_ID" property="routerSubstepId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_MATERIAL_CODE" property="bomComponentMaterialCode" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_MATERIAL_DESC" property="bomComponentMaterialDesc" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="selectBySubStepIds" resultMap="BaseResultMap">
+        select * from mt_router_substep_component where TENANT_ID = ${tenantId} AND ROUTER_SUBSTEP_ID IN
+        <foreach collection="subStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryRouterSubstepComponentForUi" resultMap="DtoResult">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mrsc.ROUTER_SUBSTEP_COMPONENT_ID,
+        mrsc.ROUTER_SUBSTEP_ID,
+        mrsc.BOM_COMPONENT_ID,
+        mm.MATERIAL_CODE BOM_COMPONENT_MATERIAL_CODE,
+        mmt.MATERIAL_NAME BOM_COMPONENT_MATERIAL_DESC,
+        mrsc.QTY,
+        mrsc.SEQUENCE
+        from mt_router_substep_component mrsc
+        join mt_bom_component mbc on mrsc.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID and mbc.TENANT_ID = ${tenantId}
+        join mt_material mm on mbc.MATERIAL_ID = mm.MATERIAL_ID and mm.TENANT_ID = ${tenantId}
+        join mt_material_tl mmt on mm.MATERIAL_ID = mmt.MATERIAL_ID and mmt.LANG = #{locale}
+        where mrsc.TENANT_ID = ${tenantId}
+        and mrsc.ROUTER_SUBSTEP_ID in
+        <foreach collection="subStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        Order By mrsc.CREATION_DATE DESC
+    </select>
+</mapper>

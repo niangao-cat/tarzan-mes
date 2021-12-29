@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeFifthAreaKanbanLoadMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeFifthAreaKanbanLoad">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="FIFTH_AREA_KANBAN_LOAD_ID" property="fifthAreaKanbanLoadId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="CIRCUIT_NUMBER" property="circuitNumber" jdbcType="VARCHAR"/>
+        <result column="WAFER" property="wafer" jdbcType="VARCHAR"/>
+        <result column="HOT_SUPPLIER_LOT" property="hotSupplierLot" jdbcType="VARCHAR"/>
+        <result column="VIRTUAL_NUMBER" property="virtualNumber" jdbcType="VARCHAR"/>
+        <result column="HOT_SINK_CODE" property="hotSinkCode" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectFifthAreaLoad" resultType="com.ruike.hme.domain.entity.HmeFifthAreaKanbanLoad">
+        SELECT
+            hvn.TENANT_ID,
+            hvn.EO_ID,
+            hvn.virtual_num as virtual_number,
+            hmll.hot_sink_code,
+            hsd.attribute2 AS CIRCUIT_NUMBER,
+            hmll.attribute2 AS wafer,
+            hmll.attribute6 AS hot_supplier_lot
+        FROM
+            hme_virtual_num hvn,
+            hme_selection_details hsd,
+            hme_material_lot_load hmll
+        WHERE
+            hmll.tenant_id = hsd.tenant_id
+          AND hmll.load_sequence = hsd.load_sequence
+          AND hsd.tenant_id = hvn.tenant_id
+          AND hsd.virtual_num = hvn.virtual_num
+          AND hvn.tenant_id = #{tenantId}
+          AND hvn.eo_id IN
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectFifthAreaLoadId" resultType="java.lang.String">
+        SELECT
+        hfakl.FIFTH_AREA_KANBAN_LOAD_ID
+        FROM
+        hme_fifth_area_kanban_load hfakl
+        WHERE
+        hfakl.TENANT_ID = #{tenantId}
+        AND hfakl.EO_ID IN
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <insert id="batchInsertLoad">
+        INSERT INTO hme_fifth_area_kanban_load
+        (
+        TENANT_ID,
+        FIFTH_AREA_KANBAN_LOAD_ID,
+        EO_ID,
+        CIRCUIT_NUMBER,
+        WAFER,
+        HOT_SUPPLIER_LOT,
+        VIRTUAL_NUMBER,
+        HOT_SINK_CODE,
+        CID,
+        OBJECT_VERSION_NUMBER,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15)
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.fifthAreaKanbanLoadId},
+            #{item.eoId},
+            #{item.circuitNumber},
+            #{item.wafer},
+            #{item.hotSupplierLot},
+            #{item.virtualNumber},
+            #{item.hotSinkCode},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="batchDeleteByPrimary" parameterType="java.lang.String">
+        DELETE FROM hme_fifth_area_kanban_load WHERE FIFTH_AREA_KANBAN_LOAD_ID IN
+        <foreach collection="fifthAreaLoadIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+</mapper>

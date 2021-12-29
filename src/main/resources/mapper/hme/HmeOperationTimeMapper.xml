@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeOperationTimeMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeOperationTime">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OPERATION_TIME_ID" property="operationTimeId" jdbcType="VARCHAR"/>
+        <result column="TIME_CODE" property="timeCode" jdbcType="VARCHAR"/>
+        <result column="TIME_NAME" property="timeName" jdbcType="VARCHAR"/>
+        <result column="STANDARD_REQD_TIME_IN_PROCESS" property="standardReqdTimeInProcess" jdbcType="DECIMAL"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="query" resultType="com.ruike.hme.domain.vo.HmeOperationTimeVO">
+        select hot.operation_time_id, hot.time_code, hot.time_name, hot.standard_reqd_time_in_process,
+			 hot.operation_id, mo.OPERATION_NAME, mo.DESCRIPTION, hot.workcell_id,mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, hot.enable_flag,
+             hot.created_by, hot.creation_date, hot.last_updated_by, hot.last_update_date
+        from hme_operation_time hot
+        left join mt_operation mo
+        on mo.OPERATION_ID = hot.operation_id
+        and mo.TENANT_ID = hot.TENANT_ID
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = hot.WORKCELL_ID
+        and mmw.TENANT_ID = hot.TENANT_ID
+        where hot.tenant_id = #{tenantId}
+        <if test="dto.timeCode != null">
+            and hot.time_code LIKE CONCAT('%',#{dto.timeCode},'%')
+        </if>
+        <if test="dto.timeName != null">
+            and hot.time_name LIKE CONCAT('%',#{dto.timeName},'%')
+        </if>
+        <if test="dto.standardReqdTimeInProcess != null">
+            and hot.standard_reqd_time_in_process = #{dto.standardReqdTimeInProcess}
+        </if>
+        <if test="dto.description != null">
+            and mo.DESCRIPTION LIKE CONCAT('%',#{dto.description},'%')
+        </if>
+        <if test="dto.workcellName != null">
+            and mmw.WORKCELL_NAME LIKE CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        <if test="dto.enableFlag != null">
+            and hot.enable_flag = #{dto.enableFlag}
+        </if>
+    </select>
+
+    <select id="queryMaterial" resultType="com.ruike.hme.domain.vo.HmeOperationTimeVO2">
+        select hotm.operation_time_material_id, hotm.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               hotm.production_version_id, hpv.PRODUCTION_VERSION, hpv.DESCRIPTION, hotm.standard_reqd_time_in_process,
+               hotm.enable_flag, hotm.created_by, hotm.creation_date, hotm.last_updated_by, hotm.last_update_date
+        from hme_operation_time_material hotm
+        left join mt_material mm
+        on mm.MATERIAL_ID = hotm.MATERIAL_ID
+        and mm.TENANT_ID = hotm.TENANT_ID
+        left join hme_production_version hpv
+        on hpv.production_version_id = hotm.production_version_id
+        and hpv.tenant_id = hotm.TENANT_ID
+        where hotm.tenant_id = #{tenantId}
+        and hotm.operation_time_id = #{dto.operationTimeId}
+        <if test="dto.materialName != null">
+            and mm.MATERIAL_NAME LIKE CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test="dto.description != null">
+            and hpv.DESCRIPTION LIKE CONCAT('%',#{dto.description},'%')
+        </if>
+        <if test="dto.standardReqdTimeInProcess != null">
+            and hotm.standard_reqd_time_in_process = #{dto.standardReqdTimeInProcess}
+        </if>
+        <if test="dto.enableFlag != null">
+            and hotm.enable_flag = #{dto.enableFlag}
+        </if>
+        order by hotm.last_update_date desc
+    </select>
+
+    <select id="queryObject" resultType="com.ruike.hme.domain.vo.HmeOperationTimeVO3">
+        select hoto.operation_time_object_id, hoto.object_type, hoto.object_id,
+               hoto.standard_reqd_time_in_process, hoto.enable_flag, hoto.created_by,
+               hoto.creation_date, hoto.last_updated_by, hoto.last_update_date
+        from hme_operation_time_object hoto
+        where hoto.tenant_id = #{tenantId}
+        and hoto.operation_time_id = #{dto.operationTimeId}
+        <if test="dto.objectType != null">
+            and hoto.object_type = #{dto.objectType}
+        </if>
+        <if test="dto.standardReqdTimeInProcess != null">
+            and hoto.standardReqdTimeInProcess = #{dto.standardReqdTimeInProcess}
+        </if>
+        <if test="dto.enableFlag != null">
+            and hoto.enable_flag = #{dto.enableFlag}
+        </if>
+        <if test="dto.objectCode != null  and dto.objectType == 'EO'">
+            and hoto.object_id in (
+            select me.EO_ID
+            from mt_eo me
+            where me.tenant_id = #{tenantId}
+            and me.EO_NUM like CONCAT('%',#{dto.objectCode},'%')
+            )
+        </if>
+        <if test="dto.objectCode != null  and dto.objectType == 'WO'">
+            and hoto.object_id in (
+            select mwo.WORK_ORDER_ID
+            from mt_work_order mwo
+            where mwo.tenant_id = #{tenantId}
+            and mwo.WORK_ORDER_NUM like CONCAT('%',#{dto.objectCode},'%')
+            )
+        </if>
+        order by hoto.last_update_date desc
+    </select>
+
+    <select id="queryHis" resultType="com.ruike.hme.domain.vo.HmeOperationTimeVO4">
+        select hoth.operation_time_id, hoth.time_code, hoth.time_name, hoth.standard_reqd_time_in_process,
+               hoth.operation_id, mo.OPERATION_NAME, mo.DESCRIPTION, hoth.workcell_id, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, hoth.enable_flag,
+               hoth.EVENT_ID, me.EVENT_BY, me.EVENT_TIME, met.DESCRIPTION as event_type
+        from hme_operation_time_his hoth
+        left join mt_operation mo
+        on mo.OPERATION_ID = hoth.operation_id
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = hoth.WORKCELL_ID
+        left join mt_event me
+        on me.EVENT_ID = hoth.EVENT_ID
+        left join mt_event_type met
+        on met.EVENT_TYPE_ID = me.EVENT_TYPE_ID
+        where hoth.tenant_id = #{tenantId}
+        and hoth.operation_time_id = #{dto.operationTimeId}
+        <if test="dto.dateFrom != null">
+            and me.EVENT_TIME >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.dateTo != null">
+            and me.EVENT_TIME &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        order by me.EVENT_TIME desc
+    </select>
+
+    <select id="queryMaterialHis" resultType="com.ruike.hme.domain.vo.HmeOperationTimeVO5">
+        select hotmh.operation_time_material_id, hotmh.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               hotmh.production_version_id, hpv.PRODUCTION_VERSION, hpv.DESCRIPTION, hotmh.standard_reqd_time_in_process,
+               hotmh.enable_flag, hotmh.event_id, me.EVENT_BY, me.EVENT_TIME, met.DESCRIPTION as event_type
+        from hme_operation_time_material_his hotmh
+        left join mt_material mm
+        on mm.MATERIAL_ID = hotmh.MATERIAL_ID
+        left join hme_production_version hpv
+        on hpv.production_version_id = hotmh.production_version_id
+        left join mt_event me
+        on me.EVENT_ID = hotmh.EVENT_ID
+        left join mt_event_type met
+        on met.EVENT_TYPE_ID = me.EVENT_TYPE_ID
+        where hotmh.tenant_id = #{tenantId}
+        and hotmh.operation_time_id = #{dto.operationTimeId}
+        <if test="dto.dateFrom != null">
+            and me.EVENT_TIME >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.dateTo != null">
+            and me.EVENT_TIME &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        order by me.EVENT_TIME desc
+    </select>
+
+    <select id="queryObjectHis" resultType="com.ruike.hme.domain.vo.HmeOperationTimeVO6">
+        select hotoh.operation_time_object_id, hotoh.object_type, hotoh.object_id,
+               hotoh.standard_reqd_time_in_process, hotoh.enable_flag, hotoh.EVENT_ID,
+               me.EVENT_BY, me.EVENT_TIME, met.DESCRIPTION as event_type
+        from hme_operation_time_object_his hotoh
+        left join mt_event me
+        on me.EVENT_ID = hotoh.EVENT_ID
+        left join mt_event_type met
+        on met.EVENT_TYPE_ID = me.EVENT_TYPE_ID
+        where hotoh.tenant_id = #{tenantId}
+        and hotoh.operation_time_id = #{dto.operationTimeId}
+        <if test="dto.dateFrom != null">
+            and me.EVENT_TIME >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.dateTo != null">
+            and me.EVENT_TIME &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        order by me.EVENT_TIME desc
+    </select>
+</mapper>

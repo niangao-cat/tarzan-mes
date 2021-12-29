@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfApCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfApCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="AP_DURATION" property="apDuration" jdbcType="DECIMAL"/>
+        <result column="AP_CHANNER" property="apChanner" jdbcType="VARCHAR"/>
+        <result column="AP_CURRENT" property="apCurrent" jdbcType="DECIMAL"/>
+        <result column="AP_POWER" property="apPower" jdbcType="DECIMAL"/>
+        <result column="AP_BASE_TEMP" property="apBaseTemp" jdbcType="DECIMAL"/>
+        <result column="AP_LASER_TEMP" property="apLaserTemp" jdbcType="DECIMAL"/>
+        <result column="AP_NOZZLE_TEMP" property="apNozzleTemp" jdbcType="DECIMAL"/>
+        <result column="AP_WATER_COOL_TEMP" property="apWaterCoolTemp" jdbcType="DECIMAL"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE1" property="apAttribute1" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE2" property="apAttribute2" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE3" property="apAttribute3" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE4" property="apAttribute4" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE5" property="apAttribute5" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE6" property="apAttribute6" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE7" property="apAttribute7" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE8" property="apAttribute8" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE9" property="apAttribute9" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE10" property="apAttribute10" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE11" property="apAttribute11" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE12" property="apAttribute12" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE13" property="apAttribute13" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE14" property="apAttribute14" jdbcType="VARCHAR"/>
+        <result column="AP_ATTRIBUTE15" property="apAttribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="selectOperation" resultType="java.lang.String">
+        SELECT
+            mowdr.OPERATION_ID
+        FROM
+            mt_operation_wkc_dispatch_rel mowdr,
+            mt_mod_organization_rel mmor
+        WHERE
+            mowdr.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.ORGANIZATION_ID = #{wkcId}
+        AND mmor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="selectcode" resultType="com.ruike.itf.api.dto.ApCollectItfDTO1">
+        SELECT
+            hejdr.job_record_id,
+            hejdr.eo_id,
+            hejdr.tag_group_id,
+            hejdr.tag_id,
+            hejdr.minimum_value,
+            hejdr.maximal_value,
+            htda.limit_cond1,
+            htda.cond1_value,
+            htda.limit_cond2,
+            htda.cond2_value,
+            htda.value_field
+        FROM
+            hme_eo_job_data_record hejdr,
+            hme_tag_daq_attr htda
+        WHERE
+            hejdr.tag_id = htda.tag_id
+        AND htda.value_field IS NOT NULL
+        AND hejdr.job_id = #{jobId}
+    </select>
+</mapper>

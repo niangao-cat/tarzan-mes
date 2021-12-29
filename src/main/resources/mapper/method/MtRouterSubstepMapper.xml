@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterSubstepMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterSubstep">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_SUBSTEP_ID" property="routerSubstepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_ID" property="substepId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtRouterSubstepDTO">
+        <result column="ROUTER_SUBSTEP_ID" property="routerSubstepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_ID" property="substepId" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_NAME" property="substepName" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_DESC" property="substepDesc" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="selectByStepIds" resultMap="BaseResultMap">
+        select * from mt_router_substep where TENANT_ID = ${tenantId} AND ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryRouterSubstepForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mrs.ROUTER_SUBSTEP_ID,
+        mrs.ROUTER_STEP_ID,
+        mrs.SUBSTEP_ID,
+        ms.SUBSTEP_NAME,
+        mst.DESCRIPTION SUBSTEP_DESC,
+        mrs.SEQUENCE
+        from mt_router_substep mrs
+        join mt_substep ms on mrs.SUBSTEP_ID = ms.SUBSTEP_ID and ms.TENANT_ID = ${tenantId}
+        join mt_substep_tl mst on ms.SUBSTEP_ID = mst.SUBSTEP_ID and mst.LANG = #{locale}
+        where mrs.TENANT_ID = ${tenantId}
+        and mrs.ROUTER_STEP_ID in
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        Order By mrs.CREATION_DATE DESC
+    </select>
+</mapper>

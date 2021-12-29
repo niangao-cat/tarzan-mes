@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeNcCodeRouterRelHisMapper">
+    <select id="ncCodeRouterRelHisQuery" resultType="com.ruike.hme.domain.vo.HmeNcCodeRouterRelHisVO">
+        SELECT
+        hncrrh.NC_CODE_ROUTER_REL_HIS_ID,
+        hncrrh.NC_GROUP_ID,
+        mng.NC_GROUP_CODE,
+        mng.DESCRIPTION AS NC_GROUP_DESCRIPTION,
+        hncrrh.NC_CODE_ID,
+        mnc.NC_CODE,
+        mnc.DESCRIPTION AS NC_CODE_DESCRIPTION,
+        hncrrh.PROD_LINE_ID,
+        mmpl.PROD_LINE_CODE,
+        mmpl.DESCRIPTION AS PROD_LINE_DESCRIPTION,
+        hncrrh.DEVICE_TYPE,
+        hncrrh.CHIP_TYPE,
+        hncrrh.ROUTER_ID,
+        mr.ROUTER_NAME,
+        hncrrh.ENABLE_FLAG,
+        me.EVENT_TIME AS CREATION_DATE,
+        iu.real_name AS login_name,
+        hncrrh.ATTRIBUTE1 OPERATION_ID,
+        mo.OPERATION_NAME
+    FROM
+        hme_nc_code_router_rel_his hncrrh
+        LEFT JOIN mt_operation mo ON mo.OPERATION_ID = hncrrh.ATTRIBUTE1,
+        mt_nc_group mng,
+        mt_nc_code mnc,
+        mt_mod_production_line mmpl,
+        mt_router mr,
+        mt_event me,
+        hzero_platform.iam_user iu
+    WHERE
+        iu.id = me.CREATED_BY
+        AND me.EVENT_ID = hncrrh.EVENT_ID
+        AND mr.ROUTER_ID = hncrrh.ROUTER_ID
+        AND mmpl.PROD_LINE_ID = hncrrh.PROD_LINE_ID
+        AND mnc.NC_CODE_ID = hncrrh.NC_CODE_ID
+        AND mng.NC_GROUP_ID = hncrrh.NC_GROUP_ID
+        AND hncrrh.NC_CODE_ROUTER_REL_ID = #{ncCodeRouterRelId}
+    ORDER BY
+        hncrrh.creation_date DESC
+    </select>
+</mapper>

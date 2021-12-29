@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsMaterialInspContentMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsMaterialInspContent">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="material_inspection_content_id" property="materialInspectionContentId" jdbcType="VARCHAR"/>
+        <result column="scheme_id" property="schemeId" jdbcType="VARCHAR"/>
+        <result column="tag_group_id" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="tag_id" property="tagId" jdbcType="VARCHAR"/>
+        <result column="order_key" property="orderKey" jdbcType="DECIMAL"/>
+        <result column="inspection" property="inspection" jdbcType="VARCHAR"/>
+        <result column="inspection_desc" property="inspectionDesc" jdbcType="VARCHAR"/>
+        <result column="inspection_type" property="inspectionType" jdbcType="VARCHAR"/>
+        <result column="standard_type" property="standardType" jdbcType="VARCHAR"/>
+        <result column="accuracy" property="accuracy" jdbcType="DECIMAL"/>
+        <result column="standard_from" property="standardFrom" jdbcType="DECIMAL"/>
+        <result column="standard_to" property="standardTo" jdbcType="DECIMAL"/>
+        <result column="standard_uom" property="standardUom" jdbcType="VARCHAR"/>
+        <result column="defect_level" property="defectLevel" jdbcType="VARCHAR"/>
+        <result column="standard_text" property="standardText" jdbcType="VARCHAR"/>
+        <result column="inspection_tool" property="inspectionTool" jdbcType="VARCHAR"/>
+        <result column="inspection_method" property="inspectionMethod" jdbcType="VARCHAR"/>
+        <result column="sample_type" property="sampleType" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="attribute_category" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="attribute1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="attribute2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="attribute3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="attribute4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="attribute5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="attribute6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="attribute7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="attribute8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="attribute9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="attribute10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectInspectionLine" resultType="com.ruike.qms.api.dto.QmsMaterialInspContentReturnDTO">
+        SELECT
+            qmic.material_inspection_content_id,
+            qmic.scheme_id,
+            qmic.tag_group_id,
+            qmic.tag_id,
+            qmic.order_key,
+            qmic.inspection,
+            qmic.inspection_type,
+            qmic.defect_level,
+            qmic.standard_type,
+            qmic.accuracy,
+            qmic.standard_from,
+            qmic.standard_to,
+            qmic.standard_uom,
+            qmic.standard_text,
+            qmic.inspection_tool,
+            qmic.inspection_method,
+            qmic.sample_type,
+            qmic.enable_flag,
+            qst.sample_type_code,
+            mgt.DESCRIPTION STANDARD_TYPE_MEANING,
+            mgt2.DESCRIPTION INSPECTION_METHOD_MEANING,
+            qmic.object_version_number,
+            qmic.inspection_desc
+        FROM
+            qms_material_insp_content qmic
+            left join qms_sample_type qst on qmic.sample_type = qst.sample_type_id
+            left join mt_gen_type mgt on mgt.MODULE = 'GENERAL' and mgt.TYPE_GROUP = 'TAG_VALUE_TYPE' and qmic.standard_type = mgt.TYPE_CODE
+            left join mt_gen_type mgt2 on mgt2.MODULE = 'GENERAL' and mgt2.TYPE_GROUP = 'TAG_COLLECTION_METHOD' and qmic.inspection_method = mgt2.TYPE_CODE
+        WHERE
+            qmic.tenant_id = #{tenantId}
+            <if test="tagGroupId != null and tagGroupId != ''">
+                AND qmic.tag_group_id = #{tagGroupId}
+            </if>
+            <if test="inspectionSchemeId != null and inspectionSchemeId != ''">
+                AND qmic.scheme_id = #{inspectionSchemeId}
+            </if>
+    </select>
+</mapper>

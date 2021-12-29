@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeExceptionGroupMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeExceptionGroup">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="exception_group_id" property="exceptionGroupId" jdbcType="VARCHAR"/>
+        <result column="exception_group_code" property="exceptionGroupCode" jdbcType="VARCHAR"/>
+        <result column="exception_group_name" property="exceptionGroupName" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="exception_group_type" property="exceptionGroupType" jdbcType="VARCHAR"/>
+        <result column="source_group_id" property="sourceGroupId" jdbcType="VARCHAR"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="uiQuery"
+            resultType="com.ruike.hme.domain.entity.HmeExceptionGroup">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select exc.tenant_id,
+        exc.exception_group_id,
+        exc.exception_group_type,
+        tl.DESCRIPTION exception_group_type_name,
+        exc.exception_group_code,
+        exc.exception_group_name,
+        exc.enable_flag,
+        exc.source_group_id,
+        exc.object_version_number,
+        exc.creation_date,
+        exc.created_by,
+        exc.last_updated_by,
+        exc.last_update_date
+        from  mt_gen_type mgt
+        left join mt_gen_type_tl tl on mgt.GEN_TYPE_ID = tl.GEN_TYPE_ID and tl.LANG = #{locale}
+        ,hme_exception_group exc
+        <if test="dto.exceptionId != null">
+            , hme_exc_group_assign ega
+        </if>
+        <if test="dto.processId != null">
+            , hme_exc_group_wkc_assign egwa
+        </if>
+        <if test="dto.workcellId != null">
+            , hme_exc_group_wkc_assign egwa2
+        </if>
+        where exc.exception_group_type = mgt.TYPE_CODE
+        and   mgt.TYPE_GROUP = 'EXCEPTION_GROUP_TYPE'
+        and   exc.tenant_id = #{tenantId}
+        <if test="dto.exceptionGroupId!=null">
+            and exc.exception_group_id = #{dto.exceptionGroupId}
+        </if>
+        <if test="dto.enableFlag!=null">
+            and exc.enable_flag = #{dto.enableFlag}
+        </if>
+        <if test="dto.exceptionGroupType!=null">
+            and exc.exception_group_type = #{dto.exceptionGroupType}
+        </if>
+        <if test="dto.exceptionGroupCode!=null">
+            and exc.exception_group_code like CONCAT(#{dto.exceptionGroupCode},"%")
+        </if>
+        <if test="dto.exceptionGroupName!=null">
+            and exc.exception_group_name like CONCAT(#{dto.exceptionGroupName},"%")
+        </if>
+        <if test="dto.exceptionId != null">
+            and exc.exception_group_id = ega.exception_group_id
+            and ega.exception_id = #{dto.exceptionId}
+        </if>
+        <if test="dto.processId != null">
+            and egwa.exception_group_id = exc.exception_group_id
+            and egwa.workcell_id = #{dto.processId}
+        </if>
+        <if test="dto.workcellId != null">
+            and egwa2.exception_group_id = exc.exception_group_id
+            and egwa2.workcell_id = #{dto.workcellProcessId}
+        </if>
+        group by exc.tenant_id,
+        exc.exception_group_id,
+        exc.exception_group_type,
+        tl.DESCRIPTION,
+        exc.exception_group_code,
+        exc.exception_group_name,
+        exc.enable_flag,
+        exc.source_group_id,
+        exc.object_version_number,
+        exc.creation_date,
+        exc.created_by,
+        exc.last_updated_by,
+        exc.last_update_date
+    </select>
+</mapper>

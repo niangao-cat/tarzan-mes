@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.pull.infra.mapper.MtPullInstructionSnapshotMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.pull.domain.entity.MtPullInstructionSnapshot">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="INSTRUCTION_SNAPSHOT_ID" property="instructionSnapshotId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="SOURCE_ORDER_TYPE" property="sourceOrderType" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="TO_LOCATOR_ID" property="toLocatorId" jdbcType="VARCHAR"/>
+        <result column="WAVE_SEQUENCE" property="waveSequence" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="TIMESTAMP"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="COVER_QTY" property="coverQty" jdbcType="DECIMAL"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="SNAPSHOT_REVISION" property="snapshotRevision" jdbcType="VARCHAR"/>
+        <result column="LATEST_REVISION_FLAG" property="latestRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

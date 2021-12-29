@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDistributionSignMapper">
+
+    <select id="selectSignListByDocId" resultType="com.ruike.wms.domain.vo.WmsDistributionSignLineVO">
+        select ins.instruction_id
+             , ins.material_id
+             , mm.material_code
+             , mm.material_name
+             , ins.instruction_status
+             , ins.quantity
+             , ins.uom_id
+             , uom.uom_code
+             , mia_ver.attr_value                                                  material_version
+             , mia_so.attr_value                                                   so_num
+             , mia_sol.attr_value                                                  so_line_num
+             , sum(IF(mml_status.attr_value = 'PREPARED', mml.PRIMARY_UOM_QTY, 0)) signable_qty
+             , count(mml.MATERIAL_LOT_ID)                                          barcode_num
+             , sum(IF(mml_status.attr_value = 'PREPARED', 1, 0))                   signable_barcode_num
+        from mt_instruction ins
+                 left join mt_instruction_attr mia_ver on ins.instruction_id = mia_ver.instruction_id
+            and mia_ver.ATTR_NAME = 'MATERIAL_VERSION'
+                 left join mt_instruction_attr mia_so on ins.instruction_id = mia_so.instruction_id
+            and mia_so.ATTR_NAME = 'SO_NUM'
+                 left join mt_instruction_attr mia_sol on ins.instruction_id = mia_sol.instruction_id
+            and mia_sol.ATTR_NAME = 'SO_LINE_NUM'
+                 left join mt_instruction_actual act on act.INSTRUCTION_ID = ins.INSTRUCTION_ID
+                 left join mt_instruction_actual_detail miad on miad.ACTUAL_ID = act.ACTUAL_ID
+                 left join mt_material_lot mml on mml.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+                 left join mt_material_lot_attr mml_status on mml.material_lot_id = mml_status.material_lot_id and
+                                                              mml_status.attr_name = 'STATUS'
+           , mt_material mm
+           , mt_uom uom
+        where ins.MATERIAL_ID = mm.MATERIAL_ID
+          and ins.UOM_ID = uom.UOM_ID
+          and ins.INSTRUCTION_STATUS = 'PREPARE_COMPLETE'
+          and ins.TENANT_ID = #{tenantId}
+          and ins.source_doc_id = #{instructionDocId}
+        group by ins.INSTRUCTION_ID
+               , ins.MATERIAL_ID
+               , mm.MATERIAL_CODE
+               , mm.MATERIAL_NAME
+               , ins.INSTRUCTION_STATUS
+               , ins.QUANTITY
+               , ins.UOM_ID
+               , uom.UOM_CODE
+               , mia_ver.attr_value
+               , mia_so.attr_value
+               , mia_sol.attr_value
+    </select>
+
+    <select id="selectPrepareSignList" resultType="com.ruike.wms.domain.vo.WmsDistributionSignDetailVO">
+        select mia.instruction_id
+        ,mia.tenant_id
+        ,ins.source_doc_id instruction_doc_id
+        ,mml.material_lot_id
+        ,mml.material_lot_code
+        ,miad.container_id
+        ,mia.material_id
+        ,mml.site_id
+        ,loc.parent_locator_id warehouse_id
+        ,mml.locator_id
+        ,loc_t.parent_locator_id to_warehouse_id
+        ,doca.attr_value to_locator_id
+        ,mml.lot
+        ,mml.primary_uom_qty
+        ,mml.primary_uom_id
+        ,uom.uom_code primary_uom_code
+        ,miad.actual_qty
+        , mml_so.attr_value so_num
+        , mml_soline.attr_value so_line_num
+        from mt_instruction_actual mia
+        ,mt_instruction_actual_detail miad
+        ,mt_instruction ins
+        left join mt_instruction_doc_attr doca on ins.SOURCE_DOC_ID = doca.INSTRUCTION_DOC_ID and doca.ATTR_NAME=
+        'TO_LOCATOR_ID'
+        ,mt_material_lot mml
+        inner join mt_material_lot_attr mml_status on mml.material_lot_id = mml_status.material_lot_id and
+        mml_status.attr_name = 'STATUS'
+        left join mt_material_lot_attr mml_so on mml.material_lot_id = mml_so.material_lot_id and
+        mml_so.attr_name = 'SO_NUM'
+        left join mt_material_lot_attr mml_soline on mml.material_lot_id = mml_soline.material_lot_id and
+        mml_soline.attr_name = 'SO_LINE_NUM'
+        ,mt_mod_locator loc
+        ,mt_mod_locator loc_t
+        ,mt_uom uom
+        where mia.ACTUAL_ID = miad.ACTUAL_ID
+        and mia.INSTRUCTION_ID = ins.INSTRUCTION_ID
+        and miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mml.LOCATOR_ID = loc.LOCATOR_ID
+        and doca.ATTR_VALUE = loc_t.LOCATOR_ID
+        and mml.PRIMARY_UOM_ID = uom.UOM_ID
+        and mml_status.ATTR_VALUE = 'PREPARED'
+        and mia.TENANT_ID = #{tenantId}
+        and mia.INSTRUCTION_ID in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtBomMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtBom">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="BOM_TYPE" property="bomType" jdbcType="VARCHAR"/>
+        <result column="BOM_STATUS" property="bomStatus" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_QTY" property="primaryQty" jdbcType="DECIMAL"/>
+        <result column="COPIED_FROM_BOM_ID" property="copiedFromBomId" jdbcType="VARCHAR"/>
+        <result column="RELEASED_FLAG" property="releasedFlag" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="AUTO_REVISION_FLAG" property="autoRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_AS_MATERIAL_FLAG" property="assembleAsMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="ViewResultMap7" type="tarzan.method.domain.vo.MtBomVO7">
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="BOM_TYPE" property="bomType" jdbcType="VARCHAR"/>
+        <result column="BOM_STATUS" property="bomStatus" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_QTY" property="primaryQty" jdbcType="DECIMAL"/>
+        <result column="COPIED_FROM_BOM_ID" property="copiedFromBomId" jdbcType="VARCHAR"/>
+        <result column="RELEASED_FLAG" property="releasedFlag" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="AUTO_REVISION_FLAG" property="autoRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_AS_MATERIAL_FLAG" property="assembleAsMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <collection property="siteId" ofType="java.lang.String"
+                    javaType="java.util.List" select="selectSiteByBomId" column="BOM_ID">
+            <constructor>
+                <arg column="SITE_ID"/>
+            </constructor>
+        </collection>
+    </resultMap>
+
+    <select id="selectSiteByBomId" parameterType="String" resultType="String">
+       select l.SITE_ID from mt_bom_site_assign l where l.BOM_ID=#{bomId} and l.ENABLE_FLAG='Y'
+    </select>
+
+    <resultMap id="BaseTLResultMap" type="tarzan.method.domain.vo.MtBomVO8">
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ViewResultMap" type="tarzan.method.domain.vo.MtBomVO9">
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="BOM_TYPE" property="bomType" jdbcType="VARCHAR"/>
+        <result column="BOM_TYPE_DESC" property="bomTypeDesc" jdbcType="VARCHAR"/>
+        <result column="BOM_STATUS" property="bomStatus" jdbcType="VARCHAR"/>
+        <result column="BOM_STATUS_DESC" property="bomStatusDesc" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_QTY" property="primaryQty" jdbcType="DECIMAL"/>
+        <result column="RELEASED_FLAG" property="releasedFlag" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="AUTO_REVISION_FLAG" property="autoRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_AS_MATERIAL_FLAG" property="assembleAsMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_BOM_ID" property="copiedFromBomId" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_BOM_NAME" property="copiedFromBomName" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_BOM_REVISION" property="copiedFromBomRevision" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_BOM_TYPE" property="copiedFromBomType" jdbcType="VARCHAR"/>
+
+        <collection property="componentList" ofType="tarzan.method.domain.vo.MtBomComponentVO14">
+            <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+            <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+            <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+            <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+            <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+            <result column="UOM_NAME" property="uomName" jdbcType="VARCHAR"/>
+            <result column="BOM_COMPONENT_TYPE" property="bomComponentType" jdbcType="VARCHAR"/>
+            <result column="BOM_COMPONENT_TYPE_DESC" property="bomComponentTypeDesc" jdbcType="VARCHAR"/>
+            <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+            <result column="COMPONENT_DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+            <result column="COMPONENT_DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectBoms" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select b.BOM_ID,
+        b.BOM_NAME,
+        b.REVISION,
+        t.DESCRIPTION,
+        b.BOM_TYPE,
+        b.BOM_STATUS,
+        b.PRIMARY_QTY,
+        b.COPIED_FROM_BOM_ID,
+        b.RELEASED_FLAG,
+        b.CURRENT_FLAG,
+        b.DATE_FROM,
+        b.DATE_TO,
+        b.CID
+        from mt_bom b,
+        mt_bom_tl t
+        where b.TENANT_ID = ${tenantId}
+        AND b.BOM_ID = t.BOM_ID
+        AND t.LANG = #{locale}
+        <if test="bom.siteId!=null">
+            AND EXISTS (SELECT 1 FROM mt_bom_site_assign ts WHERE ts.bom_id = b.bom_id AND ts.TENANT_ID = ${tenantId}
+            AND ts.enable_flag = 'Y' AND ts.site_id = #{bom.siteId})
+        </if>
+        <if test="bom.bomName!=null">
+            and b.BOM_NAME like CONCAT('%',#{bom.bomName},'%')
+        </if>
+        <if test="bom.revision!=null">
+            and b.REVISION = #{bom.revision}
+        </if>
+        <if test="bom.bomType!=null">
+            and b.BOM_TYPE = #{bom.bomType}
+        </if>
+        <if test="bom.currentFlag!=null">
+            and b.CURRENT_FLAG = #{bom.currentFlag}
+        </if>
+        <if test="bom.dateFrom!=null">
+            and DATE_FORMAT(b.DATE_FROM,'%Y-%m-%d %H:%i:%S') &gt;= #{bom.dateFrom}
+        </if>
+        <if test="bom.dateTo!=null">
+            and DATE_FORMAT(b.DATE_TO,'%Y-%m-%d %H:%i:%S') &lt;= #{bom.dateTo}
+        </if>
+        <if test="bom.description!=null">
+            and t.DESCRIPTION like CONCAT('%',#{bom.description},'%')
+        </if>
+        <if test="bom.bomStatus!=null">
+            and b.BOM_STATUS = #{bom.bomStatus}
+        </if>
+        <if test="bom.copiedFromBomId!=null">
+            and b.COPIED_FROM_BOM_ID = #{bom.copiedFromBomId}
+        </if>
+        <if test="bom.releasedFlag!=null">
+            and b.RELEASED_FLAG = #{bom.releasedFlag}
+        </if>
+        <if test="bom.primaryQty!=null">
+            and b.PRIMARY_QTY = #{bom.primaryQty}
+        </if>
+        <if test='bom.onlyAvailableFlag!=null and bom.onlyAvailableFlag=="Y"'>
+            and b.DATE_FROM &lt;= now()
+            and (b.DATE_TO is null or b.DATE_TO &gt; now())
+            and b.BOM_STATUS &lt;&gt; 'ABANDON'
+        </if>
+        <if test="bom.autoRevisionFlag!=null">
+            and b.AUTO_REVISION_FLAG = #{bom.autoRevisionFlag}
+        </if>
+        <if test="bom.assembleAsMaterialFlag!=null">
+            and b.ASSEMBLE_AS_MATERIAL_FLAG = #{bom.assembleAsMaterialFlag}
+        </if>
+    </select>
+
+    <select id="selectBomTL" resultMap="BaseTLResultMap">
+       select t.BOM_ID,t.LANG,t.DESCRIPTION from mt_bom_tl t where t.BOM_ID = #{bomId}
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="ViewResultMap7">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT t1.BOM_ID,
+        t1.BOM_NAME,
+        t1.REVISION,
+        t2.DESCRIPTION,
+        t1.BOM_TYPE,
+        t1.BOM_STATUS,
+        t1.PRIMARY_QTY,
+        t1.COPIED_FROM_BOM_ID,
+        t1.RELEASED_FLAG,
+        t1.CURRENT_FLAG,
+        t1.DATE_FROM,
+        t1.DATE_TO,
+        t1.AUTO_REVISION_FLAG,
+        t1.ASSEMBLE_AS_MATERIAL_FLAG,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        FROM mt_bom t1
+        INNER JOIN mt_bom_tl t2 ON (t1.BOM_ID = t2.BOM_ID AND t2.LANG = #{locale})
+        where t1.TENANT_ID = ${tenantId}
+        AND t1.BOM_ID = t2.BOM_ID
+        AND t2.LANG = #{locale}
+        AND t1.BOM_ID IN
+        <foreach collection="bomIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectBomAndCompById" resultMap="ViewResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT b.BOM_ID,
+        b.BOM_NAME,
+        b.REVISION,
+        t.DESCRIPTION,
+        b.BOM_TYPE,
+        '' AS BOM_TYPE_DESC,
+        b.BOM_STATUS,
+        '' AS BOM_STATUS_DESC,
+        b.PRIMARY_QTY,
+        b.RELEASED_FLAG,
+        b.CURRENT_FLAG,
+        b.DATE_FROM,
+        b.DATE_TO,
+        b.AUTO_REVISION_FLAG,
+        b.ASSEMBLE_AS_MATERIAL_FLAG,
+        b.COPIED_FROM_BOM_ID,
+        b1.BOM_NAME AS COPIED_FROM_BOM_NAME,
+        b1.REVISION AS COPIED_FROM_BOM_REVISION,
+        b1.BOM_TYPE AS COPIED_FROM_BOM_TYPE,
+        c.BOM_COMPONENT_ID,
+        c.LINE_NUMBER,
+        c.MATERIAL_ID,
+        '' AS MATERIAL_CODE,
+        '' AS MATERIAL_NAME,
+        '' AS UOM_NAME,
+        c.BOM_COMPONENT_TYPE,
+        '' AS BOM_COMPONENT_TYPE_DESC,
+        c.QTY,
+        c.DATE_FROM AS COMPONENT_DATE_FROM,
+        c.DATE_TO AS COMPONENT_DATE_TO
+        FROM mt_bom b INNER JOIN mt_bom_tl t ON (b.BOM_ID = t.BOM_ID AND t.LANG = #{locale})
+        LEFT JOIN mt_bom b1 ON (b.COPIED_FROM_BOM_ID = b1.BOM_ID AND b1.TENANT_ID = ${tenantId})
+        LEFT JOIN mt_bom_component c ON (b.BOM_ID = c.BOM_ID AND c.TENANT_ID =${tenantId})
+        WHERE b.TENANT_ID = ${tenantId}
+        AND b.BOM_ID = #{bomId}
+    </select>
+    <select id="selectByBomNameCustom" resultMap="BaseResultMap" fetchSize="5000">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT t1.BOM_ID,
+        t1.BOM_NAME,
+        t1.REVISION,
+        t2.DESCRIPTION,
+        t1.BOM_TYPE,
+        t1.BOM_STATUS,
+        t1.PRIMARY_QTY,
+        t1.COPIED_FROM_BOM_ID,
+        t1.RELEASED_FLAG,
+        t1.CURRENT_FLAG,
+        t1.DATE_FROM,
+        t1.DATE_TO,
+        t1.AUTO_REVISION_FLAG,
+        t1.ASSEMBLE_AS_MATERIAL_FLAG,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        FROM mt_bom t1
+        INNER JOIN mt_bom_tl t2 ON (t1.BOM_ID = t2.BOM_ID AND t2.LANG = #{locale})
+        where t1.TENANT_ID = ${tenantId}
+        AND t1.BOM_ID = t2.BOM_ID
+        AND t2.LANG = #{locale}
+        AND t1.CURRENT_FLAG='Y'
+        AND ${bomNames}
+    </select>
+    <select id="selectByBomIds" resultMap="BaseResultMap" fetchSize="5000">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT t1.BOM_ID,
+        t1.BOM_NAME,
+        t1.REVISION,
+        t2.DESCRIPTION,
+        t1.BOM_TYPE,
+        t1.BOM_STATUS,
+        t1.PRIMARY_QTY,
+        t1.COPIED_FROM_BOM_ID,
+        t1.RELEASED_FLAG,
+        t1.CURRENT_FLAG,
+        t1.DATE_FROM,
+        t1.DATE_TO,
+        t1.AUTO_REVISION_FLAG,
+        t1.ASSEMBLE_AS_MATERIAL_FLAG,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        FROM mt_bom t1
+        INNER JOIN mt_bom_tl t2 ON (t1.BOM_ID = t2.BOM_ID AND t2.LANG = #{locale})
+        where t1.TENANT_ID = ${tenantId}
+        AND t1.BOM_ID = t2.BOM_ID
+        AND t2.LANG = #{locale}
+        AND ${bomIds}
+    </select>
+</mapper>

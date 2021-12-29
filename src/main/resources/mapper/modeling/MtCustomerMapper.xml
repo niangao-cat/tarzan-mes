@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtCustomerMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtCustomer">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_CODE" property="customerCode" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_NAME_ALT" property="customerNameAlt" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="CUSTOMER_TYPE" property="customerType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_IDENTIFICATION_ID" property="sourceIdentificationId" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="batchSelectCustomerByIdList" resultMap="BaseResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select *
+        from mt_customer c
+        join mt_customer_tl tl on c.CUSTOMER_ID = tl.CUSTOMER_ID and tl.LANG = #{locale}
+        where c.TENANT_ID = #{tenantId}
+        and c.CUSTOMER_ID in
+        <foreach collection="customerIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryCustomerByCode" resultMap="BaseResultMap" fetchSize="5000">
+        select * from mt_customer
+        where
+        TENANT_ID = ${tenantId}
+        and ${customerCodeList}
+    </select>
+</mapper>

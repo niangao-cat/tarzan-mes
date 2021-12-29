@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtInstructionActualDetailMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtInstructionActualDetail">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ACTUAL_DETAIL_ID" property="actualDetailId" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_ID" property="actualId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_QTY" property="actualQty" jdbcType="DECIMAL"/>
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="FROM_LOCATOR_ID" property="fromLocatorId" jdbcType="VARCHAR"/>
+        <result column="TO_LOCATOR_ID" property="toLocatorId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <delete id="batchDelete">
+        delete from mt_instruction_actual_detail
+        where
+        TENANT_ID = #{tenantId}
+        and ACTUAL_DETAIL_ID in
+        <foreach collection="instructionActualDetailIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="propertyLimitInstructionActualDetailQuery"
+            resultType="tarzan.actual.domain.vo.MtInstructionActualDetailVO">
+        select
+        t3.SOURCE_DOC_ID as instructionDocId,
+        t2.INSTRUCTION_ID as instructionId,
+        t1.*
+        from mt_instruction_actual_detail t1
+        join mt_instruction_actual t2
+        on t1.ACTUAL_ID=t2.ACTUAL_ID
+        join mt_instruction t3
+        on t2.INSTRUCTION_ID=t3.INSTRUCTION_ID
+        where
+        t1.TENANT_ID=#{tenantId}
+        and t2.TENANT_ID=#{tenantId}
+        and t3.TENANT_ID=#{tenantId}
+        <if test="vo.actualDetailId != null">
+            and t1.ACTUAL_DETAIL_ID=#{vo.actualDetailId}
+        </if>
+        <if test="vo.actualId != null">
+            and t1.ACTUAL_ID=#{vo.actualId}
+        </if>
+        <if test="vo.materialLotId != null">
+            and t1.MATERIAL_LOT_ID=#{vo.materialLotId}
+        </if>
+        <if test="vo.uomId != null">
+            and t1.UOM_ID=#{vo.uomId}
+        </if>
+        <if test="vo.containerId != null">
+            and t1.CONTAINER_ID=#{vo.containerId}
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select *
+        from mt_instruction_actual_detail
+        where TENANT_ID = ${tenantId}
+        AND ACTUAL_ID IN
+        <foreach collection="actualIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByMyCondition" resultType="tarzan.actual.domain.vo.MtInstructionActualDetailVO2">
+        SELECT
+        tb.INSTRUCTION_ID,
+        tbd.ACTUAL_DETAIL_ID,
+        tbd.ACTUAL_ID,
+        tbd.MATERIAL_LOT_ID,
+        tbd.UOM_ID,
+        tbd.ACTUAL_QTY,
+        tbd.CONTAINER_ID
+        FROM
+        mt_instruction_actual_detail tbd,
+        mt_instruction_actual tb
+        WHERE
+        tbd.TENANT_ID = ${tenantId}
+        AND tb.TENANT_ID = ${tenantId}
+        AND tbd.ACTUAL_ID = tb.ACTUAL_ID
+        AND tb.INSTRUCTION_ID in
+        <foreach collection="instructionIdList" open="(" close=")" separator="," item="item">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectMaterialLotIdByActualId" resultType="java.lang.String">
+        select t.MATERIAL_LOT_ID
+        from mt_instruction_actual_detail t
+        where t.TENANT_ID = ${tenantId}
+        AND t.ACTUAL_ID IN
+        <foreach collection="actualIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updateActualQty">
+        UPDATE mt_instruction_actual_detail t
+        SET t.ACTUAL_QTY = #{actualQty}
+        WHERE
+            t.TENANT_ID = #{tenantId}
+        AND t.ACTUAL_DETAIL_ID = #{actualDetailId}
+    </update>
+
+    <update id="updateLocator">
+        UPDATE mt_instruction_actual_detail t
+        SET t.LOCATOR_ID = #{toLocatorId}
+        WHERE
+            t.TENANT_ID = #{tenantId}
+        AND t.ACTUAL_DETAIL_ID = #{actualDetailId}
+    </update>
+
+    <update id="updateQty">
+        UPDATE mt_instruction_actual_detail t
+        SET t.ACTUAL_QTY = #{actualQty}
+        WHERE
+            t.TENANT_ID = #{tenantId}
+        AND t.ACTUAL_ID = #{actualId}
+        AND t.MATERIAL_LOT_ID = #{materialLotId}
+    </update>
+
+    <update id="updateLocatorByActualId">
+        UPDATE mt_instruction_actual_detail t
+        SET t.TO_LOCATOR_ID = #{locatorId}
+        WHERE
+            t.TENANT_ID = #{tenantId}
+        AND t.ACTUAL_ID = #{actualId}
+        AND t.MATERIAL_LOT_ID = #{materialLotId}
+    </update>
+
+    <delete id="deleteByMaterialLotId">
+        DELETE
+        FROM
+            mt_instruction_actual_detail
+        WHERE
+            mt_instruction_actual_detail.TENANT_ID = #{tenantId}
+        AND mt_instruction_actual_detail.ACTUAL_ID = #{actualId}
+        and mt_instruction_actual_detail.MATERIAL_LOT_ID = #{materialLotId}
+    </delete>
+
+    <update id="updateContainer">
+        UPDATE mt_instruction_actual_detail t
+        SET t.CONTAINER_ID = ''
+        WHERE
+            t.TENANT_ID = #{tenantId}
+        AND t.ACTUAL_ID = #{actualId}
+        AND t.MATERIAL_LOT_ID = #{materialLotId}
+    </update>
+
+    <select id="getActualDetailId" resultMap="BaseResultMap">
+        select *
+        from mt_instruction_actual_detail t
+        where t.TENANT_ID = #{tenantId}
+        AND t.ACTUAL_ID = #{actualId}
+    </select>
+</mapper>

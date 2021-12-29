@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeNcDisposePlatformMapper">
+
+    <select id="getProcessNcCodeTypes" resultType="com.ruike.hme.api.dto.HmeNcDisposePlatformDTO8">
+        select DISTINCT(mng.NC_GROUP_ID) AS NC_CODE_ID, mng.DESCRIPTION, mng.CREATION_DATE
+        from mt_operation_wkc_dispatch_rel mowdr
+        left join mt_nc_valid_oper mnvo
+        on mnvo.OPERATION_ID = mowdr.OPERATION_ID
+        and mnvo.NC_OBJECT_TYPE = 'NC_GROUP'
+        left join mt_nc_GROUP mng
+        on mng.NC_GROUP_ID = mnvo.NC_OBJECT_ID
+        and mng.ENABLE_FLAG = 'Y'
+        and mng.COMPONENT_REQUIRED = #{componentRequired}
+        where mowdr.WORKCELL_ID = #{workcellId}
+        and mng.NC_GROUP_ID is not null
+        <if test="description != null">
+            and mng.DESCRIPTION like CONCAT('%',#{description},'%')
+        </if>
+        order by mng.CREATION_DATE
+    </select>
+
+    <select id="getProcessNcCodeTypes2" resultType="com.ruike.hme.api.dto.HmeNcDisposePlatformDTO8">
+        select DISTINCT(mng.NC_GROUP_ID) AS NC_CODE_ID, mng.DESCRIPTION, mng.CREATION_DATE
+        from mt_operation_wkc_dispatch_rel mowdr
+        left join mt_nc_valid_oper mnvo
+        on mnvo.OPERATION_ID = mowdr.OPERATION_ID
+        and mnvo.NC_OBJECT_TYPE = 'NC_GROUP'
+        left join mt_nc_group mng
+        on mng.NC_GROUP_ID = mnvo.NC_OBJECT_ID
+        and mng.ENABLE_FLAG = 'Y'
+        and mng.COMPONENT_REQUIRED = #{componentRequired}
+        where mowdr.WORKCELL_ID = #{workcellId}
+        and mng.NC_GROUP_ID is not null
+        order by mng.CREATION_DATE
+    </select>
+
+    <select id="getOtherWorkcell" resultType="com.ruike.hme.api.dto.HmeNcDisposePlatformDTO12">
+        select mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, hejs.site_in_date,
+        hejs.operation_id, mo.OPERATION_NAME, hejs.eo_step_id as eo_step_actual_id,
+        mrs.STEP_NAME as eo_step_actual_name
+        from mt_material_lot mml
+        left join hme_eo_job_sn hejs
+        on hejs.eo_id = mml.EO_ID
+        and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS')
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = hejs.workcell_id
+        and mmw.WORKCELL_TYPE = 'STATION'
+        left join mt_operation mo
+        on mo.OPERATION_ID = hejs.operation_id
+        left join mt_router_step mrs
+        on mrs.ROUTER_STEP_ID = hejs.eo_step_id
+        where mml.MATERIAL_LOT_CODE = #{dto.materialLotCode}
+        and mmw.WORKCELL_ID != #{dto.workcellId}
+        and mmw.WORKCELL_ID is not null
+        and hejs.operation_id is not null
+        and hejs.eo_step_id is not null
+        <if test="dto.workcellCode != null">
+            and mmw.WORKCELL_CODE like CONCAT('%',CONCAT(#{dto.workcellCode},'%'))
+        </if>
+        <if test="dto.workcellName != null">
+            and mmw.WORKCELL_NAME like CONCAT('%',CONCAT(#{dto.workcellName},'%'))
+        </if>
+        order by hejs.site_in_date
+    </select>
+
+    <select id="getRouterStep" resultType="java.lang.String">
+        select mrs.ROUTER_STEP_ID
+        from mt_material_lot mml
+        left join mt_eo_router mer
+        on mer.EO_ID = mml.EO_ID
+        left join mt_router_step mrs
+        on mrs.ROUTER_ID = mer.ROUTER_ID
+        where mml.TENANT_ID = #{tenantId}
+        and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+        and mrs.ROUTER_STEP_ID is not null
+    </select>
+
+    <select id="getMaterialData" resultType="com.ruike.hme.api.dto.HmeNcDisposePlatformDTO23">
+        select mm.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME
+        from mt_router_operation mro
+        left join mt_router_operation_component mroc
+        on mroc.ROUTER_OPERATION_ID = mro.ROUTER_OPERATION_ID
+        left join mt_bom_component mbc
+        on mbc.BOM_COMPONENT_ID = mroc.BOM_COMPONENT_ID
+        LEFT JOIN mt_material mm
+        on mm.MATERIAL_ID = mbc.MATERIAL_ID
+        where mro.TENANT_ID = #{tenantId}
+        and mro.OPERATION_ID = #{operationId}
+        and mro.ROUTER_STEP_ID = #{routerStepId}
+        and mm.MATERIAL_ID is not null
+    </select>
+
+    <select id="getAttrValue" resultType="java.lang.String">
+        select mpia.ATTR_VALUE
+        from mt_material_site mms
+        left join mt_pfep_inventory mpi
+        on mpi.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_pfep_inventory_attr mpia
+        on mpia.PFEP_INVENTORY_ID = mpi.PFEP_INVENTORY_ID
+        and mpia.ATTR_NAME = 'MAT_LOT_TYPE'
+        where mms.TENANT_ID = #{tenantId}
+        and mms.MATERIAL_ID = #{materialId}
+        and mms.SITE_ID = #{siteId}
+    </select>
+
+    <select id="materialDataPageQuery" resultType="com.ruike.hme.api.dto.HmeNcDisposePlatformDTO13">
+        select hnct.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME, hnct.nc_component_temp_id,
+               hncst.material_lot_id, hncst.material_lot_code, hncst.ATTRIBUTE1 as scrap_qty_str
+        from hme_nc_component_temp hnct
+        left join hme_nc_component_sn_temp hncst
+        on hncst.nc_component_temp_id = hnct.nc_component_temp_id
+        left join mt_material mm
+        on mm.material_id = hnct.material_id
+        where hnct.tenant_id = #{tenantId}
+        and hnct.site_id = #{siteId}
+        and hnct.workcell_id = #{dto.workcellId}
+        and hnct.sn = #{dto.materialLotCode}
+        and hnct.user_id = #{userId}
+        order by hnct.CREATION_DATE desc
+    </select>
+
+    <select id="ncRecordQuery" resultType="com.ruike.hme.api.dto.HmeNcDisposePlatformDTO2">
+        select
+        mnr.*, mni.INCIDENT_NUMBER AS nc_number,
+        mwo.WORK_ORDER_NUM,
+        hnra.process_method,
+        mml.MATERIAL_LOT_CODE AS barcode,
+        mng.DESCRIPTION AS nc_group_desc,
+        hnra.attribute5 rework_order,
+        hnra.attribute4 DISPOSITION_FUNCTION_ID,
+        df.DISPOSITION_FUNCTION,
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        attr.ATTR_VALUE SUPPLIER_LOT,
+        hsd.ATTRIBUTE2 CHIP_SEQUENCE,
+        mld.hot_sink_code,
+        mld.load_row,
+        mld.load_column,
+        attr1.ATTR_VALUE MATERIAL_VERSION
+        from mt_nc_record mnr
+        left join mt_nc_incident mni
+        on mni.NC_INCIDENT_ID = mnr.NC_INCIDENT_ID
+        left join mt_material_lot ml on ml.MATERIAL_LOT_ID = mnr.MATERIAL_LOT_ID
+        left join mt_material_lot_attr attr
+        on attr.MATERIAL_LOT_ID = ml.MATERIAL_LOT_ID and attr.ATTR_NAME = 'SUPPLIER_LOT'
+        left join mt_supplier ms on ms.SUPPLIER_ID = ml.SUPPLIER_ID
+        left join mt_eo me
+        on me.EO_ID = mnr.EO_ID
+        left join mt_work_order mwo
+        on mwo.WORK_ORDER_ID = me.WORK_ORDER_ID
+        left join hme_nc_record_attr hnra
+        on hnra.parent_record_id = mnr.NC_RECORD_ID
+        and hnra.tenant_id = #{tenantId}
+        left join hme_material_lot_load mld on mld.tenant_id = hnra.tenant_id AND mld.load_sequence = hnra.attribute7
+        left join hme_selection_details hsd on hsd.tenant_id = hnra.tenant_id AND hsd.load_sequence = hnra.attribute7
+        left join mt_material_lot mml on mml.MATERIAL_LOT_ID = hnra.attribute3
+        LEFT JOIN mt_disposition_function df ON df.DISPOSITION_FUNCTION_ID = hnra.attribute4
+        left join mt_nc_group mng
+        on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+        LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = ml.MATERIAL_LOT_ID and attr1.ATTR_NAME = 'MATERIAL_VERSION'
+        where mnr.TENANT_ID = #{tenantId}
+        and (mnr.PARENT_NC_RECORD_ID IS NULL or mnr.PARENT_NC_RECORD_ID = '')
+        <if test="dto.workcellId != null">
+            and mnr.ROOT_CAUSE_WORKCELL_ID = #{dto.workcellId}
+        </if>
+        <if test="dto.workcellIdList != null and dto.workcellIdList.size() > 0">
+            and mnr.WORKCELL_ID IN
+            <foreach collection="dto.workcellIdList" item="s" open="  (" separator="," close=")" index="index">
+                #{s}
+            </foreach>
+        </if>
+        <if test="dto.materialLotIdList != null and dto.materialLotIdList.size() > 0">
+            and mnr.MATERIAL_LOT_ID IN
+            <foreach collection="dto.materialLotIdList" item="s" open="  (" separator="," close=")" index="index">
+                #{s}
+            </foreach>
+        </if>
+        <if test="dto.materialId != null">
+            and mnr.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.dateTimeFrom != null and dto.dateTimeFrom !=''">
+            and mnr.DATE_TIME > #{dto.dateTimeFrom}
+        </if>
+        <if test="dto.dateTimeTo != null and dto.dateTimeTo !=''">
+            and mnr.DATE_TIME &lt; #{dto.dateTimeTo}
+        </if>
+        <if test="dto.incidentNum != null">
+            and mni.INCIDENT_NUMBER LIKE CONCAT('%',#{dto.incidentNum},'%')
+        </if>
+        <if test="dto.workOrderNum != null">
+            and mwo.WORK_ORDER_NUM LIKE CONCAT('%',#{dto.workOrderNum},'%')
+        </if>
+        <if test="dto.disposeMethod != null">
+            and hnra.process_method = #{dto.disposeMethod}
+        </if>
+        <if test="dto.status != null">
+            and mnr.NC_STATUS = #{dto.status}
+        </if>
+        <if test="dto.ncGroupId != null">
+            and mng.NC_GROUP_ID = #{dto.ncGroupId}
+        </if>
+        <if test="dto.ncType != null">
+            and mng.COMPONENT_REQUIRED = #{dto.ncType}
+        </if>
+        <if test="dto.supplierId != null">
+            and ml.SUPPLIER_ID = #{dto.supplierId}
+        </if>
+        <if test="dto.supplierLot != null">
+            and attr.ATTR_VALUE LIKE CONCAT('%', #{dto.supplierLot}, '%')
+        </if>
+        <if test="dto.ncCodeId != null">
+            and EXISTS (
+            SELECT 1 FROM mt_nc_record sub_nr WHERE sub_nr.PARENT_NC_RECORD_ID = mnr.NC_RECORD_ID
+            AND sub_nr.NC_CODE_ID = #{dto.ncCodeId}
+            )
+        </if>
+        <if test="dto.materialVersion != null">
+            and attr1.ATTR_VALUE LIKE CONCAT('%',#{dto.materialVersion},'%')
+        </if>
+        <if test="dto.componentMaterialId != null">
+            and mnr.COMPONENT_MATERIAL_ID = #{dto.componentMaterialId}
+        </if>
+        order by mnr.nc_status desc, mnr.CREATION_DATE desc
+    </select>
+
+    <select id="siteOutDateQuery" resultType="java.util.Date">
+        select hejs.site_out_date
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materiaLotlId}
+        order by hejs.site_in_date desc
+        limit 1
+    </select>
+
+    <select id="commentsQuery" resultType="com.ruike.hme.api.dto.HmeNcDisposePlatformDTO26">
+        select mnr.COMMENTS
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.MATERIAL_ID = #{materialId}
+        and mnr.NC_CODE_ID = #{ncCodeId}
+        <if test="rootCauseOperationId != null and rootCauseOperationId != ''">
+            and mnr.ROOT_CAUSE_OPERATION_ID = #{rootCauseOperationId}
+        </if>
+        <if test="eoStepActualId != null and eoStepActualId != ''">
+            and mnr.EO_STEP_ACTUAL_ID = #{eoStepActualId}
+        </if>
+        and mnr.COMMENTS != ''
+        and mnr.PARENT_NC_RECORD_ID = ''
+        order by mnr.CREATION_DATE desc
+        limit 1
+    </select>
+
+    <select id="getNoSiteOutJobId" resultType="java.lang.String">
+        select hejs.job_id
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materiaLotlId}
+        and hejs.site_out_date is null
+    </select>
+
+    <select id="getOperationId" resultType="java.lang.String">
+        select owdr.OPERATION_ID
+        from mt_operation_wkc_dispatch_rel owdr
+        where owdr.TENANT_ID = #{tenantId}
+        and owdr.WORKCELL_ID = #{workcellId}
+        order by owdr.PRIORITY desc
+        limit 1
+    </select>
+
+    <select id="getJobIdList" resultType="java.lang.String">
+        select hejs.job_id
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materiaLotlId}
+        and hejs.operation_id = #{operationId}
+    </select>
+
+    <select id="snMaterialQuery" resultType="com.ruike.hme.domain.vo.HmeNcDisposePlatformVO5">
+        select hejm.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               hejm.material_lot_id, mml.MATERIAL_LOT_CODE, mml.lot,
+               IFNULL(hejm.release_qty, 0) as release_qty, 'N' as no_return_material_flag,
+               hejm.job_id
+        from hme_eo_job_material hejm
+        left join mt_material mm
+        on mm.MATERIAL_ID = hejm.material_id
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hejm.MATERIAL_LOT_ID
+        where hejm.tenant_id = #{tenantId}
+        and hejm.job_id = #{jobId}
+        and hejm.is_issued = '1'
+    </select>
+
+    <select id="qtyQuery" resultType="java.math.BigDecimal">
+        select IFNULL(sum(mnr.QTY), 0)
+        from mt_nc_record mnr
+        left join mt_nc_group mng
+        on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.MATERIAL_LOT_ID = #{materiaLotlId}
+        and mnr.OPERATION_ID = #{operationId}
+        and mnr.PARENT_NC_RECORD_ID = ''
+        and mng.COMPONENT_REQUIRED = 'Y'
+        and NC_STATUS = #{ncStatus}
+    </select>
+
+    <select id="timeMaterialQuery" resultType="com.ruike.hme.domain.vo.HmeNcDisposePlatformVO5">
+        select slm.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME, slm.material_lot_id,
+               mml.MATERIAL_LOT_CODE, mml.lot, slm.release_qty as release_qty,
+               'N' as no_return_material_flag, slm.job_id
+        from hme_eo_job_sn_lot_material slm
+        left join mt_material mm
+        on mm.MATERIAL_ID = slm.material_id
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = slm.MATERIAL_LOT_ID
+        where slm.tenant_id = #{tenantId}
+        and slm.job_id = #{jobId}
+        and slm.release_qty > 0
+    </select>
+
+    <select id="ncMaterialQuery" resultType="com.ruike.hme.domain.vo.HmeNcDisposePlatformVO3">
+        select mnr.COMPONENT_MATERIAL_ID as material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME, mnr.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE, mml.LOT, mnr.qty, mnr.NC_STATUS, 0 as release_qty, 'White' as color,
+        case
+        when hnra.process_method = '3' then
+        IFNULL(mnr.qty, 0)
+        else
+        0
+        end scrap_qty
+        from mt_nc_record mnr
+        left join mt_material mm
+        on mm.MATERIAL_ID = mnr.COMPONENT_MATERIAL_ID
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = mnr.MATERIAL_LOT_ID
+        left join hme_nc_record_attr hnra
+        on hnra.parent_record_id = mnr.NC_RECORD_ID
+        and hnra.tenant_id = mnr.TENANT_ID
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.PARENT_NC_RECORD_ID = ''
+        and mnr.EO_ID = #{eoId}
+        and mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+        and mnr.OPERATION_ID = #{operationId}
+        <if test="materialLotIdList != null and materialLotIdList.size > 0">
+            and mnr.MATERIAL_LOT_ID not in
+            <foreach collection="materialLotIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="areaLocatorQuery" resultType="java.lang.String">
+        select mml.LOCATOR_ID
+        from mt_mod_locator_org_rel rel
+        left join mt_mod_locator mml
+        on mml.LOCATOR_ID = rel.LOCATOR_ID
+        and mml.TENANT_ID = rel.TENANT_ID
+        where rel.TENANT_ID = #{tenantId}
+        and rel.ORGANIZATION_ID = #{organizationId}
+        and rel.ORGANIZATION_TYPE = 'WORKCELL'
+        and mml.LOCATOR_CATEGORY = 'INVENTORY'
+    </select>
+
+    <select id="getTotalByMaterialLot" resultType="java.lang.Long">
+        select count(*)
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.MATERIAL_LOT_ID = #{materialLotId}
+        and mnr.PARENT_NC_RECORD_ID = ''
+        and mnr.NC_STATUS = 'OPEN'
+    </select>
+
+    <select id="scrapQtyQuery" resultType="java.math.BigDecimal">
+        select IFNULL(round(sum(mnr.QTY), 2),0)
+        from mt_nc_record mnr
+        join mt_nc_group mng
+        on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+        join hme_nc_record_attr hnra
+        on hnra.parent_record_id = mnr.NC_RECORD_ID
+        and hnra.tenant_id = mnr.TENANT_ID
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.MATERIAL_LOT_ID = #{materiaLotlId}
+        and mnr.OPERATION_ID = #{operationId}
+        and (mnr.PARENT_NC_RECORD_ID is null or mnr.PARENT_NC_RECORD_ID = '')
+        and mng.COMPONENT_REQUIRED = 'Y'
+        and hnra.process_method = '3'
+    </select>
+
+    <select id="waitAuditQtyQuery" resultType="java.math.BigDecimal">
+        select IFNULL(round(sum(mnr.QTY), 3),0)
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.MATERIAL_LOT_ID = #{materiaLotlId}
+        and mnr.EO_ID = #{eoId}
+        and (mnr.PARENT_NC_RECORD_ID is null or mnr.PARENT_NC_RECORD_ID = '')
+        and mnr.NC_STATUS = 'OPEN'
+    </select>
+
+    <select id="waitAuditQtyReleaseQuery" resultType="java.math.BigDecimal">
+        select IFNULL(round(sum(mnr.QTY), 3),0)
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.MATERIAL_ID = #{materialId}
+        and mnr.EO_ID = #{eoId}
+        and (mnr.PARENT_NC_RECORD_ID is null or mnr.PARENT_NC_RECORD_ID = '')
+        and mnr.NC_STATUS = 'OPEN'
+        <if test="materialLotIdList!=null and materialLotIdList.size>0">
+            and mnr.MATERIAL_LOT_ID not in
+            <foreach collection="materialLotIdList" open="(" close=")" separator="," item="item" index="index">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getBomComponentIdByMaterial" resultType="java.lang.String">
+        select mbc.BOM_COMPONENT_ID
+        from mt_eo_bom meb
+        left join mt_bom_component mbc
+        on mbc.BOM_ID = meb.BOM_ID
+        and mbc.TENANT_ID = meb.TENANT_ID
+        where meb.TENANT_ID = #{tenantId}
+        and meb.EO_ID = #{eoId}
+        and mbc.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="getAssembleQtySum" resultType="java.math.BigDecimal">
+        select IFNULL(sum(woca.ASSEMBLE_QTY),0) + IFNULL(sum(woca.SCRAPPED_QTY),0)
+        from mt_work_order_component_actual woca
+        where woca.TENANT_ID = #{tenantId}
+        and woca.BOM_COMPONENT_ID = #{bomComponentId}
+        and woca.WORK_ORDER_ID = #{workOrderId}
+    </select>
+
+    <select id="eoComponentActualQuery" resultType="tarzan.actual.domain.entity.MtEoComponentActual">
+        select meca.OPERATION_ID, meca.ROUTER_STEP_ID
+        from mt_eo_component_actual meca
+        where meca.TENANT_ID = #{tenantId}
+        and meca.MATERIAL_ID = #{materialId}
+        and meca.EO_ID = #{eoId}
+        and meca.ASSEMBLE_QTY > 0
+        limit 1
+    </select>
+
+    <select id="eoComponentActualAssembleQuery" resultType="com.ruike.hme.domain.vo.HmeNcDisposePlatformVO4">
+        select meca.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME, meca.ASSEMBLE_QTY as release_qty,
+               meca.SCRAPPED_QTY as scrap_qty, 'Green' as color
+        from hme_eo_job_sn hejs
+        left join mt_eo_component_actual meca
+        on meca.ROUTER_STEP_ID = hejs.eo_step_id
+        and meca.TENANT_ID = hejs.tenant_id
+        left join mt_material mm
+        on mm.MATERIAL_ID = meca.MATERIAL_ID
+        where hejs.tenant_id = #{tenantId}
+        and hejs.eo_id = #{eoId}
+        and hejs.workcell_id = #{workcellId}
+        and meca.EO_ID = #{eoId}
+    </select>
+
+    <select id="ncMaterialLotQuery" resultType="com.ruike.hme.domain.vo.HmeNcDisposePlatformVO4">
+        select mnr.COMPONENT_MATERIAL_ID as MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME, mnr.MATERIAL_LOT_ID,
+               mml.MATERIAL_LOT_CODE, mml.LOT, 0 as release_qty, 0 as SCRAPPED_QTY,
+               mml.PRIMARY_UOM_QTY, 'White' as color
+        from mt_nc_record mnr
+        left join mt_material mm
+        on mm.MATERIAL_ID = mnr.COMPONENT_MATERIAL_ID
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = mnr.MATERIAL_LOT_ID
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.EO_ID = #{eoId}
+        and mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+        and (mnr.PARENT_NC_RECORD_ID = '' or mnr.PARENT_NC_RECORD_ID is null)
+        and mnr.NC_STATUS = 'OPEN'
+        and (mnr.MATERIAL_LOT_ID != '' or mnr.MATERIAL_LOT_ID is not null)
+    </select>
+
+    <select id="eoJobSnLotMaterialQuery" resultType="com.ruike.hme.domain.entity.HmeEoJobSnLotMaterial">
+        select ejslm.*
+        from hme_eo_job_sn_lot_material ejslm
+        where ejslm.tenant_id = #{tenantId}
+        and ejslm.job_id = #{jobId}
+        and ejslm.material_lot_id = #{materialLotId}
+        and ejslm.release_qty > 0
+        order by ejslm.last_update_date desc
+    </select>
+
+    <select id="routerStepIdQuery" resultType="java.lang.String">
+        select mrs.ROUTER_STEP_ID
+        from mt_eo_router mer,
+        mt_router_step mrs,
+        mt_router_operation mro
+        where mer.TENANT_ID = #{tenantId}
+        and mrs.ROUTER_ID = mer.ROUTER_ID
+        and mrs.TENANT_ID = mer.TENANT_ID
+        and mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        and mro.TENANT_ID = mrs.TENANT_ID
+        and mer.EO_ID = #{eoId}
+        and mro.OPERATION_ID = #{operationId}
+        and mrs.ROUTER_STEP_ID is not null
+        limit 1
+    </select>
+
+    <select id="woBomComponentIdQuery" resultType="java.lang.String">
+        select mbc.BOM_COMPONENT_ID
+        from mt_work_order mwo
+        left join mt_bom_component mbc
+        on mbc.BOM_ID = mwo.BOM_ID
+        and mbc.TENANT_ID = mwo.TENANT_ID
+        where mwo.WORK_ORDER_ID = #{workOrderId}
+        and mbc.LINE_NUMBER = #{lineNumber}
+        and mbc.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="getAssembleQty" resultType="java.math.BigDecimal">
+        select IFNULL(sum(woca.ASSEMBLE_QTY),0) + IFNULL(sum(woca.SCRAPPED_QTY),0)
+        from mt_work_order_component_actual woca
+        where woca.TENANT_ID = #{tenantId}
+        and woca.MATERIAL_ID in
+        <foreach collection="materialIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        and woca.WORK_ORDER_ID = #{workOrderId}
+        and woca.ROUTER_STEP_ID = #{routerStepId}
+    </select>
+
+    <select id="getScrapQty" resultType="java.math.BigDecimal">
+        select IFNULL(sum(woca.SCRAPPED_QTY),0) + IFNULL(sum(woca.ASSEMBLE_QTY),0)
+        from mt_work_order_component_actual woca
+        where woca.TENANT_ID = #{tenantId}
+        and woca.MATERIAL_ID in
+        <foreach collection="materialIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        and woca.WORK_ORDER_ID = #{workOrderId}
+        and woca.ROUTER_STEP_ID = #{routerStepId}
+    </select>
+
+    <select id="getPrimaryMaterial" resultType="java.lang.String">
+        SELECT
+            mbc2.BOM_COMPONENT_ID
+        FROM
+            mt_bom_component mbc,
+            mt_bom_substitute_group mbsg,
+            mt_bom_substitute mbs,
+            mt_bom_component mbc2
+        WHERE mbc.TENANT_ID = #{tenantId}
+        and mbc.BOM_COMPONENT_ID = #{bomComponentId}
+        and mbc.MATERIAL_ID = mbs.material_id
+        and mbs.BOM_SUBSTITUTE_GROUP_ID = mbsg.BOM_SUBSTITUTE_GROUP_ID
+        and mbsg.BOM_COMPONENT_ID = mbc2.BOM_COMPONENT_ID
+        and mbc2.QTY> 0
+        and mbc2.BOM_ID = #{bomId}
+    </select>
+
+    <select id="defaultStorageLocatorQuery" resultType="java.lang.String">
+        select rel.LOCATOR_ID
+        from mt_mod_locator_org_rel rel
+        left join mt_mod_locator mml
+        on mml.LOCATOR_ID = rel.LOCATOR_ID
+        where rel.TENANT_ID = #{tenantId}
+        and rel.ORGANIZATION_ID = #{wkcLineId}
+        and rel.ORGANIZATION_TYPE = 'WORKCELL'
+        and mml.LOCATOR_TYPE = 'DEFAULT_STORAGE'
+        and mml.LOCATOR_CATEGORY = 'INVENTORY'
+    </select>
+
+    <select id="getSubstituteMaterialByGroup" resultType="java.lang.String">
+        select wmsr.MATERIAL_ID
+        from wms_material_substitute_rel wmsr
+        where wmsr.TENANT_ID = #{tenantId}
+        and wmsr.SUBSTITUTE_GROUP = #{substituteGroup}
+    </select>
+
+    <select id="getRouterStepByEo" resultType="java.lang.String">
+        SELECT
+            mrs.ROUTER_STEP_ID
+        FROM
+            mt_eo_router mer,
+            mt_router_step mrs
+        WHERE
+            mer.TENANT_ID = #{tenantId}
+        AND mer.EO_ID = #{eoId}
+        AND mer.ROUTER_ID = mrs.ROUTER_ID
+    </select>
+
+    <select id="getRouterStepByWo" resultType="java.lang.String">
+        SELECT
+            mrs.ROUTER_STEP_ID
+        FROM
+            mt_work_order mwo,
+            mt_router_step mrs
+        WHERE
+            mwo.WORK_ORDER_ID = #{woId}
+        AND mrs.ROUTER_ID = mwo.ROUTER_ID
+    </select>
+
+    <select id="getWoSubstituteByPrimary" resultType="java.lang.String">
+        SELECT DISTINCT
+            (mbs.MATERIAL_ID)
+        FROM
+            mt_bom_substitute_group mbsg,
+            mt_bom_substitute mbs,
+            mt_bom_component mbc2
+        WHERE
+            mbsg.TENANT_ID = #{tenantId}
+        AND mbsg.BOM_COMPONENT_ID = #{bomComponentId}
+        AND mbs.BOM_SUBSTITUTE_GROUP_ID = mbsg.BOM_SUBSTITUTE_GROUP_ID
+        AND mbc2.BOM_ID = #{bomId}
+        AND mbc2.MATERIAL_ID = mbs.MATERIAL_ID
+        AND mbc2.BOM_COMPONENT_ID IS NOT NULL
+    </select>
+
+    <select id="getGlobalSubstituteByPrimary" resultType="java.lang.String">
+        SELECT DISTINCT
+            wmsr2.MATERIAL_ID
+        FROM
+            wms_material_substitute_rel wmsr
+        LEFT JOIN wms_material_substitute_rel wmsr2 ON wmsr2.TENANT_ID = wmsr.TENANT_ID
+        AND wmsr2.SUBSTITUTE_GROUP = wmsr.SUBSTITUTE_GROUP
+        WHERE
+            wmsr.TENANT_ID = #{tenantId}
+        AND wmsr.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="getSubLocatorByLocatorId" resultType="java.lang.String">
+        SELECT
+            mml.LOCATOR_ID
+        FROM
+            mt_mod_locator mml
+        WHERE
+            mml.TENANT_ID = #{tenantId}
+        AND mml.PARENT_LOCATOR_ID = #{locatorId}
+    </select>
+
+    <select id="getNcStorageByLocatorId" resultType="java.lang.String">
+        select mml2.LOCATOR_ID
+        from mt_material_lot ml
+        left join mt_mod_locator mml
+        on mml.LOCATOR_ID = ml.LOCATOR_ID
+        left join mt_mod_locator mml2
+        on mml2.PARENT_LOCATOR_ID = mml.PARENT_LOCATOR_ID
+        where ml.TENANT_ID = #{tenantId}
+        and ml.MATERIAL_LOT_ID = #{materialLotId}
+        and mml2.LOCATOR_TYPE = 'NC_STORAGE'
+    </select>
+
+    <select id="queryMaterialLotInfo" resultType="com.ruike.hme.domain.vo.HmeNcDisposePlatformVO7">
+        SELECT
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mml.PRIMARY_UOM_QTY,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            attr1.ATTR_VALUE COS_TYPE,
+            attr2.ATTR_VALUE REMARK,
+            attr3.ATTR_VALUE LOCATION_COLUMN,
+            attr4.ATTR_VALUE LOCATION_ROW
+        FROM
+            mt_material_lot mml
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mml.MATERIAL_ID
+        LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'COS_TYPE'
+        LEFT JOIN mt_material_lot_attr attr2 ON attr2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr2.ATTR_NAME = 'REMARK'
+        LEFT JOIN mt_material_lot_attr attr3 ON attr3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr3.ATTR_NAME = 'LOCATION_COLUMN'
+        LEFT JOIN mt_material_lot_attr attr4 ON attr4.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr4.ATTR_NAME = 'LOCATION_ROW'
+        WHERE mml.TENANT_ID = #{tenantId}
+        AND mml.MATERIAL_LOT_ID = #{materialLotId}
+    </select>
+
+    <select id="queryOpenNcRecordQty" resultType="java.math.BigDecimal">
+        SELECT
+            IFNULL(sum(nr.QTY),0) TOTAL_QTY
+        FROM
+            mt_nc_record nr,
+            mt_nc_group ng
+        WHERE nr.TENANT_ID = #{tenantId}
+        AND ng.TENANT_ID = ng.TENANT_ID
+        AND nr.NC_CODE_ID = ng.NC_GROUP_ID
+        AND ng.COMPONENT_REQUIRED = 'Y'
+        AND nr.NC_STATUS = 'OPEN'
+        AND nr.MATERIAL_LOT_ID = #{materialLotId}
+    </select>
+
+    <update id="batchUpdate">
+        update hme_material_lot_load
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            material_lot_id =
+            <foreach collection="materialLotLoadList" item="clause" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{clause.materialLotLoadId} then #{clause.materialLotId}
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and material_lot_load_id in
+            <foreach collection="materialLotLoadList" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.materialLotLoadId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="queryBomComponentByEoAndCode" resultType="java.lang.String">
+        SELECT
+            bc.BOM_COMPONENT_ID
+        FROM
+            mt_bom_component bc,
+            mt_eo_bom eb
+        WHERE
+        bc.TENANT_ID = #{tenantId}
+        AND bc.TENANT_ID = eb.TENANT_ID
+        AND eb.EO_ID = #{eoId}
+        AND bc.MATERIAL_ID = #{materialId}
+        AND bc.BOM_ID = eb.BOM_ID
+    </select>
+
+    <select id="queryNcRecordByLoadSequence" resultType="java.lang.String">
+        SELECT
+            nr.NC_RECORD_ID
+        FROM
+            mt_nc_record nr,
+            hme_nc_record_attr attr
+        WHERE
+            nr.TENANT_ID = #{tenantId}
+        AND nr.NC_RECORD_ID = attr.parent_record_id
+        AND attr.attribute7 = #{loadSequence}
+        AND (nr.PARENT_NC_RECORD_ID is NULL OR nr.PARENT_NC_RECORD_ID = '')
+        AND nr.NC_STATUS = 'OPEN'
+    </select>
+
+    <select id="queryMaterialLotLoadInfo" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        SELECT
+            mml.material_lot_load_id,
+            mml.material_lot_id,
+            mml.load_sequence,
+            mml.load_row,
+            mml.load_column,
+            mml.cos_num,
+	        mml.hot_sink_code
+        FROM
+         hme_virtual_num vn,
+         hme_selection_details sd,
+         hme_material_lot_load mml
+         WHERE vn.TENANT_ID = #{tenantId}
+         AND vn.MATERIAL_LOT_ID = #{materialLotId}
+         AND vn.EO_ID = #{eoId}
+         AND sd.virtual_num = vn.virtual_num
+         AND mml.LOAD_SEQUENCE = sd.LOAD_SEQUENCE
+    </select>
+
+    <select id="queryMaterialLotNcLoadInfo" resultType="com.ruike.hme.domain.entity.HmeMaterialLotNcLoad">
+         SELECT
+   	        mml.nc_load_id,
+	        mml.load_sequence,
+        	mml.load_num
+        FROM
+         hme_virtual_num vn,
+         hme_selection_details sd,
+         hme_material_lot_nc_load mml
+         WHERE vn.TENANT_ID = #{tenantId}
+         AND vn.MATERIAL_LOT_ID = #{materialLotId}
+         AND vn.EO_ID = #{eoId}
+         AND sd.virtual_num = vn.virtual_num
+         AND mml.LOAD_SEQUENCE = sd.LOAD_SEQUENCE
+         AND mml.LOAD_SEQUENCE = #{loadSequence}
+    </select>
+
+    <select id="eoJobDataRecordQuery" resultType="com.ruike.hme.domain.vo.HmeNcDisposePlatformVO8">
+        select hejdr.job_record_id, hejdr.result+0 as result, mt.TAG_CODE
+        from hme_eo_job_data_record hejdr,
+             mt_tag mt
+        where hejdr.tenant_id = #{tenantId}
+        and hejdr.eo_id = #{eoId}
+        and hejdr.workcell_id = #{workcellId}
+        and hejdr.result is not null
+        and hejdr.result != ''
+        and mt.TAG_ID = hejdr.tag_id
+        and mt.TAG_CODE like CONCAT('%',CONCAT(#{tagCode} ,'%'))
+    </select>
+
+    <select id="queryLatestJobIdByEoAndWorkcell" resultType="java.lang.String">
+        SELECT
+        	ejs.job_id
+        FROM
+        	hme_eo_job_sn ejs
+        WHERE ejs.tenant_id = #{tenantId}
+        AND ejs.eo_id = #{eoId}
+        AND ejs.workcell_id = #{workcellId}
+        ORDER BY ejs.creation_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryCurrentWorkcellId" resultType="java.lang.String">
+        SELECT
+        	ejs.workcell_id
+        FROM
+        	hme_eo_job_sn ejs
+        WHERE ejs.tenant_id = #{tenantId}
+        AND ejs.material_lot_id = #{materialLotId}
+        ORDER BY ejs.site_in_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryWoOfEo" resultType="com.ruike.hme.domain.vo.HmeNcDisposePlatformVO10">
+        SELECT
+            eo.EO_ID,
+            wo.WORK_ORDER_NUM
+        FROM
+            mt_eo eo,
+            mt_work_order wo
+        WHERE
+            wo.WORK_ORDER_ID = eo.WORK_ORDER_ID
+          AND eo.EO_ID IN
+        <foreach collection="eoIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+    </select>
+</mapper>

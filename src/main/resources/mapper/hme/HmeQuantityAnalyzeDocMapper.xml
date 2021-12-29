@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeQuantityAnalyzeDocMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeQuantityAnalyzeDoc">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="qa_doc_id" property="qaDocId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="quantity" property="quantity" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="quantityAnalyzeDocQuery" resultType="com.ruike.hme.domain.vo.HmeQuantityAnalyzeDocVO">
+        select hqad.qa_doc_id, hqad.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME, hqad.material_lot_id,
+        mml.MATERIAL_LOT_CODE, hqad.quantity
+        from hme_quantity_analyze_doc hqad,
+        mt_material mm,
+        mt_material_lot mml
+        where hqad.tenant_id = #{tenantId}
+        and mm.MATERIAL_ID = hqad.material_id
+        and mml.MATERIAL_LOT_ID = hqad.material_lot_id
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hqad.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            and mml.MATERIAL_LOT_CODE LIKE concat('%',concat(#{dto.materialLotCode},'%'))
+        </if>
+        <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+            and hqad.material_lot_id in(
+            select DISTINCT hejm.material_lot_id
+            from mt_work_order mwo
+            left join hme_eo_job_sn hejs
+            on hejs.tenant_id = mwo.TENANT_ID
+            and hejs.work_order_id = mwo.WORK_ORDER_ID
+            left join hme_eo_job_material hejm
+            on hejm.tenant_id = mwo.TENANT_ID
+            and hejm.job_id = hejs.job_id
+            where mwo.TENANT_ID = #{tenantId}
+            and mwo.WORK_ORDER_NUM like concat('%',concat(#{dto.workOrderNum},'%'))
+            and hejm.material_lot_id is not null
+            and hejm.material_lot_id != ''
+            )
+        </if>
+    </select>
+
+    <select id="getWoByMaterialLot" resultType="java.lang.String">
+        select DISTINCT(mwo.WORK_ORDER_NUM)
+        from hme_eo_job_material hejm,
+             hme_eo_job_sn hejs,
+             mt_work_order mwo
+        where hejm.tenant_id = #{tenantId}
+          and hejm.material_lot_id = #{materialLotId}
+          and hejs.job_id = hejm.job_id
+          and hejs.work_order_id is not null
+          and hejs.work_order_id != ''
+          and mwo.WORK_ORDER_ID = hejs.work_order_id
+    </select>
+
+    <select id="quantityAnalyzeLineQuery" resultType="com.ruike.hme.domain.vo.HmeQuantityAnalyzeDocVO2">
+        select hqal.qa_line_id, hqal.tag_code, hqal.tag_description, hqal.result
+        from hme_quantity_analyze_line hqal
+        where hqal.tenant_id = #{tenantId}
+          and hqal.qa_doc_id = #{docId}
+    </select>
+
+    <select id="selectList"
+            resultType="com.ruike.hme.domain.vo.QualityAnalyzeRepresentationLineVO">
+        select doc.qa_doc_id
+        , doc.qa_type
+        , doc.material_id
+        , mm.material_code
+        , mm.material_name
+        , doc.material_lot_id
+        , mml.material_lot_code
+        , doc.quantity
+        from hme_quantity_analyze_doc doc
+        , mt_material mm
+        , mt_material_lot mml
+        where doc.material_id = mm.material_id
+        and doc.material_lot_id = mml.MATERIAL_LOT_ID
+        and doc.tenant_id = #{tenantId}
+        and doc.qa_type = #{query.qaType}
+        <if test="query.workOrderNum != null">
+            <bind name="workOrderNumLike" value="'%'+query.workOrderNum+'%'"/>
+            and doc.material_lot_id in(
+            select DISTINCT hejm.material_lot_id
+            from mt_work_order mwo
+            left join hme_eo_job_sn hejs
+            on hejs.tenant_id = mwo.TENANT_ID
+            and hejs.work_order_id = mwo.WORK_ORDER_ID
+            left join hme_eo_job_material hejm
+            on hejm.tenant_id = mwo.TENANT_ID
+            and hejm.job_id = hejs.job_id
+            where mwo.TENANT_ID = #{tenantId}
+            and mwo.WORK_ORDER_NUM like #{workOrderNumLike} )
+        </if>
+        <if test="query.materialLotCode != null">
+            <bind name="materialLotCodeLike" value="'%'+query.materialLotCode+'%'"/>
+            and mml.material_lot_code like #{materialLotCodeLike}
+        </if>
+        <if test="query.materialId != null">
+            and doc.material_id = #{query.materialId}
+        </if>
+    </select>
+
+    <select id="getMaterialLotWorkOrder" resultType="com.ruike.hme.domain.vo.MaterialLotWorkOrderVO">
+        select distinct hejm.material_lot_id,
+        mwo.work_order_id,
+        mwo.work_order_num
+        from hme_eo_job_material hejm,
+        hme_eo_job_sn hejs,
+        mt_work_order mwo
+        where hejm.tenant_id = #{tenantId}
+        and hejs.job_id = hejm.job_id
+        and hejs.work_order_id is not null
+        and hejs.work_order_id != ''
+        and mwo.WORK_ORDER_ID = hejs.work_order_id
+        and hejm.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

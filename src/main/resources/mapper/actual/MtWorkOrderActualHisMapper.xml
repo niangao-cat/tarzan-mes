@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtWorkOrderActualHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtWorkOrderActualHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_ACTUAL_HIS_ID" property="workOrderActualHisId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ACTUAL_ID" property="workOrderActualId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="RELEASED_QTY" property="releasedQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QTY" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="ACTUAL_START_DATE" property="actualStartDate" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_END_DATE" property="actualEndDate" jdbcType="TIMESTAMP"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="TRX_RELEASED_QTY" property="trxReleasedQty" jdbcType="DECIMAL"/>
+        <result column="TRX_COMPLETED_QTY" property="trxCompletedQty" jdbcType="DECIMAL"/>
+        <result column="TRX_SCRAPPED_QTY" property="trxScrappedQty" jdbcType="DECIMAL"/>
+        <result column="TRX_HOLD_QTY" property="trxHoldQty" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="queryHis" resultMap="BaseResultMap">
+        select * from mt_work_order_actual_his ws
+        where 1 = 1
+        and TENANT_ID = ${tenantId}
+        <if test="workOrderId != null">
+            AND ws.WORK_ORDER_ID = #{condition.workOrderId}
+        </if>
+        <if test="workOrderActualId != null">
+            AND ws.WORK_ORDER_ACTUAL_ID = #{condition.workOrderActualId}
+        </if>
+        <if test="eventId != null">
+            AND ws.EVENT_ID = #{condition.eventId}
+        </if>
+    </select>
+
+    <select id="selectByEventIds" resultMap="BaseResultMap">
+        select * from mt_work_order_actual_his t where TENANT_ID = ${tenantId}
+        and t.EVENT_ID IN
+        <foreach collection="eventIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

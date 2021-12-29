@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeReportMapper">
+
+    <select id="processGatherResultReportQuery" resultType="com.ruike.hme.domain.vo.HmeProcessGatherResultReportVO">
+        SELECT
+        ea.ATTR_VALUE as sn,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mmsa.ATTR_VALUE as model,
+        wo.WORK_ORDER_NUM,
+        mtg.TAG_GROUP_CODE,
+        mtg.TAG_GROUP_DESCRIPTION,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        jdr.maximal_value,
+        jdr.minimum_value,
+        jdr.result,
+        mmw_p.WORKCELL_CODE as processCode,
+        mmw_p.WORKCELL_NAME as processName,
+        mmw_s.WORKCELL_CODE,
+        mmw_s.WORKCELL_NAME,
+        iu.real_name,
+        jdr.last_update_date as gather_date ,
+        hejs.site_in_date,
+        hejs.site_out_date
+        from
+            hme_eo_job_sn hejs,
+            mt_material mm,
+            mt_material_site mms
+            left join mt_material_site_attr mmsa on mmsa.material_Site_id = mms.material_site_id
+            and mmsa.attr_name = 'attribute5',
+            hme_eo_job_data_record jdr,
+            hzero_platform.iam_user iu,
+            mt_tag_group mtg,
+            mt_tag mt,
+            mt_mod_workcell mmw_s
+            LEFT JOIN mt_mod_organization_rel mor ON mmw_s.workcell_id = mor.ORGANIZATION_ID
+            AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+            and mor.parent_ORGANIZATION_TYPE = 'WORKCELL'
+            AND mor.TOP_SITE_ID = #{dto.siteId}
+            left join mt_mod_workcell mmw_p on mmw_p.workcell_id = mor.parent_ORGANIZATION_id,
+            mt_work_order wo,
+            mt_eo eo,
+            mt_eo_attr ea
+        where
+            eo.EO_ID = hejs.eo_id
+            and hejs.job_id = jdr.job_id
+            and eo.material_id = mm.MATERIAL_ID
+            and mm.MATERIAL_ID = mms.MATERIAL_ID
+            and mms.SITE_ID = #{dto.siteId}
+            and jdr.tag_group_id = mtg.TAG_GROUP_ID
+            and jdr.tag_id = mt.TAG_ID
+            and jdr.last_updated_by = iu.id
+            and mmw_s.WORKCELL_ID = hejs.workcell_id
+            and wo.work_order_id = eo.WORK_ORDER_ID
+            and eo.EO_ID = ea.EO_ID
+            and ea.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+            <if test="dto.snList!=null and dto.snList.size()>0">
+                and ea.ATTR_VALUE in
+                <foreach collection="dto.snList" item="item" open="(" close=")" separator="," index="index">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.materialCodeList!=null and dto.materialCodeList.size()>0">
+                and mm.MATERIAL_CODE in
+                <foreach collection="dto.materialCodeList" item="item" open="(" close=")" separator="," index="index">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.model != null and dto.model != ''">
+                and mmsa.ATTR_VALUE like concat('%',concat(#{dto.model},'%'))
+            </if>
+            <if test="dto.workOrderNumList!=null and dto.workOrderNumList.size()>0">
+                and wo.WORK_ORDER_NUM in
+                <foreach collection="dto.workOrderNumList" item="item" open="(" close=")" separator="," index="index">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.tagGroupCodeList!=null and dto.tagGroupCodeList.size()>0">
+                and mtg.TAG_GROUP_CODE in
+                <foreach collection="dto.tagGroupCodeList" item="item" open="(" close=")" separator="," index="index">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.tagCodeList!=null and dto.tagCodeList.size()>0">
+                and mt.TAG_CODE in
+                <foreach collection="dto.tagCodeList" item="item" open="(" close=")" separator="," index="index">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.processCodeList!=null and dto.processCodeList.size()>0">
+                and mmw_p.WORKCELL_CODE in
+                <foreach collection="dto.processCodeList" item="item" open="(" close=")" separator="," index="index">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.workcellCodeList!=null and dto.workcellCodeList.size()>0">
+                and mmw_s.WORKCELL_CODE in
+                <foreach collection="dto.workcellCodeList" item="item" open="(" close=")" separator="," index="index">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.gatherDateFrom != null">
+                and jdr.last_update_date >= DATE_FORMAT(#{dto.gatherDateFrom}, '%Y-%m-%d %T')
+            </if>
+            <if test="dto.gatherDateTo != null">
+                and jdr.last_update_date &lt;= DATE_FORMAT(#{dto.gatherDateTo}, '%Y-%m-%d %T')
+            </if>
+            <if test="dto.siteInDateFrom != null">
+                and hejs.site_in_date >= DATE_FORMAT(#{dto.siteInDateFrom}, '%Y-%m-%d %T')
+            </if>
+            <if test="dto.siteInDateTo != null">
+                and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.siteInDateTo}, '%Y-%m-%d %T')
+            </if>
+            <if test="dto.siteOutDateFrom != null">
+                and hejs.site_out_date >= DATE_FORMAT(#{dto.siteOutDateFrom}, '%Y-%m-%d %T')
+            </if>
+            <if test="dto.siteOutDateTo != null">
+                and hejs.site_out_date &lt;= DATE_FORMAT(#{dto.siteOutDateTo}, '%Y-%m-%d %T')
+            </if>
+            order by jdr.job_id,jdr.last_update_date
+    </select>
+
+    <select id="processGatherResultReportExport" resultType="com.ruike.hme.domain.vo.HmeProcessGatherResultReportVO2">
+        SELECT
+        ea.ATTR_VALUE as sn,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mmsa.ATTR_VALUE as model,
+        wo.WORK_ORDER_NUM,
+        mtg.TAG_GROUP_CODE,
+        mtg.TAG_GROUP_DESCRIPTION,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        jdr.maximal_value,
+        jdr.minimum_value,
+        jdr.result,
+        mmw_p.WORKCELL_CODE as processCode,
+        mmw_p.WORKCELL_NAME as processName,
+        mmw_s.WORKCELL_CODE,
+        mmw_s.WORKCELL_NAME,
+        iu.real_name,
+        DATE_FORMAT(jdr.last_update_date, '%Y-%m-%d %H:%i:%s') as gather_date_str,
+        DATE_FORMAT(hejs.site_in_date, '%Y-%m-%d %H:%i:%s') as site_in_date_str,
+        DATE_FORMAT(hejs.site_out_date, '%Y-%m-%d %H:%i:%s') as site_out_date_str
+        from
+        hme_eo_job_sn hejs,
+        mt_material mm,
+        mt_material_site mms
+        left join mt_material_site_attr mmsa on mmsa.material_Site_id = mms.material_site_id
+        and mmsa.attr_name = 'attribute5',
+        hme_eo_job_data_record jdr,
+        hzero_platform.iam_user iu,
+        mt_tag_group mtg,
+        mt_tag mt,
+        mt_mod_workcell mmw_s
+        LEFT JOIN mt_mod_organization_rel mor ON mmw_s.workcell_id = mor.ORGANIZATION_ID
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mor.parent_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.TOP_SITE_ID = #{dto.siteId}
+        left join mt_mod_workcell mmw_p on mmw_p.workcell_id = mor.parent_ORGANIZATION_id,
+        mt_work_order wo,
+        mt_eo eo,
+        mt_eo_attr ea
+        where
+        eo.EO_ID = hejs.eo_id
+        and hejs.job_id = jdr.job_id
+        and eo.material_id = mm.MATERIAL_ID
+        and mm.MATERIAL_ID = mms.MATERIAL_ID
+        and mms.SITE_ID = #{dto.siteId}
+        and jdr.tag_group_id = mtg.TAG_GROUP_ID
+        and jdr.tag_id = mt.TAG_ID
+        and jdr.last_updated_by = iu.id
+        and mmw_s.WORKCELL_ID = hejs.workcell_id
+        and wo.work_order_id = eo.WORK_ORDER_ID
+        and eo.EO_ID = ea.EO_ID
+        and ea.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+        <if test="dto.snList!=null and dto.snList.size()>0">
+            and ea.ATTR_VALUE in
+            <foreach collection="dto.snList" item="item" open="(" close=")" separator="," index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.materialCodeList!=null and dto.materialCodeList.size()>0">
+            and mm.MATERIAL_CODE in
+            <foreach collection="dto.materialCodeList" item="item" open="(" close=")" separator="," index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.model != null and dto.model != ''">
+            and mmsa.ATTR_VALUE like concat('%',concat(#{dto.model},'%'))
+        </if>
+        <if test="dto.workOrderNumList!=null and dto.workOrderNumList.size()>0">
+            and wo.WORK_ORDER_NUM in
+            <foreach collection="dto.workOrderNumList" item="item" open="(" close=")" separator="," index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.tagGroupCodeList!=null and dto.tagGroupCodeList.size()>0">
+            and mtg.TAG_GROUP_CODE in
+            <foreach collection="dto.tagGroupCodeList" item="item" open="(" close=")" separator="," index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.tagCodeList!=null and dto.tagCodeList.size()>0">
+            and mt.TAG_CODE in
+            <foreach collection="dto.tagCodeList" item="item" open="(" close=")" separator="," index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.processCodeList!=null and dto.processCodeList.size()>0">
+            and mmw_p.WORKCELL_CODE in
+            <foreach collection="dto.processCodeList" item="item" open="(" close=")" separator="," index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.workcellCodeList!=null and dto.workcellCodeList.size()>0">
+            and mmw_s.WORKCELL_CODE in
+            <foreach collection="dto.workcellCodeList" item="item" open="(" close=")" separator="," index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.gatherDateFrom != null">
+            and jdr.last_update_date >= DATE_FORMAT(#{dto.gatherDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.gatherDateTo != null">
+            and jdr.last_update_date &lt;= DATE_FORMAT(#{dto.gatherDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.siteInDateFrom != null">
+            and hejs.site_in_date >= DATE_FORMAT(#{dto.siteInDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.siteInDateTo != null">
+            and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.siteInDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.siteOutDateFrom != null">
+            and hejs.site_out_date >= DATE_FORMAT(#{dto.siteOutDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.siteOutDateTo != null">
+            and hejs.site_out_date &lt;= DATE_FORMAT(#{dto.siteOutDateTo}, '%Y-%m-%d %T')
+        </if>
+        order by jdr.job_id,jdr.last_update_date
+    </select>
+</mapper>

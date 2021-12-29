@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModProdLineDispatchOperMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModProdLineDispatchOper">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="DISPATCH_OPERATION_ID" property="dispatchOperationId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.modeling.domain.vo.MtModProdLineDispatchOperVO2">
+        <result column="DISPATCH_OPERATION_ID" property="dispatchOperationId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_CODE" property="prodLineCode" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="version" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="prodLineIdLimitDispatchOperationQueryForUi" resultMap="DtoResultMap">
+    SELECT
+        pl.DISPATCH_OPERATION_ID,
+        pl.PROD_LINE_ID,
+        pl.OPERATION_ID,
+        b.PROD_LINE_CODE,
+        ob.OPERATION_NAME,
+        ob.REVISION
+    FROM
+        mt_mod_prod_line_dispatch_oper pl
+        INNER JOIN mt_mod_production_line b ON pl.PROD_LINE_ID = b.PROD_LINE_ID
+        INNER JOIN mt_operation ob ON pl.OPERATION_ID = ob.OPERATION_ID
+    where 
+	    pl.PROD_LINE_ID = #{prodLineId}
+	    and pl.TENANT_ID = #{tenantId}
+	    and b.TENANT_ID = #{tenantId}
+	    and ob.TENANT_ID = #{tenantId} 
+	    ORDER BY pl.CREATION_DATE DESC 
+    </select>
+
+</mapper>

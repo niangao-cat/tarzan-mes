@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsSampleSchemeMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsSampleScheme">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="scheme_id" property="schemeId" jdbcType="VARCHAR"/>
+        <result column="sample_plan_type" property="samplePlanType" jdbcType="VARCHAR"/>
+        <result column="sample_standard_type" property="sampleStandardType" jdbcType="VARCHAR"/>
+        <result column="sample_size_code_letter" property="sampleSizeCodeLetter" jdbcType="VARCHAR"/>
+        <result column="lot_upper_limit" property="lotUpperLimit" jdbcType="DECIMAL"/>
+        <result column="lot_lower_limit" property="lotLowerLimit" jdbcType="DECIMAL"/>
+        <result column="acceptance_quantity_limit" property="acceptanceQuantityLimit" jdbcType="VARCHAR"/>
+        <result column="sample_size" property="sampleSize" jdbcType="DECIMAL"/>
+        <result column="ac" property="ac" jdbcType="DECIMAL"/>
+        <result column="re" property="re" jdbcType="DECIMAL"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectByConditionForUi" resultType="com.ruike.qms.api.dto.QmsSampleSchemeDTO">
+        SELECT
+        scheme.scheme_id,
+        scheme.sample_plan_type,
+        scheme.sample_standard_type,
+        scheme.sample_size_code_letter,
+        scheme.lot_upper_limit,
+        scheme.lot_lower_limit,
+        scheme.acceptance_quantity_limit,
+        scheme.sample_size,
+        scheme.ac,
+        scheme.re,
+        scheme.enable_flag,
+        scheme.ATTRIBUTE1
+        FROM
+        qms_sample_scheme scheme
+        WHERE scheme.TENANT_ID = #{tenantId}
+        <if test="dto.schemeId != null">
+            and scheme.scheme_id = #{dto.schemeId}
+        </if>
+        <if test="dto.samplePlanType != null">
+            and scheme.sample_plan_type = #{dto.samplePlanType}
+        </if>
+        <if test="dto.sampleSizeCodeLetter != null">
+            and scheme.sample_size_code_letter = #{dto.sampleSizeCodeLetter}
+        </if>
+        <if test="dto.acceptanceQuantityLimit != null">
+            and scheme.acceptance_quantity_limit = #{dto.acceptanceQuantityLimit}
+        </if>
+        <if test="dto.enableFlag != null">
+            and scheme.enable_flag = #{dto.enableFlag}
+        </if>
+    </select>
+    <select id="selectByConditionCount" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        qms_sample_scheme scheme
+        WHERE scheme.TENANT_ID = #{tenantId}
+        <if test="schemeId != null">
+            and scheme.scheme_id != #{schemeId}
+        </if>
+        <if test="aql != null">
+            and scheme.acceptance_quantity_limit = #{aql}
+        </if>
+        <if test="lotSize != null">
+            and #{lotSize} BETWEEN scheme.lot_upper_limit AND scheme.lot_lower_limit
+        </if>
+    </select>
+
+    <select id="qmsSampleSchemeQuery" resultType="com.ruike.qms.api.dto.QmsSampleSchemeDTO">
+        select qss.scheme_id, qss.sample_standard_type, qss.sample_size_code_letter, qss.lot_upper_limit,
+               qss.lot_lower_limit, qss.acceptance_quantity_limit, qss.sample_size, qss.ac, qss.re
+        from qms_sample_scheme qss
+        where qss.tenant_id = #{tenantId}
+        <if test="dto.schemeId != null">
+            and qss.scheme_id != #{dto.schemeId}
+        </if>
+        <if test="dto.sampleSizeCodeLetter != null">
+            and qss.sample_size_code_letter LIKE CONCAT('%',#{dto.sampleSizeCodeLetter},'%')
+        </if>
+        <if test="dto.acceptanceQuantityLimit != null">
+            and qss.acceptance_quantity_limit LIKE CONCAT('%',#{dto.acceptanceQuantityLimit},'%')
+        </if>
+    </select>
+</mapper>

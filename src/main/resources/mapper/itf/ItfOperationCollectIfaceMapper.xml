@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfOperationCollectIfaceMapper">
+
+
+    <select id="queryResult" resultType="com.ruike.itf.api.dto.OperationCollectItfDTO">
+        SELECT
+            mt.tag_code,
+            hetdr.result,
+            hetdr.created_by
+        FROM
+            hme_eo_test_data_record hetdr,
+            mt_tag mt
+        WHERE
+            mt.tag_id = hetdr.tag_id
+        and hetdr.operation_id = #{dto.operationId}
+        <if test="dto.reworkFlag != null and dto.reworkFlag.length() != 0">
+        and hetdr.rework_flag = #{dto.reworkFlag}
+        </if>
+        and hetdr.eo_id = #{dto.eoId}
+        and mt.tag_code = #{dto.tagCode}
+        and mt.tenant_id = #{tenantId}
+        and hetdr.last_update_date = (
+            SELECT
+                max(hetdr1.last_update_date)
+            FROM
+                hme_eo_test_data_record hetdr1,
+                mt_tag mt1
+            WHERE
+                mt1.TAG_ID = hetdr1.tag_id
+            AND mt1.TAG_CODE = mt.TAG_CODE
+        and hetdr1.operation_id = #{dto.operationId}
+        <if test="dto.reworkFlag != null and dto.reworkFlag.length() != 0">
+            and hetdr1.rework_flag = #{dto.reworkFlag}
+        </if>
+        and hetdr1.eo_id = #{dto.eoId}
+        )
+    </select>
+
+    <select id="queryResultLike" resultType="com.ruike.itf.api.dto.OperationCollectItfDTO">
+        SELECT
+            mt.tag_code,
+            hetdr.result,
+            hetdr.created_by
+        FROM
+            hme_eo_test_data_record hetdr,
+            mt_tag mt
+        WHERE
+            mt.tag_id = hetdr.tag_id
+        and hetdr.operation_id = #{dto.operationId}
+        <if test="dto.reworkFlag != null and dto.reworkFlag.length() != 0">
+        and hetdr.rework_flag = #{dto.reworkFlag}
+        </if>
+        and hetdr.eo_id = #{dto.eoId}
+        and mt.tag_code like #{dto.tagCode}
+        and mt.tenant_id = #{tenantId}
+        and hetdr.last_update_date = (
+            SELECT
+                max(hetdr1.last_update_date)
+            FROM
+                hme_eo_test_data_record hetdr1,
+                mt_tag mt1
+            WHERE
+                mt1.TAG_ID = hetdr1.tag_id
+            AND mt1.TAG_CODE = mt.TAG_CODE
+            and hetdr1.operation_id = #{dto.operationId}
+                <if test="dto.reworkFlag != null and dto.reworkFlag.length() != 0">
+                    and hetdr1.rework_flag = #{dto.reworkFlag}
+                </if>
+            and hetdr1.eo_id = #{dto.eoId}
+        )
+    </select>
+</mapper>

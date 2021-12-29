@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtNumrangeMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtNumrange">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NUMRANGE_ID" property="numrangeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_GROUP" property="numrangeGroup" jdbcType="VARCHAR"/>
+        <result column="NUM_DESCRIPTION" property="numDescription" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX1" property="inputBox1" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX2" property="inputBox2" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX3" property="inputBox3" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX4" property="inputBox4" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX5" property="inputBox5" jdbcType="VARCHAR"/>
+        <result column="NUM_EXAMPLE" property="numExample" jdbcType="VARCHAR"/>
+        <result column="OUTSIDE_NUM_FLAG" property="outsideNumFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VResultMap" type="io.tarzan.common.domain.vo.MtNumrangeVO7"  extends="BaseResultMap">
+        <result column="OBJECT_CODE" property="objectCode" jdbcType="VARCHAR"/>
+        <result column="OBJECT_NAME" property="objectName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ViewResultMap" type="io.tarzan.common.domain.vo.MtNumrangeVO6">
+        <result column="NUMRANGE_ID" property="numrangeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_GROUP" property="numrangeGroup" jdbcType="VARCHAR"/>
+        <result column="OBJECT_CODE" property="objectCode" jdbcType="VARCHAR"/>
+        <result column="OBJECT_NAME" property="objectName" jdbcType="VARCHAR"/>
+        <result column="NUM_DESCRIPTION" property="numDescription" jdbcType="VARCHAR"/>
+        <result column="NUM_EXAMPLE" property="numExample" jdbcType="VARCHAR"/>
+        <result column="OUTSIDE_NUM_FLAG" property="outsideNumFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryNumrangeListForUi" resultMap="ViewResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.NUMRANGE_ID,
+        b.OBJECT_ID,
+        mno.OBJECT_CODE,
+        mnot.OBJECT_NAME,
+        b.NUMRANGE_GROUP,
+        t.NUM_DESCRIPTION,
+        b.NUM_EXAMPLE,
+        b.OUTSIDE_NUM_FLAG,
+        b.ENABLE_FLAG
+        FROM
+        mt_numrange b
+        INNER JOIN mt_numrange_object mno ON
+        b.object_id = mno.object_id
+        LEFT JOIN mt_numrange_object_tl mnot ON
+        mnot.object_id = mno.object_id
+        AND mnot.LANG = #{locale}
+        LEFT OUTER JOIN mt_numrange_tl t ON
+        ( b.numrange_Id = t.numrange_Id
+        AND t.LANG = #{locale})
+        WHERE b.tenant_id = ${tenantId}
+        AND mno.tenant_id = ${tenantId}
+        <if test="objectId!=null and objectId!=''">
+            AND b.OBJECT_ID = #{objectId}
+        </if>
+        <if test="numDescription!=null and numDescription!=''">
+            AND t.NUM_DESCRIPTION LIKE concat('%',concat(#{numDescription},'%'))
+        </if>
+        ORDER BY mno.OBJECT_CODE,  b.NUMRANGE_GROUP
+    </select>
+
+    <select id="queryNumrangeForUi" resultMap="VResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.NUMRANGE_ID,
+        b.OBJECT_ID,
+        b.NUMRANGE_GROUP,
+        t.NUM_DESCRIPTION,
+        b.INPUT_BOX1,
+        b.INPUT_BOX2,
+        b.INPUT_BOX3,
+        b.INPUT_BOX4,
+        b.INPUT_BOX5,
+        b.NUM_EXAMPLE,
+        b.OUTSIDE_NUM_FLAG,
+        b.ENABLE_FLAG,
+        b.CID,
+        mno.OBJECT_CODE,
+        mnot.OBJECT_NAME
+        FROM
+        mt_numrange b
+        LEFT OUTER JOIN mt_numrange_TL t ON ( b.numrange_Id = t.numrange_Id AND t.LANG = #{locale} )
+        INNER JOIN mt_numrange_object mno ON
+        b.object_id = mno.object_id
+        LEFT JOIN mt_numrange_object_tl mnot ON
+        mnot.object_id = mno.object_id
+        AND mnot.LANG = #{locale}
+        WHERE  b.tenant_id = ${tenantId}
+        AND b.NUMRANGE_ID = #{numrangeId}
+    </select>
+</mapper>

@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtExtendSettingsMapper">
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtExtendSettings">
+        <result column="EXTEND_ID" property="extendId" jdbcType="VARCHAR"/>
+        <result column="EXTEND_TABLE_DESC_ID" property="extendTableDescId" jdbcType="VARCHAR"/>
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_MEANING" property="attrMeaning" jdbcType="VARCHAR"/>
+        <result column="TL_FLAG" property="tlFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <resultMap id="VoMap2" type="io.tarzan.common.domain.vo.MtExtendSettingsVO2" extends="BaseResultMap">
+        <result column="ATTR_TABLE" property="attrTable" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="DtoMap" type="io.tarzan.common.api.dto.MtExtendAttrDTO2">
+        <result column="EXTEND_ID" property="extendId" jdbcType="VARCHAR"/>
+        <result column="EXTEND_TABLE_DESC_ID" property="extendTableDescId" jdbcType="VARCHAR"/>
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_MEANING" property="attrMeaning" jdbcType="VARCHAR"/>
+        <result column="TL_FLAG" property="tlFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="ATTR_TABLE" property="attrTable" jdbcType="VARCHAR"/>
+        <result column="SERVICE_PACKAGE" property="servicePackage" jdbcType="VARCHAR"/>
+        <result column="SERVICE_PACKAGE_DESC" property="servicePackageDesc" jdbcType="VARCHAR"/>
+        <result column="ATTR_TABLE_DESC" property="attrTableDesc" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ExtendAttrMap" type="io.tarzan.common.domain.vo.MtExtendAttrVO">
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="attrValue" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ExtendAttrMap1" type="io.tarzan.common.domain.vo.MtExtendAttrVO1">
+        <result column="ATTR_ID" property="attrId" jdbcType="VARCHAR"/>
+        <result column="MAIN_TABLE_KEY_ID" property="keyId" jdbcType="VARCHAR"/>
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="attrValue" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ExtendAttrMap2" type="io.tarzan.common.domain.vo.MtExtendAttrVO2">
+        <result column="ATTR_ID" property="attrId" jdbcType="VARCHAR"/>
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="attrValue" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ExtendAttrMap3" type="io.tarzan.common.domain.vo.MtExtendAttrVO4">
+        <result column="KEY_ID" property="keyId" jdbcType="VARCHAR"/>
+        <result column="ATTR_ID" property="attrId" jdbcType="VARCHAR"/>
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="attrValue" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ExtendAttrHisMap" type="io.tarzan.common.domain.vo.MtExtendAttrHisVO">
+        <result column="ATTR_HIS_ID" property="attrHisId" jdbcType="VARCHAR"/>
+        <result column="ATTR_ID" property="attrId" jdbcType="VARCHAR"/>
+        <result column="KID" property="kid" jdbcType="VARCHAR"/>
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="attrValue" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ExtendAttrResultMap" type="io.tarzan.common.domain.vo.MtExtendAttrVO3">
+        <result column="ATTR_ID" property="attrId" jdbcType="VARCHAR"/>
+        <result column="MAIN_TABLE_KEY_VALUE" property="mainTableKeyValue" jdbcType="VARCHAR"/>
+        <result column="ATTR_NAME" property="attrName" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="attrValue" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="CREATED_BY" property="createBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <resultMap id="ResultMapView" type="io.tarzan.common.domain.vo.MtExtendVO11">
+        <result column="KEY_ID" property="keyId" jdbcType="DECIMAL"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <resultMap id="ResultMapView2" type="io.tarzan.common.domain.vo.MtExtendVO12">
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="customAttrQuery" resultMap="VoMap2">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.EXTEND_ID,
+        b.EXTEND_TABLE_DESC_ID,
+        b.ATTR_NAME,
+        l.ATTR_MEANING,
+        b.TL_FLAG,
+        b.ENABLE_FLAG,
+        b.SEQUENCE,
+        tt.ATTR_TABLE
+        FROM
+        mt_extend_settings b
+        INNER JOIN mt_extend_settings_tl l ON b.extend_id = l.extend_id
+        AND l.LANG = #{locale}
+        INNER JOIN mt_extend_table_desc tt ON tt.EXTEND_TABLE_DESC_ID = b.EXTEND_TABLE_DESC_ID
+        INNER JOIN mt_extend_table_desc_tl ttl ON ttl.extend_table_desc_id = tt.extend_table_desc_id
+        AND ttl.LANG = #{locale}
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        AND tt.TENANT_ID = ${tenantId}
+        <if test="dto.attrTable!=null">
+            AND tt.ATTR_TABLE =#{dto.attrTable}
+        </if>
+        <if test="dto.enableFlag!=null">
+            AND b.ENABLE_FLAG =#{dto.enableFlag}
+        </if>
+    </select>
+
+    <select id="attrPropertyQuery" resultMap="ExtendAttrMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        ATTR_NAME,
+        ATTR_VALUE
+        FROM
+        ${tableName}
+        WHERE
+        1 = 1
+        AND TENANT_ID = ${tenantId}
+        AND ${mainTableKey} = #{keyId}
+        <foreach collection="attrList" item="attr" open=" and (" close=")" separator=" or ">
+            (ATTR_NAME=#{attr.attrName}
+            <if test='attr.tlFlag =="Y"'>
+                AND LANG=#{locale}
+            </if>
+            <if test='attr.tlFlag !="Y"'>
+                AND LANG=''
+            </if>
+            )
+        </foreach>
+    </select>
+
+    <select id="attrPropertyBatchQuery" resultMap="ExtendAttrMap1" fetchSize="5000">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        ATTR_ID,
+        ATTR_NAME,
+        ${mainTableKey} MAIN_TABLE_KEY_ID,
+        ATTR_VALUE,
+        LANG
+        FROM
+        ${tableName}
+        where
+        TENANT_ID = ${tenantId}
+        <if test="keyIds != null and keyIds.size()>0">
+            and ${mainTableKey} IN
+            <foreach collection="keyIds" separator="," open="(" close=")" index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="attrTableWithLangQuery" resultMap="ExtendAttrMap2">
+        SELECT
+        ATTR_ID,
+        ATTR_NAME,
+        ATTR_VALUE,
+        LANG
+        FROM
+        ${tableName}
+        WHERE
+        1 = 1
+        AND TENANT_ID = ${tenantId}
+        AND ${mainTableKey} = #{keyId}
+        <foreach collection="attrList" item="attr" open=" and (" close=")" separator=" or ">
+            (ATTR_NAME=#{attr.attrName}
+            <if test='attr.tlFlag =="Y"'>
+                AND LANG &lt;&gt; ''
+            </if>
+            <if test='attr.tlFlag !="Y"'>
+                AND LANG =''
+            </if>
+            )
+        </foreach>
+    </select>
+
+    <select id="attrPropertyLimitKidQuery" resultType="java.lang.String">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        ${mainTableKey}
+        FROM
+        ${tableName}
+        WHERE
+        1 = 1
+        AND TENANT_ID = ${tenantId}
+        AND ATTR_NAME=#{attrName}
+        AND ATTR_VALUE=#{attrValue}
+        <if test='tlFlag =="Y"'>
+            AND LANG=#{locale}
+        </if>
+        <if test='tlFlag !="Y"'>
+            AND LANG=''
+        </if>
+    </select>
+
+    <select id="selectSettingsByProperty" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t.*
+        FROM
+        mt_extend_settings t,
+        mt_extend_settings_tl l
+        WHERE
+        t.EXTEND_ID = l.EXTEND_ID
+        AND l.LANG = #{locale}
+        AND t.TENANT_ID = ${tenantId}
+        AND t.ENABLE_FLAG = #{enableFlag}
+        AND t.EXTEND_TABLE_DESC_ID = #{extendTableDescId}
+        AND t.ATTR_NAME IN
+        <foreach collection="attrNames" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="attrBatchPropertyLimitKidQuery" resultType="java.lang.String">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        ${mainTableKey}
+        FROM
+        ${tableName}
+        WHERE
+        1 = 1
+        AND TENANT_ID = ${tenantId}
+        <foreach collection="attrList" item="attr" open=" and (" close=")" separator=" AND ">
+            (ATTR_NAME=#{attr.attrName}
+            AND ATTR_VALUE =#{attr.attrValue}
+            <if test='attr.tlFlag =="Y"'>
+                AND LANG=#{locale}
+            </if>
+            <if test='attr.tlFlag !="Y"'>
+                AND LANG=''
+            </if>
+            )
+        </foreach>
+    </select>
+
+    <select id="existAttrQuery" resultMap="ExtendAttrMap2">
+        SELECT
+        ATTR_ID,
+        ATTR_NAME,
+        ATTR_VALUE,
+        LANG
+        FROM
+        ${tableName}
+        WHERE
+        1 = 1
+        AND TENANT_ID = ${tenantId}
+        AND ${mainTableKey} = #{keyId}
+        <foreach collection="attrNameList" item="attrName" open=" and (" close=")" separator=" OR ">
+            ATTR_NAME=#{attrName}
+        </foreach>
+    </select>
+
+    <select id="attrHisBatchQuery" resultMap="ExtendAttrHisMap">
+        SELECT
+        t.ATTR_HIS_ID,
+        t.ATTR_ID,
+        t.${mainTableKey} KID,
+        t.ATTR_NAME,
+        t.ATTR_VALUE,
+        t.LANG,
+        t.EVENT_ID,
+        e.EVENT_BY,
+        e.EVENT_TIME
+        FROM
+        ${hisTable} t,
+        mt_event e
+        WHERE
+        t.EVENT_ID = e.EVENT_ID
+        AND t.TENANT_ID = ${tenantId}
+        AND e.TENANT_ID = ${tenantId}
+        AND t.EVENT_ID IN
+        <foreach collection="eventIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="attrHisQuery" resultMap="ExtendAttrHisMap">
+        SELECT
+        t.ATTR_HIS_ID,
+        t.ATTR_ID,
+        t.${mainTableKey} KID,
+        t.ATTR_NAME,
+        t.ATTR_VALUE,
+        t.LANG,
+        t.EVENT_ID,
+        e.EVENT_BY,
+        e.EVENT_TIME
+        FROM
+        ${hisTable} t,
+        mt_event e
+        WHERE
+        t.EVENT_ID = e.EVENT_ID
+        AND t.TENANT_ID = ${tenantId}
+        AND e.TENANT_ID = ${tenantId}
+        <if test="dto.kid!=null">
+            and t.${mainTableKey}=#{dto.kid}
+        </if>
+        <if test="dto.eventId!=null">
+            and t.EVENT_ID=#{dto.eventId}
+        </if>
+        <if test="dto.eventBy!=null">
+            and e.EVENT_BY=#{dto.eventBy}
+        </if>
+        <if test="dto.attrName!=null">
+            and t.ATTR_NAME=#{dto.attrName}
+        </if>
+        <if test="dto.eventTimeFrom!=null">
+            and e.EVENT_TIME &gt;= #{dto.eventTimeFrom}
+        </if>
+        <if test="dto.eventTimeTo!=null">
+            and e.EVENT_TIME &lt;= #{dto.eventTimeTo}
+        </if>
+    </select>
+
+    <select id="getLangValue" resultMap="ExtendAttrMap2">
+        SELECT
+        ATTR_ID,
+        ATTR_NAME,
+        ATTR_VALUE,
+        LANG
+        FROM
+        ${tableName}
+        WHERE
+        1 = 1
+        AND TENANT_ID = ${tenantId}
+        AND ${mainTableKey} = #{keyId}
+        AND ATTR_NAME = #{field}
+    </select>
+
+    <select id="queryExtendAttrForUi" resultMap="DtoMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT b.EXTEND_ID,
+        b.EXTEND_TABLE_DESC_ID,
+        b.ATTR_NAME,
+        l.ATTR_MEANING,
+        b.TL_FLAG,
+        b.ENABLE_FLAG,
+        b.SEQUENCE,
+        tt.ATTR_TABLE,
+        tt.SERVICE_PACKAGE,
+        gl.DESCRIPTION SERVICE_PACKAGE_DESC,
+        tt.ATTR_TABLE_DESC
+        FROM mt_extend_settings b
+        INNER JOIN mt_extend_settings_tl l ON b.extend_id = l.extend_id AND l.LANG = #{locale}
+        INNER JOIN mt_extend_table_desc tt ON tt.EXTEND_TABLE_DESC_ID = b.EXTEND_TABLE_DESC_ID
+        INNER JOIN mt_extend_table_desc_tl ttl
+        ON ttl.extend_table_desc_id = tt.extend_table_desc_id AND ttl.LANG = #{locale}
+        inner join mt_gen_type g on tt.SERVICE_PACKAGE = g.TYPE_CODE and g.TYPE_GROUP = 'SERVICE_PACKAGE'
+        inner join mt_gen_type_tl gl on g.GEN_TYPE_ID = gl.GEN_TYPE_ID and gl.LANG = #{locale}
+        WHERE
+        b.TENANT_ID = #{tenantId}
+        AND tt.TENANT_ID = #{tenantId}
+        <if test="table.attrTable!=null">
+            AND tt.ATTR_TABLE like concat('%',concat(#{table.attrTable},'%'))
+        </if>
+        <if test="table.attrTableDesc!=null">
+            AND ttl.ATTR_TABLE_DESC like concat('%',concat(#{table.attrTableDesc},'%'))
+        </if>
+        order by b.CREATION_DATE desc
+    </select>
+
+    <select id="attrDataQuery" resultMap="ExtendAttrResultMap">
+        SELECT ATTR_ID,
+        ${mainTableKey} AS MAIN_TABLE_KEY_VALUE,
+        ATTR_NAME,
+        ATTR_VALUE,
+        LANG
+        FROM ${tableName}
+        WHERE TENANT_ID = ${tenantId}
+        AND ${mainTableKey} IN
+        <foreach collection="kids" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="attrsFromName" resultMap="ExtendAttrMap1">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        ATTR_ID,
+        ATTR_NAME,
+        ${mainTableKey} MAIN_TABLE_KEY_ID,
+        ATTR_VALUE,
+        LANG
+        FROM
+        ${tableName}
+        WHERE
+        ${mainTableKey} IN (
+        SELECT
+        ${mainTableKey}
+        FROM
+        ${tableName}
+        WHERE
+        1 = 1
+        AND TENANT_ID = ${tenantId}
+        <foreach collection="exAttrs" item="attr" open=" and (" close=")" separator=" or ">
+            (
+            ATTR_NAME=#{attr.attrName}
+            <if test='attr.attrValue !=null'>
+                AND ATTR_VALUE=#{attr.attrValue}
+            </if>
+            <if test='attr.tlFlag =="Y"'>
+                AND LANG=#{locale}
+            </if>
+            <if test='attr.tlFlag !="Y"'>
+                AND LANG=''
+            </if>
+            )
+        </foreach>
+        )
+    </select>
+    <select id="attrsFromNameLineToHeader" resultType="java.lang.String">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        ${mainTableKey}
+        FROM
+        ${tableName}
+        WHERE
+        1 = 1
+        AND TENANT_ID = ${tenantId}
+        <if test='dto.attrName !=null'>
+            AND ATTR_NAME=#{dto.attrName}
+        </if>
+        <if test='dto.attrValue !=null'>
+            AND ATTR_VALUE=#{dto.attrValue}
+        </if>
+        <if test='dto.tlFlag =="Y"'>
+            AND LANG=#{locale}
+        </if>
+        <if test='dto.tlFlag !="Y"'>
+            AND LANG=''
+        </if>
+    </select>
+    <select id="attrsFromNameForKids" resultMap="ExtendAttrMap1">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        ATTR_ID,
+        ATTR_NAME,
+        ${mainTableKey} MAIN_TABLE_KEY_ID,
+        ATTR_VALUE,
+        LANG
+        FROM
+        ${tableName}
+        WHERE
+        TENANT_ID = ${tenantId}
+        AND ${mainTableKey} IN
+        <foreach collection="kids" item="kid" open="(" close=")" separator=",">
+            #{kid}
+        </foreach>
+        <foreach collection="extend" item="attr" open=" and (" close=")" separator=" or ">
+            (
+            ATTR_NAME=#{attr.attrName}
+            <if test='attr.attrValue !=null'>
+                AND ATTR_VALUE=#{attr.attrValue}
+            </if>
+            <if test='attr.tlFlag =="Y"'>
+                AND LANG=#{locale}
+            </if>
+            <if test='attr.tlFlag !="Y"'>
+                AND LANG=''
+            </if>
+            )
+        </foreach>
+    </select>
+
+    <select id="existAttrQueryForKeyId" resultMap="ExtendAttrResultMap" fetchSize="5000">
+        SELECT
+        ATTR_ID,
+        ${mainTableKey} AS MAIN_TABLE_KEY_VALUE,
+        ATTR_NAME,
+        ATTR_VALUE,
+        LANG,
+        CREATED_BY,
+        CREATION_DATE,
+        OBJECT_VERSION_NUMBER
+        FROM
+        ${tableName}
+        WHERE
+        TENANT_ID = ${tenantId}
+        <if test="keyId!=null">
+            AND ${keyId}
+        </if>
+        <if test="keyId==null">
+            AND 1=-1
+        </if>
+    </select>
+
+    <select id="existAttrBatchQuery" resultMap="ExtendAttrMap3">
+        SELECT
+        ${mainTableKey} KEY_ID,
+        ATTR_ID,
+        ATTR_NAME,
+        ATTR_VALUE,
+        LANG
+        FROM
+        ${tableName}
+        WHERE
+        TENANT_ID = ${tenantId}
+        <choose>
+            <when test="attrPropertyList != null and attrPropertyList.size() > 0">
+                <foreach collection="attrPropertyList" index="i" item="item" separator="OR" open="and (" close=")">
+                    ${mainTableKey} = #{item.keyId}
+                    <if test="item.attrs != null">
+                        AND ATTR_NAME IN
+                        <foreach collection="item.attrs" index="a" item="attr" separator="," open="(" close=")">
+                            #{attr.attrName}
+                        </foreach>
+                    </if>
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1 = 2
+            </otherwise>
+        </choose>
+
+    </select>
+    <select id="selectLatestHisIdsByMainT" resultMap="ResultMapView" fetchSize="5000">
+        SELECT
+        ${mainTableKey} KEY_ID,
+        LATEST_HIS_ID
+        FROM
+        ${mainTableName}
+        WHERE
+        TENANT_ID = ${tenantId}
+        <if test="keyIds!=null">
+            AND ${keyIds}
+        </if>
+        <if test="keyIds==null">
+            AND 1=-1
+        </if>
+    </select>
+
+    <select id="selectEventIdsByLatestHisId" resultMap="ResultMapView2">
+        SELECT
+        t.${hisTableKey} LATEST_HIS_ID,
+        t.EVENT_ID
+        FROM
+        ${hisTable} t
+        WHERE
+        t.TENANT_ID = ${tenantId}
+        and t.${hisTableKey} IN
+        <foreach collection="hisIds" open="(" close=")" separator="," item="ids" index="index">
+            #{ids}
+        </foreach>
+    </select>
+</mapper>

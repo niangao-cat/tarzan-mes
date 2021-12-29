@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruike.itf.infra.mapper.ItfWcsTaskIfaceMapper">
+  <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfWcsTaskIface">
+    <!--@mbg.generated-->
+    <!--@Table itf_wcs_task_iface-->
+    <id column="IFACE_ID" jdbcType="VARCHAR" property="ifaceId" />
+    <result column="TENANT_ID" jdbcType="BIGINT" property="tenantId" />
+    <result column="TASK_NUM" jdbcType="VARCHAR" property="taskNum" />
+    <result column="DOC_ID" jdbcType="VARCHAR" property="docId" />
+    <result column="DOC_LINE_ID" jdbcType="VARCHAR" property="docLineId" />
+    <result column="MATERIAL_CODE" jdbcType="VARCHAR" property="materialCode" />
+    <result column="MATERIAL_VERSION" jdbcType="VARCHAR" property="materialVersion" />
+    <result column="QTY" jdbcType="VARCHAR" property="qty" />
+    <result column="SO_NUM" jdbcType="VARCHAR" property="soNum" />
+    <result column="SO_LINE_NUM" jdbcType="VARCHAR" property="soLineNum" />
+    <result column="EXIT_NUM" jdbcType="VARCHAR" property="exitNum" />
+    <result column="WAREHOUSE_CODE" jdbcType="VARCHAR" property="warehouseCode" />
+    <result column="TASK_STATUS" jdbcType="VARCHAR" property="taskStatus" />
+    <result column="STATUS" jdbcType="VARCHAR" property="status" />
+    <result column="MESSAGE" jdbcType="VARCHAR" property="message" />
+    <result column="CID" jdbcType="BIGINT" property="cid" />
+    <result column="object_version_number" jdbcType="BIGINT" property="objectVersionNumber" />
+    <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+    <result column="created_by" jdbcType="BIGINT" property="createdBy" />
+    <result column="last_updated_by" jdbcType="BIGINT" property="lastUpdatedBy" />
+    <result column="last_update_date" jdbcType="TIMESTAMP" property="lastUpdateDate" />
+    <result column="ATTRIBUTE_CATEGORY" jdbcType="VARCHAR" property="attributeCategory" />
+    <result column="ATTRIBUTE1" jdbcType="VARCHAR" property="attribute1" />
+    <result column="ATTRIBUTE2" jdbcType="VARCHAR" property="attribute2" />
+    <result column="ATTRIBUTE3" jdbcType="VARCHAR" property="attribute3" />
+    <result column="ATTRIBUTE4" jdbcType="VARCHAR" property="attribute4" />
+    <result column="ATTRIBUTE5" jdbcType="VARCHAR" property="attribute5" />
+    <result column="ATTRIBUTE6" jdbcType="VARCHAR" property="attribute6" />
+    <result column="ATTRIBUTE7" jdbcType="VARCHAR" property="attribute7" />
+    <result column="ATTRIBUTE8" jdbcType="VARCHAR" property="attribute8" />
+    <result column="ATTRIBUTE9" jdbcType="VARCHAR" property="attribute9" />
+    <result column="ATTRIBUTE10" jdbcType="VARCHAR" property="attribute10" />
+    <result column="ATTRIBUTE11" jdbcType="VARCHAR" property="attribute11" />
+    <result column="ATTRIBUTE12" jdbcType="VARCHAR" property="attribute12" />
+    <result column="ATTRIBUTE13" jdbcType="VARCHAR" property="attribute13" />
+    <result column="ATTRIBUTE14" jdbcType="VARCHAR" property="attribute14" />
+    <result column="ATTRIBUTE15" jdbcType="VARCHAR" property="attribute15" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    IFACE_ID, TENANT_ID, TASK_NUM, DOC_ID, DOC_LINE_ID, MATERIAL_CODE, MATERIAL_VERSION, 
+    QTY, SO_NUM, SO_LINE_NUM, EXIT_NUM, WAREHOUSE_CODE, TASK_STATUS, `STATUS`, MESSAGE, 
+    CID, object_version_number, creation_date, created_by, last_updated_by, last_update_date, 
+    ATTRIBUTE_CATEGORY, ATTRIBUTE1, ATTRIBUTE2, ATTRIBUTE3, ATTRIBUTE4, ATTRIBUTE5, ATTRIBUTE6, 
+    ATTRIBUTE7, ATTRIBUTE8, ATTRIBUTE9, ATTRIBUTE10, ATTRIBUTE11, ATTRIBUTE12, ATTRIBUTE13, 
+    ATTRIBUTE14, ATTRIBUTE15
+  </sql>
+
+  <update id="updateByTaskNum">
+    <!--@mbg.generated-->
+    UPDATE itf_wcs_task_iface
+    SET
+    TASK_STATUS = #{taskStatus,jdbcType=VARCHAR}
+    WHERE TASK_NUM = #{taskNum,jdbcType=VARCHAR}
+  </update>
+
+  <select id="selectByTaskNum"  resultType="java.lang.String">
+    select TASK_NUM from itf_wcs_task_iface where TASK_NUM = #{taskNum,jdbcType=VARCHAR}
+  </select>
+</mapper>

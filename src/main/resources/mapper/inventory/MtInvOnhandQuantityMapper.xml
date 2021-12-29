@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtInvOnhandQuantityMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtInvOnhandQuantity">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ONHAND_QUANTITY_ID" property="onhandQuantityId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="ONHAND_QUANTITY" property="onhandQuantity" jdbcType="DECIMAL"/>
+        <result column="LOT_CODE" property="lotCode" jdbcType="VARCHAR"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VoResult" type="tarzan.inventory.domain.vo.MtInvOnhandQuantityVO4">
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOT_CODE" property="lotCode" jdbcType="VARCHAR"/>
+        <result column="ONHAND_QUANTITY" property="onhandQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QUANTITY" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="AVALID_QUANTITY" property="availableQty" jdbcType="DECIMAL"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectOnhandQuantity" resultMap="BaseResultMap">
+        select t.* from mt_inv_onhand_quantity t
+        where t.TENANT_ID = ${tenantId}
+        <if test="dto.siteId != null">
+            AND t.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.lotCode != null">
+            AND t.LOT_CODE = #{dto.lotCode}
+        </if>
+        <if test='dto.lotCode == null or dto.lotCode==""'>
+            AND t.LOT_CODE = ''
+        </if>
+        <if test="dto.materialId != null">
+            AND t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.locatorId != null">
+            AND t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test='dto.ownerId != null and dto.ownerId!=""'>
+            AND t.OWNER_ID = #{dto.ownerId}
+        </if>
+        <if test='dto.ownerId == null or dto.ownerId==""'>
+            AND t.OWNER_ID = ''
+        </if>
+        <if test='dto.ownerType != null and dto.ownerType!=""'>
+            AND t.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test='dto.ownerType == null or dto.ownerType==""'>
+            AND t.OWNER_TYPE = ''
+        </if>
+    </select>
+
+    <select id="organizationSumOnhandQtyGet" resultType="java.lang.Double">
+        SELECT
+        sum( t.ONHAND_QUANTITY )
+        FROM
+        mt_inv_onhand_quantity t
+        WHERE
+        t.TENANT_ID = ${tenantId}
+        AND t.LOCATOR_ID IN
+        <foreach collection="locatorIds" index="i" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="lotCode != null">
+            AND t.LOT_CODE = #{lotCode}
+        </if>
+        AND t.MATERIAL_ID = #{materialId}
+        <if test="ownerType != null">
+            AND t.OWNER_TYPE = #{ownerType}
+        </if>
+        <if test="ownerId != null">
+            ANd t.OWNER_ID = #{ownerId}
+        </if>
+    </select>
+
+    <select id="selectByOrganizationDetail" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_inv_onhand_quantity t
+        WHERE
+        t.TENANT_ID = ${tenantId}
+        AND t.LOCATOR_ID IN
+        <foreach collection="locatorIds" index="i" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="lotCode != null">
+            AND t.LOT_CODE = #{lotCode}
+        </if>
+        AND t.MATERIAL_ID = #{materialId}
+        <if test="ownerType != null">
+            AND t.OWNER_TYPE = #{ownerType}
+        </if>
+        <if test="ownerId != null">
+            ANd t.OWNER_ID = #{ownerId}
+        </if>
+    </select>
+
+    <select id="selectByConditions" resultMap="BaseResultMap">
+        select * from mt_inv_onhand_quantity t
+        where t.TENANT_ID = #{tenantId}
+        <if test="condition.siteId!=null">
+            and t.SITE_ID in
+            (
+            <foreach collection="condition.siteId" item="item" separator="," index="index">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="condition.materialId!=null">
+            and t.MATERIAL_ID in
+            (
+            <foreach collection="condition.materialId" item="item" separator="," index="index">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="condition.locatorId!=null">
+            and t.LOCATOR_ID in
+            (
+            <foreach collection="condition.locatorId" item="item" separator="," index="index">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="condition.lotCode!=null">
+            and t.LOT_CODE in
+            (
+            <foreach collection="condition.lotCode" item="item" separator="," index="index">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="condition.ownerType!=null">
+            and t.OWNER_TYPE in
+            (
+            <foreach collection="condition.ownerType" item="item" separator="," index="index">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="condition.ownerId!=null">
+            and t.OWNER_ID in
+            (
+            <foreach collection="condition.ownerId" item="item" separator="," index="index">
+                #{item}
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <select id="selectForUpdate" resultMap="BaseResultMap">
+        SELECT
+            *
+        FROM
+            mt_inv_onhand_quantity t
+        WHERE
+            t.TENANT_ID = ${tenantId}
+            and t.ONHAND_QUANTITY_ID = #{onhandQuantityId}
+        FOR UPDATE
+    </select>
+
+    <select id="queryInventoryOnhandQuantityForUi" resultMap="VoResult">
+        SELECT q.SITE_ID,
+        q.MATERIAL_ID,
+        sum(q.ONHAND_QUANTITY) ONHAND_QUANTITY,
+        IFNULL(sum(t.HOLD_QUANTITY), 0) HOLD_QUANTITY,
+        sum(q.ONHAND_QUANTITY) - IFNULL(sum(t.HOLD_QUANTITY), 0) AVALID_QUANTITY,
+        q.LOT_CODE,
+        q.LOCATOR_ID,
+        q.OWNER_ID,
+        q.OWNER_TYPE
+        FROM mt_inv_onhand_quantity q
+        LEFT JOIN (SELECT SITE_ID,
+        MATERIAL_ID,
+        LOCATOR_ID,
+        LOT_CODE,
+        sum(HOLD_QUANTITY) HOLD_QUANTITY,
+        OWNER_ID,
+        OWNER_TYPE
+        FROM mt_inv_onhand_hold
+        WHERE TENANT_ID = #{tenantId}
+        <if test="dto.orderType != null">
+            AND OWNER_TYPE = #{dto.orderType}
+        </if>
+        <if test="dto.orderId != null">
+            AND OWNER_ID = #{dto.orderId}
+        </if>
+        GROUP BY SITE_ID, MATERIAL_ID, LOCATOR_ID, LOT_CODE, OWNER_ID, OWNER_TYPE) t ON (
+        q.SITE_ID = t.SITE_ID
+        AND q.MATERIAL_ID = t.MATERIAL_ID
+        AND q.LOCATOR_ID = t.LOCATOR_ID
+        AND q.LOT_CODE = t.LOT_CODE
+        AND q.OWNER_ID = t.OWNER_ID
+        AND q.OWNER_TYPE = t.OWNER_TYPE
+        )
+        WHERE
+        q.TENANT_ID = #{tenantId}
+        <if test="dto.materialId != null">
+            AND q.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="locatorIdList != null and locatorIdList.size() != 0">
+            AND q.LOCATOR_ID IN
+            <foreach collection="locatorIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.ownerId != null">
+            AND q.OWNER_ID = #{dto.ownerId}
+        </if>
+        <if test="dto.ownerType != null">
+            AND q.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test="lotList != null and lotList.size() != 0">
+            AND q.LOT_CODE IN
+            <foreach collection="lotList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.ownerType != null">
+            AND q.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test="dto.ownerId != null">
+            AND q.OWNER_ID = #{dto.ownerId}
+        </if>
+        GROUP BY q.SITE_ID, q.MATERIAL_ID, q.LOT_CODE, q.LOCATOR_ID, q.OWNER_ID, q.OWNER_TYPE
+        <if test="dto.holdFlag == 'Y'.toString()">
+            HAVING HOLD_QUANTITY > 0
+        </if>
+    </select>
+</mapper>

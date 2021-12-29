@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsCostCenterReturnMapper">
+
+    <select id="selectDocType" resultType="com.ruike.wms.api.dto.WmsMaterialReturnScanTypeDTO">
+        SELECT
+          settle_attr.ATTR_VALUE AS SETTLE_ACCOUNTS,
+          CASE settle_attr.ATTR_VALUE
+          WHEN 'COST_CENTER' THEN
+            mc.COSTCENTER_CODE
+          WHEN 'INTERNAL_ORDER' THEN
+            wio.INTERNAL_ORDER
+          END AS COST_CENTER_CODE
+        FROM
+          mt_instruction_doc mid
+        LEFT JOIN mt_costcenter mc ON mc.COSTCENTER_ID = mid.COST_CENTER_ID
+        LEFT JOIN mt_instruction_doc_attr settle_attr ON settle_attr.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND settle_attr.ATTR_NAME = 'SETTLE_ACCOUNTS'
+        LEFT JOIN mt_instruction_doc_attr print_attr ON print_attr.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND print_attr.ATTR_NAME = 'PRINT_FLAG'
+        LEFT JOIN mt_instruction_doc_attr order_attr ON order_attr.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND order_attr.ATTR_NAME = 'INTERNAL_ORDER_ID'
+        LEFT JOIN wms_internal_order wio ON wio.INTERNAL_ORDER_ID = order_attr.ATTR_VALUE
+        WHERE mid.TENANT_ID = #{tenantId}
+        <if test="instructionDocNum != null">
+            and mid.INSTRUCTION_DOC_NUM = #{instructionDocNum}
+        </if>
+    </select>
+    <select id="getLocatorQuery" resultType="tarzan.modeling.domain.vo.MtModLocatorVO8">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        t1.LOCATOR_ID,
+        t1.LOCATOR_CODE,
+        t2.LOCATOR_NAME,
+        t2.LOCATOR_LOCATION,
+        t1.LOCATOR_TYPE,
+        t1.LOCATOR_GROUP_ID,
+        t1.LENGTH,
+        t1.WIDTH,
+        t1.HEIGHT,
+        t1.SIZE_UOM_ID,
+        t1.MAX_WEIGHT,
+        t1.WEIGHT_UOM_ID,
+        t1.MAX_CAPACITY,
+        t1.ENABLE_FLAG,
+        t1.PARENT_LOCATOR_ID,
+        t1.LOCATOR_CATEGORY,
+        t1.NEGATIVE_FLAG
+        from mt_mod_locator t1 INNER join mt_mod_locator_tl t2 on (t1.LOCATOR_ID=t2.LOCATOR_ID and t2.LANG=#{locale})
+        where
+        t1.TENANT_ID = #{tenantId}
+        <if test="dto.locatorId!=null">
+            and t1.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.locatorCode!=null">
+            and t1.LOCATOR_CODE = #{dto.locatorCode}
+        </if>
+        <if test="dto.locatorName!=null">
+            and t2.LOCATOR_NAME like concat('%',#{dto.locatorName} ,'%')
+        </if>
+        <if test="dto.locatorLocation!=null">
+            and t2.LOCATOR_LOCATION like concat('%',#{dto.locatorLocation} ,'%')
+        </if>
+        <if test="dto.enableFlag!=null">
+            and t1.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.locatorType!=null">
+            and t1.LOCATOR_TYPE = #{dto.locatorType}
+        </if>
+        <if test="dto.locatorCategory!=null">
+            and t1.LOCATOR_CATEGORY = #{dto.locatorCategory}
+        </if>
+        <if test="dto.negativeFlag!=null">
+            and t1.NEGATIVE_FLAG = #{dto.negativeFlag}
+        </if>
+        <if test="dto.locatorGroupId!=null">
+            and t1.LOCATOR_GROUP_ID = #{dto.locatorGroupId}
+        </if>
+        <if test="dto.parentLocatorId!=null">
+            and t1.PARENT_LOCATOR_ID = #{dto.parentLocatorId}
+        </if>
+        order by CAST(t1.LOCATOR_ID AS DECIMAL (36))
+    </select>
+
+    <select id="queryMoveTypeByTransactionTypeCode" resultType="string">
+        select wtt.move_type
+          from wms_transaction_type wtt
+         where wtt.tenant_id = #{tenantId}
+           and wtt.transaction_type_code = #{transactionTypeCode}
+    </select>
+</mapper>

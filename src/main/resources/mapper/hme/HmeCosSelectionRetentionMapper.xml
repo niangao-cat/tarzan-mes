@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosSelectionRetentionMapper">
+
+    <select id="queryList" resultType="com.ruike.hme.domain.vo.HmeCosSelectionRetentionVO">
+        SELECT
+            mmlo2.LOCATOR_CODE PARENT_LOCATOR_CODE,
+            mmlo.LOCATOR_CODE,
+            mwo.WORK_ORDER_NUM,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mmla.ATTR_VALUE COS_TYPE,
+            mml.MATERIAL_LOT_CODE,
+            hmll.load_row,
+            hmll.load_column,
+            hmll.load_sequence,
+            hsd.ATTRIBUTE1 selection_status,
+            hmll.hot_sink_code,
+            mml2.MATERIAL_LOT_CODE SELECTED_MATERIAL_LOT_CODE,
+            hsd.old_load,
+            hsd.virtual_num,
+            me.IDENTIFICATION,
+            mm2.MATERIAL_CODE DEVICE_MATERIAL_CODE,
+            hsd.ATTRIBUTE2,
+            hmll.ATTRIBUTE2 WAFER,
+            hmll.ATTRIBUTE4 HOT_SINK_MATERIAL_LOT_CODE,
+            hmll.ATTRIBUTE6,
+            hmll.ATTRIBUTE13,
+            iu.real_name,
+            hmll.last_update_date
+        FROM
+            mt_material_lot mml,
+            mt_mod_locator mmlo,
+            mt_mod_locator mmlo2,
+            hme_material_lot_load hmll
+            LEFT JOIN hme_selection_details hsd ON hmll.load_sequence = hsd.load_sequence
+            LEFT JOIN hme_virtual_num hvn ON hsd.virtual_num = hvn.VIRTUAL_NUM
+            LEFT JOIN mt_material_lot mml2 ON  hsd.old_material_lot_id = mml2.MATERIAL_LOT_ID
+            LEFT JOIN mt_eo me ON me.EO_ID = hvn.EO_ID
+            LEFT JOIN mt_material mm2 ON mm2.MATERIAL_ID = me.MATERIAL_ID,
+            mt_work_order mwo,
+            mt_material mm,
+            mt_material_lot_attr mmla,
+            mt_material_lot_attr mmla2,
+            mt_material_site mms,
+            mt_material_basic mmb,
+            iam_user iu
+        WHERE
+            mml.TENANT_ID = #{tenantId}
+            AND mml.LOCATOR_ID = mmlo.LOCATOR_ID
+            AND mmlo.PARENT_LOCATOR_ID = mmlo2.LOCATOR_ID
+            AND mml.TENANT_ID = hmll.tenant_id AND mml.MATERIAL_LOT_ID = hmll.material_lot_id
+            AND hmll.ATTRIBUTE3 = mwo.WORK_ORDER_ID
+            AND mml.MATERIAL_ID = mm.MATERIAL_ID
+            AND mml.TENANT_ID = mmla.TENANT_ID AND mml.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+            AND mmla.ATTR_NAME = 'COS_TYPE'
+            AND mml.ENABLE_FLAG = 'Y'
+            AND mml.TENANT_ID = mmla2.TENANT_ID AND mml.MATERIAL_LOT_ID = mmla2.MATERIAL_LOT_ID
+            AND mmla2.ATTR_NAME = 'MF_FLAG'
+            AND mmla2.ATTR_VALUE <![CDATA[<>]]> 'Y'
+            AND mml.SITE_ID = mms.SITE_ID
+            AND mml.MATERIAL_ID = mms.MATERIAL_ID
+            AND mms.MATERIAL_SITE_ID = mmb.MATERIAL_SITE_ID
+            AND hmll.last_updated_by = iu.id
+            <if test="itemGroupList!=null and itemGroupList.size()>0">
+                and mmb.ITEM_GROUP in
+                <foreach collection="itemGroupList" open="(" close=")" separator="," index="index" item="item">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.parentLocatorId!=null and dto.parentLocatorId!=''">
+                AND mmlo2.LOCATOR_ID = #{dto.parentLocatorId}
+            </if>
+            <if test="dto.locatorId!=null and dto.locatorId!=''">
+                AND mmlo.LOCATOR_ID = #{dto.locatorId}
+            </if>
+            <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+                AND mwo.WORK_ORDER_NUM LIKE CONCAT("%",#{dto.workOrderNum},"%")
+            </if>
+            <if test="dto.materialId!=null and dto.materialId!=''">
+                AND mm.MATERIAL_ID = #{dto.materialId}
+            </if>
+            <if test="dto.cosType!=null and dto.cosType!=''">
+                AND mmla.ATTR_VALUE = #{dto.cosType}
+            </if>
+            <if test="dto.selectionStatus!=null and dto.selectionStatus!='' and dto.selectionStatus!='UNSELECTED'">
+                AND hsd.ATTRIBUTE1 = #{dto.selectionStatus}
+            </if>
+            <if test="dto.selectionStatus!=null and dto.selectionStatus!='' and dto.selectionStatus =='UNSELECTED'">
+                AND (hsd.ATTRIBUTE1 = '' or hsd.ATTRIBUTE1 is null)
+            </if>
+            <if test="dto.materialLotCodeList!=null and dto.materialLotCodeList.size()>0">
+                and mml.MATERIAL_LOT_CODE in
+                <foreach collection="dto.materialLotCodeList" open="(" close=")" separator="," index="index" item="item">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.hotSinkCodeList!=null and dto.hotSinkCodeList.size()>0">
+                and hmll.hot_sink_code in
+                <foreach collection="dto.hotSinkCodeList" open="(" close=")" separator="," index="index" item="item">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.virtualNum!=null and dto.virtualNum!=''">
+                AND hsd.virtual_num LIKE CONCAT("%",#{dto.virtualNum},"%")
+            </if>
+            <if test="dto.identification!=null and dto.identification!=''">
+                AND me.IDENTIFICATION LIKE CONCAT("%",#{dto.identification},"%")
+            </if>
+            <if test="dto.deviceMaterialId!=null and dto.deviceMaterialId!=''">
+                AND mm2.MATERIAL_ID = #{dto.deviceMaterialId}
+            </if>
+            <if test="dto.waferList!=null and dto.waferList.size()>0">
+                and hmll.ATTRIBUTE2 in
+                <foreach collection="dto.waferList" open="(" close=")" separator="," index="index" item="item">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.attribute6!=null and dto.attribute6!=''">
+                AND hmll.ATTRIBUTE6 = #{dto.attribute6}
+            </if>
+            <if test="dto.id!=null and dto.id!=''">
+                AND iu.id = #{dto.id}
+            </if>
+            <if test="dto.timeStart!=null and dto.timeStart!=''">
+                AND hmll.last_update_date &gt;= #{dto.timeStart}
+            </if>
+            <if test="dto.timeTo!=null and dto.timeTo!=''">
+                AND hmll.last_update_date &lt;= #{dto.timeTo}
+            </if>
+            <if test="dto.current!=null and dto.current!=''">
+                AND EXISTS (
+                SELECT
+                1
+                FROM
+                hme_cos_function hcf
+                WHERE
+                hcf.TENANT_ID = #{tenantId}
+                AND hcf.current = #{dto.current}
+                AND hcf.load_sequence = hmll.load_sequence
+                )
+            </if>
+        GROUP BY
+            mmlo2.LOCATOR_CODE,
+            mmlo.LOCATOR_CODE,
+            mwo.WORK_ORDER_NUM,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mmla.ATTR_VALUE,
+            mml.MATERIAL_LOT_CODE,
+            hmll.load_row,
+            hmll.load_column,
+            hmll.load_sequence,
+            hsd.ATTRIBUTE1,
+            hmll.hot_sink_code,
+            mml2.MATERIAL_LOT_CODE,
+            hsd.old_load,
+            hsd.virtual_num,
+            me.IDENTIFICATION,
+            mm2.MATERIAL_CODE,
+            hsd.ATTRIBUTE2,
+            hmll.ATTRIBUTE2,
+            hmll.ATTRIBUTE4,
+            hmll.ATTRIBUTE6,
+            hmll.ATTRIBUTE13,
+            iu.real_name,
+            hmll.last_update_date
+    </select>
+</mapper>

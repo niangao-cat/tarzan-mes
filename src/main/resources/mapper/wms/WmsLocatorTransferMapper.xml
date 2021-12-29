@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsLocatorTransferMapper">
+
+
+    <select id="selectMaterialLotInfo" resultType="com.ruike.wms.domain.vo.WmsLocatorTransferVO">
+        SELECT
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mml.SITE_ID,
+            mml.ENABLE_FLAG,
+            mml.QUALITY_STATUS,
+            mml.LOCATOR_ID,
+            loca.LOCATOR_CODE,
+            loca.LOCATOR_NAME,
+            mml.MATERIAL_ID,
+            mml.PRIMARY_UOM_ID,
+            mml.PRIMARY_UOM_QTY,
+            mml.FREEZE_FLAG,
+            mml.lot,
+            mmla.ATTR_VALUE MATERIAL_VERSION,
+            mmla2.ATTR_VALUE WAREHOUSE_ID,
+            loca2.LOCATOR_CODE WAREHOUSE_CODE,
+            loca2.LOCATOR_NAME WAREHOUSE_NAME,
+            mu.UOM_CODE PRIMARY_UOM_CODE,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            ms.SUPPLIER_CODE,
+            mml.SUPPLIER_ID,
+            mml.SUPPLIER_SITE_ID,
+            mss.SUPPLIER_SITE_CODE,
+            mms.SITE_CODE
+        FROM
+            mt_material_lot mml
+            left join mt_material_lot_attr mmla on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID and mmla.ATTR_NAME = 'MATERIAL_VERSION'
+            left join mt_material_lot_attr mmla2 on mmla2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID and mmla2.ATTR_NAME = 'WAREHOUSE_ID'
+            left join mt_uom mu on mml.PRIMARY_UOM_ID = mu.UOM_ID
+            left join mt_material mm on mml.MATERIAL_ID = mm.MATERIAL_ID
+            left join mt_mod_locator loca on loca.LOCATOR_ID = mml.LOCATOR_ID
+            left join mt_mod_locator loca2 on loca2.LOCATOR_ID = mmla2.ATTR_VALUE
+            left join mt_supplier ms on mml.SUPPLIER_ID = ms.SUPPLIER_ID
+            left join mt_supplier_site mss on mml.SUPPLIER_SITE_ID = mss.SUPPLIER_SITE_ID
+            left join mt_mod_site mms on mml.SITE_ID = mms.SITE_ID
+        where
+            mml.TENANT_ID = 0
+                and mml.MATERIAL_LOT_ID in
+            <foreach collection="materialLotIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+    </select>
+</mapper>

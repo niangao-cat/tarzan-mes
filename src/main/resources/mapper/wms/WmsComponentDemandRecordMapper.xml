@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsComponentDemandRecordMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsComponentDemandRecord">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="demand_record_id" property="demandRecordId" jdbcType="VARCHAR"/>
+        <result column="wo_dispatch_id" property="woDispatchId" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="bom_component_id" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="router_id" property="routerId" jdbcType="VARCHAR"/>
+        <result column="router_step_id" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="router_operation_id" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="operation_id" property="operationId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_version" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="uom_id" property="uomId" jdbcType="VARCHAR"/>
+        <result column="bom_id" property="bomId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="prod_line_id" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="process_id" property="processId" jdbcType="VARCHAR"/>
+        <result column="calendar_shift_id" property="calendarShiftId" jdbcType="VARCHAR"/>
+        <result column="shift_code" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="distribution_basic_id" property="distributionBasicId" jdbcType="VARCHAR"/>
+        <result column="distribution_type" property="distributionType" jdbcType="VARCHAR"/>
+        <result column="so_num" property="soNum" jdbcType="VARCHAR"/>
+        <result column="so_line_num" property="soLineNum" jdbcType="VARCHAR"/>
+        <result column="wo_quantity" property="woQuantity" jdbcType="DECIMAL"/>
+        <result column="usage_quantity" property="usageQuantity" jdbcType="DECIMAL"/>
+        <result column="dispatch_quantity" property="dispatchQuantity" jdbcType="DECIMAL"/>
+        <result column="requirement_quantity" property="requirementQuantity" jdbcType="DECIMAL"/>
+        <result column="dist_demand_id" property="distDemandId" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE16" property="attribute16" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE17" property="attribute17" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE18" property="attribute18" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE19" property="attribute19" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE20" property="attribute20" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectListFromDispatch" resultType="com.ruike.wms.domain.entity.WmsComponentDemandRecord">
+        select hwdr.TENANT_ID
+             , hwdr.WO_DISPATCH_ID
+             , hwdr.WORK_ORDER_ID
+             , mbc.BOM_COMPONENT_ID
+             , mrs.ROUTER_ID
+             , mrs.ROUTER_STEP_ID
+             , mro.ROUTER_OPERATION_ID
+             , mro.OPERATION_ID
+             , mbc.MATERIAL_ID
+             , ifnull(mbca_ver.ATTR_VALUE, '')                                           material_version
+             , mm.PRIMARY_UOM_ID                                                         uom_id
+             , mbc.BOM_ID
+             , mwo.SITE_ID
+             , hwdr.PROD_LINE_ID
+             , hwdr.WORKCELL_ID
+             , mmw.WORKCELL_ID                                                           process_id
+             , hwdr.CALENDAR_SHIFT_ID
+             , ifnull(bs.distribution_type, bsg.distribution_type)                       distribution_type
+             , ifnull(bs.distribution_basic_id, bsg.distribution_basic_id)               distribution_basic_id
+             , mwo.qty                                                                   wo_quantity
+             , mbc.QTY                                                                   usage_quantity
+             , hwdr.DISPATCH_QTY                                                         dispatch_quantity
+             , hwdr.DISPATCH_QTY * mbc.QTY * (1 + ifnull(mbc.ATTRITION_CHANCE, 0) / 100) requirement_quantity
+             , 1 + ifnull(mbc.ATTRITION_CHANCE, 0) / 100                                 attrition_rate
+             , IF(mbca_spec.ATTR_VALUE = 'E', mwoa_so.attr_value, '')                    so_num
+             , IF(mbca_spec.ATTR_VALUE = 'E', mwoa_sol.attr_value, '')                   so_line_num
+        from hme_wo_dispatch_recode hwdr
+                 join mt_calendar_shift mcs on hwdr.CALENDAR_SHIFT_ID = mcs.CALENDAR_SHIFT_ID
+                 join mt_mod_organization_rel mor
+                      on mor.PARENT_ORGANIZATION_ID = hwdr.workcell_id and mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL' and
+                         mor.ORGANIZATION_TYPE = 'WORKCELL'
+                 join mt_mod_workcell mmw on mmw.WORKCELL_ID = mor.ORGANIZATION_ID and mmw.ENABLE_FLAG = 'Y' and
+                                             mmw.WORKCELL_type = 'PROCESS'
+                 left join mt_mod_workcell_attr mwa_pf
+                           on mwa_pf.WORKCELL_ID = mmw.WORKCELL_ID and mwa_pf.ATTR_NAME = 'PREPARE_FLAG'
+                 join mt_operation_wkc_dispatch_rel owdr on owdr.WORKCELL_ID = mmw.WORKCELL_ID
+                 join mt_router_operation mro on mro.OPERATION_ID = owdr.OPERATION_ID
+                 join mt_router_step mrs on mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+                 join mt_router mt on mrs.ROUTER_ID = mt.ROUTER_ID and mt.router_status = 'CAN_RELEASE'
+                 join mt_work_order mwo on mwo.ROUTER_ID = mt.ROUTER_ID and mwo.WORK_ORDER_ID = hwdr.WORK_ORDER_ID
+            and mwo.PRODUCTION_LINE_ID = hwdr.PROD_LINE_ID
+                 left join mt_work_order_attr mwoa_so
+                           on mwoa_so.work_order_id = mwo.WORK_ORDER_ID and mwoa_so.ATTR_NAME = 'attribute1'
+                 left join mt_work_order_attr mwoa_sol
+                           on mwoa_sol.work_order_id = mwo.WORK_ORDER_ID and mwoa_sol.ATTR_NAME = 'attribute7'
+                 join mt_router_operation_component moc
+                      on mro.ROUTER_OPERATION_ID = moc.ROUTER_OPERATION_ID and moc.enable_flag = 'Y'
+                 join mt_bom_component mbc
+                      on mbc.BOM_COMPONENT_ID = moc.BOM_COMPONENT_ID and mbc.bom_component_type = 'ASSEMBLING' and
+                         mbc.QTY > 0
+                 left join mt_bom_component_attr mbca_ver
+                           on mbc.BOM_COMPONENT_ID = mbca_ver.BOM_COMPONENT_ID and mbca_ver.ATTR_NAME = 'lineAttribute7'
+                 left join mt_bom_component_attr mbca_spec
+                           on mbc.BOM_COMPONENT_ID = mbca_spec.BOM_COMPONENT_ID and
+                              mbca_spec.ATTR_NAME = 'lineAttribute11'
+                 join mt_material mm on mm.material_id = mbc.MATERIAL_ID
+                 join mt_material_site mms on mms.material_id = mm.material_id and
+                                              mms.SITE_ID = mwo.SITE_ID and mms.ENABLE_FLAG = 'Y'
+                 left join mt_material_site_attr mmsa on mms.MATERIAL_SITE_ID = mmsa.MATERIAL_SITE_ID and
+                                                         mmsa.ATTR_NAME = 'attribute1'
+                 left join mt_material_basic mmb on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+                 left join wms_item_group wig on wig.item_group_code = mmb.item_group
+                 left join (select dbd.material_id
+                                 , dbd.site_id
+                                 , dbdp.PRODUCTION_LINE_ID
+                                 , dbd.distribution_type
+                                 , dbd.header_id distribution_basic_id
+                            from wms_distribution_basic_data dbd
+                               , wms_distribution_basic_line dbdp
+                            where dbdp.enabled_flag = 'Y'
+                              and dbd.enable_flag = 'Y'
+                              and dbdp.header_id = dbd.header_id) bs
+                           on bs.PRODUCTION_LINE_ID = mwo.PRODUCTION_LINE_ID and bs.material_id = mbc.MATERIAL_ID and
+                              bs.site_id = mwo.SITE_ID
+                 left join (select dbd.material_group_id
+                                 , dbd.site_id
+                                 , dbdp.PRODUCTION_LINE_ID
+                                 , dbd.distribution_type
+                                 , dbd.header_id distribution_basic_id
+                            from wms_distribution_basic_data dbd
+                               , wms_distribution_basic_line dbdp
+                            where dbdp.enabled_flag = 'Y'
+                              and dbd.enable_flag = 'Y'
+                              and dbdp.header_id = dbd.header_id) bsg
+                           on bsg.PRODUCTION_LINE_ID = mwo.PRODUCTION_LINE_ID and
+                              bsg.material_group_id = wig.item_group_id and bsg.site_id = mwo.SITE_ID
+        where hwdr.TENANT_ID = #{tenantId}
+          and hwdr.wo_dispatch_id = #{woDispatchId}
+          and ifnull(mwa_pf.attr_value, 'N') != 'Y'
+          and ifnull(mmsa.ATTR_VALUE, '1') != '2'
+          and ifnull(ifnull(bs.distribution_type
+                         , bsg.distribution_type), 'DEFAULT') != 'NULL'
+    </select>
+
+    <select id="selectRelListByDispatchId" resultType="com.ruike.wms.domain.vo.WmsDistDemandDispatchRelVO">
+        select cdr.wo_dispatch_id
+             , cdr.work_order_id
+             , wo.work_order_num
+             , cdr.demand_record_id
+             , wddd.dist_demand_id
+             , wddd.demand_detail_id
+             , wddd.instruction_doc_id
+             , doc.instruction_doc_num
+             , wddd.dispatch_qty
+             , cdr.material_id
+             , ifnull(cdr.material_version, '')        material_version
+             , cdr.process_id
+             , exists(select 1
+                      from wms_distribution_demand_detail sub
+                      where sub.source_detail_id = wddd.demand_detail_id
+                        and sub.substitute_flag = 'Y') substitute_exists
+        from wms_component_demand_record cdr
+                 left join wms_distribution_demand_detail wddd on cdr.demand_record_id = wddd.demand_record_id
+                 left join mt_instruction_doc doc on doc.instruction_doc_id = wddd.instruction_doc_id and
+                                                     doc.instruction_doc_status != 'CANCEL'
+           , mt_work_order wo
+        where cdr.work_order_id = wo.work_order_id
+          and cdr.wo_dispatch_id = #{woDispatchId}
+          and cdr.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectNonCreatedListByDateRange" resultType="com.ruike.wms.domain.entity.WmsComponentDemandRecord">
+        select wcdr.*
+        from wms_component_demand_record wcdr
+           , mt_calendar_shift mcs
+        where wcdr.calendar_shift_id = mcs.CALENDAR_SHIFT_ID
+          and wcdr.dist_demand_id is null
+          and wcdr.tenant_id = #{tenantId}
+          and mcs.SHIFT_DATE between DATE_FORMAT(#{startDate}, '%Y-%m-%d') and DATE_FORMAT(#{endDate}, '%Y-%m-%d')
+    </select>
+
+    <select id="selectBarcodeOnhandBySite" resultType="com.ruike.wms.domain.vo.WmsDistributionQtyVO">
+        select ml.material_id
+             , ifnull(mml_ver.attr_value, '')     material_version
+             , ifnull(mml_so.attr_value, '')      so_num
+             , ifnull(mml_soline.attr_value, '')  so_line_num
+             , ifnull(sum(ml.primary_uom_qty), 0) quantity
+        from mt_material_lot ml
+                 left join mt_material_lot_attr mml_status on ml.material_lot_id = mml_status.material_lot_id
+            and mml_status.attr_name = 'STATUS'
+                 left join mt_material_lot_attr mml_ver on ml.material_lot_id = mml_ver.material_lot_id
+            and mml_ver.attr_name = 'MATERIAL_VERSION'
+                 left join mt_material_lot_attr mml_so on ml.material_lot_id = mml_so.material_lot_id
+            and mml_so.attr_name = 'SO_NUM'
+                 left join mt_material_lot_attr mml_soline on ml.material_lot_id = mml_soline.material_lot_id
+            and mml_soline.attr_name = 'SO_LINE_NUM',
+             mt_mod_locator loc,
+             mt_mod_locator wh
+        where ml.enable_flag = 'Y'
+          and ml.quality_status = 'OK'
+          and mml_status.attr_value = 'INSTOCK'
+          and ml.locator_id = loc.locator_id
+          and loc.parent_locator_id = wh.locator_id
+          and wh.locator_type != '14'
+          and ml.site_id = #{siteId}
+          and ml.tenant_id = #{tenantId}
+        group by ml.material_id
+               , ifnull(mml_ver.attr_value, '')
+               , ifnull(mml_so.attr_value, '')
+               , ifnull(mml_soline.attr_value, '')
+    </select>
+
+    <select id="selectListByIds" resultType="com.ruike.wms.domain.entity.WmsComponentDemandRecord">
+        select wcdr.*
+        ,( 1+ifnull(mbc.ATTRITION_CHANCE, 0) / 100 ) attrition_rate
+        from wms_component_demand_record wcdr
+        ,mt_bom_component mbc
+        where wcdr.bom_component_id = mbc.BOM_COMPONENT_ID
+        and wcdr.demand_record_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectSummaryListByDateRange" resultType="com.ruike.wms.domain.vo.WmsComponentDemandSumVO">
+        select wcdr.material_id
+             , mm.material_code
+             , mm.material_name
+             , wcdr.material_version
+             , wcdr.workcell_id
+             , wkc.workcell_code
+             , wkc.workcell_name
+             , wcdr.uom_id
+             , uom.uom_code
+             , mbc.attrition_chance
+             , mcs.shift_date
+             , wcdr.dispatch_quantity * wcdr.usage_quantity requirement_qty
+             , wcdr.requirement_quantity attrition_qty
+        from wms_component_demand_record wcdr
+                 join mt_bom_component mbc on wcdr.bom_component_id = mbc.bom_component_id
+           , mt_material mm
+           , mt_mod_workcell wkc
+           , mt_calendar_shift mcs
+           , mt_uom uom
+        where wcdr.material_id = mm.material_id
+          and wcdr.workcell_id = wkc.workcell_id
+          and wcdr.uom_id = uom.uom_id
+          and wcdr.calendar_shift_id = mcs.calendar_shift_id
+          and wcdr.work_order_id = #{workOrderId}
+          and wcdr.tenant_id = #{tenantId}
+          and mcs.shift_date between DATE_FORMAT(#{startDate}, '%Y-%m-%d') and DATE_FORMAT(#{endDate}, '%Y-%m-%d')
+    </select>
+
+    <select id="selectRequirementWithDate" resultType="com.ruike.wms.domain.vo.WmsComponentDemandDateVO">
+        select mcs.shift_date                                               requirement_date
+             , ifnull(sum(wcdr.dispatch_quantity * wcdr.usage_quantity), 0) requirement_qty
+             , ifnull(sum(wcdr.requirement_quantity), 0)                    attrition_qty
+        from mt_calendar_shift mcs
+                 left join wms_component_demand_record wcdr on wcdr.calendar_shift_id = mcs.calendar_shift_id
+            and wcdr.work_order_id = #{workOrderId}
+            and wcdr.tenant_id = #{tenantId}
+            and wcdr.material_id = #{materialId}
+            and ifnull(wcdr.material_version, '') = ifnull(#{materialVersion}, '')
+            and wcdr.workcell_id = #{workcellId}
+        where mcs.shift_date between DATE_FORMAT(#{startDate}, '%Y-%m-%d') and DATE_FORMAT(#{endDate}, '%Y-%m-%d')
+        group by mcs.shift_date
+    </select>
+
+</mapper>

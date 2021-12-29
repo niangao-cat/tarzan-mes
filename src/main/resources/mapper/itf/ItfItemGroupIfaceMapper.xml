@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfItemGroupIfaceMapper">
+
+    <insert id="batchInsertItemGroup" parameterType="com.ruike.itf.domain.entity.ItfItemGroupIface">
+        INSERT INTO itf_item_group_iface
+        VALUES
+        <foreach collection="itemGroupIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.ifaceId},
+            #{item.itemGroupCode},
+            #{item.itemGroupDescription},
+            #{item.batchId},
+            #{item.batchDate},
+            #{item.status},
+            #{item.message},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getUnprocessedList" resultType="com.ruike.itf.domain.entity.ItfItemGroupIface">
+        select t.* from itf_item_group_iface t where t.STATUS = 'N' AND t.TENANT_ID = ${tenantId}
+    </select>
+</mapper>

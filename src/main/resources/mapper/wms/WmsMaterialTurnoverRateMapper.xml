@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialTurnoverRateMapper">
+
+    <select id="queryList" resultType="com.ruike.wms.domain.vo.WmsMaterialTurnoverRateVO">
+        SELECT
+        mms.SITE_CODE,
+        mm.MATERIAL_ID,
+        mml.LOCATOR_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mml1.LOCATOR_CODE WAREHOUSE_CODE,
+        mml.LOCATOR_CODE,
+        ABS(sum(CASE WHEN mij.CHANGE_QUANTITY &lt; 0 THEN mij.CHANGE_QUANTITY ELSE 0 END)) AS sendQty,
+        sum(CASE WHEN mij.CHANGE_QUANTITY >= 0 THEN mij.CHANGE_QUANTITY ELSE 0 END) AS receiptQty,
+        mu.UOM_CODE
+        FROM
+        mt_inv_journal mij,
+        mt_material mm,
+        mt_mod_site mms,
+        mt_uom mu,
+        mt_mod_locator mml
+        LEFT JOIN mt_mod_locator mml1 ON mml.PARENT_LOCATOR_ID = mml1.locator_id
+        WHERE
+        mij.TENANT_ID = #{tenantId}
+        and mij.MATERIAL_ID = mm.MATERIAL_ID
+        and mij.SITE_ID = mms.SITE_ID
+        and mij.LOCATOR_ID = mml.LOCATOR_ID
+        and mm.PRIMARY_UOM_ID = mu.UOM_ID
+        and mij.EVENT_TIME >= #{dto.startDate}
+        and mij.EVENT_TIME &lt;= #{dto.endDate}
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND mms.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mm.MATERIAL_ID in
+            <foreach collection="dto.materialIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            and mml1.LOCATOR_ID in
+            <foreach collection="dto.warehouseIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mml.LOCATOR_ID in
+            <foreach collection="dto.locatorIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        mms.SITE_CODE,
+        mm.MATERIAL_ID,
+        mml.LOCATOR_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mml1.LOCATOR_CODE,
+        mml.LOCATOR_CODE,
+        mu.UOM_CODE
+    </select>
+
+    <select id="selectQtyByStart" resultType="com.ruike.wms.domain.vo.WmsMaterialTurnoverRateVO2">
+        SELECT
+            mij.TENANT_ID,
+            mij.SITE_ID,
+            mij.MATERIAL_ID,
+            mij.LOCATOR_ID,
+            mij.LOT_CODE,
+            mij.OWNER_ID,
+            mij.OWNER_TYPE
+        FROM
+            mt_inv_journal mij
+        WHERE
+            mij.TENANT_ID = #{tenantId}
+        and mij.MATERIAL_ID = #{materialId}
+        and mij.LOCATOR_ID = #{locatorId}
+        and STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d') &lt;= STR_TO_DATE(date_sub(#{startDate},interval 1 day),'%Y-%m-%d')
+        GROUP BY
+            mij.TENANT_ID,
+            mij.SITE_ID,
+            mij.MATERIAL_ID,
+            mij.LOCATOR_ID,
+            mij.LOT_CODE,
+            mij.OWNER_ID,
+            mij.OWNER_TYPE
+    </select>
+
+    <select id="selectQtyByEnd" resultType="com.ruike.wms.domain.vo.WmsMaterialTurnoverRateVO2">
+        SELECT
+            mij.TENANT_ID,
+            mij.SITE_ID,
+            mij.MATERIAL_ID,
+            mij.LOCATOR_ID,
+            mij.LOT_CODE,
+            mij.OWNER_ID,
+            mij.OWNER_TYPE
+        FROM
+            mt_inv_journal mij
+        WHERE
+            mij.TENANT_ID = #{tenantId}
+        and mij.MATERIAL_ID = #{materialId}
+        and mij.LOCATOR_ID = #{locatorId}
+        and STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d') &lt;= STR_TO_DATE(#{endDate},'%Y-%m-%d')
+        GROUP BY
+            mij.TENANT_ID,
+            mij.SITE_ID,
+            mij.MATERIAL_ID,
+            mij.LOCATOR_ID,
+            mij.LOT_CODE,
+            mij.OWNER_ID,
+            mij.OWNER_TYPE
+    </select>
+
+    <select id="selectStartQty" resultType="java.math.BigDecimal">
+        SELECT
+            mij.ONHAND_QUANTITY
+        FROM
+            mt_inv_journal mij
+        WHERE
+            mij.TENANT_ID = #{tenantId}
+            and mij.SITE_ID = #{siteId}
+            and mij.MATERIAL_ID = #{materialId}
+            and mij.LOCATOR_ID = #{locatorId}
+            AND mij.LOT_CODE = #{lotCode}
+            and mij.OWNER_ID = #{ownerId}
+            AND mij.OWNER_TYPE = #{ownerType}
+            and STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d') &lt;= STR_TO_DATE(date_sub(#{startDate},interval 1 day),'%Y-%m-%d')
+        <if test='flag == "Y"'>
+            ORDER BY mij.EVENT_TIME desc,mij.ONHAND_QUANTITY desc
+        </if>
+        <if test='flag == "N"'>
+            ORDER BY mij.EVENT_TIME desc,mij.ONHAND_QUANTITY asc
+        </if>
+        LIMIT 1
+    </select>
+
+    <select id="selectEndQty" resultType="java.math.BigDecimal">
+        SELECT
+            mij.ONHAND_QUANTITY
+        FROM
+            mt_inv_journal mij
+        WHERE
+            mij.TENANT_ID = #{tenantId}
+            and mij.SITE_ID = #{siteId}
+            and mij.MATERIAL_ID = #{materialId}
+            and mij.LOCATOR_ID = #{locatorId}
+            AND mij.LOT_CODE = #{lotCode}
+            and mij.OWNER_ID = #{ownerId}
+            AND mij.OWNER_TYPE = #{ownerType}
+            and STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d') &lt;= STR_TO_DATE(#{endDate},'%Y-%m-%d')
+        <if test='flag == "Y"'>
+            ORDER BY mij.EVENT_TIME desc,mij.ONHAND_QUANTITY desc
+        </if>
+        <if test='flag == "N"'>
+            ORDER BY mij.EVENT_TIME desc,mij.ONHAND_QUANTITY asc
+        </if>
+        LIMIT 1
+    </select>
+
+    <select id="selectStartInvJournal" resultType="tarzan.inventory.domain.entity.MtInvJournal">
+        SELECT
+            *
+        FROM
+            mt_inv_journal mij
+        WHERE
+            mij.TENANT_ID = #{tenantId}
+            and mij.SITE_ID = #{siteId}
+            and mij.MATERIAL_ID = #{materialId}
+            and mij.LOCATOR_ID = #{locatorId}
+            AND mij.LOT_CODE = #{lotCode}
+            and mij.OWNER_ID = #{ownerId}
+            AND mij.OWNER_TYPE = #{ownerType}
+            and STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d') &lt;= STR_TO_DATE(date_sub(#{startDate},interval 1 day),'%Y-%m-%d')
+        ORDER BY mij.EVENT_TIME desc
+        LIMIT 1
+    </select>
+
+    <select id="selectEndInvJournal" resultType="tarzan.inventory.domain.entity.MtInvJournal">
+        SELECT
+            *
+        FROM
+            mt_inv_journal mij
+        WHERE
+            mij.TENANT_ID = #{tenantId}
+            and mij.SITE_ID = #{siteId}
+            and mij.MATERIAL_ID = #{materialId}
+            and mij.LOCATOR_ID = #{locatorId}
+            AND mij.LOT_CODE = #{lotCode}
+            and mij.OWNER_ID = #{ownerId}
+            AND mij.OWNER_TYPE = #{ownerType}
+            and STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d') &lt;= STR_TO_DATE(#{endDate},'%Y-%m-%d')
+        ORDER BY mij.EVENT_TIME desc
+        LIMIT 1
+    </select>
+</mapper>

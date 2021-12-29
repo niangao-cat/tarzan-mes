@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtEoActualHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtEoActualHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_ACTUAL_HIS_ID" property="eoActualHisId" jdbcType="VARCHAR"/>
+        <result column="EO_ACTUAL_ID" property="eoActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_START_TIME" property="actualStartTime" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_END_TIME" property="actualEndTime" jdbcType="TIMESTAMP"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QTY" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="TRX_COMPLETED_QTY" property="trxCompletedQty" jdbcType="DECIMAL"/>
+        <result column="TRX_SCRAPPED_QTY" property="trxScrappedQty" jdbcType="DECIMAL"/>
+        <result column="TRX_HOLD_QTY" property="trxHoldQty" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="eventLimitEoActualHisBatchQuery" resultMap="BaseResultMap">
+        SELECT *
+        from mt_eo_actual_his t
+        WHERE t.TENANT_ID = ${tenantId}
+        AND t.EVENT_ID IN
+        <foreach collection="eventIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="eoActualHisPropertyQuery" resultMap="BaseResultMap">
+        SELECT t.*
+        FROM mt_eo_actual_his t,
+        mt_event e
+        WHERE t.TENANT_ID = ${tenantId}
+        AND e.TENANT_ID = ${tenantId}
+        AND t.EVENT_ID = e.EVENT_ID
+        <if test="dto.eoActualId !=null">
+            AND t.EO_ACTUAL_ID = #{dto.eoActualId}
+        </if>
+        <if test="dto.eoId !=null">
+            AND t.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.eventId !=null">
+            AND t.EVENT_ID = #{dto.eventId}
+        </if>
+        <if test="dto.eventBy !=null">
+            AND e.EVENT_BY = #{dto.eventBy}
+        </if>
+        <if test="dto.eventTimeFrom!=null">
+            and DATE_FORMAT(e.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &gt;= DATE_FORMAT(#{dto.eventTimeFrom},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="dto.eventTimeTo!=null">
+            and DATE_FORMAT(e.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &lt;= DATE_FORMAT(#{dto.eventTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+</mapper>

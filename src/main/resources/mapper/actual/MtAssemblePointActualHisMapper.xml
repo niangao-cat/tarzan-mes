@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtAssemblePointActualHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtAssemblePointActualHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_POINT_ACTUAL_HIS_ID" property="assemblePointActualHisId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_POINT_ACTUAL_ID" property="assemblePointActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_GROUP_ACTUAL_ID" property="assembleGroupActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_POINT_ID" property="assemblePointId" jdbcType="VARCHAR"/>
+        <result column="FEEDING_SEQUENCE" property="feedingSequence" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="FEEDING_QTY" property="feedingQty" jdbcType="DECIMAL"/>
+        <result column="FEEDING_MATERIAL_LOT_SEQUENCE" property="feedingMaterialLotSequence" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="TRX_QTY" property="trxQty" jdbcType="DECIMAL"/>
+        <result column="TRX_FEEDING_QTY" property="trxFeedingQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

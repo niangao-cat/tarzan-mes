@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosRuleLogicMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosRuleLogic">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="COS_RULE_LOGIC_ID" property="cosRuleLogicId" jdbcType="VARCHAR"/>
+        <result column="COS_RULE_ID" property="cosRuleId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="RULE_NUMBER" property="ruleNumber" jdbcType="VARCHAR"/>
+        <result column="CURRENT" property="current" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_ITEM" property="collectionItem" jdbcType="VARCHAR"/>
+        <result column="COUNT_TYPE" property="countType" jdbcType="VARCHAR"/>
+        <result column="RANGE_TYPE" property="rangeType" jdbcType="VARCHAR"/>
+        <result column="RULE_VALUE" property="ruleValue" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="cosRuleLogicQuery" resultType="com.ruike.hme.api.dto.HmeCosRuleLogicDTO">
+        SELECT
+            hcrl.cos_rule_id,
+            hcrl.site_id,
+            hcrl.cos_rule_logic_id,
+            hcrl.rule_number,
+            hcrl.current,
+            hcrl.Collection_item,
+            hcrl.count_type,
+            hcrl.Range_type,
+            hcrl.rule_value
+        FROM
+            hme_cos_rule_logic hcrl
+        WHERE
+            hcrl.TENANT_ID =#{tenantId}
+        AND hcrl.cos_rule_id =#{cosRuleId}
+    </select>
+</mapper>

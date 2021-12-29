@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtBomReferencePointMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtBomReferencePoint">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="BOM_REFERENCE_POINT_ID" property="bomReferencePointId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+        <result column="REFERENCE_POINT" property="referencePoint" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_POINT_ID" property="copiedFromPointId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap1" type="tarzan.method.domain.vo.MtBomReferencePointVO2">
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_REFERENCE_POINT_ID" property="bomReferencePointId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectConditionCustom" resultMap="BaseResultMap1">
+        select t1.BOM_ID,
+        t1.BOM_COMPONENT_ID,
+        t2.BOM_REFERENCE_POINT_ID
+        from mt_bom_component t1,
+        mt_bom_reference_point t2
+        where t1.TENANT_ID = ${tenantId}
+        AND t2.TENANT_ID = ${tenantId}
+        AND t1.BOM_COMPONENT_ID = t2.BOM_COMPONENT_ID
+        <if test="condition.bomId!=null">
+            and t1.BOM_ID = #{condition.bomId}
+        </if>
+        <if test="condition.bomComponentId!=null">
+            and t2.BOM_COMPONENT_ID = #{condition.bomComponentId}
+        </if>
+        <if test="condition.qty!=null">
+            and t2.QTY = #{condition.qty}
+        </if>
+        <if test="condition.referencePoint!=null">
+            and t2.REFERENCE_POINT = #{condition.referencePoint}
+        </if>
+        <if test='condition.onlyAvailableFlag!=null and condition.onlyAvailableFlag=="Y"'>
+            and t1.BOM_ID IN
+            (
+            select BOM_ID
+            from mt_bom
+            where TENANT_ID = ${tenantId}
+            AND DATE_FROM &lt;= now()
+            and (DATE_TO is null or DATE_TO &gt; now()) and BOM_STATUS &lt;&gt; 'ABANDON'
+            )
+            and t1.DATE_FROM &lt;= now()
+            and (t1.DATE_TO is null or t1.DATE_TO &gt; now())
+            and t2.ENABLE_FLAG = 'Y'
+        </if>
+        <if test="condition.enableFlag!=null">
+            and t2.ENABLE_FLAG = #{condition.enableFlag}
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select *
+        from mt_bom_reference_point
+        where TENANT_ID = ${tenantId}
+        AND BOM_REFERENCE_POINT_ID IN
+        <foreach collection="bomReferencePointIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByComponentIdAndPointIds" resultMap="BaseResultMap">
+        select * from mt_bom_reference_point
+        where TENANT_ID = ${tenantId}
+        AND BOM_COMPONENT_ID = #{bomComponentId}
+        AND BOM_REFERENCE_POINT_ID IN
+        <foreach collection="bomReferencePointIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

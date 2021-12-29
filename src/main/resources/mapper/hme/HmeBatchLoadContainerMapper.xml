@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeBatchLoadContainerMapper">
+
+    <!--查询外箱装载物料批明细-->
+    <select id="queryOuterContainerLoadDetail" resultType="com.ruike.hme.domain.vo.HmeLoadContainerVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+            MML.MATERIAL_LOT_ID,
+            MML.MATERIAL_LOT_CODE,
+            MML.QUALITY_STATUS,
+            MGST.DESCRIPTION QUALITY_STATUS_DES,
+        MWO.WORK_ORDER_NUM,
+        MML.PRIMARY_UOM_QTY,
+        MM.MATERIAL_CODE,
+        #{outerContainerCode} OUTER_CONTAINER_CODE,
+        MMT.MATERIAL_NAME,
+        MML.LOCATOR_ID,
+        LOCATER.LOCATOR_CODE,
+        MWO.REMARK,
+        MML.ENABLE_FLAG,
+        MML.FREEZE_FLAG,
+        MML.STOCKTAKE_FLAG,
+        ATTR.ATTR_VALUE MATERIAL_LOT_STATUS
+        FROM MT_MATERIAL_LOT MML
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR ON MML.MATERIAL_LOT_ID = ATTR.MATERIAL_LOT_ID AND ATTR.ATTR_NAME = 'STATUS'
+        LEFT JOIN MT_EO ME ON MML.EO_ID= ME.EO_ID
+        LEFT JOIN MT_WORK_ORDER MWO ON ME.WORK_ORDER_ID=MWO.WORK_ORDER_ID,
+        MT_MOD_LOCATOR LOCATER,
+        MT_MATERIAL MM
+        LEFT JOIN MT_MATERIAL_TL MMT
+        ON MM.MATERIAL_ID=MMT.MATERIAL_ID AND MMT.LANG = #{lang},
+        MT_GEN_STATUS MGS
+        LEFT JOIN MT_GEN_STATUS_TL MGST
+        ON MGS.GEN_STATUS_ID= MGST.GEN_STATUS_ID AND MGST.LANG = #{lang}
+        WHERE MML.MATERIAL_ID=MM.MATERIAL_ID
+        AND   MML.LOCATOR_ID=LOCATER.LOCATOR_ID
+        AND   MML.QUALITY_STATUS=MGS.STATUS_CODE
+        AND   MGS.STATUS_GROUP ='QUALITY_STATUS'
+        AND   MGS.MODULE ='MATERIAL_LOT'
+        <if test="materialLotIdList != null and materialLotIdList.size > 0 ">
+            AND MML.MATERIAL_LOT_ID IN
+            <foreach collection="materialLotIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryLocatorCodeByContainerId" resultType="java.lang.String">
+        SELECT
+	        ml.LOCATOR_CODE
+        FROM
+	        mt_container mc,
+	        mt_mod_locator ml
+        WHERE
+            ml.locator_id = mc.locator_id
+        AND mc.CONTAINER_ID = #{containerId}
+        AND mc.TENANT_ID = #{tenantId}
+    </select>
+
+</mapper>

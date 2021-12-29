@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtNcRecordMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtNcRecord">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NC_RECORD_ID" property="ncRecordId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="PARENT_NC_RECORD_ID" property="parentNcRecordId" jdbcType="VARCHAR"/>
+        <result column="USER_ID" property="userId" jdbcType="DECIMAL"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="NC_INCIDENT_ID" property="ncIncidentId" jdbcType="VARCHAR"/>
+        <result column="DATE_TIME" property="dateTime" jdbcType="TIMESTAMP"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="DEFECT_COUNT" property="defectCount" jdbcType="DECIMAL"/>
+        <result column="COMMENTS" property="comments" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="NC_TYPE" property="ncType" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_MATERIAL_ID" property="componentMaterialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="REFERENCE_POINT" property="referencePoint" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ROOT_CAUSE_OPERATION_ID" property="rootCauseOperationId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="ROOT_CAUSE_WORKCELL_ID" property="rootCauseWorkcellId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="NC_STATUS" property="ncStatus" jdbcType="VARCHAR"/>
+        <result column="CONFIRMED_STATUS" property="confirmedStatus" jdbcType="VARCHAR"/>
+        <result column="CONFIRMED_DATE_TIME" property="confirmedDateTime" jdbcType="TIMESTAMP"/>
+        <result column="CLOSURE_REQUIRED_FLAG" property="closureRequiredFlag" jdbcType="VARCHAR"/>
+        <result column="CLOSED_DATE_TIME" property="closedDateTime" jdbcType="TIMESTAMP"/>
+        <result column="CLOSED_USER_ID" property="closedUserId" jdbcType="DECIMAL"/>
+        <result column="DISPOSITION_DONE_FLAG" property="dispositionDoneFlag" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_ID" property="dispositionGroupId" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_ROUTER_ID" property="dispositionRouterId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByNcCodeIds" resultMap="BaseResultMap">
+        SELECT t.*
+        FROM mt_nc_record t
+        WHERE 1 = 1
+        AND t.TENANT_ID = ${tenantId}
+        AND t.EO_ID = #{eoId}
+        AND t.PARENT_NC_RECORD_ID = #{parentNcRecordId}
+        AND t.NC_CODE_ID IN
+        <foreach collection="ncCodeIds" item="item" index="i" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="eoMaxNcLimitCount" resultType="java.lang.Integer">
+        select count(1)
+        from mt_nc_record t
+        where t.TENANT_ID = ${tenantId}
+        and t.EO_ID = #{dto.eoId}
+        and t.NC_CODE_ID = #{dto.ncCodeId}
+        and t.NC_STATUS &lt;&gt; 'CANCEL'
+    </select>
+
+    <select id="getMaxSequence" resultType="java.lang.Long">
+        select max(SEQUENCE) from mt_nc_record t where TENANT_ID = ${tenantId} and EO_ID=#{eoId};
+    </select>
+
+    <select id="mtNcRecordQuery" resultType="tarzan.actual.domain.entity.MtNcRecord">
+        select *
+        FROM
+            mt_nc_record mnr
+        WHERE
+            mnr.TENANT_ID = #{tenantId}
+        AND mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+        AND mnr.DATE_TIME >= DATE_FORMAT(#{dateTime},'%Y-%m-%d %Hq:%i:%S')
+        AND (mnr.PARENT_NC_RECORD_ID IS NULL OR mnr.PARENT_NC_RECORD_ID = '')
+        UNION
+        select *
+        FROM
+            mt_nc_record mnr
+        WHERE
+            mnr.TENANT_ID = #{tenantId}
+        AND mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+        AND mnr.NC_STATUS != 'CLOSED'
+        AND (mnr.PARENT_NC_RECORD_ID IS NULL OR mnr.PARENT_NC_RECORD_ID = '')
+        ORDER BY DATE_TIME DESC
+    </select>
+</mapper>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeOperationTimeObjectMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeOperationTimeObject">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OPERATION_TIME_OBJECT_ID" property="operationTimeObjectId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_TIME_ID" property="operationTimeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE" property="objectType" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="STANDARD_REQD_TIME_IN_PROCESS" property="standardReqdTimeInProcess" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+    <select id="queryStandardReqdTimeInProcessOfWkcSn" resultType="java.math.BigDecimal">
+        SELECT
+        hoto.standard_reqd_time_in_process
+        FROM
+        hme_operation_time hot,
+        hme_operation_time_object hoto
+        WHERE
+        hot.enable_flag = 'Y'
+        AND hoto.enable_flag = 'Y'
+        AND hot.tenant_id = #{tenantId}
+        AND hoto.tenant_id = #{tenantId}
+        AND hot.operation_time_id = hoto.operation_time_id
+        AND hoto.object_type = 'EO'
+        AND hoto.object_id = #{dto.eoId}
+        <if test="type == 'WKC'">
+            AND hot.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="type == 'OPERATION'">
+            AND hot.operation_id = #{dto.operationId}
+        </if>
+    </select>
+    <select id="queryStandardReqdTimeInProcessOfWkcWo" resultType="java.math.BigDecimal">
+        SELECT
+        hoto.standard_reqd_time_in_process
+        FROM
+        hme_operation_time hot,
+        hme_operation_time_object hoto
+        WHERE
+        hot.enable_flag = 'Y'
+        AND hoto.enable_flag = 'Y'
+        AND hot.tenant_id = #{tenantId}
+        AND hoto.tenant_id = #{tenantId}
+        AND hot.operation_time_id = hoto.operation_time_id
+        AND hoto.object_type = 'WO'
+        AND hoto.object_id = #{dto.workOrderId}
+        <if test="type == 'WKC'">
+            AND hot.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="type == 'OPERATION'">
+            AND hot.operation_id = #{dto.operationId}
+        </if>
+    </select>
+    <select id="queryStandardReqdTimeInProcessOfWkcMaterialVersion" resultType="java.math.BigDecimal">
+        SELECT
+        hotm.standard_reqd_time_in_process
+        FROM
+        hme_operation_time hot,
+        hme_operation_time_material hotm,
+        mt_work_order wo,
+        hme_production_version hpv,
+        mt_material_site mms
+        WHERE
+        hot.enable_flag = 'Y'
+        AND hotm.enable_flag = 'Y'
+        AND mms.ENABLE_FLAG = 'Y'
+        AND hot.tenant_id = #{tenantId}
+        AND hotm.tenant_id = #{tenantId}
+        AND wo.TENANT_ID = #{tenantId}
+        AND hpv.tenant_id = #{tenantId}
+        AND mms.TENANT_ID = #{tenantId}
+        AND mms.SITE_ID = wo.SITE_ID
+        AND mms.MATERIAL_ID = hotm.material_id
+        AND hpv.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND hotm.production_version_id = hpv.production_version_id
+        AND hpv.PRODUCTION_VERSION = wo.PRODUCTION_VERSION
+        AND wo.WORK_ORDER_ID = #{dto.workOrderId}
+        AND hot.operation_time_id = hotm.operation_time_id
+        AND hotm.material_id = #{dto.materialId}
+        <if test="type == 'WKC'">
+            AND hot.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="type == 'OPERATION'">
+            AND hot.operation_id = #{dto.operationId}
+        </if>
+    </select>
+    <select id="queryStandardReqdTimeInProcessOfWkcMaterial" resultType="java.math.BigDecimal">
+        SELECT
+        hotm.standard_reqd_time_in_process
+        FROM
+        hme_operation_time hot,
+        hme_operation_time_material hotm
+        WHERE
+        hot.enable_flag = 'Y'
+        AND hotm.enable_flag = 'Y'
+        AND hot.tenant_id = #{tenantId}
+        AND hotm.tenant_id = #{tenantId}
+        AND hotm.production_version_id is null
+        AND hot.operation_time_id = hotm.operation_time_id
+        AND hotm.material_id = #{dto.materialId}
+        <if test="type == 'WKC'">
+            AND hot.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="type == 'OPERATION'">
+            AND hot.operation_id = #{dto.operationId}
+        </if>
+    </select>
+    <select id="queryStandardReqdTimeInProcessOfWkcOrOperation" resultType="java.math.BigDecimal">
+        SELECT
+        hot.standard_reqd_time_in_process
+        FROM
+        hme_operation_time hot
+        WHERE
+        hot.enable_flag = 'Y'
+        AND hot.tenant_id = #{tenantId}
+        <if test="type == 'WKC'">
+            AND hot.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="type == 'OPERATION'">
+            AND hot.operation_id = #{dto.operationId}
+        </if>
+    </select>
+</mapper>

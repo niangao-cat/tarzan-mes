@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtBomComponentMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtBomComponent">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_TYPE" property="bomComponentType" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="KEY_MATERIAL_FLAG" property="keyMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_METHOD" property="assembleMethod" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_AS_REQ_FLAG" property="assembleAsReqFlag" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_POLICY" property="attritionPolicy" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_CHANCE" property="attritionChance" jdbcType="DECIMAL"/>
+        <result column="ATTRITION_QTY" property="attritionQty" jdbcType="DECIMAL"/>
+        <result column="COPIED_FROM_COMPONENT_ID" property="copiedFromComponentId" jdbcType="VARCHAR"/>
+        <result column="ISSUED_LOCATOR_ID" property="issuedLocatorId" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="ResultView1" type="tarzan.method.domain.vo.MtBomComponentVO13">
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_TYPE" property="bomComponentType" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="KEY_MATERIAL_FLAG" property="keyMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_METHOD" property="assembleMethod" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_AS_REQ_FLAG" property="assembleAsReqFlag" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_POLICY" property="attritionPolicy" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_CHANCE" property="attritionChance" jdbcType="DECIMAL"/>
+        <result column="ATTRITION_QTY" property="attritionQty" jdbcType="DECIMAL"/>
+        <result column="COPIED_FROM_COMPONENT_ID" property="copiedFromComponentId" jdbcType="VARCHAR"/>
+        <result column="ISSUED_LOCATOR_ID" property="issuedLocatorId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="perQty" property="perQty" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="selectBomComponents" resultMap="BaseResultMap">
+        select * from mt_bom_component where TENANT_ID = ${tenantId}
+        <if test="bomComponent.bomId!=null">
+            and BOM_ID = #{bomComponent.bomId}
+        </if>
+        <if test="bomComponent.lineNumber!=null">
+            and LINE_NUMBER = #{bomComponent.lineNumber}
+        </if>
+        <if test="bomComponent.materialId!=null">
+            and MATERIAL_ID = #{bomComponent.materialId}
+        </if>
+        <if test="bomComponent.bomComponentType!=null">
+            and BOM_COMPONENT_TYPE = #{bomComponent.bomComponentType}
+        </if>
+        <if test="bomComponent.dateFrom!=null">
+            and DATE_FORMAT(DATE_FROM,'%Y-%m-%d %H:%i:%S') = #{bomComponent.dateFrom}
+        </if>
+        <if test="bomComponent.dateTo!=null">
+            and DATE_FORMAT(DATE_TO,'%Y-%m-%d %H:%i:%S') = #{bomComponent.dateTo}
+        </if>
+        <if test="bomComponent.qty!=null">
+            and QTY = #{bomComponent.qty}
+        </if>
+        <if test="bomComponent.keyMaterialFlag!=null">
+            and KEY_MATERIAL_FLAG = #{bomComponent.keyMaterialFlag}
+        </if>
+        <if test="bomComponent.assembleMethod!=null">
+            and ASSEMBLE_METHOD = #{bomComponent.assembleMethod}
+        </if>
+        <if test="bomComponent.assembleAsReqFlag!=null">
+            and ASSEMBLE_AS_REQ_FLAG = #{bomComponent.assembleAsReqFlag}
+        </if>
+        <if test="bomComponent.attritionPolicy!=null">
+            and ATTRITION_POLICY = #{bomComponent.attritionPolicy}
+        </if>
+        <if test="bomComponent.attritionChance!=null">
+            and ATTRITION_CHANCE = #{bomComponent.attritionChance}
+        </if>
+        <if test="bomComponent.attritionQty!=null">
+            and ATTRITION_QTY = #{bomComponent.attritionQty}
+        </if>
+        <if test='bomComponent.onlyAvailableFlag!=null and bomComponent.onlyAvailableFlag=="Y"'>
+            and DATE_FROM &lt;= now()
+            and (DATE_TO is null or DATE_TO &gt; now())
+            and BOM_ID IN (select BOM_ID from mt_bom where TENANT_ID = ${tenantId} AND DATE_FROM &lt;= now() and
+            (DATE_TO is null or DATE_TO &gt; now()) and BOM_STATUS &lt;&gt; 'ABANDON')
+        </if>
+        <if test="bomComponent.copiedFromComponentId!=null">
+            and COPIED_FROM_COMPONENT_ID = #{bomComponent.copiedFromComponentId}
+        </if>
+        <if test="bomComponent.issuedLocatorId!=null">
+            and ISSUED_LOCATOR_ID = #{bomComponent.issuedLocatorId}
+        </if>
+    </select>
+
+    <select id="selectByBomCompCondition" resultMap="BaseResultMap">
+        select mbc.*
+        from mt_bom mb,
+        mt_bom_component mbc,
+        mt_bom_site_assign mbsa
+        where mb.BOM_ID = mbc.BOM_ID
+        and mbsa.BOM_ID = mb.BOM_ID
+        and mbsa.SITE_ID = #{siteId}
+        and mbsa.ENABLE_FLAG='Y'
+        and mbc.MATERIAL_ID = #{materialId}
+        <if test='bomComponentType!=null and bomComponentType!=""'>
+            and mbc.BOM_COMPONENT_TYPE = #{bomComponentType}
+        </if>
+        and mb.DATE_FROM &lt;= now()
+        and (mb.DATE_TO is null or mb.DATE_TO &gt; now())
+        and mb.BOM_STATUS &lt;&gt; 'ABANDON'
+        and mbc.DATE_FROM &lt;= now()
+        and (mbc.DATE_TO is null or mbc.DATE_TO &gt; now())
+        and mb.TENANT_ID = ${tenantId}
+        and mbc.TENANT_ID = ${tenantId}
+        and mbsa.TENANT_ID = ${tenantId}
+    </select>
+
+    <select id="selectEnableByBomId" resultMap="BaseResultMap">
+       select * from mt_bom_component where TENANT_ID = ${tenantId} AND BOM_ID = #{bomId} and DATE_FROM &lt;= now() and (DATE_TO is null or DATE_TO &gt; now())
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="ResultView1">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select b.*,
+        convert(b.QTY / IFNULL(bb.PRIMARY_QTY,1),decimal(18,6)) perQty
+        from mt_bom_component b,
+        mt_bom bb,
+        MT_BOM_TL bl
+        where b.BOM_ID = bb.BOM_ID
+        AND bb.BOM_ID = bl.BOM_ID
+        AND b.TENANT_ID = ${tenantId}
+        AND bb.TENANT_ID = ${tenantId}
+        AND bl.LANG = #{locale}
+        AND b.BOM_COMPONENT_ID IN
+        <foreach collection="bomComponentIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByBomIdAndComponentIds" resultMap="BaseResultMap" fetchSize="5000">
+        select *
+        from mt_bom_component
+        where TENANT_ID = ${tenantId}
+        AND BOM_ID = #{bomId}
+        AND BOM_COMPONENT_ID IN
+        <foreach collection="bomComponentIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectBomComponentByBomIds" resultMap="BaseResultMap" fetchSize="5000">
+        select *
+        from mt_bom_component
+        where TENANT_ID = ${tenantId}
+        AND (DATE_TO is null or DATE_TO &gt; now())
+        AND ${bomIds}
+
+    </select>
+    <select id="bomComponentLimitOperationBatchGet" resultType="tarzan.method.domain.vo.MtBomComponentVO17">
+        select distinct
+        t1.BOM_COMPONENT_ID,
+        t2.OPERATION_ID
+        from MT_ROUTER_OPERATION_COMPONENT t1
+        left join MT_ROUTER_OPERATION t2
+        on t1.ROUTER_OPERATION_ID=t2.ROUTER_OPERATION_ID
+        where t1.TENANT_ID=${tenantId}
+        and t2.TENANT_ID=${tenantId}
+        AND t1.BOM_COMPONENT_ID IN
+        <foreach collection="bomComponentIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectBomComponentByBomIdsAll" resultMap="BaseResultMap" fetchSize="5000">
+        select *
+        from mt_bom_component
+        where TENANT_ID = ${tenantId}
+        AND BOM_ID IN
+        <foreach collection="bomIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+
+    </select>
+
+</mapper>

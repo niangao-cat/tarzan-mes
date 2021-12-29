@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeFifthAreaKanbanMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeFifthAreaKanban">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="FIFTH_AREA_KANBAN_ID" property="fifthAreaKanbanId" jdbcType="VARCHAR"/>
+        <result column="JOB_ID" property="jobId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_NAME" property="workcellName" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_NAME" property="prodLineName" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="CHIP_TYPE" property="chipType" jdbcType="VARCHAR"/>
+        <result column="WO_MATERIAL_CODE" property="woMaterialCode" jdbcType="VARCHAR"/>
+        <result column="SN_MATERIAL_CODE" property="snMaterialCode" jdbcType="VARCHAR"/>
+        <result column="LAB_CODE" property="labCode" jdbcType="VARCHAR"/>
+        <result column="SITE_OUT_DATE" property="siteOutDate" jdbcType="DATE"/>
+        <result column="REWORK_FLAG" property="reworkFlag" jdbcType="VARCHAR"/>
+        <result column="NC_PROCESS_METHOD" property="ncProcessMethod" jdbcType="VARCHAR"/>
+        <result column="REAL_NAME" property="realName" jdbcType="VARCHAR"/>
+        <result column="LOGIN_NAME" property="loginName" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectMainData" resultType="com.ruike.hme.domain.entity.HmeFifthAreaKanban">
+        SELECT
+            mmw.WORKCELL_NAME,
+            mmpl.PROD_LINE_NAME,
+            mo.OPERATION_NAME,
+            eo.IDENTIFICATION AS SN,
+            mm_wo.MATERIAL_CODE AS WO_MATERIAL_CODE,
+            mm_eo.MATERIAL_CODE AS SN_MATERIAL_CODE,
+            mmla.ATTR_VALUE AS LAB_CODE,
+            hejs.SITE_OUT_DATE,
+            ( CASE hejs.rework_flag WHEN 'Y' THEN '是' ELSE '否' END ) AS REWORK_FLAG,-- 是否返修
+            iu.REAL_NAME,
+            iu.LOGIN_NAME,
+            eo.EO_ID,
+            mmw.WORKCELL_ID,
+            hejs.JOB_ID,
+            hejs.tenant_id,
+            SUBSTRING( eo.IDENTIFICATION, 5, 1 ) AS CHIP_TYPE
+        FROM
+            hme_eo_job_sn hejs,
+            mt_mod_workcell mmw,
+            mt_mod_organization_rel mmor_wkc,
+            mt_mod_organization_rel mmor_op,
+            mt_mod_organization_rel mmor_ws,
+            mt_mod_production_line mmpl,
+            mt_operation mo,
+            mt_eo eo,
+            mt_work_order wo,
+            mt_material mm_wo,
+            mt_material mm_eo,
+            mt_material_lot mml
+            LEFT JOIN mt_material_lot_attr mmla ON mmla.TENANT_ID = mml.TENANT_ID
+            AND mmla.material_lot_id = mml.material_lot_id
+            AND mmla.attr_name = 'LAB_CODE',
+            iam_user iu
+        WHERE
+              iu.id = hejs.site_out_by
+          AND mml.TENANT_ID = eo.TENANT_ID
+          AND mml.MATERIAL_LOT_CODE = eo.IDENTIFICATION
+          AND mm_eo.MATERIAL_ID = eo.MATERIAL_ID
+          AND mm_wo.MATERIAL_ID = wo.MATERIAL_ID
+          AND wo.WORK_ORDER_ID = eo.WORK_ORDER_ID
+          AND eo.EO_ID = hejs.eo_id
+          AND mo.OPERATION_ID = hejs.operation_id
+          AND mmpl.PROD_LINE_ID = mmor_ws.PARENT_ORGANIZATION_ID
+          AND mmor_ws.TENANT_ID = mmor_op.TENANT_ID
+          AND mmor_ws.ORGANIZATION_TYPE = 'WORKCELL'
+          AND mmor_ws.ORGANIZATION_ID = mmor_op.PARENT_ORGANIZATION_ID
+          AND mmor_op.TENANT_ID = mmor_wkc.TENANT_ID
+          AND mmor_op.ORGANIZATION_TYPE = 'WORKCELL'
+          AND mmor_op.ORGANIZATION_ID = mmor_wkc.PARENT_ORGANIZATION_ID
+          AND mmor_wkc.TENANT_ID = mmw.TENANT_ID
+          AND mmor_wkc.ORGANIZATION_ID = mmw.WORKCELL_ID
+          AND mmor_wkc.ORGANIZATION_TYPE = 'WORKCELL'
+          AND mmw.WORKCELL_ID = hejs.workcell_id
+          AND hejs.tenant_id = #{tenantId}
+          AND hejs.site_out_date BETWEEN STR_TO_DATE(#{preOneStartTime}, '%Y-%m-%d %H:%i:%s')
+          AND STR_TO_DATE(#{preOneEndTime}, '%Y-%m-%d %H:%i:%s')
+    </select>
+
+    <select id="selectNcProcessMethod" resultType="com.ruike.hme.domain.vo.HmeFifthAreaKanbanVO2">
+        SELECT
+            mnr.EO_ID,
+            mnr.WORKCELL_ID,
+            hnra.process_method
+        FROM
+            mt_nc_record mnr,
+            hme_nc_record_attr hnra
+        WHERE
+              hnra.tenant_id = mnr.tenant_id
+          AND hnra.parent_record_id = mnr.NC_RECORD_ID
+          AND mnr.TENANT_ID = #{tenantId}
+        AND ( mnr.PARENT_NC_RECORD_ID IS NULL OR mnr.PARENT_NC_RECORD_ID = '' )
+        AND ( mnr.EO_ID, mnr.ROOT_CAUSE_WORKCELL_ID ) IN
+        <foreach collection="dtoList" index="index" item="item" open="(" separator="," close=")">
+            (#{item.eoId},#{item.workcellId})
+        </foreach>
+        ORDER BY
+            mnr.EO_ID,
+            mnr.WORKCELL_ID,
+            mnr.LAST_UPDATE_DATE DESC
+    </select>
+
+    <select id="selectFifthAreaKanbanId" resultType="java.lang.String">
+        SELECT
+            hfak.FIFTH_AREA_KANBAN_ID
+        FROM
+            hme_fifth_area_kanban hfak
+        WHERE
+              hfak.TENANT_ID = #{tenantId}
+          AND hfak.site_out_date BETWEEN STR_TO_DATE( #{preOneStartTime}, '%Y-%m-%d %H:%i:%s' )
+          AND STR_TO_DATE( #{preOneEndTime}, '%Y-%m-%d %H:%i:%s' )
+    </select>
+
+    <insert id="batchInsertFifthArea">
+        INSERT INTO hme_fifth_area_kanban
+        (
+        TENANT_ID,
+        FIFTH_AREA_KANBAN_ID,
+        JOB_ID,
+        EO_ID,
+        WORKCELL_ID,
+        WORKCELL_NAME,
+        PROD_LINE_NAME,
+        OPERATION_NAME,
+        SN,
+        CHIP_TYPE,
+        WO_MATERIAL_CODE,
+        SN_MATERIAL_CODE,
+        LAB_CODE,
+        SITE_OUT_DATE,
+        REWORK_FLAG,
+        NC_PROCESS_METHOD,
+        REAL_NAME,
+        LOGIN_NAME,
+        CID,
+        OBJECT_VERSION_NUMBER,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15)
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.fifthAreaKanbanId},
+            #{item.jobId},
+            #{item.eoId},
+            #{item.workcellId},
+            #{item.workcellName},
+            #{item.prodLineName},
+            #{item.operationName},
+            #{item.sn},
+            #{item.chipType},
+            #{item.woMaterialCode},
+            #{item.snMaterialCode},
+            #{item.labCode},
+            #{item.siteOutDate},
+            #{item.reworkFlag},
+            #{item.ncProcessMethod},
+            #{item.realName},
+            #{item.loginName},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="batchDeleteByPrimary" parameterType="java.lang.String">
+        DELETE FROM hme_fifth_area_kanban WHERE FIFTH_AREA_KANBAN_ID IN
+        <foreach collection="fifthAreaKanbanIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+</mapper>

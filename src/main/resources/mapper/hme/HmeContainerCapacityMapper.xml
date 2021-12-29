@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeContainerCapacityMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.ruike.hme.domain.entity.HmeContainerCapacity" id="BaseResultMap">
+    <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+    <result jdbcType="VARCHAR" property="containerCapacityId" column="CONTAINER_CAPACITY_ID"/>
+    <result jdbcType="VARCHAR" property="containerTypeId" column="CONTAINER_TYPE_ID"/>
+    <result jdbcType="VARCHAR" property="siteId" column="SITE_ID"/>
+    <result jdbcType="VARCHAR" property="operationId" column="OPERATION_ID"/>
+    <result jdbcType="VARCHAR" property="cosType" column="COS_TYPE"/>
+    <result jdbcType="DECIMAL" property="capacity" column="CAPACITY"/>
+    <result jdbcType="VARCHAR" property="enableFlag" column="ENABLE_FLAG"/>
+    <result jdbcType="DECIMAL" property="lineNum" column="LINE_NUM"/>
+    <result jdbcType="DECIMAL" property="columnNum" column="COLUMN_NUM"/>
+    <result jdbcType="VARCHAR" property="attribute1" column="ATTRIBUTE1"/>
+    <result jdbcType="VARCHAR" property="attribute2" column="ATTRIBUTE2"/>
+    <result jdbcType="VARCHAR" property="attribute3" column="ATTRIBUTE3"/>
+    <result jdbcType="VARCHAR" property="attribute4" column="ATTRIBUTE4"/>
+    <result jdbcType="VARCHAR" property="attribute5" column="ATTRIBUTE5"/>
+    <result jdbcType="DECIMAL" property="cid" column="CID"/>
+    <result jdbcType="DECIMAL" property="objectVersionNumber" column="OBJECT_VERSION_NUMBER"/>
+    <result jdbcType="DATE" property="creationDate" column="CREATION_DATE"/>
+    <result jdbcType="DECIMAL" property="createdBy" column="CREATED_BY"/>
+    <result jdbcType="DECIMAL" property="lastUpdatedBy" column="LAST_UPDATED_BY"/>
+    <result jdbcType="DATE" property="lastUpdateDate" column="LAST_UPDATE_DATE"/>
+</resultMap>
+    <select id="containerCapacityQuery" resultType="com.ruike.hme.domain.vo.HmeContainerCapacityVO">
+        SELECT
+	        *
+        FROM
+	        hme_container_capacity
+        WHERE
+	        CONTAINER_TYPE_ID = #{containerTypeId}
+	    AND ENABLE_FLAG = "Y"
+    </select>
+
+    <select id="queryContainerCapacityForGetChip" resultType="com.ruike.hme.domain.entity.HmeContainerCapacity">
+        select hcc.container_capacity_id,
+               hcc.container_type_id,
+               hcc.site_id,
+               hcc.operation_id,
+               hcc.cos_type,
+               hcc.capacity,
+               hcc.enable_flag,
+               hcc.line_num,
+               hcc.column_num,
+               hcc.attribute1
+          from hme_container_capacity hcc,
+               mt_container_type mct
+         where hcc.container_type_id = mct.container_type_id
+            and hcc.operation_id = #{operationId}
+            and hcc.cos_type = #{cosType}
+            and mct.tenant_id = #{tenantId}
+            and mct.container_type_code = #{containerTypeCode}
+            and mct.enable_flag = 'Y'
+            and hcc.enable_flag = 'Y'
+            limit 1
+    </select>
+</mapper>

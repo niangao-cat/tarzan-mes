@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtAssembleProcessActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtAssembleProcessActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_PROCESS_ACTUAL_ID" property="assembleProcessActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_CONFIRM_ACTUAL_ID" property="assembleConfirmActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="SCRAP_QTY" property="scrapQty" jdbcType="DECIMAL"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_ID" property="substepId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_GROUP_ID" property="assembleGroupId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_POINT_ID" property="assemblePointId" jdbcType="VARCHAR"/>
+        <result column="REFERENCE_AREA" property="referenceArea" jdbcType="VARCHAR"/>
+        <result column="REFERENCE_POINT" property="referencePoint" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_HIS_ID" property="materialLotHisId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_METHOD" property="assembleMethod" jdbcType="VARCHAR"/>
+        <result column="OPERATE_BY" property="operateBy" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="componentType" type="tarzan.actual.domain.vo.MtAssembleProcessActualVO3">
+        <result column="ASSEMBLE_PROCESS_ACTUAL_ID" property="assembleProcessActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_CONFIRM_ACTUAL_ID" property="assembleConfirmActualId" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_TYPE" property="componentType" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select *
+        from mt_assemble_process_actual
+        where TENANT_ID = ${tenantId}
+        and ASSEMBLE_PROCESS_ACTUAL_ID IN
+        <foreach collection="assembleProcessActualIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectAssembleProcessActual" resultMap="BaseResultMap">
+        select *
+        from mt_assemble_process_actual t
+        where t.TENANT_ID = ${tenantId}
+        <if test="dto.assembleProcessActualId!=null">
+            and t.ASSEMBLE_PROCESS_ACTUAL_ID=#{dto.assembleProcessActualId}
+        </if>
+        <if test="dto.assembleConfirmActualId!=null">
+            and t.ASSEMBLE_CONFIRM_ACTUAL_ID=#{dto.assembleConfirmActualId}
+        </if>
+        <if test="dto.routerId!=null">
+            and t.ROUTER_ID=#{dto.routerId}
+        </if>
+        <if test="dto.substepId!=null">
+            and t.SUBSTEP_ID=#{dto.substepId}
+        </if>
+        <if test="dto.workcellId!=null">
+            and t.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="dto.assembleGroupId!=null">
+            and t.ASSEMBLE_GROUP_ID=#{dto.assembleGroupId}
+        </if>
+        <if test="dto.assemblePointId!=null">
+            and t.ASSEMBLE_POINT_ID =#{dto.assemblePointId}
+        </if>
+        <if test="dto.referenceArea!=null">
+            and t.REFERENCE_AREA =#{dto.referenceArea}
+        </if>
+        <if test="dto.referencePoint!=null">
+            and t.REFERENCE_POINT =#{dto.referencePoint}
+        </if>
+        <if test="dto.locatorId!=null">
+            and t.LOCATOR_ID =#{dto.locatorId}
+        </if>
+        <if test="dto.assembleMethod!=null">
+            and t.ASSEMBLE_METHOD =#{dto.assembleMethod}
+        </if>
+        <if test="dto.eventId!=null">
+            and t.EVENT_ID =#{dto.eventId}
+        </if>
+        <if test="dto.eventTimeFrom!=null">
+            and t.EVENT_TIME &gt;= #{dto.eventTimeFrom}
+        </if>
+        <if test="dto.eventTimeTo!=null">
+            and t.EVENT_TIME &lt;= #{dto.eventTimeTo}
+        </if>
+        <if test="dto.eventBy!=null">
+            and t.EVENT_BY = #{dto.eventBy}
+        </if>
+        <if test="dto.operateBy!=null">
+            and t.OPERATE_BY = #{dto.operateBy}
+        </if>
+        <if test="dto.materialLotId!=null">
+            and t.MATERIAL_LOT_ID = #{dto.materialLotId}
+        </if>
+        <if test="dto.materialLotHisId!=null">
+            and t.MATERIAL_LOT_HIS_ID = #{dto.materialLotHisId}
+        </if>
+    </select>
+
+    <select id="selectComponentAssembleProcessActual" resultMap="componentType">
+        select c.ASSEMBLE_CONFIRM_ACTUAL_ID,
+        c.SUBSTITUTE_FLAG,
+        c.MATERIAL_ID,
+        c.ROUTER_STEP_ID,
+        c.COMPONENT_TYPE,
+        c.BOM_COMPONENT_ID,
+        p.ASSEMBLE_PROCESS_ACTUAL_ID
+        from MT_ASSEMBLE_CONFIRM_ACTUAL c LEFT join MT_ASSEMBLE_PROCESS_ACTUAL p on (c.ASSEMBLE_CONFIRM_ACTUAL_ID =
+        p.ASSEMBLE_CONFIRM_ACTUAL_ID and p.TENANT_ID = ${tenantId})
+        where c.TENANT_ID = ${tenantId}
+
+        <choose>
+            <when test="dto.bomComponentId!=null">
+                and c.BOM_COMPONENT_ID = #{dto.bomComponentId}
+            </when>
+            <otherwise>
+                and c.BOM_COMPONENT_ID is not null
+                and c.BOM_COMPONENT_ID &lt;&gt; ''
+            </otherwise>
+        </choose>
+
+        <if test="dto.bomComponentType!=null">
+            and c.COMPONENT_TYPE=#{dto.bomComponentType}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and c.ROUTER_STEP_ID=#{dto.routerStepId}
+        </if>
+        <if test="dto.substituteFlag!=null">
+            <choose>
+                <when test='dto.substituteFlag!="Y"'>
+                    and c.SUBSTITUTE_FLAG &lt;&gt; 'Y'
+                </when>
+                <otherwise>
+                    and c.SUBSTITUTE_FLAG=#{dto.substituteFlag}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="dto.eoId != null">
+            and c.EO_ID = #{dto.eoId}
+        </if>
+    </select>
+
+    <select id="selectListByMaterialLotIds" resultMap="BaseResultMap">
+        select *
+        from mt_assemble_process_actual
+        where TENANT_ID = ${tenantId}
+        <if test="materialLotIdList!=null and materialLotIdList.size()>0">
+            and MATERIAL_LOT_ID in
+            <foreach collection="materialLotIdList" open="(" close=")" item="data" separator="," index="index">
+                #{data}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="componentLimitAssembleActualForEoIds" resultMap="componentType">
+        select
+        c.ASSEMBLE_CONFIRM_ACTUAL_ID,
+        c.SUBSTITUTE_FLAG,
+        c.MATERIAL_ID,
+        c.ROUTER_STEP_ID,
+        c.COMPONENT_TYPE,
+        c.BOM_COMPONENT_ID,
+        p.ASSEMBLE_PROCESS_ACTUAL_ID
+        from MT_ASSEMBLE_CONFIRM_ACTUAL c
+        LEFT join MT_ASSEMBLE_PROCESS_ACTUAL p on (c.ASSEMBLE_CONFIRM_ACTUAL_ID =
+        p.ASSEMBLE_CONFIRM_ACTUAL_ID and p.TENANT_ID = ${tenantId})
+        where c.TENANT_ID = ${tenantId}
+        <if test="eoId != null">
+            and c.EO_ID = #{eoId}
+        </if>
+    </select>
+</mapper>

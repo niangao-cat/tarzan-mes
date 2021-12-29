@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDistributionListQueryMapper">
+
+    <select id="selectDistributionDoc" resultType="com.ruike.wms.domain.vo.WmsDistributionListQueryVO"
+            parameterType="com.ruike.wms.domain.vo.WmsDistributionListQueryVO">
+        SELECT
+        t.INSTRUCTION_DOC_NUM,
+        t.INSTRUCTION_DOC_STATUS,
+        mms.SITE_NAME SITE_ID,
+        ma1.ATTR_VALUE AS production_line,
+        mmpl.prod_line_name AS production_line_name,
+        ma2.ATTR_VALUE AS work_cell,
+        mmw.workcell_name AS work_cell_name,
+        ma3.ATTR_VALUE to_locator_id,
+        mml.LOCATOR_CODE AS to_locator_code,
+        t.REMARK,
+        t.INSTRUCTION_DOC_ID,
+        t.CREATED_BY,
+        t.CREATION_DATE,
+        t.LAST_UPDATED_BY,
+        t.LAST_UPDATE_DATE,
+        T.DEMAND_TIME,
+        ma_sf.ATTR_VALUE replenishment_flag,
+        rep_doc.INSTRUCTION_DOC_NUM replenishment_num
+        FROM
+        mt_instruction_doc t
+        LEFT JOIN mt_instruction_doc_attr ma1 ON t.INSTRUCTION_DOC_ID = ma1.INSTRUCTION_DOC_ID
+        AND ma1.ATTR_NAME = 'PROD_LINE_CODE'
+        LEFT JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_CODE = ma1.ATTR_VALUE
+        LEFT JOIN mt_instruction_doc_attr ma2 ON t.INSTRUCTION_DOC_ID = ma2.INSTRUCTION_DOC_ID
+        AND ma2.ATTR_NAME = 'WORKCELL'
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_CODE = ma2.ATTR_VALUE
+        LEFT JOIN mt_instruction_doc_attr ma3 ON t.INSTRUCTION_DOC_ID = ma3.INSTRUCTION_DOC_ID
+        AND ma3.ATTR_NAME = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_instruction_doc_attr ma_sf ON t.INSTRUCTION_DOC_ID = ma_sf.INSTRUCTION_DOC_ID
+        AND ma_sf.ATTR_NAME = 'SUPPLY_FLAG'
+        LEFT JOIN mt_instruction_doc_attr ma_rln ON t.INSTRUCTION_DOC_ID = ma_rln.INSTRUCTION_DOC_ID
+        AND ma_rln.ATTR_NAME = 'REPLENISHMENT_LIST_NUM'
+        left join mt_instruction_doc rep_doc on rep_doc.INSTRUCTION_DOC_ID = ma_rln.ATTR_VALUE
+        LEFT JOIN mt_mod_locator mml ON ma3.ATTR_VALUE = mml.LOCATOR_ID,
+        mt_mod_site mms
+        WHERE mms.SITE_ID = t.SITE_ID
+        AND t.TENANT_ID = mms.TENANT_ID
+        AND t.INSTRUCTION_DOC_TYPE = 'DISTRIBUTION_DOC'
+        and t.TENANT_ID = #{tenantId}
+        <if test="instructionDocNum != null">
+            and t.INSTRUCTION_DOC_NUM Like CONCAT('%',#{instructionDocNum},'%')
+        </if>
+        <if test="instructionDocId != null">
+            and t.INSTRUCTION_DOC_ID = #{instructionDocId}
+        </if>
+        <if test="statusList!= null">
+            and t.INSTRUCTION_DOC_STATUS in
+            <foreach collection="statusList" separator="," item="status" open="(" close=")">
+                #{status}
+            </foreach>
+        </if>
+        <if test="materialId != null">
+            AND t.INSTRUCTION_DOC_ID in ( SELECT mi.SOURCE_DOC_ID FROM mt_instruction mi WHERE mi.MATERIAL_ID =
+            #{materialId})
+        </if>
+        <if test="workNum != null">
+            AND EXISTS ( SELECT 1 FROM mt_instruction_doc_attr mi WHERE mi.INSTRUCTION_DOC_ID = t.INSTRUCTION_DOC_ID AND
+            mi.ATTR_NAME = 'RELATED_WO' and mi.ATTR_VALUE Like CONCAT('%',#{workNum},'%'))
+        </if>
+        <if test="productionLine != null">
+            and ma1.ATTR_VALUE = #{productionLine}
+        </if>
+        <if test="workCell != null">
+            and ma2.ATTR_VALUE = #{workCell}
+        </if>
+        <if test="siteId != null">
+            and t.SITE_ID = #{siteId}
+        </if>
+        <if test="suiteFlag != null">
+            <choose>
+                <when test="suiteFlag == 'N'.toString() ">
+                    and t.instruction_doc_id in (select ins.source_doc_id
+                    from mt_instruction ins
+                    where ins.QUANTITY > (select ifnull(sum(mia.ACTUAL_QTY),0)
+                    from mt_instruction_actual mia
+                    where mia.instruction_id = ins.instruction_id))
+                </when>
+                <when test="suiteFlag == 'Y'.toString() ">
+                    and t.instruction_doc_id not in (select ins.source_doc_id
+                    from mt_instruction ins
+                    where ins.QUANTITY > (select ifnull(sum(mia.ACTUAL_QTY),0)
+                    from mt_instruction_actual mia
+                    where mia.instruction_id = ins.instruction_id))
+                </when>
+            </choose>
+        </if>
+        <if test="replenishmentCreatedFlag != null">
+            <choose>
+                <when test="replenishmentCreatedFlag == 'N'.toString()">
+                    and ifnull(ma_rln.ATTR_VALUE,'') = ''
+                </when>
+                <when test="replenishmentCreatedFlag == 'Y'.toString()">
+                    and ifnull(ma_rln.ATTR_VALUE,'') != ''
+                </when>
+            </choose>
+        </if>
+        <if test="replenishmentFlag != null">
+            and ifnull(ma_sf.ATTR_VALUE,'N') = #{replenishmentFlag}
+        </if>
+        <if test="demandTimeFrom != null">
+            and t.DEMAND_TIME &gt;= #{demandTimeFrom}
+        </if>
+        <if test="demandTimeTo != null">
+            and t.DEMAND_TIME &lt;= #{demandTimeTo}
+        </if>
+        AND EXISTS (
+        SELECT
+        1
+        FROM
+        mt_mod_site s
+        INNER JOIN mt_user_organization r ON r.TENANT_ID = #{tenantId}
+        AND r.USER_ID = #{userId}
+        AND r.ORGANIZATION_TYPE = 'SITE'
+        AND r.ORGANIZATION_ID = s.SITE_ID
+        AND r.ENABLE_FLAG = 'Y'
+        WHERE
+        s.TENANT_ID = #{tenantId}
+        AND s.ENABLE_FLAG = 'Y'
+        AND t.SITE_ID = s.SITE_ID
+        )
+        ORDER BY t.CREATION_DATE DESC
+    </select>
+
+    <select id="selectDistribution" resultType="com.ruike.wms.domain.vo.WmsDistributionListQueryVO1">
+        SELECT mit1.ATTR_VALUE     INSTRUCTION_NUM,
+               t.INSTRUCTION_STATUS,
+               mm.MATERIAL_ID,
+               mm.MATERIAL_CODE,
+               mit.ATTR_VALUE AS   material_version,
+               mm.MATERIAL_NAME,
+               t.QUANTITY,
+               sum(mia.ACTUAL_QTY) acutal_qty,
+               mu.UOM_CODE,
+               t.REMARK,
+               t.INSTRUCTION_ID,
+               mit2.ATTR_VALUE     SIGNED_QTY,
+               mit3.ATTR_VALUE     rel_so_num,
+               mit4.ATTR_VALUE     rel_so_line_num,
+               mit5.ATTR_VALUE     backflush_flag,
+               CONCAT(
+                       mit3.ATTR_VALUE,
+                       IF
+                           (
+                               mit4.ATTR_VALUE = '',
+                               NULL,
+                               IF
+                                   (mit4.ATTR_VALUE IS NULL, NULL, CONCAT('-', mit4.ATTR_VALUE))
+                           )
+                   )               so_num
+        FROM mt_instruction t
+                 LEFT JOIN mt_instruction_attr mit ON mit.ATTR_NAME = 'MATERIAL_VERSION'
+            AND t.INSTRUCTION_ID = mit.INSTRUCTION_ID
+                 LEFT JOIN mt_instruction_actual mia ON t.INSTRUCTION_ID = mia.INSTRUCTION_ID
+                 LEFT JOIN mt_instruction_attr mit1 ON mit1.INSTRUCTION_ID = t.INSTRUCTION_ID
+            AND mit1.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                 LEFT JOIN mt_instruction_attr mit2 ON mit2.INSTRUCTION_ID = t.INSTRUCTION_ID
+            AND mit2.ATTR_NAME = 'SIGNED_QTY'
+                 LEFT JOIN mt_instruction_attr mit3 ON mit3.INSTRUCTION_ID = t.INSTRUCTION_ID
+            AND mit3.ATTR_NAME = 'SO_NUM'
+                 LEFT JOIN mt_instruction_attr mit4 ON mit4.INSTRUCTION_ID = t.INSTRUCTION_ID
+            AND mit4.ATTR_NAME = 'SO_LINE_NUM'
+                 LEFT JOIN mt_instruction_attr mit5 ON mit5.INSTRUCTION_ID = t.INSTRUCTION_ID
+	        AND mit5.ATTR_NAME = 'BACKFLUSH_FLAG',
+             mt_material mm,
+             mt_uom mu
+        WHERE mia.TENANT_ID = #{tenantId}
+          AND t.TENANT_ID = #{tenantId}
+          AND t.SOURCE_DOC_ID = #{sourceDocId}
+          AND t.MATERIAL_ID = mm.MATERIAL_ID
+          AND t.UOM_ID = mu.UOM_ID
+        GROUP BY mit1.ATTR_VALUE,
+                 t.INSTRUCTION_STATUS,
+                 mm.MATERIAL_ID,
+                 mm.MATERIAL_CODE,
+                 mit.ATTR_VALUE,
+                 mm.MATERIAL_NAME,
+                 t.QUANTITY,
+                 mu.UOM_CODE,
+                 t.REMARK,
+                 t.INSTRUCTION_ID,
+                 mit2.ATTR_VALUE,
+                 mit3.ATTR_VALUE,
+                 mit4.ATTR_VALUE,
+                 mit5.ATTR_VALUE
+        order by case t.INSTRUCTION_STATUS when 'PREPARE_EXECUTE' then 1 when 'RELEASED' then 2 else 99 end,
+                 mit1.ATTR_VALUE
+    </select>
+
+    <select id="selectDistributionDtl" resultType="com.ruike.wms.domain.vo.WmsDistributionListQueryVO2">
+        SELECT mih.INSTRUCTION_DOC_NUM,
+               mi.INSTRUCTION_NUM,
+               mml.MATERIAL_LOT_CODE material_lot,
+               mmla1.ATTR_VALUE      material_status,
+               mm.MATERIAL_CODE,
+               mmla.ATTR_VALUE       material_version,
+               mm.MATERIAL_NAME,
+               mml.PRIMARY_UOM_QTY,
+               mml.LOT,
+               mu.UOM_CODE,
+               mml.MATERIAL_LOT_ID,
+               mid.CREATION_DATE     created_date,
+               mid.CREATED_BY,
+               mid.ACTUAL_DETAIL_ID  INSTRUCTION_DETAIL_ID,
+               mmloc.LOCATOR_CODE
+        FROM mt_mod_locator mmloc,
+             mt_instruction mi,
+             mt_instruction_actual mia,
+             mt_instruction_actual_detail mid,
+             mt_instruction_doc mih,
+             mt_material_lot mml
+                 left JOIN mt_material_lot_attr mmla ON
+                     mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+                     and mmla.ATTR_NAME = 'MATERIAL_VERSION'
+                 LEFT JOIN mt_material_lot_attr mmla1 ON mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+                 AND mmla1.ATTR_NAME = 'STATUS',
+             mt_material mm,
+             mt_uom mu
+        where mih.INSTRUCTION_DOC_ID = mi.SOURCE_DOC_ID
+          and mi.INSTRUCTION_ID = #{instructionId}
+          AND mid.TENANT_ID = #{tenantId}
+          AND mi.INSTRUCTION_ID = mia.INSTRUCTION_ID
+          AND mia.ACTUAL_ID = mid.ACTUAL_ID
+          and mid.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+          and mml.MATERIAL_ID = mm.MATERIAL_ID
+          and mml.PRIMARY_UOM_ID = mu.UOM_ID
+          AND mml.LOCATOR_ID = mmloc.LOCATOR_ID
+    </select>
+
+    <select id="selectDeliveryPrintHead" resultType="com.ruike.wms.domain.vo.WmsDeliveryPrintVO">
+        SELECT t.INSTRUCTION_DOC_NUM,
+               ms.SUPPLIER_NAME,
+               mc.CUSTOMER_NAME,
+               t.REMARK,
+               t.INSTRUCTION_DOC_ID,
+               t.CREATED_BY
+        FROM mt_instruction_doc t
+                 LEFT JOIN mt_supplier ms ON ms.SUPPLIER_ID = t.SUPPLIER_ID
+                 LEFT JOIN mt_customer mc ON mc.CUSTOMER_ID = t.CUSTOMER_ID
+        where 1 = 1
+          AND t.INSTRUCTION_DOC_ID = #{instructionDocId}
+          AND t.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="selectDeliveryPrintLine" resultType="com.ruike.wms.domain.vo.WmsDeliveryPrintVO1">
+        SELECT mia.ATTR_VALUE                                         line_num,
+               CONCAT(midp.INSTRUCTION_DOC_NUM, '#', miap.ATTR_VALUE) po_num,
+               mm.MATERIAL_CODE,
+               mm.MATERIAL_NAME,
+               mi.QUANTITY,
+               mia1.ATTR_VALUE                                        MATERIAL_VERSION,
+               mu.UOM_CODE,
+               mmb.OLD_ITEM_CODE,
+               mml.LOCATOR_CODE,
+               mi.REMARK
+        FROM mt_instruction_doc mid,
+             mt_instruction mi
+                 LEFT JOIN mt_instruction_attr mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+                 AND mia.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                 LEFT JOIN mt_instruction_attr mia1 ON mia1.INSTRUCTION_ID = mi.INSTRUCTION_ID
+                 AND mia1.ATTR_NAME = 'MATERIAL_VERSION'
+                 LEFT JOIN mt_material_site mms ON mms.MATERIAL_ID = mi.MATERIAL_ID
+                 AND mms.site_id = mi.site_id
+                 LEFT JOIN mt_material_basic mmb ON mi.MATERIAL_ID = mmb.MATERIAL_ID
+                 AND mmb.MATERIAL_site_id = mms.MATERIAL_site_id
+                 LEFT JOIN wms_po_delivery_rel rel ON mi.SOURCE_DOC_ID = rel.delivery_doc_id
+                 AND mi.INSTRUCTION_ID = rel.delivery_doc_line_id
+                 LEFT JOIN mt_instruction_doc midp ON midp.INSTRUCTION_DOC_ID = rel.po_id
+                 LEFT JOIN mt_instruction mip ON mip.INSTRUCTION_ID = rel.po_line_id
+                 LEFT JOIN mt_instruction_attr miap ON miap.INSTRUCTION_ID = mip.INSTRUCTION_ID
+                 AND miap.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                 LEFT JOIN mt_mod_locator mml ON mi.TO_LOCATOR_ID = mml.LOCATOR_ID,
+             mt_material mm,
+             mt_uom mu
+        WHERE 1 = 1
+          AND mid.INSTRUCTION_DOC_ID = #{instructionDocId}
+          AND mid.TENANT_ID = #{tenantId}
+          AND mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+          AND mi.MATERIAL_ID = mm.MATERIAL_ID
+          AND mi.UOM_ID = mu.UOM_ID
+          AND mi.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+    </select>
+
+    <select id="selectBatchInStockByDemand" resultType="com.ruike.wms.domain.vo.WmsBatchDistributionDemandVO">
+        SELECT
+        ifnull( sum( ml.PRIMARY_UOM_QTY ), 0 ) in_stock_qty,
+        ml.MATERIAL_ID,
+        ml.SITE_ID,
+        IFNULL(mml_ver.ATTR_VALUE,'') AS material_version,
+        IFNULL(mml_so.ATTR_VALUE,'') AS so_num,
+        IFNULL(mml_soline.ATTR_VALUE,'') AS so_line_num,
+        #{workCellId} AS work_cell_id
+        FROM
+        mt_material_lot ml
+        LEFT JOIN mt_material_lot_attr mml_ver ON ml.material_lot_id = mml_ver.material_lot_id
+        AND mml_ver.attr_name = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr mml_so ON ml.material_lot_id = mml_so.material_lot_id
+        AND mml_so.attr_name = 'SO_NUM'
+        LEFT JOIN mt_material_lot_attr mml_soline ON ml.material_lot_id = mml_soline.material_lot_id
+        AND mml_soline.attr_name = 'SO_LINE_NUM'
+        INNER JOIN mt_mod_locator_org_rel mlor ON mlor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mlor.LOCATOR_ID = ml.LOCATOR_ID
+        AND mlor.ORGANIZATION_ID = #{workCellId}
+        WHERE
+        ml.TENANT_ID = #{tenantId}
+        AND ml.ENABLE_FLAG = 'Y'
+        AND ml.QUALITY_STATUS = 'OK'
+        AND ml.MATERIAL_ID IN
+        <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ml.SITE_ID = #{siteId}
+        GROUP BY
+        ml.MATERIAL_ID,
+        ml.SITE_ID,
+        material_version,
+        so_num,
+        so_line_num
+    </select>
+
+    <select id="selectBatchInventoryQtyByDemand" resultType="com.ruike.wms.domain.vo.WmsBatchDistributionDemandVO">
+        SELECT
+        ifnull( sum( ml.PRIMARY_UOM_QTY ), 0 ) in_stock_qty,
+        ml.MATERIAL_ID,
+        ml.SITE_ID,
+        IFNULL( mml_ver.ATTR_VALUE, '' ) AS material_version,
+        IFNULL( mml_so.ATTR_VALUE, '' ) AS so_num,
+        IFNULL( mml_soline.ATTR_VALUE, '' ) AS so_line_num
+        FROM
+        mt_material_lot ml
+        LEFT JOIN mt_material_lot_attr mml_ver ON ml.material_lot_id = mml_ver.material_lot_id
+        AND mml_ver.attr_name = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr mml_so ON ml.material_lot_id = mml_so.material_lot_id
+        AND mml_so.attr_name = 'SO_NUM'
+        LEFT JOIN mt_material_lot_attr mml_soline ON ml.material_lot_id = mml_soline.material_lot_id
+        AND mml_soline.attr_name = 'SO_LINE_NUM'
+        LEFT JOIN mt_material_lot_attr mml_status ON ml.material_lot_id = mml_status.material_lot_id
+        AND mml_status.attr_name = 'STATUS'
+        INNER JOIN mt_mod_locator loc ON ml.locator_id = loc.locator_id
+        INNER JOIN mt_mod_locator wh ON loc.parent_locator_id = wh.locator_id
+        AND wh.locator_type != '14'
+        WHERE
+        ml.TENANT_ID = #{tenantId}
+        AND ml.ENABLE_FLAG = 'Y'
+        AND ml.QUALITY_STATUS = 'OK'
+        AND mml_status.ATTR_VALUE = 'INSTOCK'
+        AND ml.MATERIAL_ID IN
+        <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ml.SITE_ID = #{siteId}
+        GROUP BY
+        ml.MATERIAL_ID,
+        ml.SITE_ID,
+        material_version,
+        so_num,
+        so_line_num
+    </select>
+
+    <select id="selectReplenishLineByDocIds" resultType="com.ruike.wms.domain.vo.WmsReplenishmentLineVO">
+        select mm.MATERIAL_ID
+        ,mm.MATERIAL_CODE
+        ,mia_ver.ATTR_VALUE material_version
+        ,mia_so.ATTR_VALUE SO_NUM
+        ,mia_sol.ATTR_VALUE SO_LINE_NUM
+        ,ifnull(sum(ins.QUANTITY - (select ifnull(sum(mia.ACTUAL_QTY),0)
+        from mt_instruction_actual mia
+        where mia.INSTRUCTION_ID = ins.INSTRUCTION_ID)),0) replenish_qty
+        ,mm.PRIMARY_UOM_ID uom_id
+        ,uom.UOM_CODE
+        ,exists (select 1
+        from wms_material_substitute_rel msr
+        where msr.SITE_ID = ins.site_id
+        and msr.MAIN_MATERIAL_ID = mm.material_id) substitute_allowed_flag
+        from mt_instruction ins
+        left join mt_instruction_attr mia_ver on ins.INSTRUCTION_ID = mia_ver.INSTRUCTION_ID and mia_ver.ATTR_NAME =
+        'MATERIAL_VERSION'
+        left join mt_instruction_attr mia_so on ins.INSTRUCTION_ID = mia_so.INSTRUCTION_ID and mia_so.ATTR_NAME =
+        'SO_NUM'
+        left join mt_instruction_attr mia_sol on ins.INSTRUCTION_ID = mia_sol.INSTRUCTION_ID and mia_sol.ATTR_NAME =
+        'SO_LINE_NUM'
+        ,mt_material mm
+        ,mt_uom uom
+        where ins.material_id = mm.material_id
+        and mm.primary_uom_id = uom.UOM_ID
+        and ins.quantity > (select ifnull(sum(mia.ACTUAL_QTY),0)
+        from mt_instruction_actual mia
+        where mia.INSTRUCTION_ID = ins.INSTRUCTION_ID)
+        and ins.TENANT_ID = #{tenantId}
+        and ins.SOURCE_DOC_ID in
+        <foreach collection="docIdList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        group by mm.MATERIAL_ID
+        ,ins.site_id
+        ,mm.MATERIAL_CODE
+        ,mia_ver.ATTR_VALUE
+        ,mia_so.ATTR_VALUE
+        ,mia_sol.ATTR_VALUE
+        ,mm.PRIMARY_UOM_ID
+        ,uom.UOM_CODE
+    </select>
+
+    <select id="instructionDocExport" resultType="com.ruike.wms.domain.vo.WmsDistributionDocVO">
+        SELECT
+        mid.instruction_doc_id,
+        mid.INSTRUCTION_DOC_NUM,
+        mi.INSTRUCTION_STATUS,
+        mid.INSTRUCTION_DOC_STATUS,
+        mms.SITE_NAME SITE_NAME,
+        mm.MATERIAL_CODE,
+        mit.ATTR_VALUE material_version,
+        mm.MATERIAL_NAME,
+        mi.QUANTITY,
+        sum( mia.ACTUAL_QTY ) acutal_qty,
+        mit2.ATTR_VALUE SIGNED_QTY,
+        ma1.ATTR_VALUE AS production_line,
+        mmpl.prod_line_name AS production_line_name,
+        DATE_FORMAT(mid.DEMAND_TIME,'%Y-%m-%d %H:%i:%S') DEMAND_TIME,
+        mid.CREATION_DATE,
+        mit1.ATTR_VALUE
+        FROM
+        mt_instruction mi
+        LEFT JOIN mt_material mm ON mm.material_id = mi.material_id
+        LEFT JOIN mt_instruction_actual mia ON mi.INSTRUCTION_ID = mia.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_attr mit ON mit.ATTR_NAME = 'MATERIAL_VERSION'
+        AND mi.INSTRUCTION_ID = mit.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_attr mit1 ON mit1.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        AND mit1.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr mit2 ON mit2.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        AND mit2.ATTR_NAME = 'SIGNED_QTY'
+        LEFT JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = mi.SOURCE_DOC_ID
+        LEFT JOIN mt_instruction_doc_attr ma1 ON mid.INSTRUCTION_DOC_ID = ma1.INSTRUCTION_DOC_ID
+        AND ma1.ATTR_NAME = 'PROD_LINE_CODE'
+        LEFT JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_CODE = ma1.ATTR_VALUE
+        LEFT JOIN mt_instruction_doc_attr ma2 ON mid.INSTRUCTION_DOC_ID = ma2.INSTRUCTION_DOC_ID
+        AND ma2.ATTR_NAME = 'WORKCELL'
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_CODE = ma2.ATTR_VALUE
+        LEFT JOIN mt_instruction_doc_attr ma3 ON mid.INSTRUCTION_DOC_ID = ma3.INSTRUCTION_DOC_ID
+        AND ma3.ATTR_NAME = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_instruction_doc_attr ma_sf ON mid.INSTRUCTION_DOC_ID = ma_sf.INSTRUCTION_DOC_ID
+        AND ma_sf.ATTR_NAME = 'SUPPLY_FLAG'
+        LEFT JOIN mt_instruction_doc_attr ma_rln ON mid.INSTRUCTION_DOC_ID = ma_rln.INSTRUCTION_DOC_ID
+        AND ma_rln.ATTR_NAME = 'REPLENISHMENT_LIST_NUM'
+        LEFT JOIN mt_instruction_doc rep_doc ON rep_doc.INSTRUCTION_DOC_ID = ma_rln.ATTR_VALUE
+        LEFT JOIN mt_mod_locator mml ON ma3.ATTR_VALUE = mml.LOCATOR_ID,
+        mt_mod_site mms
+        WHERE
+        mms.SITE_ID = mid.SITE_ID
+        AND mid.TENANT_ID = mms.TENANT_ID
+        AND mid.INSTRUCTION_DOC_TYPE = 'DISTRIBUTION_DOC'
+        AND mid.TENANT_ID = #{tenantId}
+        AND mid.INSTRUCTION_DOC_ID IN
+        <foreach collection="instructionDocIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        GROUP BY
+        mid.INSTRUCTION_DOC_NUM,
+        mi.INSTRUCTION_STATUS,
+        mid.INSTRUCTION_DOC_STATUS,
+        mms.SITE_NAME,
+        mm.MATERIAL_CODE,
+        mit.ATTR_VALUE,
+        mm.MATERIAL_NAME,
+        mi.QUANTITY,
+        mit2.ATTR_VALUE,
+        ma1.ATTR_VALUE,
+        mmpl.prod_line_name,
+        mid.DEMAND_TIME,
+        mid.CREATION_DATE,
+        mit1.ATTR_VALUE
+        ORDER BY
+        mid.CREATION_DATE DESC, CASE
+        mi.INSTRUCTION_STATUS
+        WHEN 'PREPARE_EXECUTE' THEN
+        1
+        WHEN 'RELEASED' THEN
+        2 ELSE 99
+        END,
+        mit1.ATTR_VALUE
+    </select>
+</mapper>

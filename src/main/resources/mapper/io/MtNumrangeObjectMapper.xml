@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtNumrangeObjectMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtNumrangeObject">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_CODE" property="objectCode" jdbcType="VARCHAR"/>
+        <result column="OBJECT_NAME" property="objectName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectCondition" resultType="io.tarzan.common.domain.vo.MtNumrangeObjectVO2">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()" />
+        SELECT
+        tb.TENANT_ID,
+        tb.OBJECT_VERSION_NUMBER,
+        tb.OBJECT_NAME,
+        tb.OBJECT_ID,
+        tb.OBJECT_CODE,
+        tb.LAST_UPDATE_DATE,
+        tb.LAST_UPDATED_BY,
+        tb.ENABLE_FLAG,
+        tb.CREATION_DATE,
+        tb.CREATED_BY,
+        tb.CID,
+        tl.DESCRIPTION
+        FROM
+        MT_NUMRANGE_OBJECT tb,
+        mt_numrange_object_tl tl
+        where tl.OBJECT_ID=tb.OBJECT_ID
+        AND tb.TENANT_ID = ${tenantId}
+        AND tl.LANG = #{lang}
+        <if test="dto.objectCode != null">
+            AND tb.OBJECT_CODE = #{dto.objectCode}
+        </if>
+        <if test="dto.objectName != null">
+            AND tb.OBJECT_NAME  LIKE concat('%', concat(#{dto.objectName}, '%'))
+        </if>
+        <if test="dto.description != null">
+            AND tl.DESCRIPTION LIKE concat('%', concat(#{dto.description}, '%'))
+        </if>
+        <if test="dto.enableFlag != null">
+            AND tb.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.objectId != null">
+            AND tb.OBJECT_ID = #{dto.objectId}
+        </if>
+        order by tb.OBJECT_ID
+    </select>
+</mapper>

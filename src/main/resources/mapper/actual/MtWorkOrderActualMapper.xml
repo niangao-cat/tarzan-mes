@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtWorkOrderActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtWorkOrderActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_ACTUAL_ID" property="workOrderActualId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="RELEASED_QTY" property="releasedQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QTY" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="ACTUAL_START_DATE" property="actualStartDate" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_END_DATE" property="actualEndDate" jdbcType="TIMESTAMP"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="queryWorkOrderActual" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        mt_work_order_actual a
+        WHERE
+        a.TENANT_ID = #{tenantId}
+        and a.WORK_ORDER_ID in
+        <foreach collection="workOrderIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <select id="propertyLimitWOActualPropertyQuery" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        MT_WORK_ORDER_ACTUAL t
+        WHERE
+        t.TENANT_ID =#{tenantId}
+        <if test="vo.workOrderId != null">
+            AND t.WORK_ORDER_ID = #{vo.workOrderId}
+        </if>
+        <if test="vo.workOrderActualId != null">
+            AND t.WORK_ORDER_ACTUAL_ID =#{vo.workOrderActualId}
+        </if>
+        <if test="vo.actualStartDateFrom != null">
+            AND t.ACTUAL_START_DATE &gt;= #{vo.actualStartDateFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="vo.actualStartDateTo != null">
+            AND t.ACTUAL_START_DATE &lt;= #{vo.actualStartDateTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="vo.actualEndDateFrom != null">
+            AND t.ACTUAL_END_DATE &gt;= #{vo.actualEndDateFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="vo.actualEndDateTo != null">
+            AND t.ACTUAL_END_DATE &gt;= #{vo.actualEndDateTo,jdbcType=TIMESTAMP}
+        </if>
+    </select>
+
+    <select id="selectForUpdate" resultMap="BaseResultMap">
+        SELECT
+            mwoa.*
+        FROM
+            mt_work_order_actual mwoa
+        WHERE
+          mwoa.WORK_ORDER_ACTUAL_ID IN
+        <foreach collection="workOrderActualIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+            FOR UPDATE
+    </select>
+</mapper>

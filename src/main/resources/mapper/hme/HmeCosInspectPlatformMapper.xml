@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosInspectPlatformMapper">
+
+    <!-- 查询按钮-->
+    <select id="queryAutoOperationRecord" resultType="com.ruike.hme.domain.vo.HmeCosInspectPlatformAutoQueryInfoResponseVO">
+        select ejs.source_job_id operation_record_id,ejs.work_order_id,wo.work_order_num,ejs.material_lot_id,ml.material_lot_code
+        ,ml.primary_uom_qty,mmla.attr_value lot_no
+        ,cor.cos_num,cor.wafer,cor.job_batch,ejs.sn_material_id material_id,m.material_code,m.material_name,cor.remark
+        ,ejs.site_in_date,ejs.site_out_date,ejs.job_id eo_job_sn_id
+        from hme_eo_job_sn ejs
+        inner join hme_cos_operation_record cor on cor.operation_record_id = ejs.source_job_id and ejs.tenant_id = cor.tenant_id
+        inner join mt_work_order wo on wo.work_order_id = ejs.work_order_id and wo.tenant_id = ejs.tenant_id
+        left join mt_material_lot ml on ml.material_lot_id = ejs.material_lot_id and ml.tenant_id = ejs.tenant_id
+        left join mt_material_lot_attr mmla on mmla.material_lot_id = ml.material_lot_id and mmla.tenant_id = ml.tenant_id and mmla.attr_name = 'LOTNO'
+        left join mt_material m on m.material_id = ejs.sn_material_id and m.tenant_id = ejs.tenant_id
+        where ejs.tenant_id = #{tenantId}
+        and ejs.source_job_id = #{operationRecordId}
+        and ejs.workcell_id = #{workcellId}
+        and ejs.operation_id = #{operationId}
+        and ejs.job_type = 'COS_DETECT'
+        and ejs.site_out_date is null
+        and cor.surplus_cos_num > 0
+        order by ejs.site_out_date,ejs.site_in_date desc
+    </select>
+
+    <!-- 查询按钮-->
+    <select id="queryOperationRecord" resultType="com.ruike.hme.domain.vo.HmeCosInspectPlatformAutoQueryInfoResponseVO">
+        select ejs.source_job_id operation_record_id,ejs.work_order_id,wo.work_order_num,ejs.material_lot_id,ml.material_lot_code
+        ,ml.primary_uom_qty,mmla.attr_value lot_no
+        ,cor.cos_num,cor.wafer,cor.job_batch,ejs.sn_material_id material_id,m.material_code,m.material_name,cor.remark
+        ,ejs.site_in_date,ejs.site_out_date,ejs.job_id eo_job_sn_id
+        from hme_eo_job_sn ejs
+        inner join hme_cos_operation_record cor on cor.operation_record_id = ejs.source_job_id and ejs.tenant_id = cor.tenant_id
+        inner join mt_work_order wo on wo.work_order_id = ejs.work_order_id and wo.tenant_id = ejs.tenant_id
+        left join mt_material_lot ml on ml.material_lot_id = ejs.material_lot_id and ml.tenant_id = ejs.tenant_id
+        left join mt_material_lot_attr mmla on mmla.material_lot_id = ml.material_lot_id and mmla.tenant_id = ml.tenant_id and mmla.attr_name = 'LOTNO'
+        left join mt_material m on m.material_id = ejs.sn_material_id and m.tenant_id = ejs.tenant_id
+        where ejs.tenant_id = #{tenantId}
+        and ejs.source_job_id = #{operationRecordId}
+        and ejs.workcell_id = #{workcellId}
+        and ejs.operation_id = #{operationId}
+        and ejs.job_type = 'COS_DETECT'
+        <if test="workOrderNum != null">
+            and wo.work_order_num = #{workOrderNum}
+        </if>
+        <if test="wafer != null">
+            and cor.wafer = #{wafer}
+        </if>
+        <if test="equipmentId != null">
+            and cor.equipment_id = #{equipmentId}
+        </if>
+        <if test="beginDate != null">
+            and ejs.creation_date >= DATE_FORMAT(#{beginDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="endDate != null">
+            and ejs.creation_date >= DATE_FORMAT(#{endDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        order by ejs.site_out_date,ejs.site_in_date desc
+    </select>
+
+</mapper>

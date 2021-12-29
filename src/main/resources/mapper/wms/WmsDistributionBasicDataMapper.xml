@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDistributionBasicDataMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsDistributionBasicData">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="HEADER_ID" property="headerId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_VERSION" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_GROUP_ID" property="materialGroupId" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_TYPE" property="distributionType" jdbcType="VARCHAR"/>
+        <result column="PROPORTION" property="proportion" jdbcType="DECIMAL"/>
+        <result column="INVENTORY_LEVEL" property="inventoryLevel" jdbcType="DECIMAL"/>
+        <result column="INVENTORY_LEVEL_UOM" property="inventoryLevelUom" jdbcType="VARCHAR"/>
+        <result column="EVERY_QTY" property="everyQty" jdbcType="DECIMAL"/>
+        <result column="ONE_QTY" property="oneQty" jdbcType="DECIMAL"/>
+        <result column="ONE_TIME" property="oneTime" jdbcType="DATE"/>
+        <result column="ONE_UOM" property="oneUom" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_PACKAGE_QTY" property="minimumPackageQty" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="query" resultType="com.ruike.wms.domain.vo.WmsDistributionBasicDataVO">
+        SELECT
+            wdbd.header_id,
+            wdbd.site_id,
+            wdbd.material_version,
+            mms.SITE_CODE,
+            wdbd.material_group_id,
+            wig.item_group_code AS material_group_code,
+            wig.item_group_description AS material_group_desc,
+            mm.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            line.prod_line_id AS prod_line_id_str,
+            line.PROD_LINE_CODE AS prod_line_code_list,
+            line.workcell_id AS workcell_ids,
+            line.workcell_code AS workcell_codes,
+            wdbd.distribution_type,
+            wdbd.proportion,
+            wdbd.inventory_level,
+            line.every_qty,
+            wdbd.minimum_package_qty,
+            wdbd.enable_flag,
+            masa.ATTR_VALUE AS back_item_flag,
+            wdbd.last_updated_by,
+            wdbd.last_update_date
+        FROM
+        wms_distribution_basic_data wdbd
+        LEFT JOIN mt_mod_site mms ON mms.SITE_ID = wdbd.site_id
+        AND mms.tenant_id = #{tenantId}
+        LEFT JOIN wms_item_group wig ON wig.item_group_id = wdbd.material_group_id
+        AND wig.tenant_id = #{tenantId}
+        LEFT JOIN mt_material mm ON mm.material_id = wdbd.material_id
+        AND mm.tenant_id = #{tenantId}
+        LEFT JOIN mt_material_site mas ON mas.material_id = wdbd.material_id
+        AND mas.SITE_ID = wdbd.site_id
+        AND mas.tenant_id = #{tenantId}
+        LEFT JOIN mt_material_site_attr masa ON masa.MATERIAL_SITE_ID = mas.MATERIAL_SITE_ID
+        AND masa.ATTR_NAME = 'attribute1'
+        AND masa.tenant_id = #{tenantId}
+        LEFT JOIN (
+        SELECT
+        wdbdpl.header_id,
+        GROUP_CONCAT( mmpl.PROD_LINE_CODE) AS prod_line_code,
+        GROUP_CONCAT( wdbdpl.production_line_id) AS prod_line_id,
+        GROUP_CONCAT( wdbdpl.workcell_id) AS workcell_id,
+        GROUP_CONCAT( mmw.WORKCELL_CODE) AS workcell_code,
+        GROUP_CONCAT( wdbdpl.every_qty) AS every_qty
+        FROM
+        wms_distribution_basic_line wdbdpl
+        LEFT JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_ID = wdbdpl.production_line_id
+        AND mmpl.tenant_id = #{tenantId}
+        LEFT JOIN mt_mod_workcell mmw ON mmw.workcell_id = wdbdpl.workcell_id
+        AND mmw.tenant_id = #{tenantId}
+        GROUP BY
+        wdbdpl.header_id
+        ) line ON line.header_id = wdbd.header_id
+        WHERE wdbd.tenant_id = #{tenantId}
+        <if test="dto.siteId != null">
+            AND wdbd.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.materialGroupId != null">
+            AND wdbd.material_group_id = #{dto.materialGroupId}
+        </if>
+        <if test="dto.materialId != null">
+            AND wdbd.material_id =  #{dto.materialId}
+        </if>
+        <if test="dto.prodLineId != null">
+            AND FIND_IN_SET(#{dto.prodLineId},line.prod_line_id)
+        </if>
+        <if test="dto.distributionType != null">
+            AND wdbd.distribution_type = #{dto.distributionType}
+        </if>
+        <if test="dto.enableFlag != null">
+            AND wdbd.enable_flag = #{dto.enableFlag}
+        </if>
+        ORDER BY wdbd.last_update_date DESC
+    </select>
+
+    <select id="queryDistributionBasic" resultType="com.ruike.wms.domain.vo.WmsDistributionBasicDataVO">
+        SELECT
+        wdbd.header_id,
+        wdbd.site_id,
+        mms.SITE_CODE,
+        wdbd.material_group_id,
+        wig.item_group_code AS material_group_code,
+        wig.item_group_description AS material_group_desc,
+        mm.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        wdbdpl.line_id,
+        wdbdpl.production_line_id AS prod_line_id,
+        mmpl.PROD_LINE_CODE,
+        wdbdpl.workcell_id,
+        mmw.WORKCELL_CODE,
+        wdbdpl.backflush_flag,
+        wdbd.distribution_type,
+        wdbd.proportion,
+        wdbd.inventory_level,
+        wdbd.every_qty,
+        wdbd.minimum_package_qty,
+        wdbd.enable_flag
+        FROM
+        wms_distribution_basic_data wdbd
+        LEFT JOIN mt_mod_site mms ON mms.SITE_ID = wdbd.site_id
+        AND mms.tenant_id = #{tenantId}
+        LEFT JOIN wms_item_group wig ON wig.item_group_id = wdbd.material_group_id
+        AND wig.tenant_id = #{tenantId}
+        LEFT JOIN mt_material mm ON mm.material_id = wdbd.material_id
+        AND mm.tenant_id = #{tenantId}
+        LEFT JOIN wms_distribution_basic_line wdbdpl ON wdbdpl.header_id = wdbd.header_id
+        AND wdbdpl.tenant_id = #{tenantId}
+        LEFT JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_ID = wdbdpl.production_line_id
+        AND mmpl.tenant_id = #{tenantId}
+        LEFT JOIN mt_mod_workcell mmw ON mmw.workcell_id = wdbdpl.workcell_id
+        AND mmw.tenant_id = #{tenantId}
+        WHERE wdbd.tenant_id = #{tenantId}
+        <if test="dto.siteId != null">
+            AND wdbd.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.materialGroupId != null">
+            AND wdbd.material_group_id = #{dto.materialGroupId}
+        </if>
+        <if test="dto.materialId != null">
+            AND wdbd.material_id =  #{dto.materialId}
+        </if>
+        <if test="dto.prodLineId != null">
+            AND wdbdpl.production_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.distributionType != null">
+            AND wdbd.distribution_type = #{dto.distributionType}
+        </if>
+        <if test="dto.enableFlag != null">
+            AND wdbd.enable_flag = #{dto.enableFlag}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsObjectTransactionMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsObjectTransaction">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TRANSACTION_ID" property="transactionId" jdbcType="VARCHAR"/>
+        <result column="TRANSACTION_TYPE_CODE" property="transactionTypeCode" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="BARCODE" property="barcode" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="TRANSACTION_QTY" property="transactionQty" jdbcType="DECIMAL"/>
+        <result column="LOT_NUMBER" property="lotNumber" jdbcType="VARCHAR"/>
+        <result column="DELIVERY_BATCH" property="deliveryBatch" jdbcType="VARCHAR"/>
+        <result column="TRANSACTION_UOM" property="transactionUom" jdbcType="VARCHAR"/>
+        <result column="TRANSACTION_TIME" property="transactionTime" jdbcType="DATE"/>
+        <result column="TRANSACTION_REASON_CODE" property="transactionReasonCode" jdbcType="VARCHAR"/>
+        <result column="ACCOUNT_DATE" property="accountDate" jdbcType="DATE"/>
+        <result column="WAREHOUSE_CODE" property="warehouseCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_PLANT_CODE" property="transferPlantCode" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_WAREHOUSE_CODE" property="transferWarehouseCode" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_LOCATOR_CODE" property="transferLocatorCode" jdbcType="VARCHAR"/>
+        <result column="COSTCENTER_CODE" property="costcenterCode" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_CODE" property="supplierCode" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_CODE" property="supplierSiteCode" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_CODE" property="customerCode" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_CODE" property="customerSiteCode" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_TYPE" property="sourceDocType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_NUM" property="sourceDocNum" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_LINE_NUM" property="sourceDocLineNum" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="OPERATION_SEQUENCE" property="operationSequence" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_CODE" property="prodLineCode" jdbcType="VARCHAR"/>
+        <result column="MERGE_FLAG" property="mergeFlag" jdbcType="VARCHAR"/>
+        <result column="MERGE_ID" property="mergeId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE16" property="attribute16" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE17" property="attribute17" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE18" property="attribute18" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE19" property="attribute19" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE20" property="attribute20" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE21" property="attribute21" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE22" property="attribute22" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE23" property="attribute23" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE24" property="attribute24" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE25" property="attribute25" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE26" property="attribute26" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE27" property="attribute27" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE28" property="attribute28" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE29" property="attribute29" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE30" property="attribute30" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE31" property="attribute31" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE32" property="attribute32" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE33" property="attribute33" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE34" property="attribute34" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE35" property="attribute35" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE36" property="attribute36" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE37" property="attribute37" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE38" property="attribute38" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE39" property="attribute39" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE40" property="attribute40" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_ID" property="sourceDocId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_LINE_ID" property="sourceDocLineId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_LOCATOR_ID" property="transferLocatorId" jdbcType="VARCHAR"/>
+        <result column="PLANT_ID" property="plantId" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="SALE_DOC_ID" property="saleDocId" jdbcType="VARCHAR"/>
+        <result column="SALE_DOC_LINE_ID" property="saleDocLineId" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_SALE_DOC_ID" property="transferSaleDocId" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_SALE_DOC_LINE_ID" property="transferSaleDocLineId" jdbcType="VARCHAR"/>
+        <result column="INSIDE_ORDER" property="insideOrder" jdbcType="VARCHAR"/>
+        <result column="MAKE_ORDER_NUM" property="makeOrderNum" jdbcType="VARCHAR"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="WAREHOUSE_ID" property="warehouseId" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_WAREHOUSE_ID" property="transferWarehouseId" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_PLANT_ID" property="transferPlantId" jdbcType="VARCHAR"/>
+        <result column="MOVE_TYPE" property="moveType" jdbcType="VARCHAR"/>
+        <result column="BOM_RESERVE_NUM" property="bomReserveNum" jdbcType="VARCHAR"/>
+        <result column="BOM_RESERVE_LINE_NUM" property="bomReserveLineNum" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_SO_NUM" property="transferSoNum" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_SO_LINE_NUM" property="transferSoLineNum" jdbcType="VARCHAR"/>
+        <result column="PO_NUM" property="poNum" jdbcType="VARCHAR"/>
+        <result column="PO_LINE_NUM" property="poLineNum" jdbcType="VARCHAR"/>
+        <result column="MOVE_REASON" property="moveReason" jdbcType="VARCHAR"/>
+        <result column="SN_NUM" property="snNum" jdbcType="VARCHAR"/>
+        <result column="GM_CODE" property="gmCode" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_CODE" property="containerCode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryTransferWarehouseCodeAndTransferLocatorCode" resultType="java.util.Map">
+        SELECT LOC2.LOCATOR_ID   TRANSFER_LOCATOR_ID,
+               LOC2.LOCATOR_CODE TRANSFER_WAREHOUSE_CODE
+        FROM MT_MOD_LOCATOR LOC1
+                 LEFT JOIN MT_MOD_LOCATOR LOC2 ON LOC1.PARENT_LOCATOR_ID = LOC2.LOCATOR_ID
+        WHERE LOC1.TENANT_ID = #{tenantId}
+          and LOC1.LOCATOR_ID = #{targetLocatorId}
+    </select>
+
+    <select id="selectLastTrxByMaterialLotId" resultMap="BaseResultMap">
+        select t.*
+        from wms_object_transaction t
+        where t.TRANSACTION_ID = (select max(trx.TRANSACTION_ID)
+                                  from wms_object_transaction trx
+                                  where trx.TRANSACTION_TYPE_CODE = #{transactionTypeCode}
+                                    and trx.MATERIAL_LOT_ID = #{materialLotId}
+                                    and trx.TENANT_ID = #{tenantId})
+        limit 1
+    </select>
+
+    <select id="selectForMergeList" resultType="com.ruike.wms.domain.entity.WmsObjectTransaction">
+        select ot.*
+        from wms_transaction_type wtt,
+             wms_object_transaction ot
+        where ot.TRANSACTION_TYPE_CODE = wtt.TRANSACTION_TYPE_CODE
+          and ot.TENANT_ID = wtt.TENANT_ID
+          and wtt.PROCESS_ERP_FLAG = 'Y'
+          and wtt.TENANT_ID = #{tenantId}
+          and (ot.MERGE_FLAG = 'N' or ot.MERGE_FLAG = '' or ot.MERGE_FLAG is null)
+    </select>
+
+    <select id="selectWorkReportForMergeList" resultType="com.ruike.wms.domain.entity.WmsObjectTransaction">
+        SELECT
+            ot.*
+        FROM
+            wms_transaction_type wtt,
+            wms_object_transaction ot
+        WHERE
+            ot.TRANSACTION_TYPE_CODE = wtt.TRANSACTION_TYPE_CODE
+          AND ot.TENANT_ID = wtt.TENANT_ID
+          AND wtt.PROCESS_ERP_FLAG = 'Y'
+          AND wtt.TENANT_ID = 0
+          AND ot.TRANSACTION_TYPE_CODE = 'HME_WORK_REPORT'
+          AND ( ot.MERGE_FLAG = 'N' OR ot.MERGE_FLAG = '' OR ot.MERGE_FLAG IS NULL )
+    </select>
+
+    <select id="selectExcludeWorkReportForMergeList" resultType="com.ruike.wms.domain.entity.WmsObjectTransaction">
+        SELECT
+            ot.*
+        FROM
+            wms_transaction_type wtt,
+            wms_object_transaction ot
+        WHERE
+            ot.TRANSACTION_TYPE_CODE = wtt.TRANSACTION_TYPE_CODE
+          AND ot.TENANT_ID = wtt.TENANT_ID
+          AND wtt.PROCESS_ERP_FLAG = 'Y'
+          AND wtt.TENANT_ID = 0
+          AND ot.TRANSACTION_TYPE_CODE != 'HME_WORK_REPORT'
+          AND ( ot.MERGE_FLAG = 'N' OR ot.MERGE_FLAG = '' OR ot.MERGE_FLAG IS NULL )
+    </select>
+
+    <update id="batchUpdate" parameterType="com.ruike.wms.domain.entity.WmsObjectTransaction">
+        update wms_object_transaction
+        <set>
+            event_id=
+            <foreach collection="list" item="clause" index="index"
+                     separator=" " open="case transaction_id" close="end">
+                when #{clause.transactionId} then #{clause.eventId}
+            </foreach>
+        </set>
+        <where>
+            TRANSACTION_ID in
+            <foreach collection="list" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.transactionId,jdbcType=VARCHAR}
+            </foreach>
+        </where>
+    </update>
+
+    <update id="batchUpdateMergeFlag" parameterType="com.ruike.wms.domain.entity.WmsObjectTransaction">
+        update wms_object_transaction
+        <set>
+            merge_flag =
+            <foreach collection="list" item="clause" index="index"
+                     separator=" " open="case transaction_id" close="end">
+                when #{clause.transactionId} then #{clause.mergeFlag}
+            </foreach>
+            ,merge_id =
+            <foreach collection="list" item="clause" index="index"
+                     separator=" " open="case transaction_id" close="end">
+                when #{clause.transactionId} then #{clause.mergeId}
+            </foreach>
+            ,attribute15 =
+            <foreach collection="list" item="clause" index="index"
+                     separator=" " open="case transaction_id" close="end">
+                when #{clause.transactionId} then #{clause.attribute15}
+            </foreach>
+        </set>
+        <where>
+            TRANSACTION_ID in
+            <foreach collection="list" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.transactionId,jdbcType=VARCHAR}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="queryInstructionLineNum" resultType="tarzan.instruction.domain.entity.MtInstruction">
+        select mia.instruction_id, mia.attr_value instruction_num
+        from mt_instruction_attr mia
+        where mia.attr_name = 'INSTRUCTION_LINE_NUM'
+        and mia.tenant_id = #{tenantId}
+        and mia.instruction_id in
+        <foreach collection="list" item="item"
+                 separator="," open="(" close=")">
+            #{item,jdbcType=VARCHAR}
+        </foreach>
+    </select>
+
+    <select id="checkFinishedProductFlag" resultType="int">
+        SELECT
+            1
+        FROM
+            mt_material_site mms,
+            mt_material_site_attr mmsa
+        WHERE
+            mms.material_site_id = mmsa.material_site_id
+            AND mmsa.ATTR_NAME = 'attribute11'
+            AND mmsa.ATTR_VALUE !=''
+	        AND mmsa.ATTR_VALUE IS NOT NULL
+          and mms.TENANT_ID = #{tenantId}
+          and mms.MATERIAL_ID = #{materialId}
+          and mms.SITE_ID = #{siteId}
+        limit 1
+    </select>
+
+    <select id="getSourceDocLineNumForStockIn" resultType="string">
+        select pdr.srm_line_num
+        from wms_po_delivery_rel pdr
+        where pdr.tenant_id = #{tenantId}
+          and pdr.po_id = #{poId}
+          and pdr.po_line_id = #{poLineId}
+          and pdr.delivery_doc_id = #{sourceDocId}
+          and pdr.delivery_doc_line_id = #{sourceDocLineId}
+    </select>
+
+    <select id="selectByIdList" resultType="com.ruike.wms.domain.entity.WmsObjectTransaction">
+        select tenant_id, transaction_id, transaction_type_code, event_id, barcode, plant_code, material_code,
+        transaction_qty, lot_number, delivery_batch, transaction_uom, transaction_time, transaction_reason_code,
+        account_date, warehouse_code, locator_code, transfer_plant_code, transfer_warehouse_code, transfer_locator_code,
+        costcenter_code, supplier_code, supplier_site_code, customer_code, customer_site_code, source_doc_type,
+        source_doc_num, source_doc_line_num, work_order_num, operation_sequence, prod_line_code, merge_flag, merge_id,
+        spec_stock_flag, container_id, transfer_lot_number, container_code, transfer_so_line_num, transfer_so_num,
+        so_line_num, so_num, po_line_num, po_num, move_reason, move_type, bom_reserve_line_num, bom_reserve_num, cid,
+        object_version_number, created_by, creation_date, last_updated_by, last_update_date, attribute1, attribute2,
+        attribute3, attribute4, attribute5, attribute6, attribute7, attribute8, attribute9, attribute10, attribute11,
+        attribute12, attribute13, attribute14, attribute15, attribute16, attribute17, attribute18, attribute19,
+        attribute20, attribute21, attribute22, attribute23, attribute24, attribute25, attribute26, attribute27,
+        attribute28, attribute29, attribute30, attribute31, attribute32, attribute33, attribute34, attribute35,
+        attribute36, attribute37, attribute38, attribute39, attribute40, source_doc_id, source_doc_line_id,
+        material_lot_id, material_id, locator_id, transfer_locator_id, plant_id, remark, sale_doc_id, sale_doc_line_id,
+        transfer_sale_doc_id, transfer_sale_doc_line_id, inside_order, make_order_num, owner_type, warehouse_id,
+        transfer_warehouse_id, transfer_plant_id, sn_num, gmcode
+        from wms_object_transaction
+        where 1=1
+        and transaction_id in
+        <foreach collection="ids" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectNonRealTimeTransaction" resultType="java.lang.String">
+        SELECT
+        wot.TRANSACTION_ID
+        FROM
+        wms_object_transaction wot,
+        mt_work_order wo,
+        mt_work_order_attr woa
+        WHERE 1=1
+        <choose>
+            <when test="businessAreaList != null and businessAreaList.size() > 0">
+                AND woa.ATTR_VALUE IN
+                <foreach collection="businessAreaList" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+        AND woa.ATTR_NAME = 'attribute4'
+        AND woa.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa.TENANT_ID = wo.TENANT_ID
+        AND wo.TENANT_ID = wot.TENANT_ID
+        AND wo.WORK_ORDER_NUM = wot.WORK_ORDER_NUM
+        <choose>
+            <when test="transactionIdList != null and transactionIdList.size() > 0">
+                AND wot.TRANSACTION_ID IN
+                <foreach collection="transactionIdList" separator="," item="id" open="(" close=")">
+                    #{id}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCmsEoSnRelMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCmsEoSnRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CMS_EO_SN_REL_ID" property="cmsEoSnRelId" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_NUM" property="equipmentNum" jdbcType="VARCHAR"/>
+        <result column="SN_NUM" property="snNum" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <update id="myBatchUpdate">
+        UPDATE hme_cms_eo_sn_rel
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            equipment_num =
+            <foreach collection="updateList" item="item" index="index"
+                     separator=" " open="case cms_eo_sn_rel_id" close="end">
+                when #{item.cmsEoSnRelId} then #{item.equipmentNum}
+            </foreach>,
+            sn_num =
+            <foreach collection="updateList" item="item" index="index"
+                     separator=" " open="case cms_eo_sn_rel_id" close="end">
+                when #{item.cmsEoSnRelId} then #{item.snNum}
+            </foreach>,
+            eo_id =
+            <foreach collection="updateList" item="item" index="index"
+                     separator=" " open="case cms_eo_sn_rel_id" close="end">
+                when #{item.cmsEoSnRelId} then #{item.eoId}
+            </foreach>
+        </set>
+        <where>
+            cms_eo_sn_rel_id in
+            <foreach collection="updateList" item="item"
+                     separator="," open="(" close=")">
+                #{item.cmsEoSnRelId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

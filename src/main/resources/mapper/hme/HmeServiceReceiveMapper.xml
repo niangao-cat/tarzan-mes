@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeServiceReceiveMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeServiceReceive">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SERVICE_RECEIVE_ID" property="serviceReceiveId" jdbcType="VARCHAR"/>
+        <result column="LOGISTICS_INFO_ID" property="logisticsInfoId" jdbcType="VARCHAR"/>
+        <result column="AREA_CODE" property="areaCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="SN_NUM" property="snNum" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_VERSION" property="productionVersion" jdbcType="VARCHAR"/>
+        <result column="RECEIVE_BY" property="receiveBy" jdbcType="DECIMAL"/>
+        <result column="RECEIVE_DATE" property="receiveDate" jdbcType="DATE"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="RECEIVE_STATUS" property="receiveStatus" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="materialLovQuery" resultType="com.ruike.hme.domain.vo.HmeServiceReceiveVO3">
+        SELECT
+        b.MATERIAL_ID,
+        b.MATERIAL_CODE,
+        b.MATERIAL_NAME
+        FROM
+        MT_MATERIAL_SITE item_site,
+        mt_material b
+        <if test="itemTypeList!=null and itemTypeList.size>0">
+            ,mt_material_basic d
+        </if>
+        WHERE
+        b.MATERIAL_ID = item_site.MATERIAL_ID
+        AND b.TENANT_ID = #{tenantId}
+        AND item_site.SITE_ID = #{dto.siteId}
+        AND b.ENABLE_FLAG = 'Y'
+        <if test="dto.materialInfo != null and dto.materialInfo != ''">
+            AND (
+                b.MATERIAL_CODE LIKE CONCAT('%',#{dto.materialInfo},'%') OR
+                b.MATERIAL_NAME LIKE CONCAT('%',#{dto.materialInfo},'%')
+            )
+        </if>
+        <if test="itemTypeList!=null and itemTypeList.size>0">
+            AND item_site.MATERIAL_SITE_ID = d.MATERIAL_SITE_ID
+            AND d.ITEM_TYPE IN
+            <foreach collection="itemTypeList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getMaterialIdBySnNum" resultType="java.lang.String">
+        select ssmr.material_id
+        from hme_sap_sn_material_rel ssmr
+        where ssmr.tenant_id = #{tenantId}
+        and ssmr.sn_num = #{snNum}
+        and ssmr.site_id = #{siteId}
+        order by ssmr.last_update_date desc
+        limit 1
+    </select>
+
+    <select id="getTotalBySn" resultType="java.lang.Long">
+        select COUNT(1)
+        from hme_service_receive hsr
+        where hsr.tenant_id = #{tenantId}
+        and hsr.sn_num = #{snNum}
+        and hsr.receive_status not in ('REPAIR_COMPLETE', 'CANCEL')
+    </select>
+</mapper>

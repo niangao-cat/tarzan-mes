@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.reports.infra.mapper.WmsTransferSummaryMapper">
+
+    <select id="selectList" resultType="com.ruike.reports.domain.vo.WmsTransferSummaryVO">
+        SELECT
+            doc.instruction_doc_num,
+            mms.site_code,
+            doc.instruction_doc_status,
+            doc.instruction_doc_type,
+            doc.remark,
+            usr.real_name created_by_name,
+            doc.creation_date,
+            mia_ln.attr_value instruction_line_num,
+            mm.material_code,
+            mm.material_name,
+            mia_ver.attr_value material_version,
+            ins.instruction_status,
+            ins.quantity,
+            ifnull(
+            (
+                SELECT
+                sum(mia.actual_qty)
+                FROM
+                mt_instruction_actual mia
+                WHERE
+                mia.instruction_id = ins.instruction_id
+                ),
+                0
+            ) actual_quantity,
+            from_wh.locator_code from_warehouse_code,
+            from_loc.locator_code from_locator_code,
+            to_wh.locator_code to_warehouse_code,
+            to_loc.locator_code to_locator_code,
+            mia_es.attr_value excess_setting,
+            mia_ev.attr_value excess_value,
+            mu.UOM_CODE,
+            usr.real_name executor_user,
+            ins.LAST_UPDATE_DATE executor_date
+        FROM
+        mt_instruction_doc doc,
+        mt_mod_site mms,
+        hzero_platform.iam_user usr,
+        mt_instruction ins
+        LEFT JOIN mt_instruction_attr mia_ln ON mia_ln.instruction_id = ins.instruction_id
+        AND mia_ln.attr_name = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr mia_ver ON mia_ver.instruction_id = ins.instruction_id
+        AND mia_ver.attr_name = 'MATERIAL_VERSION'
+        LEFT JOIN mt_mod_locator from_wh ON from_wh.locator_id = ins.from_locator_id
+        LEFT JOIN mt_instruction_attr mia_fl ON mia_fl.instruction_id = ins.instruction_id
+        AND mia_fl.attr_name = 'FROM_LOCATOR_ID'
+        LEFT JOIN mt_mod_locator from_loc ON from_loc.locator_id = mia_fl.attr_value
+        LEFT JOIN mt_mod_locator to_wh ON to_wh.locator_id = ins.to_locator_id
+        LEFT JOIN mt_instruction_attr mia_tl ON mia_tl.instruction_id = ins.instruction_id
+        AND mia_tl.attr_name = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_mod_locator to_loc ON to_loc.locator_id = mia_tl.attr_value
+        LEFT JOIN mt_instruction_attr mia_es ON mia_es.instruction_id = ins.instruction_id
+        AND mia_es.attr_name = 'EXCESS_SETTING'
+        LEFT JOIN mt_instruction_attr mia_ev ON mia_ev.instruction_id = ins.instruction_id
+        AND mia_ev.attr_name = 'EXCESS_VALUE'
+        LEFT JOIN MT_UOM mu ON ins.UOM_ID = mu.UOM_ID,
+        mt_material mm,
+        hzero_platform.iam_user usr2
+        WHERE
+        doc.tenant_id = 0
+        AND doc.instruction_doc_type IN (
+        'SEND_EXECUTE',
+        'RECEIVE_EXECUTE',
+        'SEND_RECEIVE_EXECUTE'
+        )
+        AND mms.site_id = doc.site_id
+        AND usr.id = doc.created_by
+        AND ins.SOURCE_DOC_ID = doc.instruction_doc_id
+        AND ins.material_id = mm.material_id
+        AND usr2.id = ins.LAST_UPDATED_BY
+        and doc.creation_date between #{dto.creationDateFrom} and #{dto.creationDateTo}
+        <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+            <bind name="instructionDocNumLike" value="'%'+dto.instructionDocNum+'%'"/>
+            and doc.instruction_doc_num like #{instructionDocNumLike}
+        </if>
+        <if test="dto.instructionDocStatus != null and dto.instructionDocStatus != ''">
+            and doc.instruction_doc_status = #{dto.instructionDocStatus}
+        </if>
+        <if test="dto.instructionDocType != null and dto.instructionDocType != ''">
+            and doc.instruction_doc_type = #{dto.instructionDocType}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion != ''">
+            and mia_ver.attr_value = #{dto.materialVersion}
+        </if>
+        <if test="dto.createdBy != null">
+            and doc.created_by = #{dto.createdBy}
+        </if>
+        <if test="dto.fromWarehouseId != null and dto.fromWarehouseId != ''">
+            AND from_wh.LOCATOR_ID = #{dto.fromWarehouseId}
+        </if>
+        <if test="dto.toWarehouseId != null and dto.toWarehouseId != ''">
+            AND to_wh.LOCATOR_ID = #{dto.toWarehouseId}
+        </if>
+        <if test="dto.fromLocatorId != null and dto.fromLocatorId != ''">
+            AND from_loc.LOCATOR_ID = #{dto.fromLocatorId}
+        </if>
+        <if test="dto.toLocatorId != null and dto.toLocatorId != ''">
+            AND to_loc.LOCATOR_ID = #{dto.toLocatorId}
+        </if>
+        <if test="dto.executorUserId != null and dto.executorUserId != ''">
+            AND ins.LAST_UPDATED_BY = #{dto.executorUserId}
+        </if>
+        <if test="dto.executorDateFrom != null">
+            AND ins.LAST_UPDATE_DATE >= DATE_FORMAT(#{dto.executorDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.executorDateTo != null">
+            AND ins.LAST_UPDATE_DATE &lt;= DATE_FORMAT(#{dto.executorDateTo}, '%Y-%m-%d %T')
+        </if>
+    </select>
+
+    <select id="selectDetailList" resultType="com.ruike.reports.domain.vo.WmsTransferSummaryVO2">
+        SELECT
+            ins.INSTRUCTION_ID,
+            doc.instruction_doc_num,
+            mms.site_code,
+            doc.instruction_doc_status,
+            doc.instruction_doc_type,
+            doc.remark,
+            usr.real_name created_by_name,
+            doc.creation_date,
+            mia_ln.attr_value instruction_line_num,
+            mm.material_code,
+            mm.material_name,
+            mia_ver.attr_value material_version,
+            ins.instruction_status,
+            ins.quantity,
+            ifnull(
+                (
+                    SELECT
+                        sum(mia.actual_qty)
+                    FROM
+                        mt_instruction_actual mia
+                    WHERE
+                        mia.instruction_id = ins.instruction_id
+                ),
+                0
+            ) actual_quantity,
+            from_wh.locator_code from_warehouse_code,
+            from_loc.locator_code from_locator_code,
+            to_wh.locator_code to_warehouse_code,
+            to_loc.locator_code to_locator_code,
+            mia_es.attr_value excess_setting,
+            mia_ev.attr_value excess_value,
+            mu.UOM_CODE,
+            usr.real_name executor_user,
+            ins.LAST_UPDATE_DATE executor_date,
+            mml.MATERIAL_LOT_CODE,
+            mml_v.ATTR_VALUE detail_material_version,
+            mml.LOT,
+            mml_s.ATTR_VALUE supplier_lot,
+            mc.CONTAINER_CODE,
+            miad.ACTUAL_QTY allocation_qty,
+            iu.real_name allocation_user,
+            miad.LAST_UPDATE_DATE allocation_date
+        FROM
+            mt_instruction_doc doc,
+            mt_mod_site mms,
+            hzero_platform.iam_user usr,
+            mt_instruction ins
+        LEFT JOIN mt_instruction_attr mia_ln ON mia_ln.instruction_id = ins.instruction_id
+        AND mia_ln.attr_name = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr mia_ver ON mia_ver.instruction_id = ins.instruction_id
+        AND mia_ver.attr_name = 'MATERIAL_VERSION'
+        LEFT JOIN mt_mod_locator from_wh ON from_wh.locator_id = ins.from_locator_id
+        LEFT JOIN mt_instruction_attr mia_fl ON mia_fl.instruction_id = ins.instruction_id
+        AND mia_fl.attr_name = 'FROM_LOCATOR_ID'
+        LEFT JOIN mt_mod_locator from_loc ON from_loc.locator_id = mia_fl.attr_value
+        LEFT JOIN mt_mod_locator to_wh ON to_wh.locator_id = ins.to_locator_id
+        LEFT JOIN mt_instruction_attr mia_tl ON mia_tl.instruction_id = ins.instruction_id
+        AND mia_tl.attr_name = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_mod_locator to_loc ON to_loc.locator_id = mia_tl.attr_value
+        LEFT JOIN mt_instruction_attr mia_es ON mia_es.instruction_id = ins.instruction_id
+        AND mia_es.attr_name = 'EXCESS_SETTING'
+        LEFT JOIN mt_instruction_attr mia_ev ON mia_ev.instruction_id = ins.instruction_id
+        AND mia_ev.attr_name = 'EXCESS_VALUE'
+        LEFT JOIN MT_UOM mu ON ins.UOM_ID = mu.UOM_ID
+        LEFT JOIN MT_INSTRUCTION_ACTUAL mia ON mia.INSTRUCTION_ID = ins.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_actual_detail miad ON miad.ACTUAL_ID = mia.ACTUAL_ID
+        LEFT JOIN mt_container mc ON mc.container_id = miad.container_id
+        LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+        LEFT JOIN mt_material_lot_attr mml_v ON mml_v.material_lot_id = mml.material_lot_id
+        AND mml_v.attr_name = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr mml_s ON mml_s.material_lot_id = mml.material_lot_id
+        AND mml_s.attr_name = 'SUPPLIER_LOT'
+        LEFT JOIN iam_user iu ON iu.id = miad.LAST_UPDATED_BY,
+         mt_material mm,
+         hzero_platform.iam_user usr2
+        WHERE
+            doc.tenant_id = 0
+        AND doc.instruction_doc_type IN (
+            'SEND_EXECUTE',
+            'RECEIVE_EXECUTE',
+            'SEND_RECEIVE_EXECUTE'
+        )
+        AND mms.site_id = doc.site_id
+        AND usr.id = doc.created_by
+        AND ins.SOURCE_DOC_ID = doc.instruction_doc_id
+        AND ins.material_id = mm.material_id
+        AND usr2.id = ins.LAST_UPDATED_BY
+        and doc.creation_date between #{dto.creationDateFrom} and #{dto.creationDateTo}
+        <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+            <bind name="instructionDocNumLike" value="'%'+dto.instructionDocNum+'%'"/>
+            and doc.instruction_doc_num like #{instructionDocNumLike}
+        </if>
+        <if test="dto.instructionDocStatus != null and dto.instructionDocStatus != ''">
+            and doc.instruction_doc_status = #{dto.instructionDocStatus}
+        </if>
+        <if test="dto.instructionDocType != null and dto.instructionDocType != ''">
+            and doc.instruction_doc_type = #{dto.instructionDocType}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion != ''">
+            and mia_ver.attr_value = #{dto.materialVersion}
+        </if>
+        <if test="dto.createdBy != null">
+            and doc.created_by = #{dto.createdBy}
+        </if>
+        <if test="dto.fromWarehouseId != null and dto.fromWarehouseId != ''">
+            AND from_wh.LOCATOR_ID = #{dto.fromWarehouseId}
+        </if>
+        <if test="dto.toWarehouseId != null and dto.toWarehouseId != ''">
+            AND to_wh.LOCATOR_ID = #{dto.toWarehouseId}
+        </if>
+        <if test="dto.fromLocatorId != null and dto.fromLocatorId != ''">
+            AND from_loc.LOCATOR_ID = #{dto.fromLocatorId}
+        </if>
+        <if test="dto.toLocatorId != null and dto.toLocatorId != ''">
+            AND to_loc.LOCATOR_ID = #{dto.toLocatorId}
+        </if>
+        <if test="dto.executorUserId != null and dto.executorUserId != ''">
+            AND ins.LAST_UPDATED_BY = #{dto.executorUserId}
+        </if>
+        <if test="dto.executorDateFrom != null">
+            AND ins.LAST_UPDATE_DATE >= DATE_FORMAT(#{dto.executorDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.executorDateTo != null">
+            AND ins.LAST_UPDATE_DATE &lt;= DATE_FORMAT(#{dto.executorDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND mml.MATERIAL_LOT_CODE like CONCAT('%',#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.lot != null and dto.lot != ''">
+            AND mml.LOT like CONCAT('%',#{dto.lot},'%')
+        </if>
+        <if test="dto.supplierLot != null and dto.supplierLot != ''">
+            AND mml_s.ATTR_VALUE like CONCAT('%',#{dto.supplierLot},'%')
+        </if>
+        <if test="dto.allocationUserId != null and dto.allocationUserId != ''">
+            AND miad.LAST_UPDATED_BY = #{dto.allocationUserId}
+        </if>
+        <if test="dto.allocationDateFrom != null">
+            AND miad.LAST_UPDATE_DATE >= DATE_FORMAT(#{dto.allocationDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.allocationDateTo != null">
+            AND miad.LAST_UPDATE_DATE &lt;= DATE_FORMAT(#{dto.allocationDateTo}, '%Y-%m-%d %T')
+        </if>
+    </select>
+
+</mapper>

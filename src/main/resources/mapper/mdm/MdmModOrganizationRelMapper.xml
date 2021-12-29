@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.mdm.infra.mapper.MdmModOrganizationRelMapper">
+
+    <select id="getCurrentNodeOrganization" parameterType="com.ruike.mdm.domain.vo.MdmModOrganizationFullNodeVO"
+            resultType="com.ruike.mdm.domain.vo.MdmModOrganizationFullTreeVO">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select mme.ENTERPRISE_ID id
+        ,mme.ENTERPRISE_CODE code
+        ,metl.ENTERPRISE_NAME name
+        ,'ENTERPRISE' type
+        ,null parent_Id
+        ,null parent_type
+        ,null TOP_SITE_ID
+        ,null SEQUENCE
+        from mt_mod_enterprise mme
+        ,mt_mod_enterprise_tl metl
+        where mme.ENTERPRISE_ID = metl.ENTERPRISE_ID
+        and metl.LANG = 'zh_CN'
+        and mme.ENTERPRISE_ID = #{organizationId}
+        and #{organizationType} = 'ENTERPRISE'
+        union all
+        select mor.ORGANIZATION_ID id
+        ,mme.AREA_CODE code
+        ,metl.AREA_NAME name
+        ,'AREA' type
+        ,mor.PARENT_ORGANIZATION_ID parent_Id
+        ,mor.PARENT_ORGANIZATION_TYPE parent_type
+        ,mor.TOP_SITE_ID
+        ,mor.SEQUENCE
+        from mt_mod_organization_rel mor
+        ,mt_mod_area mme
+        ,mt_mod_area_tl metl
+        where mor.ORGANIZATION_ID = mme.AREA_ID
+        and mme.AREA_ID = metl.AREA_ID
+        and metl.LANG = #{lang}
+        and mor.ORGANIZATION_ID = #{organizationId}
+        and mor.ORGANIZATION_TYPE = 'AREA'
+        and #{organizationType} = 'AREA'
+        union all
+        select mor.ORGANIZATION_ID id
+        ,mme.SITE_CODE code
+        ,metl.SITE_NAME name
+        ,'SITE' type
+        ,mor.PARENT_ORGANIZATION_ID parent_Id
+        ,mor.PARENT_ORGANIZATION_TYPE parent_type
+        ,mor.TOP_SITE_ID
+        ,mor.SEQUENCE
+        from mt_mod_organization_rel mor
+        ,mt_mod_site mme
+        ,mt_mod_site_tl metl
+        where mor.ORGANIZATION_ID = mme.SITE_ID
+        and mme.SITE_ID = metl.SITE_ID
+        and metl.LANG = #{lang}
+        and mor.ORGANIZATION_ID = #{organizationId}
+        and mor.ORGANIZATION_TYPE = 'SITE'
+        and #{organizationType} = 'SITE'
+        union all
+        select mor.ORGANIZATION_ID id
+        ,mme.PROD_LINE_CODE code
+        ,metl.PROD_LINE_NAME name
+        ,'PROD_LINE' type
+        ,mor.PARENT_ORGANIZATION_ID parent_Id
+        ,mor.PARENT_ORGANIZATION_TYPE parent_type
+        ,mor.TOP_SITE_ID
+        ,mor.SEQUENCE
+        from mt_mod_organization_rel mor
+        ,mt_mod_production_line mme
+        ,mt_mod_production_line_tl metl
+        where mor.ORGANIZATION_ID = mme.PROD_LINE_ID
+        and mme.PROD_LINE_ID = metl.PROD_LINE_ID
+        and metl.LANG = #{lang}
+        and mor.ORGANIZATION_ID = #{organizationId}
+        and mor.ORGANIZATION_TYPE = 'PROD_LINE'
+        and #{organizationType} = 'PROD_LINE'
+        union all
+        select mor.ORGANIZATION_ID id
+        ,mme.WORKCELL_CODE code
+        ,metl.WORKCELL_NAME name
+        ,'WORKCELL' type
+        ,mor.PARENT_ORGANIZATION_ID parent_Id
+        ,mor.PARENT_ORGANIZATION_TYPE parent_type
+        ,mor.TOP_SITE_ID
+        ,mor.SEQUENCE
+        from mt_mod_organization_rel mor
+        ,mt_mod_workcell mme
+        ,mt_mod_workcell_tl metl
+        where mor.ORGANIZATION_ID = mme.WORKCELL_ID
+        and mme.WORKCELL_ID = metl.WORKCELL_ID
+        and metl.LANG = #{lang}
+        and mor.ORGANIZATION_ID = #{organizationId}
+        and mor.ORGANIZATION_TYPE = 'WORKCELL'
+        and #{organizationType} = 'WORKCELL'
+    </select>
+
+    <select id="getCurrentNodeLocator" resultType="com.ruike.mdm.domain.vo.MdmModOrganizationFullTreeVO">
+        select ml.LOCATOR_ID id
+              ,ml.LOCATOR_CODE code
+              ,ml.LOCATOR_NAME name
+              ,'LOCATOR' type
+              ,ml.PARENT_LOCATOR_ID parent_id
+              ,'LOCATOR' parent_type
+              ,null SEQUENCE
+        from   mt_mod_locator ml
+        where  ifnull(ml.PARENT_LOCATOR_ID,'') != ''
+        and    ml.LOCATOR_ID = #{organizationId}
+        union all
+        select ml.LOCATOR_ID id
+              ,ml.LOCATOR_CODE code
+              ,ml.LOCATOR_NAME name
+              ,'LOCATOR' type
+              ,mlo.ORGANIZATION_ID parent_id
+              ,mlo.ORGANIZATION_TYPE parent_type
+              ,mlo.SEQUENCE
+        from   mt_mod_locator ml
+              ,mt_mod_locator_org_rel mlo
+        where  ml.LOCATOR_ID = mlo.LOCATOR_ID
+        and    ifnull(ml.PARENT_LOCATOR_ID,'') = ''
+        and    ml.LOCATOR_ID = #{organizationId}
+    </select>
+</mapper>

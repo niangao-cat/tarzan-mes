@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterStepGroupStepMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterStepGroupStep">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_STEP_GROUP_STEP_ID" property="routerStepGroupStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_GROUP_ID" property="routerStepGroupId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="RouterStepGroupStepVOMap" type="tarzan.method.domain.vo.MtRouterStepGroupStepVO">
+        <result column="ROUTER_STEP_GROUP_STEP_ID" property="routerStepGroupStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_GROUP_ID" property="routerStepGroupId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="groupRouterStepId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtRouterStepGroupStepDTO">
+        <result column="ROUTER_STEP_GROUP_STEP_ID" property="routerStepGroupStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_GROUP_ID" property="routerStepGroupId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="STEP_DESC" property="stepDesc" jdbcType="VARCHAR"/>
+        <result column="QUEUE_DECISION_TYPE" property="queueDecisionType" jdbcType="VARCHAR"/>
+        <result column="STEP_SEQUENCE" property="stepSequence" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="selectRouterStepByGroup" resultMap="BaseResultMap">
+        SELECT mrsgs.*
+        FROM mt_router_step_group_step mrsgs,
+        mt_router_step_group mrsg
+        WHERE mrsg.ROUTER_STEP_GROUP_ID = mrsgs.ROUTER_STEP_GROUP_ID
+        AND mrsg.ROUTER_STEP_ID = #{routerStepId}
+        AND mrsgs.TENANT_ID = ${tenantId}
+        AND mrsg.TENANT_ID = ${tenantId}
+    </select>
+
+    <select id="selectRouterStepGroupStep" resultMap="RouterStepGroupStepVOMap">
+        select mrsgs.ROUTER_STEP_GROUP_STEP_ID,
+        mrsg.ROUTER_STEP_GROUP_ID,
+        mrsg.ROUTER_STEP_ID
+        from mt_router_step_group mrsg,
+        mt_router_step_group_step mrsgs
+        where mrsg.ROUTER_STEP_GROUP_ID = mrsgs.ROUTER_STEP_GROUP_ID
+        and mrsgs.ROUTER_STEP_ID = #{routerStepId}
+        and mrsg.TENANT_ID = ${tenantId}
+        and mrsgs.TENANT_ID = ${tenantId}
+    </select>
+
+    <select id="selectRouterStepGroupStepByIds" resultMap="BaseResultMap">
+        select mrsgs.ROUTER_STEP_GROUP_STEP_ID,
+        mrsg.ROUTER_STEP_GROUP_ID,
+        mrsg.ROUTER_STEP_ID
+        from mt_router_step_group mrsg,
+        mt_router_step_group_step mrsgs
+        where mrsg.ROUTER_STEP_GROUP_ID = mrsgs.ROUTER_STEP_GROUP_ID
+        and mrsg.TENANT_ID = ${tenantId}
+        and mrsgs.TENANT_ID = ${tenantId}
+        and mrsgs.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByGroupIds" resultMap="BaseResultMap">
+        SELECT * FROM mt_router_step_group_step WHERE TENANT_ID = ${tenantId} AND ROUTER_STEP_GROUP_ID IN
+        <foreach collection="stepGroupIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryRouterStepGroupStepForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mrsgs.ROUTER_STEP_GROUP_STEP_ID,
+        mrsgs.ROUTER_STEP_GROUP_ID,
+        mrsgs.SEQUENCE,
+        mrsgs.ROUTER_STEP_ID,
+        mrs.STEP_NAME,
+        mrst.DESCRIPTION STEP_DESC,
+        mrs.SEQUENCE STEP_SEQUENCE,
+        mrs.QUEUE_DECISION_TYPE
+        from mt_router_step_group_step mrsgs
+        join mt_router_step mrs on mrsgs.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID and mrs.TENANT_ID = ${tenantId}
+        join mt_router_step_tl mrst on mrs.ROUTER_STEP_ID = mrst.ROUTER_STEP_ID and mrst.LANG = #{locale}
+        where mrsgs.TENANT_ID = ${tenantId}
+        and mrsgs.ROUTER_STEP_GROUP_ID in
+        <foreach collection="stepGroupIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        Order By mrsgs.CREATION_DATE DESC
+    </select>
+</mapper>

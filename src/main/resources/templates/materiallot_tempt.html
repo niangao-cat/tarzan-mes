@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Model</title>
+  <style>
+    @page{
+
+      　　　　size : 200mm  300 mm;
+    }
+    .wrap p {
+      color: #000;
+      margin: 12px 0 10px;
+    }
+    .STYLE1 {
+      font-family: "Arial";
+      font-size: 26px;
+      line-height: 50px;
+      border: 2px solid;
+    }
+
+    .body {
+      background-color: #ffffff;
+
+    }
+
+    .nav-small-right {
+      float: right;
+    }
+
+    .smallsize-font {
+      font-size: 14px;
+      -webkit-transform-origin-x: 0;
+      -webkit-transform: scale(0.99);
+    }
+
+    .smallsize-font {
+      font-size: 1px;
+    }
+
+
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      word-break: keep-all;
+    }
+  </style>
+</head>
+
+<body>
+  <#list materialLotList as item>
+  <div class="wrap">
+    <table border="1" cellpadding="0" cellspacing="0" class="small-font smallsize-font"
+           style="border-collapse: collapse;" width="100%">
+      <tr>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            供应商
+          </div>
+        </td>
+        <td class="STYLE1" colspan="4" width="55%">
+          <div align="left">
+            ${item.supplierName}
+          </div>
+        </td>
+        <td class="STYLE1" rowspan="3" width="25%">
+          <div align="center">
+            <img
+                    src="${item.barcodeImg}"
+                    style="width:110px;height:110px;" />
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            品号
+          </div>
+        </td>
+        <td class="STYLE1" colspan="4" width="75%">
+          <div align="left">
+            ${item.materialCode}
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            品名
+          </div>
+        </td>
+        <td class="STYLE1" colspan="4" width="80%">
+          <div style="font-size: 15.5px;max-width: 80%;" align="left">
+            <strong>${item.materialName}</strong>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            数量
+          </div>
+        </td>
+        <td class="STYLE1" colspan="3" width="35%">
+          <div align="left">
+            ${item.primaryUomQty}/${item.primaryUomCode}
+          </div>
+        </td>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            批号
+          </div>
+        </td>
+        <td class="STYLE1" width="25%">
+          <div align="left">
+            ${item.lot}
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            条码值
+          </div>
+        </td>
+        <td class="STYLE1" colspan="5" width="80%">
+          <div align="left">
+            ${item.materialLotCode}
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            客户码
+          </div>
+        </td>
+        <td class="STYLE1" colspan="3" width="35%">
+          <div align="left">
+
+          </div>
+        </td>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            系数
+          </div>
+        </td>
+        <td class="STYLE1" colspan="5" width="25%">
+          <div align="left">
+            ${item.expansionCoefficients}
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            SO
+          </div>
+        </td>
+        <td class="STYLE1" colspan="3" width="35%">
+          <div align="left">
+
+          </div>
+        </td>
+        <td class="STYLE1" width="20%">
+          <div align="center">
+            备注
+          </div>
+        </td>
+        <td class="STYLE1" colspan="5" width="25%">
+          <div align="left">
+
+          </div>
+        </td>
+      </tr>
+    </table>
+    <div style="height: 19.1px;"></div>
+  </div>
+	</#list>
+    <!-- <br /> -->
+</body>
+
+</html>

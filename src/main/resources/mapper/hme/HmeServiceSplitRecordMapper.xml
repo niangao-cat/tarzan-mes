@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeServiceSplitRecordMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeServiceSplitRecord">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="split_record_id" property="splitRecordId" jdbcType="VARCHAR"/>
+        <result column="service_receive_id" property="serviceReceiveId" jdbcType="VARCHAR"/>
+        <result column="after_sales_repair_id" property="afterSalesRepairId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="sn_num" property="snNum" jdbcType="VARCHAR"/>
+        <result column="top_split_record_id" property="topSplitRecordId" jdbcType="VARCHAR"/>
+        <result column="parent_split_record_id" property="parentSplitRecordId" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="work_order_num" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="locator_id" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="back_type" property="backType" jdbcType="VARCHAR"/>
+        <result column="is_repair" property="isRepair" jdbcType="VARCHAR"/>
+        <result column="is_onhand" property="isOnhand" jdbcType="VARCHAR"/>
+        <result column="split_status" property="splitStatus" jdbcType="VARCHAR"/>
+        <result column="split_by" property="splitBy" jdbcType="DECIMAL"/>
+        <result column="split_time" property="splitTime" jdbcType="DATE"/>
+        <result column="wkc_shift_id" property="wkcShiftId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="operation_id" property="operationId" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectSplitRecordBySn" resultType="com.ruike.hme.api.dto.HmeServiceSplitRecordDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        ssr.split_record_id,
+        ssr.top_split_record_id,
+        ssr.parent_split_record_id,
+        ssr.material_id,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        li.logistics_company,
+        li.logistics_number,
+        li.creation_date AS back_date,
+        li.created_by AS sign_for_by,
+        sr.receive_date,
+        sr.receive_by,
+        ssr.back_type,
+        wo.work_order_id,
+        ssr.WORK_ORDER_NUM,
+        ssr.remark
+        FROM
+        hme_service_split_record ssr
+        JOIN mt_material mm ON ssr.material_id = mm.MATERIAL_ID
+        JOIN mt_material_tl mmt ON mm.material_id = mmt.MATERIAL_ID AND mmt.LANG = #{lang}
+        JOIN hme_service_receive sr ON ssr.service_receive_id = sr.service_receive_id
+        JOIN hme_logistics_info li ON sr.logistics_info_id = li.logistics_info_id
+        LEFT JOIN mt_work_order wo ON ssr.work_order_num = wo.work_order_num
+        WHERE
+        ssr.TENANT_ID = #{tenantId}
+        AND ssr.split_status in ('WAIT_SPLIT','REPAIRING')
+        <if test="snNum != null">
+            and ssr.sn_num = #{snNum}
+        </if>
+    </select>
+
+    <select id="selectSplitRecordLine" resultType="com.ruike.hme.api.dto.HmeServiceSplitRecordLineDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        ssr.split_record_id,
+        ssr.sn_num,
+        ssr.material_id,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mmb.ITEM_GROUP AS item_group_code,
+        wig.item_group_description,
+        wo.work_order_id,
+        ssr.WORK_ORDER_NUM,
+        ssr.is_repair,
+        ssr.is_onhand,
+        ssr.split_status,
+        ssr.split_by,
+        ssr.split_time,
+        ssr.remark
+        FROM
+        hme_service_split_record ssr
+        JOIN mt_material mm ON ssr.material_id = mm.MATERIAL_ID
+        JOIN mt_material_tl mmt ON mm.material_id = mmt.MATERIAL_ID AND mmt.LANG = #{lang}
+        JOIN mt_material_site mms ON mms.MATERIAL_ID = ssr.material_id
+        AND mms.SITE_ID = ssr.site_id AND mms.enable_flag = 'Y'
+        JOIN mt_material_basic mmb ON mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        LEFT JOIN wms_item_group wig ON wig.item_group_code = mmb.ITEM_GROUP
+        LEFT JOIN mt_work_order wo ON ssr.work_order_num = wo.work_order_num
+        WHERE
+        ssr.TENANT_ID = #{tenantId}
+        <if test="parentSplitRecordId != null">
+            and ssr.parent_split_record_id = #{parentSplitRecordId}
+        </if>
+    </select>
+
+    <select id="selectServiceReceive" resultType="com.ruike.hme.api.dto.HmeServiceSplitRecordDTO2">
+        SELECT
+        sr.service_receive_id,
+        asr.after_sales_repair_id,
+        sr.site_id,
+        sr.material_id,
+        mm.material_code,
+        sr.sn_num,
+        asr.work_order_id,
+        asr.locator_id,
+        asr.back_type,
+        mm.primary_uom_id as uom_id,
+        uom.uom_code
+        FROM
+        hme_service_receive sr
+        JOIN hme_after_sales_repair asr ON sr.service_receive_id = asr.service_receive_id
+        JOIN mt_material mm ON mm.material_id = sr.material_id
+        join mt_uom uom on mm.PRIMARY_UOM_ID = uom.uom_id
+        WHERE sr.tenant_id = #{tenantId}
+        AND sr.receive_status in ('RECEIVE','CONFIRM')
+        <if test="snNum != null">
+            and sr.sn_num = #{snNum}
+        </if>
+        <if test="siteId != null">
+            and sr.site_id = #{siteId}
+        </if>
+    </select>
+
+    <select id="selectMaterialLot" resultType="com.ruike.hme.api.dto.HmeServiceSplitRecordDTO3">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mml.material_id,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mmb.ITEM_GROUP AS item_group_code,
+        wig.item_group_description,
+        mmb.ITEM_TYPE
+        FROM
+        mt_material_lot mml
+        JOIN mt_material mm ON mml.material_id = mm.MATERIAL_ID
+        JOIN mt_material_tl mmt ON mm.material_id = mmt.MATERIAL_ID AND mmt.LANG = #{lang}
+        JOIN mt_material_site mms ON mms.MATERIAL_ID = mml.material_id
+        AND mms.SITE_ID = mml.site_id
+        AND mms.enable_flag = 'Y'
+        JOIN mt_material_basic mmb ON mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        LEFT JOIN wms_item_group wig ON wig.item_group_code = mmb.ITEM_GROUP
+        WHERE
+        mml.TENANT_ID = #{tenantId}
+        <if test="materialLotCode != null">
+            and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+        </if>
+    </select>
+
+    <select id="selectWorkOrderNum" resultType="java.lang.String">
+        SELECT
+        wo.WORK_ORDER_NUM
+        FROM
+        hme_repair_wo_sn_rel rel,
+        mt_work_order wo
+        WHERE
+        rel.TENANT_ID = #{tenantId}
+        AND rel.work_order_num = wo.WORK_ORDER_NUM
+        AND rel.TENANT_ID = wo.TENANT_ID
+        AND wo.`STATUS` in ( 'NEW', 'RELEASED', 'EORELEASED', 'HOLD' )
+        <if test = "snNum != null" >
+            AND rel.sn_num = #{snNum}
+        </if>
+        ORDER BY
+        rel.creation_date desc
+        LIMIT 1
+    </select>
+
+    <select id="queryWoNumBySnNumAndWoId" resultMap="BaseResultMap">
+        select sr.split_record_id,
+               sr.internal_order_num,
+               sr.top_split_record_id
+        from hme_service_split_record sr
+        where sr.tenant_id = #{tenantId}
+          and sr.sn_num = #{snNum}
+          and sr.work_order_id = #{workOrderId}
+        order by sr.creation_date desc
+        limit 1
+    </select>
+
+    <select id="queryWoNumBySplitRecordId" resultMap="BaseResultMap">
+        select sr.split_record_id,
+               sr.work_order_id,
+               wo.work_order_num internal_order_num
+        from hme_service_split_record sr,
+             mt_work_order wo
+        where sr.work_order_id = wo.work_order_id
+          and sr.tenant_id = wo.tenant_id
+          and sr.split_record_id = #{splitRecordId}
+          and sr.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryMaterialCategory" resultType="java.lang.String">
+        SELECT attr.ATTR_VALUE material_category
+        FROM mt_material_site ms,
+             mt_material_site_attr attr
+        WHERE ms.MATERIAL_SITE_ID = attr.MATERIAL_SITE_ID
+          AND ms.TENANT_ID = attr.TENANT_ID
+          AND attr.ATTR_NAME = 'attribute13'
+          AND ms.tenant_id = #{tenantId}
+          AND ms.MATERIAL_ID = #{materialId}
+          AND ms.SITE_ID = #{siteId}
+    </select>
+
+    <select id="queryRouterId" resultType="java.lang.String">
+        SELECT mr.ROUTER_ID
+        FROM mt_router mr,
+             mt_router_site_assign mrs
+        WHERE mr.TENANT_ID = #{tenantId}
+          and mr.router_name = #{routerName}
+          AND mr.ROUTER_TYPE = 'GENERAL'
+          AND mr.revision = 'MAIN'
+          AND mr.router_status = 'CAN_RELEASE'
+          AND mr.router_id = mrs.router_id
+          AND mrs.SITE_ID = #{siteId}
+          AND mrs.TENANT_ID = mr.TENANT_ID
+          AND mrs.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="batchQueryWoNumBySnNumAndWoId" resultType="com.ruike.hme.domain.vo.HmeServiceSplitRecordVO2">
+        select
+        sr.split_record_id,
+        sr.internal_order_num,
+        sr.top_split_record_id,
+        sr.sn_num,
+        sr.work_order_id,
+        sr.creation_date,
+        sr_top.work_order_id sap_order_id,
+        wo.work_order_num sap_order_num
+        from
+        hme_service_split_record sr
+        left join hme_service_split_record sr_top on sr_top.split_record_id = sr.top_split_record_id
+        and sr_top.tenant_id = sr.tenant_id
+        left join mt_work_order wo on sr_top.work_order_id = wo.work_order_id
+        and sr_top.tenant_id = wo.tenant_id
+        where
+        sr.tenant_id = #{tenantId}
+        and sr.sn_num in
+        <foreach collection="snList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and sr.work_order_id in
+        <foreach collection="woIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryOrderNumBySnNumAndWoId" resultType="com.ruike.hme.domain.vo.HmeServiceSplitRecordVO2">
+        select sr.split_record_id,
+               sr.internal_order_num,
+               sr.top_split_record_id,
+               sr.sn_num,
+               sr.work_order_id,
+               sr.creation_date,
+               sr_top.work_order_id sap_order_id,
+               wo.work_order_num    sap_order_num
+        from hme_service_split_record sr
+                 left join hme_service_split_record sr_top on sr_top.split_record_id = sr.top_split_record_id
+            and sr_top.tenant_id = sr.tenant_id
+                 left join mt_work_order wo on sr_top.work_order_id = wo.work_order_id
+            and sr_top.tenant_id = wo.tenant_id
+        where sr.tenant_id = #{tenantId}
+          and sr.sn_num = #{snNum}
+          and sr.work_order_id = #{woId}
+        order by sr.creation_date desc
+        limit 1
+    </select>
+
+    <select id="selectLatestBomByMaterial" resultType="com.ruike.hme.domain.vo.HmeServiceSplitBomHeaderVO">
+        select
+         mb.bom_id,
+         mb.bom_name,
+         mb.revision,
+         mb.description
+        from
+         mt_pfep_manufacturing mpm,
+         mt_material_site mms,
+         hme_production_version hpv,
+         mt_bom mb
+        where
+         mpm.enable_flag = 'Y'
+         and mms.enable_flag = 'Y'
+         and mpm.material_site_id = mms.material_site_id
+         and mpm.default_bom_id = mb.bom_id
+         and mb.bom_type = 'MATERIAL'
+         and mb.bom_status = 'CAN_RELEASE'
+         and hpv.material_site_id = mms.material_site_id
+         and hpv.production_version = 'ME01'
+         and hpv.bom_version = mb.revision
+         and mms.material_id = #{materialId}
+         and mms.site_id = #{siteId}
+         and mpm.tenant_id = #{tenantId}
+         and now() between hpv.date_from and ifnull(hpv.date_to,now())
+         and now() between mb.date_from and ifnull(mb.date_to,now())
+        order by
+         hpv.date_from desc,mb.date_from desc
+         limit 1
+    </select>
+
+    <select id="selectBomLineList" resultType="com.ruike.hme.domain.vo.HmeServiceSplitBomLineVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+        mbc.bom_component_id,
+        mm.material_code,
+        mmt.material_name,
+        mbc.qty usage_qty,
+        mut.uom_name,
+        mmb.item_group,
+        wig.item_group_description
+        from
+        mt_bom_component mbc,
+        mt_material mm,
+        mt_material_tl mmt,
+        mt_uom mu,
+        mt_uom_tl mut,
+        mt_material_site mms,
+        mt_material_basic mmb
+        left join wms_item_group wig on wig.item_group_code = mmb.item_group
+        where
+        mbc.bom_id = #{bomId}
+        and mbc.material_id = mm.material_id
+        and mm.material_id = mmt.material_id
+        and mmt.lang = #{lang}
+        and mm.primary_uom_id = mu.uom_id
+        and mu.uom_id = mut.uom_id
+        and mut.lang = #{lang}
+        and mbc.bom_component_type = 'ASSEMBLING'
+        and now() between mbc.date_from and ifnull(mbc.date_to, now())
+        and mms.MATERIAL_ID = mm.MATERIAL_ID
+        and mms.SITE_ID = #{siteId}
+        and mms.TENANT_ID = #{tenantId}
+        and mms.MATERIAL_SITE_ID = mmb.MATERIAL_SITE_ID
+        and mmb.item_type = 'RK05'
+        order by mbc.line_number
+    </select>
+
+    <select id="selectParentLocator" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        select loc_p.*
+        from mt_mod_locator loc,
+             mt_mod_locator loc_p
+        where loc.PARENT_LOCATOR_ID = loc_p.LOCATOR_ID
+          and loc.ENABLE_FLAG = 'Y'
+          and loc_p.ENABLE_FLAG = 'Y'
+          and loc.TENANT_ID = #{tenantId}
+          and loc.LOCATOR_ID = #{locatorId}
+    </select>
+
+    <select id="selectReturnCheckList" resultType="com.ruike.hme.domain.vo.HmeServiceSplitReturnCheckVO">
+        SELECT
+        hli.batch_number,
+        sedr.tag_group_id,
+        mtg.TAG_GROUP_CODE,
+        mtgt.TAG_GROUP_DESCRIPTION,
+        null tag_id,
+        sedr.result tag,
+        null result,
+        sedr.remark,
+        sedr.attachment_uuid,
+        sedr.last_updated_by ,
+        iu.real_name last_updated_by_name,
+        sedr.last_update_date
+        from
+        hme_service_receive ser,
+        hme_logistics_info hli,
+        hme_service_data_record sedr,
+        mt_tag_group mtg,
+        mt_tag_group_tl mtgt,
+        iam_user iu
+        where
+        ser.service_receive_id = sedr.service_receive_id
+        and hli.logistics_info_id = ser.logistics_info_id
+        and mtg.TAG_GROUP_ID = sedr.tag_group_id
+        and mtgt.TAG_GROUP_ID = mtg.TAG_GROUP_ID
+        and iu.id = sedr.last_updated_by
+        and mtgt.LANG = 'zh_CN'
+        <if test="allFlag != 'Y'.toString()">
+            and ser.receive_status != 'REPAIR_COMPLETE'
+        </if>
+        and mtg.USER_VERIFICATION = 'Y'
+        and sedr.business_type = 'AF_INPUT'
+        and ser.sn_num = #{snNum}
+        and ser.tenant_id = #{tenantId}
+        union all
+        SELECT
+        hli.batch_number,
+        sedr.tag_group_id,
+        mtg.TAG_GROUP_CODE,
+        mtgt.TAG_GROUP_DESCRIPTION,
+        sedrl.tag_id,
+        mtl.TAG_DESCRIPTION tag,
+        sedrl.result,
+        sedr.remark,
+        sedr.attachment_uuid,
+        sedr.last_updated_by ,
+        iu.real_name last_updated_by_name,
+        sedr.last_update_date
+        from
+        hme_service_receive ser,
+        hme_logistics_info hli,
+        hme_service_data_record sedr,
+        hme_service_data_record_line sedrl,
+        mt_tag_group mtg,
+        mt_tag_group_tl mtgt,
+        mt_tag mt,
+        mt_tag_tl mtl,
+        iam_user iu
+        where
+        ser.service_receive_id = sedr.service_receive_id
+        and hli.logistics_info_id = ser.logistics_info_id
+        and sedr.service_data_record_id = sedrl.service_data_record_id
+        and mtg.TAG_GROUP_ID = sedr.tag_group_id
+        and mtgt.TAG_GROUP_ID = mtg.TAG_GROUP_ID
+        and mt.TAG_ID = sedrl.tag_id
+        and mt.TAG_ID = mtl.TAG_ID
+        and mtl.LANG = 'zh_CN'
+        and iu.id = sedr.last_updated_by
+        and mtgt.LANG = 'zh_CN'
+        and mtg.USER_VERIFICATION = 'Y'
+        and sedr.business_type = 'AF_CHOOSE'
+        <if test="allFlag != 'Y'.toString()">
+            and ser.receive_status != 'REPAIR_COMPLETE'
+        </if>
+        and ser.sn_num = #{snNum}
+        and ser.tenant_id = #{tenantId}
+        order by
+        last_update_date
+    </select>
+
+    <select id="queryLastSplitRecordOfMaterialLot" resultType="com.ruike.hme.domain.entity.HmeServiceSplitRecord">
+        SELECT hssr.split_record_id,
+               hssr.service_receive_id,
+               hssr.top_split_record_id
+        FROM hme_service_split_record hssr
+        WHERE hssr.tenant_id = #{tenantId}
+          AND hssr.material_lot_id = #{materialLotId}
+          AND hssr.split_status NOT IN ('CANCEL', 'REPAIR_COMPLETE', 'REPAIRING')
+        ORDER BY hssr.last_update_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryLastSplitRecordOfMaterialLot2" resultType="com.ruike.hme.domain.entity.HmeServiceSplitRecord">
+        SELECT hssr.split_record_id,
+               hssr.service_receive_id,
+                hssr.top_split_record_id
+        FROM hme_service_split_record hssr
+        WHERE hssr.tenant_id = #{tenantId}
+          AND hssr.material_lot_id = #{materialLotId}
+          AND hssr.split_status NOT IN ('CANCEL', 'REPAIR_COMPLETE')
+        ORDER BY hssr.last_update_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="querySplitRecord" resultType="com.ruike.hme.domain.vo.HmeServiceSplitRecordVO3">
+        SELECT
+            hssr.sn_num,
+        	hspr.plant_code,
+        	hsr.receive_date,
+        	hssr.back_type,
+        	hsr.area_code
+        FROM
+        	hme_service_split_record hssr,
+        	hme_service_receive hsr,
+        	mt_site_plant_releation hspr
+        WHERE
+        	hssr.tenant_id = #{tenantId}
+        	and hssr.service_receive_id = hsr.service_receive_id
+        	and hspr.SITE_TYPE = 'MANUFACTURING'
+        	and hspr.SITE_ID = hssr.site_id
+        	and hspr.TENANT_ID = hssr.tenant_id
+            and hssr.split_record_id = #{splitRecordId}
+    </select>
+
+    <select id="getServiceReceiveIdBySiteAndSn" resultType="java.lang.String">
+        SELECT
+            hsr.service_receive_id
+        from
+            hme_service_receive hsr
+        where hsr.site_id = #{siteId}
+        and hsr.sn_num = #{snNum}
+        and hsr.receive_status in ('RECEIVE','CONFIRM')
+        and hsr.tenant_id = #{tenantId}
+        order by hsr.receive_date
+        limit 1
+    </select>
+</mapper>

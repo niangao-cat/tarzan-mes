@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ModLocatorIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModLocator">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_NAME" property="locatorName" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_LOCATION" property="locatorLocation" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_TYPE" property="locatorType" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_ID" property="locatorGroupId" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_WEIGHT" property="maxWeight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_CAPACITY" property="maxCapacity" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="PARENT_LOCATOR_ID" property="parentLocatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CATEGORY" property="locatorCategory" jdbcType="VARCHAR"/>
+        <result column="NEGATIVE_FLAG" property="negativeFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByParentLocatorId" resultType="java.lang.String">
+        select PARENT_LOCATOR_ID from mt_mod_locator where LOCATOR_ID = #{locatorId}
+    </select>
+
+    <select id="selectByLocatorId" resultType="java.lang.String">
+        select LOCATOR_ID
+        from mt_mod_locator
+        where PARENT_LOCATOR_ID = #{parentLocatorId}
+        and LOCATOR_CATEGORY = 'INVENTORY'
+        and ENABLE_FLAG = 'Y'
+        and LOCATOR_TYPE = #{locatorType}
+    </select>
+</mapper>

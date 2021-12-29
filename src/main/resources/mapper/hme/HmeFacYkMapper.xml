@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeFacYkMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeFacYk">
+        <result column="fac_yk_id" property="facYkId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="cos_type" property="cosType" jdbcType="VARCHAR"/>
+        <result column="fac_material_id" property="facMaterialId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="standard_value" property="standardValue" jdbcType="DECIMAL"/>
+        <result column="allow_differ" property="allowDiffer" jdbcType="DECIMAL"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectHmeFacYk" resultType="com.ruike.hme.domain.vo.HmeFacYkVO">
+        SELECT
+        h.fac_yk_id,
+        h.material_id,
+        h.fac_material_id,
+        h.workcell_id,
+        ma.MATERIAL_CODE,
+        ma.MATERIAL_NAME,
+        h.cos_type,
+        mm.MATERIAL_CODE FacMaterialCode,
+        mm.MATERIAL_NAME FacMaterialName,
+        mw.WORKCELL_CODE,
+        mw.DESCRIPTION,
+        h.standard_value,
+        h.allow_differ
+        FROM
+        hme_fac_yk h,
+        mt_material ma,
+        mt_material mm,
+        mt_mod_workcell mw
+        where
+        h.tenant_id = #{tenantId}
+        and h.material_id = ma.MATERIAL_ID
+        and h.fac_material_id = mm.MATERIAL_ID
+        and h.workcell_id = mw.workcell_id
+        <if test=" hmeFacYk.materialId != null">
+            and ma.material_id = #{hmeFacYk.materialId}
+        </if>
+        <if test=" hmeFacYk.cosType != null">
+            and h.cos_type LIKE CONCAT('%',#{hmeFacYk.cosType},'%')
+        </if>
+        <if test=" hmeFacYk.facMaterialId != null">
+            and mm.material_id = #{hmeFacYk.facMaterialId}
+        </if>
+        <if test=" hmeFacYk.workcellIdList != null and hmeFacYk.workcellIdList.size() > 0">
+            and mw.workcell_id IN
+            <foreach collection="hmeFacYk.workcellIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectMaxMinValue" resultType="com.ruike.hme.domain.entity.HmeFacYk">
+        SELECT
+        hfy.material_id,
+        hfy.standard_value,
+        hfy.allow_differ
+    FROM
+        hme_fac_yk hfy
+    WHERE
+        hfy.material_id = #{dto.materialId}
+        AND hfy.cos_type = #{dto.cosType}
+        AND hfy.fac_material_id = #{dto.facMaterialId}
+        AND hfy.workcell_id = #{dto.workcellId}
+        AND hfy.tenant_id = #{dto.tenantId}
+    </select>
+
+    <select id="hisListQuery" resultType="com.ruike.hme.domain.vo.HmeFacYkHisVO">
+        SELECT
+            fyh.cos_type,
+        	fyh.standard_value,
+        	fyh.allow_differ,
+        	fyh.last_update_date,
+        	mm.MATERIAL_CODE,
+        	fmm.MATERIAL_CODE FAC_MATERIAL_CODE,
+        	mmw.WORKCELL_CODE,
+        	iu.real_name LAST_UPDATE_BY_NAME
+        FROM
+        	hme_fac_yk_his fyh,
+        	mt_material mm,
+        	mt_material fmm,
+        	mt_mod_workcell mmw,
+        	iam_user iu
+        WHERE fyh.tenant_id = #{tenantId}
+        AND fyh.fac_yk_id = #{facYkId}
+        AND mm.MATERIAL_ID = fyh.material_id
+        AND fmm.MATERIAL_ID = fyh.fac_material_id
+        AND mmw.WORKCELL_ID = fyh.workcell_id
+        AND iu.id = fyh.last_updated_by
+        ORDER BY fyh.creation_date DESC
+    </select>
+
+    <update id="myBatchUpdate">
+        UPDATE hme_fac_yk
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            standard_value =
+            <foreach collection="updateList" item="item" index="index"
+                     separator=" " open="case fac_yk_id" close="end">
+                when #{item.facYkId} then #{item.standardValue}
+            </foreach>,
+            allow_differ =
+            <foreach collection="updateList" item="item" index="index"
+                     separator=" " open="case fac_yk_id" close="end">
+                when #{item.facYkId} then #{item.allowDiffer}
+            </foreach>
+        </set>
+        <where>
+            fac_yk_id in
+            <foreach collection="updateList" item="item"
+                     separator="," open="(" close=")">
+                #{item.facYkId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

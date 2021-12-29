@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtTagGroupObjectHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtTagGroupObjectHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_GROUP_OBJECT_HIS_ID" property="tagGroupObjectHisId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_OBJECT_ID" property="tagGroupObjectId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_VERSION" property="productionVersion" jdbcType="VARCHAR"/>
+        <result column="ITEM_TYPE" property="itemType" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.general.api.dto.MtTagGroupObjectHisDTO">
+        <result column="TAG_GROUP_OBJECT_HIS_ID" property="tagGroupObjectHisId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_OBJECT_ID" property="tagGroupObjectId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_CODE" property="tagGroupCode" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_DESCRIPTION" property="tagGroupDescription" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="OPERATION_DESC" property="operationDesc" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_DESC" property="routerDesc" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_NAME" property="routerStepName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_DESC" property="routerStepDesc" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CODE" property="workcellCode" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_DESC" property="workcellDesc" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="EO_NUM" property="eoNum" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="NC_CODE" property="ncCode" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_DESC" property="ncCodeDesc" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+        <result column="BOM_DESC" property="bomDesc" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_MATERIAL_CODE" property="bomComponentMaterialCode" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_MATERIAL_NAME" property="bomComponentMaterialName" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="queryTagGroupObjectHisForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mtgoh.TENANT_ID,
+        mtgoh.TAG_GROUP_OBJECT_HIS_ID,
+        mtgoh.TAG_GROUP_OBJECT_ID,
+        mtgoh.TAG_GROUP_ID,
+        mtgb.TAG_GROUP_CODE,
+        mtgt.TAG_GROUP_DESCRIPTION,
+        mtgoh.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mtgoh.OPERATION_ID,
+        mo.OPERATION_NAME,
+        mot.DESCRIPTION OPERATION_DESC,
+        mtgoh.ROUTER_ID,
+        mr.ROUTER_NAME,
+        mrt.DESCRIPTION ROUTER_DESC,
+        mtgoh.ROUTER_STEP_ID,
+        mrs.STEP_NAME ROUTER_STEP_NAME,
+        mrst.DESCRIPTION ROUTER_STEP_DESC,
+        mtgoh.WORKCELL_ID,
+        mmw.WORKCELL_CODE,
+        mmwt.DESCRIPTION WORKCELL_DESC,
+        mtgoh.WORK_ORDER_ID,
+        mwo.WORK_ORDER_NUM,
+        mtgoh.EO_ID,
+        me.EO_NUM,
+        mtgoh.NC_CODE_ID,
+        mnc.NC_CODE,
+        mnct.DESCRIPTION NC_CODE_DESC,
+        mtgoh.BOM_ID,
+        mb.BOM_NAME,
+        mbt.DESCRIPTION BOM_DESC,
+        mtgoh.BOM_COMPONENT_ID,
+        mm2.MATERIAL_CODE BOM_COMPONENT_MATERIAL_CODE,
+        mmt2.MATERIAL_NAME BOM_COMPONENT_MATERIAL_NAME,
+        e.EVENT_ID,
+        e.EVENT_BY,
+        e.EVENT_TIME
+        from mt_tag_group_object_his mtgoh
+        join mt_tag_group mtgb on mtgoh.TAG_GROUP_ID = mtgb.TAG_GROUP_ID
+        join mt_tag_group_tl mtgt on mtgb.TAG_GROUP_ID = mtgt.TAG_GROUP_ID and mtgt.LANG=#{locale}
+        left join mt_material mm on mtgoh.MATERIAL_ID = mm.MATERIAL_ID and mm.TENANT_ID = ${tenantId}
+        left join mt_material_tl mmt on mm.MATERIAL_ID = mmt.MATERIAL_ID and mmt.LANG = #{locale}
+        left join mt_operation mo on mtgoh.OPERATION_ID = mo.OPERATION_ID and mo.TENANT_ID = ${tenantId}
+        left join mt_operation_tl mot on mo.OPERATION_ID = mot.OPERATION_ID and mot.LANG = #{locale}
+        left join mt_router mr on mtgoh.ROUTER_ID = mr.ROUTER_ID and mr.TENANT_ID = ${tenantId}
+        left join mt_router_tl mrt on mr.ROUTER_ID = mrt.ROUTER_ID and mrt.LANG = #{locale}
+        left join mt_router_step mrs on mtgoh.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID and mrs.TENANT_ID = ${tenantId}
+        left join mt_router_step_tl mrst on mrs.ROUTER_STEP_ID = mrst.ROUTER_STEP_ID and mrst.LANG = #{locale}
+        left join mt_mod_workcell mmw on mtgoh.WORKCELL_ID = mmw.WORKCELL_ID and mmw.TENANT_ID = ${tenantId}
+        left join mt_mod_workcell_tl mmwt on mmw.WORKCELL_ID = mmwt.WORKCELL_ID and mmwt.LANG = #{locale}
+        left join mt_work_order mwo on mtgoh.WORK_ORDER_ID = mwo.WORK_ORDER_ID and mwo.TENANT_ID = ${tenantId}
+        left join mt_eo me on mtgoh.EO_ID = me.EO_ID and me.TENANT_ID = ${tenantId}
+        left join mt_nc_code mnc on mtgoh.NC_CODE_ID = mnc.NC_CODE_ID and mnc.TENANT_ID = ${tenantId}
+        left join mt_nc_code_tl mnct on mnc.NC_CODE_ID = mnct.NC_CODE_ID and mnct.LANG = #{locale}
+        left join mt_bom mb on mtgoh.BOM_ID = mb.BOM_ID and mb.TENANT_ID = ${tenantId}
+        left join mt_bom_tl mbt on mb.BOM_ID = mbt.BOM_ID and mbt.LANG = #{locale}
+        left join mt_bom_component mbc on mtgoh.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID and mbc.TENANT_ID = ${tenantId}
+        left join mt_material mm2 on mbc.MATERIAL_ID = mm2.MATERIAL_ID and mm2.TENANT_ID = ${tenantId}
+        left join mt_material_tl mmt2 on mm2.MATERIAL_ID = mmt2.MATERIAL_ID and mmt2.LANG = #{locale}
+        join mt_event e on e.EVENT_ID = mtgoh.EVENT_ID and e.TENANT_ID = ${tenantId}
+        where
+        mtgoh.TENANT_ID = ${tenantId}
+        and mtgoh.TAG_GROUP_ID = #{dto.tagGroupId}
+        <if test="dto.startTime != null">
+            and e.EVENT_TIME &gt;= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.endTime != null">
+            and e.EVENT_TIME &lt;= DATE_FORMAT(#{dto.endTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+</mapper>

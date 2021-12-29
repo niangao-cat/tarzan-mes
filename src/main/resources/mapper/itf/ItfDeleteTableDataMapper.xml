@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfDeleteTableDataMapper">
+
+    <delete id="deleteTableData">
+        ${deleteSql}
+    </delete>
+
+    <select id="selectTableData" resultType="java.lang.String">
+        ${selectSql}
+    </select>
+
+    <select id="selectTableData2" resultType="com.ruike.itf.domain.vo.ItfDeleteTableDataVO2">
+        ${selectSql}
+    </select>
+</mapper>

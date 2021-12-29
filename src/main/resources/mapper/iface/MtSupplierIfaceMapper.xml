@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtSupplierIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtSupplierIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="DECIMAL"/>
+        <result column="SUPPLIER_CODE" property="supplierCode" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_NAME" property="supplierName" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_NAME_ALT" property="supplierNameAlt" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_DATE_FROM" property="supplierDateFrom" jdbcType="TIMESTAMP"/>
+        <result column="SUPPLIER_DATE_TO" property="supplierDateTo" jdbcType="TIMESTAMP"/>
+        <result column="SUPPLIER_TYPE" property="supplierType" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="DECIMAL"/>
+        <result column="SUPPLIER_SITE_CODE" property="supplierSiteCode" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ADDRESS" property="supplierSiteAddress" jdbcType="VARCHAR"/>
+        <result column="COUNTRY" property="country" jdbcType="VARCHAR"/>
+        <result column="PROVINCE" property="province" jdbcType="VARCHAR"/>
+        <result column="CITY" property="city" jdbcType="VARCHAR"/>
+        <result column="CONTACT_PHONE_NUMBER" property="contactPhoneNumber" jdbcType="VARCHAR"/>
+        <result column="CONTACT_PERSON" property="contactPerson" jdbcType="VARCHAR"/>
+        <result column="SITE_DATE_FROM" property="siteDateFrom" jdbcType="TIMESTAMP"/>
+        <result column="SITE_DATE_TO" property="siteDateTo" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATION_DATE" property="erpCreationDate" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATED_BY" property="erpCreatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATED_BY" property="erpLastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATE_DATE" property="erpLastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="getUnprocessedList" resultMap="BaseResultMap" fetchSize="5000">
+        select * from mt_supplier_iface t where t.TENANT_ID = ${tenantId} and t.STATUS in ('E', 'N')
+    </select>
+</mapper>

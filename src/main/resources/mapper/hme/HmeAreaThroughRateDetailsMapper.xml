@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeAreaThroughRateDetailsMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeAreaThroughRateDetails">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="THROUGH_RATE_DETAILS_ID" property="throughRateDetailsId" jdbcType="VARCHAR"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="CHART_DATE" property="chartDate" jdbcType="DATE"/>
+        <result column="CHART_TITLE" property="chartTitle" jdbcType="VARCHAR"/>
+        <result column="OVER_FLAG" property="overFlag" jdbcType="VARCHAR"/>
+        <result column="TARGET_HEADER_THROUGH_RATE" property="targetHeaderThroughRate" jdbcType="DECIMAL"/>
+        <result column="PROCESS_NAME" property="processName" jdbcType="VARCHAR"/>
+        <result column="PROCESS_THROUGH_RATE" property="processThroughRate" jdbcType="DECIMAL"/>
+        <result column="TARGET_LINE_THROUGH_RATE" property="targetLineThroughRate" jdbcType="DECIMAL"/>
+        <result column="THROUGH_RATE" property="throughRate" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryKanbanAreaList" resultType="java.lang.String">
+        SELECT
+        	mma.AREA_ID
+        FROM
+        	mt_mod_area mma,
+        	mt_mod_area_attr attr
+        WHERE mma.TENANT_ID = #{tenantId}
+        AND mma.area_category = 'SYB'
+        AND mma.enable_flag = 'Y'
+        AND attr.AREA_ID = mma.area_id
+        AND attr.ATTR_NAME = 'KANBAN_FLAG'
+        AND attr.ATTR_VALUE = 'Y'
+        ORDER BY mma.AREA_CODE ASC
+    </select>
+
+    <select id="queryProdLineByAreaId" resultType="java.lang.String">
+        SELECT
+            mor.ORGANIZATION_ID
+        FROM
+        mt_mod_organization_rel mor,
+        mt_mod_organization_rel mor2
+        WHERE
+            mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor.PARENT_ORGANIZATION_ID = mor2.ORGANIZATION_ID
+        AND mor.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor.TENANT_ID = #{tenantId}
+        AND mor2.TOP_SITE_ID = mor.TOP_SITE_ID
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor2.PARENT_ORGANIZATION_ID = #{areaId}
+        AND mor2.ORGANIZATION_TYPE = 'AREA'
+        AND mor2.TENANT_ID = mor.TENANT_ID
+    </select>
+
+    <resultMap id="ProductionGroupMap" type="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO10">
+        <result column="CENTER_KANBAN_HEADER_ID" property="centerKanbanHeaderId" jdbcType="VARCHAR" />
+        <result column="TARGET_THROUGH_RATE" property="targetThroughRate" jdbcType="DECIMAL" />
+        <result column="PRODUCTION_GROUP_CODE" property="productionGroupCode" jdbcType="VARCHAR" />
+        <result column="PRODUCTION_GROUP_ID" property="productionGroupId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR" />
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_NAME" property="prodLineName" jdbcType="VARCHAR" />
+        <result column="PRODUCTION_VERSION" property="productionVersion" jdbcType="VARCHAR" />
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
+        <result column="COS_FLAG" property="cosFlag" jdbcType="VARCHAR" />
+        <result column="PROD_LINE_ORDER" property="prodLineOrder" jdbcType="INTEGER" />
+        <collection property="workOrderIdList" ofType="java.lang.String">
+            <result column="WORK_ORDER_ID" />
+        </collection>
+    </resultMap>
+
+    <select id="queryProductionGroupByProdLineId" resultMap="ProductionGroupMap">
+        SELECT
+        ckh.CENTER_KANBAN_HEADER_ID,
+        ckh.THROUGH_RATE TARGET_THROUGH_RATE,
+        hpg.PRODUCTION_GROUP_ID,
+        hpg.PRODUCTION_GROUP_CODE,
+        hpg.DESCRIPTION,
+        wo.WORK_ORDER_ID,
+        mpl.PROD_LINE_NAME,
+        mpl.PROD_LINE_ID,
+        pla.ATTR_VALUE COS_FLAG,
+        lattr.ATTR_VALUE PROD_LINE_ORDER
+        FROM
+        hme_center_kanban_header ckh,
+        hme_production_group hpg,
+        hme_production_group_line hpl,
+        mt_work_order wo,
+        mt_mod_production_line mpl
+        LEFT JOIN mt_mod_production_line_attr pla ON pla.PROD_LINE_ID = mpl.PROD_LINE_ID AND pla.ATTR_NAME = 'COS_FLAG'
+        LEFT JOIN mt_mod_production_line_attr lattr ON lattr.PROD_LINE_ID = mpl.PROD_LINE_ID AND lattr.ATTR_NAME = 'CENTER_KANBAN_ORDER'
+        WHERE
+        ckh.SITE_ID = #{siteId}
+        AND ckh.KANBAN_AREA = '2'
+        <choose>
+            <when test="prodLineList != null and prodLineList.size() > 0">
+                AND ckh.PROD_LINE_ID IN
+                <foreach collection="prodLineList" item="item" index="index" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1 = 2
+            </otherwise>
+        </choose>
+        AND ckh.ENABLE_FLAG = 'Y'
+        AND ckh.TENANT_ID = #{tenantId}
+        AND mpl.PROD_LINE_ID = ckh.PROD_LINE_ID
+        AND hpl.PRODUCTION_GROUP_ID = ckh.PRODUCTION_GROUP_ID
+        AND hpl.TENANT_ID = ckh.TENANT_ID
+        AND hpg.PRODUCTION_GROUP_ID = hpl.PRODUCTION_GROUP_ID
+        AND wo.MATERIAL_ID = hpl.MATERIAL_ID
+        AND wo.PRODUCTION_LINE_ID = ckh.PROD_LINE_ID
+        AND wo.TENANT_ID = #{tenantId}
+        AND CASE WHEN IFNULL(hpl.PRODUCTION_VERSION,'') != '' THEN wo.PRODUCTION_VERSION = hpl.PRODUCTION_VERSION ELSE 1 = 1 END
+    </select>
+
+    <select id="queryCurrentWorkOrderIdList" resultType="java.lang.String">
+        SELECT
+        	ejs.work_order_id
+        FROM
+        	hme_eo_job_sn ejs
+        WHERE
+            ejs.TENANT_ID = #{tenantId}
+        AND ejs.site_in_date >= #{currentStartDate}
+        AND ejs.site_in_date <![CDATA[<=]]> #{currentEndDate}
+    </select>
+
+    <select id="batchQueryCenterKanbanLineByHeaderIds" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO12">
+        SELECT
+        chl.CENTER_KANBAN_HEADER_ID,
+        chl.WORKCELL_ID PROCESS_ID,
+        chl.THROUGH_RATE TARGET_THROUGH_RATE,
+        mmw.WORKCELL_NAME PROCESS_NAME,
+        attr.ATTR_VALUE COS_TEST_FLAG
+        FROM
+        hme_center_kanban_line chl,
+        mt_mod_workcell mmw
+        LEFT JOIN mt_operation_wkc_dispatch_rel wdr ON wdr.WORKCELL_ID = mmw.workcell_Id AND wdr.TENANT_ID = 0
+        LEFT JOIN mt_operation_attr attr ON attr.operation_id = wdr.operation_id
+        AND attr.ATTR_NAME = 'COS_TEST'
+        WHERE
+        chl.TENANT_ID = #{tenantId}
+        AND chl.CENTER_KANBAN_HEADER_ID IN
+        <foreach collection="centerKanbanLineByHeaderIds" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND chl.ENABLE_FLAG = 'Y'
+        AND mmw.WORKCELL_ID = chl.WORKCELL_ID
+        ORDER BY chl.creation_date ASC
+    </select>
+
+    <select id="batchQueryProcessByWorkOrders" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO11">
+        SELECT
+        wo.WORK_ORDER_ID,
+        mor.ORGANIZATION_ID PROCESS_ID,
+        mmw.WORKCELL_NAME PROCESS_NAME,
+        moa.ATTR_VALUE QP_FLAG
+        FROM
+        mt_work_order wo,
+        mt_router_step mrs,
+        mt_router_operation mro,
+        mt_operation_wkc_dispatch_rel wdr
+        LEFT JOIN mt_operation_attr moa ON moa.operation_id = wdr.operation_id AND moa.ATTR_NAME = 'QP',
+        mt_mod_organization_rel mor,
+        mt_mod_organization_rel mor2,
+        mt_mod_workcell mmw
+        WHERE wo.TENANT_ID = #{tenantId}
+        AND wo.WORK_ORDER_ID IN
+        <foreach collection="workOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mrs.ROUTER_ID = wo.ROUTER_ID
+        AND mrs.TENANT_ID = wo.TENANT_ID
+        AND mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        AND mro.TENANT_ID = mrs.TENANT_ID
+        AND wdr.OPERATION_ID = mro.OPERATION_ID
+        AND wdr.TENANT_ID = mro.TENANT_ID
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = wdr.WORKCELL_ID
+        AND mor.TENANT_ID = #{tenantId}
+        AND mor2.TOP_SITE_ID = mor.TOP_SITE_ID
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor2.PARENT_ORGANIZATION_ID = wo.PRODUCTION_LINE_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+        AND mor2.TENANT_ID = mor.TENANT_ID
+        AND mmw.WORKCELL_ID = mor.ORGANIZATION_ID
+        ORDER BY mrs.SEQUENCE ASC
+    </select>
+
+    <select id="queryEoListByWorkOrderAndWorkcell" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO19">
+        SELECT
+        ejs.eo_id,
+        ejs.work_order_id,
+        mor.PARENT_ORGANIZATION_ID PROCESS_ID
+        FROM
+        hme_eo_job_sn ejs force index(hme_eo_job_sn_n18),
+        mt_mod_organization_rel mor
+        WHERE
+        ejs.tenant_id = #{tenantId}
+        AND ejs.site_in_date >= #{currentStartDate}
+        AND ejs.site_in_date <![CDATA[<=]]> #{currentEndDate}
+        AND ejs.work_order_id IN
+        <foreach collection="allWorkOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ( ejs.eo_id IS NOT NULL OR ejs.eo_id != '' )
+        AND ejs.site_out_date IS NOT NULL
+        AND ejs.rework_flag = 'N'
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.PARENT_ORGANIZATION_ID IN
+        <foreach collection="processIds" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = ejs.workcell_id
+        AND mor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="batchQueryReworkRecordEoList" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO19">
+        SELECT
+        ejs.eo_id,
+        ejs.work_order_id,
+        mor.PARENT_ORGANIZATION_ID PROCESS_ID
+        FROM
+        hme_eo_job_sn ejs,
+        mt_mod_organization_rel mor
+        WHERE
+        ejs.tenant_id = #{tenantId}
+        AND ejs.eo_id IN
+        <foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ejs.rework_flag = 'Y'
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.PARENT_ORGANIZATION_ID IN
+        <foreach collection="processIds" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = ejs.workcell_id
+        AND mor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryCosQtyByWorkOrderAndProcess" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO19">
+        SELECT
+        ejs.sn_qty,
+        ejs.ATTRIBUTE6 SITE_OUT_QTY,
+        ejs.work_order_id,
+        ejs.material_lot_id,
+        mor.PARENT_ORGANIZATION_ID PROCESS_ID
+        FROM
+        hme_eo_job_sn ejs force index(hme_eo_job_sn_n18),
+        mt_mod_organization_rel mor
+        WHERE
+        ejs.tenant_id = #{tenantId}
+        AND ejs.site_in_date >= DATE_FORMAT( CURRENT_DATE(), '%Y-%m-%d' )
+        AND ejs.work_order_id IN
+        <foreach collection="allWorkOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND (ejs.material_lot_id is NOT NULL OR ejs.material_lot_id != '')
+        AND ejs.site_out_date IS NOT NULL
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.PARENT_ORGANIZATION_ID IN
+        <foreach collection="processIds" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = ejs.workcell_id
+        AND mor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryCosNcRecordNum" resultType="java.lang.Integer">
+        SELECT
+        	COUNT(1)
+        FROM
+        	hme_cos_nc_record ncr
+        WHERE ncr.tenant_id = #{tenantId}
+        AND ncr.creation_date > CURRENT_DATE()
+        AND ncr.CREATED_BY = '-1'
+    </select>
+
+    <select id="queryCos015SnQty" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO19">
+        SELECT
+        ejs.sn_qty,
+        ejs.work_order_id
+        FROM
+        hme_eo_job_sn ejs force index(hme_eo_job_sn_n18),
+        mt_operation_attr moa
+        WHERE
+        ejs.tenant_id = #{tenantId}
+        AND ejs.site_in_date >= DATE_FORMAT( CURRENT_DATE (), '%Y-%m-%d' )
+        AND ejs.work_order_id IN
+        <foreach collection="workOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND (ejs.material_lot_id is NOT NULL OR ejs.material_lot_id != '')
+        AND moa.OPERATION_ID = ejs.operation_id
+        AND moa.ATTR_NAME = 'MJ'
+        AND moa.ATTR_VALUE = 'Y'
+    </select>
+
+    <delete id="batchDeleteThroughRate">
+        DELETE
+        FROM
+            hme_area_through_rate_details
+        WHERE
+            TENANT_ID = #{tenantId} AND chart_date >= current_date()
+    </delete>
+
+    <select id="queryReInspectionOkQty" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO20">
+        SELECT
+        mll.material_lot_id,
+        COUNT(1) RE_INSPECTION_OK_QTY
+        FROM
+        hme_material_lot_load mll,
+        hme_cos_nc_record cnr,
+        mt_operation_attr moa
+        WHERE mll.tenant_id = #{tenantId}
+        AND mll.material_lot_id IN
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND cnr.load_sequence = mll.load_sequence
+        AND cnr.`status` = 'N'
+        AND cnr.tenant_id = #{tenantId}
+        AND moa.OPERATION_ID = cnr.operation_id
+        AND moa.ATTR_NAME = 'QP'
+        AND moa.ATTR_VALUE = 'Y'
+        GROUP BY
+        mll.material_lot_id
+    </select>
+</mapper>

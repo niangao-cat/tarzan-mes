@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsInvOnhandQtyRecordMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsInvOnhandQtyRecord">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="onhand_qty_record_id" property="onhandQtyRecordId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="locator_id" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="lot" property="lot" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="out_qty" property="outQty" jdbcType="DECIMAL"/>
+        <result column="in_qty" property="inQty" jdbcType="DECIMAL"/>
+        <result column="inv_record_qty" property="invRecordQty" jdbcType="DECIMAL"/>
+        <result column="shot_date" property="shotDate" jdbcType="DATE"/>
+        <result column="show_date" property="showDate" jdbcType="DATE"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+    <select id="jobLastRunDateGet" resultType="java.time.LocalDate">
+        SELECT
+        	DATE_FORMAT(max(hjl.start_time), '%Y-%m-%d' ) AS last_run_date
+        FROM
+        	hzero_scheduler.hsdr_job_info hji,
+        	hzero_scheduler.hsdr_job_log hjl
+        WHERE hji.tenant_id= #{tenantId}
+        AND hji.job_id = hjl.job_id
+        AND hji.job_code = #{jobCode}
+    </select>
+
+    <select id="jobLastSyncDateGet" resultType="java.time.LocalDate">
+        SELECT
+	      jr.last_sync_date
+        FROM wms_job_record jr
+        WHERE jr.tenant_id= #{tenantId}
+        AND jr.job_code = #{jobCode}
+    </select>
+
+    <select id="invJournalQuery" resultType="com.ruike.wms.api.dto.WmsInvOnhandQtyRecordDTO">
+        SELECT
+        total.TENANT_ID,
+        total.SITE_ID,
+        total.MATERIAL_ID,
+        total.LOCATOR_ID,
+        (SELECT SUM( mij1.CHANGE_QUANTITY )
+          FROM mt_inv_journal mij1
+          WHERE mij1.CHANGE_QUANTITY &gt; 0
+        <if test="startDate!=null">
+            AND mij1.CREATION_DATE &gt;= DATE_FORMAT( DATE_SUB( #{startDate}, INTERVAL 1 DAY ), '%Y-%m-%d %H:%i:%S' )
+            AND mij1.CREATION_DATE &lt;= DATE_FORMAT( DATE_SUB( #{startDate}, INTERVAL 1 SECOND ), '%Y-%m-%d %H:%i:%S' )
+        </if>
+          AND mij1.TENANT_ID = total.TENANT_ID
+          AND mij1.SITE_ID = total.SITE_ID
+          AND mij1.MATERIAL_ID = total.MATERIAL_ID
+          AND mij1.LOCATOR_ID = total.LOCATOR_ID
+          GROUP BY mij1.TENANT_ID,
+                   mij1.SITE_ID,
+                   mij1.MATERIAL_ID,
+                   mij1.LOCATOR_ID) in_qty,
+        (SELECT SUM( mij2.CHANGE_QUANTITY )
+          FROM mt_inv_journal mij2
+          WHERE mij2.CHANGE_QUANTITY &lt; 0
+        <if test="startDate!=null">
+            AND mij2.CREATION_DATE &gt;= DATE_FORMAT( DATE_SUB( #{startDate}, INTERVAL 1 DAY ), '%Y-%m-%d %H:%i:%S' )
+            AND mij2.CREATION_DATE &lt;= DATE_FORMAT( DATE_SUB( #{startDate}, INTERVAL 1 SECOND ), '%Y-%m-%d %H:%i:%S' )
+        </if>
+          AND mij2.TENANT_ID = total.TENANT_ID
+          AND mij2.SITE_ID = total.SITE_ID
+          AND mij2.MATERIAL_ID = total.MATERIAL_ID
+          AND mij2.LOCATOR_ID = total.LOCATOR_ID
+          GROUP BY mij2.TENANT_ID,
+                   mij2.SITE_ID,
+                   mij2.MATERIAL_ID,
+                   mij2.LOCATOR_ID) out_qty
+        FROM
+        (SELECT
+          mij.TENANT_ID,
+          mij.SITE_ID,
+          mij.MATERIAL_ID,
+          mij.LOCATOR_ID
+          FROM
+          mt_inv_journal mij
+          WHERE
+          mij.CHANGE_QUANTITY != 0
+        <if test="startDate!=null">
+            AND mij.CREATION_DATE &gt;= DATE_FORMAT( DATE_SUB( #{startDate}, INTERVAL 1 DAY ), '%Y-%m-%d %H:%i:%S' )
+            AND mij.CREATION_DATE &lt;= DATE_FORMAT( DATE_SUB( #{startDate}, INTERVAL 1 SECOND ), '%Y-%m-%d %H:%i:%S' )
+        </if>
+          GROUP BY
+          mij.TENANT_ID,
+          mij.SITE_ID,
+          mij.MATERIAL_ID,
+          mij.LOCATOR_ID) total
+        WHERE total.TENANT_ID= #{tenantId}
+    </select>
+
+    <select id="invOnhandQtyRecordQuery" resultMap="BaseResultMap">
+        SELECT
+        ioqr.tenant_id,
+        ioqr.onhand_qty_record_id,
+        ioqr.site_id,
+        ioqr.locator_id,
+        ioqr.lot,
+        ioqr.material_id,
+        ioqr.out_qty,
+        ioqr.in_qty,
+        ioqr.inv_record_qty,
+        ioqr.shot_date,
+        ioqr.show_date
+        FROM
+        wms_inv_onhand_qty_record ioqr
+        WHERE ioqr.tenant_id= #{tenantId}
+        AND ioqr.show_date &gt;= DATE_FORMAT( DATE_SUB( #{startDate}, INTERVAL 1 DAY ), '%Y-%m-%d %H:%i:%S' )
+        AND ioqr.show_date &lt;= DATE_FORMAT( DATE_SUB( #{startDate}, INTERVAL 1 SECOND ), '%Y-%m-%d %H:%i:%S')
+    </select>
+
+    <select id="invOnhandQuantityQuery" resultType="com.ruike.wms.api.dto.WmsInvOnhandQtyRecordDTO">
+        SELECT
+        	ioh.tenant_id,
+        	ioh.site_id,
+        	ioh.material_id,
+        	ioh.locator_id,
+        	SUM(ioh.onhand_quantity) AS inv_record_qty
+        FROM mt_inv_onhand_quantity ioh
+        WHERE ioh.tenant_id= #{tenantId}
+        GROUP BY
+        	ioh.tenant_id,
+        	ioh.site_id,
+        	ioh.material_id,
+        	ioh.locator_id
+    </select>
+
+    <insert id="batchInsertInvOnhandQtyRecord" parameterType="com.ruike.wms.domain.entity.WmsInvOnhandQtyRecord">
+        <bind name="temp" value="@io.choerodon.mybatis.helper.AuditHelper@audit()"/>
+        INSERT INTO wms_inv_onhand_qty_record
+        VALUES
+        <foreach collection="invOnhandQtyRecordList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.onhandQtyRecordId},
+            #{item.siteId},
+            #{item.locatorId},
+            #{item.lot},
+            #{item.materialId},
+            #{item.outQty},
+            #{item.inQty},
+            #{item.invRecordQty},
+            #{item.shotDate},
+            #{item.showDate},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{temp.user},
+            #{temp.user},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="batchDeleteList">
+        delete from wms_inv_onhand_qty_record
+        WHERE
+        tenant_id = #{tenantId}
+        and show_date = DATE_FORMAT(#{showDate}, '%Y-%m-%d' )
+    </delete>
+
+    <select id="invOnhandQtyGroupQuery" resultType="com.ruike.wms.api.dto.WmsInvOnhandQtyRecordDTO2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        	ioqr.tenant_id,
+        	ioqr.site_id,
+        	mms.site_code,
+        	mmst.site_name,
+            mmw.locator_id AS warehouse_id,
+        	mmw.locator_code AS warehouse_code,
+            mmwt.locator_name AS warehouse_name,
+        	ioqr.material_id,
+        	mm.material_code,
+        	mmt.material_name
+        FROM
+        	wms_inv_onhand_qty_record ioqr,
+        	mt_mod_site mms,
+        	mt_mod_site_tl mmst,
+        	mt_mod_locator mml,
+            mt_mod_locator mmw,
+        	mt_mod_locator_tl mmwt,
+        	mt_material mm,
+        	mt_material_tl mmt
+        WHERE ioqr.tenant_id = #{tenantId}
+        AND ioqr.site_id = mms.SITE_ID
+        AND mmst.SITE_ID = mms.SITE_ID
+        AND mmst.LANG = #{lang}
+        AND ioqr.locator_id = mml.locator_id
+        AND mml.PARENT_LOCATOR_ID = mmw.LOCATOR_ID
+        AND mml.TENANT_ID = mmw.TENANT_ID
+        AND mmw.locator_id = mmwt.locator_id
+        AND mmwt.LANG = #{lang}
+        AND ioqr.material_id = mm.material_id
+        AND mmt.material_id = mm.material_id
+        AND mmt.LANG = #{lang}
+        <if test="dto.dateFrom != null and dto.dateFrom != ''">
+            AND ioqr.show_date &gt;= DATE_FORMAT( #{dto.dateFrom}, '%Y-%m-%d' )
+        </if>
+        <if test="dto.dateTo != null and dto.dateTo != ''">
+            AND ioqr.show_date &lt;= DATE_FORMAT( #{dto.dateTo}, '%Y-%m-%d' )
+        </if>
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND ioqr.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND mmwt.locator_id = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND ioqr.material_id = #{dto.materialId}
+        </if>
+        GROUP BY
+        	ioqr.tenant_id,
+        	ioqr.site_id,
+        	mms.site_code,
+        	mmst.site_name,
+            mmw.locator_id,
+            mmw.locator_code,
+            mmwt.locator_name,
+        	ioqr.material_id,
+        	mm.material_code,
+        	mmt.material_name
+    </select>
+
+    <select id="invOnhandQtyDateQuery" resultType="java.lang.String">
+        SELECT
+        DATE_FORMAT(ioqr.show_date, '%Y-%m-%d')
+        FROM
+        wms_inv_onhand_qty_record ioqr,
+        mt_mod_locator mml
+        WHERE
+        ioqr.tenant_id = #{tenantId}
+        AND ioqr.locator_id = mml.locator_id
+        <if test="dto.dateFrom != null and dto.dateFrom != ''">
+            AND ioqr.show_date &gt;= DATE_FORMAT( #{dto.dateFrom}, '%Y-%m-%d' )
+        </if>
+        <if test="dto.dateTo != null and dto.dateTo != ''">
+            AND ioqr.show_date &lt;= DATE_FORMAT( #{dto.dateTo}, '%Y-%m-%d' )
+        </if>
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND ioqr.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND mml.PARENT_LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND ioqr.material_id = #{dto.materialId}
+        </if>
+        GROUP BY ioqr.show_date
+        ORDER BY ioqr.show_date
+    </select>
+
+    <select id="invOnhandQtyQuery" resultType="com.ruike.wms.api.dto.WmsInvOnhandQtyRecordDTO3">
+        SELECT
+        ioqr.show_date,
+        ioqr.tenant_id,
+        ioqr.site_id,
+        mml.PARENT_LOCATOR_ID warehouse_id,
+        ioqr.material_id,
+        0 + CAST(sum(ioqr.in_qty) AS CHAR) sum_in_qty,
+        0 + CAST(sum(ioqr.out_qty) AS CHAR) sum_out_qty,
+        0 + CAST(sum(ioqr.inv_record_qty) AS CHAR) sum_inv_record_qty
+        FROM
+        wms_inv_onhand_qty_record ioqr,
+        mt_mod_locator mml
+        WHERE
+        ioqr.tenant_id = #{tenantId}
+        AND ioqr.locator_id = mml.locator_id
+        <if test="dto.dateFrom != null and dto.dateFrom != ''">
+            AND ioqr.show_date &gt;= DATE_FORMAT( #{dto.dateFrom}, '%Y-%m-%d' )
+        </if>
+        <if test="dto.dateTo != null and dto.dateTo != ''">
+            AND ioqr.show_date &lt;= DATE_FORMAT( #{dto.dateTo}, '%Y-%m-%d' )
+        </if>
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND ioqr.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND mml.PARENT_LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND ioqr.material_id = #{dto.materialId}
+        </if>
+        GROUP BY
+        ioqr.show_date,
+        ioqr.tenant_id,
+        ioqr.site_id,
+        mml.PARENT_LOCATOR_ID,
+        ioqr.material_id
+    </select>
+
+    <select id="queryInvJournalReport" resultType="tarzan.inventory.api.dto.MtInvJournalDTO2">
+        SELECT
+        t.JOURNAL_ID,
+        t.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME material_desc,
+        t.EVENT_TIME,
+        t.CHANGE_QUANTITY,
+        t.ONHAND_QUANTITY,
+        mmw.LOCATOR_ID warehouse_id,
+        mmw.LOCATOR_CODE warehouse_code,
+        mmw.LOCATOR_NAME warehouse_desc,
+        mml.LOCATOR_ID,
+        mml.LOCATOR_CODE,
+        mml.LOCATOR_NAME locator_desc,
+        t.LOT_CODE,
+        t.OWNER_TYPE,
+        t.OWNER_ID,
+        t.EVENT_ID,
+        met.EVENT_TYPE_CODE EVENT_TYPE,
+        met.DESCRIPTION EVENT_TYPE_DESC,
+        t.SITE_ID,
+        t.EVENT_BY,
+        t.CREATION_DATE
+        FROM
+        mt_inv_journal t
+        left join mt_material mm on t.MATERIAL_ID=mm.MATERIAL_ID
+        and t.TENANT_ID=mm.TENANT_ID
+        left join mt_mod_locator mml on t.LOCATOR_ID=mml.LOCATOR_ID
+        and t.TENANT_ID=mml.TENANT_ID
+        left join mt_mod_locator mmw on mml.PARENT_LOCATOR_ID=mmw.LOCATOR_ID
+        and mml.TENANT_ID=mmw.TENANT_ID
+        left join mt_event me on t.EVENT_ID=me.EVENT_ID
+        and t.TENANT_ID=me.TENANT_ID
+        left join mt_event_type met on me.EVENT_TYPE_ID=met.EVENT_TYPE_ID
+        and me.TENANT_ID=met.TENANT_ID
+        WHERE t.TENANT_ID = #{tenantId}
+        <if test="dto.startTime != null">
+            and t.EVENT_TIME &gt;= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.endTime != null">
+            and t.EVENT_TIME &lt;= DATE_FORMAT(#{dto.endTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.siteId != null">
+            and t.SITE_ID =#{dto.siteId}
+        </if>
+        <if test="dto.materialId != null">
+            and t.MATERIAL_ID =#{dto.materialId}
+        </if>
+        <if test="dto.lotCode != null">
+            and t.LOT_CODE =#{dto.lotCode}
+        </if>
+        <if test="dto.locatorId != null">
+            and t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.warehouseId != null">
+            and mmw.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.typeCode == 'IN'">
+            and t.CHANGE_QUANTITY &gt; 0
+        </if>
+        <if test="dto.typeCode == 'OUT'">
+            and t.CHANGE_QUANTITY &lt; 0
+        </if>
+    </select>
+
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsPqcInspectionContentMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsPqcInspectionContent">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PQC_INSPECTION_CONTENT_ID" property="pqcInspectionContentId" jdbcType="VARCHAR"/>
+        <result column="SCHEME_ID" property="schemeId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="ORDER_KEY" property="orderKey" jdbcType="DECIMAL"/>
+        <result column="INSPECTION" property="inspection" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_DESC" property="inspectionDesc" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_TYPE" property="inspectionType" jdbcType="VARCHAR"/>
+        <result column="FREQUENCY" property="frequency" jdbcType="VARCHAR"/>
+        <result column="STANDARD_TYPE" property="standardType" jdbcType="VARCHAR"/>
+        <result column="PROCESS_ID" property="processId" jdbcType="VARCHAR"/>
+        <result column="ACCURACY" property="accuracy" jdbcType="DECIMAL"/>
+        <result column="STANDARD_FROM" property="standardFrom" jdbcType="DECIMAL"/>
+        <result column="STANDARD_TO" property="standardTo" jdbcType="DECIMAL"/>
+        <result column="STANDARD_UOM" property="standardUom" jdbcType="VARCHAR"/>
+        <result column="STANDARD_TEXT" property="standardText" jdbcType="VARCHAR"/>
+        <result column="INSPECTIOM_TOOL" property="inspectiomTool" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="selectInspectionLine" resultType="com.ruike.qms.domain.vo.QmsPqcInspectionContentVO">
+        SELECT
+            qmic.pqc_inspection_content_id,
+            qmic.scheme_id,
+            qmic.tag_group_id,
+            qmic.tag_id,
+            qmic.order_key,
+            qmic.inspection,
+            qmic.inspection_type,
+            qmic.standard_type,
+            qmic.accuracy,
+            qmic.process_id,
+            qmic.frequency,
+            qmic.standard_from,
+            qmic.standard_to,
+            qmic.standard_uom,
+            qmic.standard_text,
+            qmic.enable_flag,
+            qmic.object_version_number,
+            qmic.inspection_desc,
+            qmic.INSPECTIOM_TOOL
+        FROM
+        qms_pqc_inspection_content qmic
+        WHERE
+        qmic.tenant_id = #{tenantId}
+        <if test="tagGroupId != null and tagGroupId != ''">
+            AND qmic.tag_group_id = #{tagGroupId}
+        </if>
+        <if test="inspectionSchemeId != null and inspectionSchemeId != ''">
+            AND qmic.scheme_id = #{inspectionSchemeId}
+        </if>
+    </select>
+
+    <select id="queryPqcInspectionContent" resultType="com.ruike.qms.domain.entity.QmsPqcInspectionContent">
+        SELECT
+        qmic.pqc_inspection_content_id,
+        qmic.scheme_id,
+        qmic.tag_group_id,
+        qmic.tag_id,
+        qmic.order_key,
+        qmic.inspection,
+        qmic.inspection_type,
+        qmic.standard_type,
+        qmic.accuracy,
+        qmic.process_id,
+        qmic.frequency,
+        qmic.standard_from,
+        qmic.standard_to,
+        qmic.standard_uom,
+        qmic.standard_text,
+        qmic.enable_flag,
+        qmic.object_version_number,
+        qmic.inspection_desc,
+        qmic.INSPECTIOM_TOOL
+        FROM
+        qms_pqc_inspection_content qmic
+        WHERE
+        qmic.tenant_id = #{tenantId}
+        AND qmic.scheme_id = #{pqcInspectionContent.schemeId}
+        AND qmic.tag_group_id = #{pqcInspectionContent.tagGroupId}
+        AND qmic.tag_id = #{pqcInspectionContent.tagId}
+        <if test="pqcInspectionContent.processId != null and pqcInspectionContent.processId != ''">
+            AND qmic.process_id = #{pqcInspectionContent.processId}
+        </if>
+    </select>
+</mapper>

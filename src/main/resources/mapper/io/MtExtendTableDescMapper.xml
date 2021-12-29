@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtExtendTableDescMapper">
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtExtendTableDesc">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EXTEND_TABLE_DESC_ID" property="extendTableDescId" jdbcType="VARCHAR"/>
+        <result column="ATTR_TABLE" property="attrTable" jdbcType="VARCHAR"/>
+        <result column="ATTR_TABLE_DESC" property="attrTableDesc" jdbcType="VARCHAR"/>
+        <result column="SERVICE_PACKAGE" property="servicePackage" jdbcType="VARCHAR"/>
+        <result column="MAIN_TABLE" property="mainTable" jdbcType="VARCHAR"/>
+        <result column="MAIN_TABLE_KEY" property="mainTableKey" jdbcType="VARCHAR"/>
+        <result column="HIS_TABLE" property="hisTable" jdbcType="VARCHAR"/>
+        <result column="HIS_TABLE_KEY" property="hisTableKey" jdbcType="VARCHAR"/>
+        <result column="HIS_ATTR_TABLE" property="hisAttrTable" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="INITIAL_FLAG" property="initialFlag" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+    </resultMap>
+    <resultMap id="ResultMapView" type="io.tarzan.common.domain.vo.MtExtendVO11">
+        <result column="KEY_ID" property="keyId" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+    </resultMap>
+    <resultMap id="ResultMapView2" type="io.tarzan.common.domain.vo.MtExtendVO12">
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="selectLatestHisIdByMainT" resultType="java.lang.String">
+         SELECT
+          t.LATEST_HIS_ID
+        FROM
+            ${mainTableName} t
+        WHERE
+            t.TENANT_ID = ${tenantId}
+            and t.${mainTableKey}=#{keyId}
+    </select>
+    <select id="selectLatestHisIdsByMainT" resultMap="ResultMapView" fetchSize="5000">
+        SELECT
+        ${mainTableKey} KEY_ID,
+        LATEST_HIS_ID
+        FROM
+        ${mainTableName}
+        WHERE
+        TENANT_ID = ${tenantId}
+        <if test="keyIds!=null">
+            AND ${keyIds}
+        </if>
+        <if test="keyIds==null">
+            AND 1=-1
+        </if>
+    </select>
+    <select id="selectLatestHisIdByHisT" resultType="java.lang.String">
+         SELECT
+          his.${hisTableKey}
+        FROM
+            ${hisTable} his
+        WHERE
+            his.TENANT_ID = ${tenantId}
+            and his.${mainTableKey}=#{keyId}
+            and his.EVENT_ID=#{eventId}
+    </select>
+    <select id="selectEventIdByLatestHisId" resultType="java.lang.String">
+         SELECT
+          t.EVENT_ID
+        FROM
+            ${hisTable} t
+        WHERE
+            t.TENANT_ID = ${tenantId}
+            and t.${hisTableKey}=#{latestHisId}
+    </select>
+    <select id="selectEventIdsByLatestHisId" resultMap="ResultMapView2">
+        SELECT
+        t.${hisTableKey} LATEST_HIS_ID,
+        t.EVENT_ID
+        FROM
+        ${hisTable} t
+        WHERE
+        t.TENANT_ID = ${tenantId}
+        and t.${hisTableKey} IN
+        <foreach collection="hisIds" open="(" close=")" separator="," item="ids" index="index">
+            #{ids}
+        </foreach>
+    </select>
+
+    <select id="selectAllExtTab" resultMap="BaseResultMap">
+        SELECT b.TENANT_ID,
+               b.EXTEND_TABLE_DESC_ID,
+               b.ATTR_TABLE,
+               t.ATTR_TABLE_DESC,
+               b.SERVICE_PACKAGE,
+               b.MAIN_TABLE,
+               b.MAIN_TABLE_KEY,
+               b.HIS_TABLE,
+               b.HIS_TABLE_KEY,
+               b.HIS_ATTR_TABLE,
+               b.ENABLE_FLAG,
+               t.LANG,
+               b.CID,
+               b.OBJECT_VERSION_NUMBER,
+               b.CREATED_BY,
+               b.CREATION_DATE,
+               b.LAST_UPDATED_BY,
+               b.LAST_UPDATE_DATE
+          FROM mt_extend_table_desc b,
+               mt_extend_table_desc_tl t
+         WHERE b.EXTEND_TABLE_DESC_ID = t.EXTEND_TABLE_DESC_ID
+    </select>
+</mapper>

@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsIqcAuditMapper">
+
+    <select id="selectIqcHeader" resultType="com.ruike.qms.domain.vo.QmsIqcAuditQueryVO">
+        SELECT
+            qih.IQC_HEADER_ID,
+            qih.DOC_HEADER_ID,
+            mid.INSTRUCTION_DOC_NUM,
+            CONCAT(mid.INSTRUCTION_DOC_NUM,'#',mia.ATTR_VALUE) SOURCE_ORDER_NUM,
+            qih.IQC_NUMBER,
+            qih.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            qih.MATERIAL_VERSION,
+            qih.QUANTITY,
+            mml.locator_code,
+            mml.locator_name,
+            qih.SUPPLIER_ID,
+            ms.SUPPLIER_NAME,
+            ms.SUPPLIER_CODE,
+            qih.RECEIPT_LOT,
+            qih.INSPECTION_TYPE,
+            qih.INSPECTION_FINISH_DATE,
+            qih.CREATED_DATE,
+            qih.RECEIPT_BY,
+            qih.IDENTIFICATION,
+            qih.INSPECTION_STATUS,
+            qih.RECEIPT_LOT,
+            qih.DOC_TYPE,
+            mu.UOM_CODE,
+            qih.INSPECTION_METHOD,
+            IFNULL(qih.INSPECTION_START_DATE,SYSDATE()) INSPECTION_START_DATE,
+            qih.INSPECTION_TIME,
+            qih.REMARK,
+            qih.INSPECTION_RESULT,
+            qih.OK_QTY,
+            qih.NG_QTY,
+            qih.AUDIT_OPINION,
+            qih.OBJECT_VERSION_NUMBER,
+            qih.FINAL_DECISION
+        FROM
+            QMS_IQC_HEADER qih
+            LEFT JOIN mt_instruction_doc mid ON qih.DOC_HEADER_ID = mid.INSTRUCTION_DOC_ID
+            LEFT JOIN mt_material mm ON qih.MATERIAL_ID = mm.MATERIAL_ID
+            LEFT JOIN mt_supplier ms ON qih.SUPPLIER_ID = ms.SUPPLIER_ID
+            left join mt_instruction_attr mia on qih.DOC_LINE_ID = mia.INSTRUCTION_ID and mia.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+            left join mt_uom mu on qih.UOM_ID = mu.UOM_ID
+            LEFT JOIN mt_instruction mi ON mi.INSTRUCTION_ID = QIH.DOC_LINE_ID
+            LEFT JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mi.TO_LOCATOR_ID
+        WHERE
+            qih.TENANT_ID = #{tenantId}
+        <if test="dto.locatorCode !=null and dto.locatorCode !='' ">
+            AND QIH.DOC_LINE_ID IN (
+            SELECT
+            mi.INSTRUCTION_ID
+            FROM
+            mt_instruction mi
+            WHERE
+            mi.TENANT_ID = 0
+            AND mi.to_locator_id IN (
+            SELECT
+            mml.locator_id
+            FROM
+            mt_mod_locator mml
+            WHERE
+            mml.TENANT_ID = 0
+            AND mml.locator_code LIKE CONCAT('%',#{dto.locatorCode}, '%')
+            )
+            )
+        </if>
+        <if test="dto.relFlag == 'REL'">
+            and EXISTS(
+            select hiigr.rel_id
+            from mt_material_site mms,
+            mt_material_basic mmb,
+            hme_inspector_item_group_rel hiigr
+            where mms.TENANT_ID = qih.TENANT_ID
+            and mms.MATERIAL_ID = qih.MATERIAL_ID
+            and mms.SITE_ID = qih.SITE_ID
+            and mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+            and hiigr.user_id = #{userId}
+            and hiigr.privilege_type = 'CHECKER'
+            and hiigr.item_group_id = mmb.item_group
+            and hiigr.enable_flag = 'Y'
+            )
+        </if>
+            <if test="dto.inspectionResult != null and dto.inspectionResult != ''">
+                AND qih.INSPECTION_RESULT = #{dto.inspectionResult}
+            </if>
+            <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+                AND mid.INSTRUCTION_DOC_NUM like CONCAT('%',#{dto.instructionDocNum},'%')
+            </if>
+            <if test="dto.iqcNumber != null and dto.iqcNumber != ''">
+                AND qih.IQC_NUMBER like CONCAT('%',#{dto.iqcNumber},'%')
+            </if>
+            <if test="dto.inspectionStatus != null and dto.inspectionStatus != ''">
+                AND qih.INSPECTION_STATUS = #{dto.inspectionStatus}
+            </if>
+            <if test="dto.identification != null and dto.identification != ''">
+                AND qih.IDENTIFICATION = #{dto.identification}
+            </if>
+            <if test="dto.iqcHeaderId != null and dto.iqcHeaderId != ''">
+                AND qih.IQC_HEADER_ID = #{dto.iqcHeaderId}
+            </if>
+            <if test="dto.materialId != null and dto.materialId != ''">
+                AND qih.MATERIAL_ID = #{dto.materialId}
+            </if>
+            <if test="dto.finalDecision != null and dto.finalDecision != ''">
+                AND qih.FINAL_DECISION = #{dto.finalDecision}
+            </if>
+            <if test="dto.supplierId != null and dto.supplierId != ''">
+                AND qih.supplier_id = #{dto.supplierId}
+            </if>
+            <if test="dto.receiptLot != null and dto.receiptLot != ''">
+                AND qih.receipt_lot like CONCAT('%',#{dto.receiptLot},'%')
+            </if>
+            <if test="dto.createdDateFrom != null and dto.createdDateFrom != ''">
+                and qih.CREATED_DATE >= #{dto.createdDateFrom}
+            </if>
+            <if test="dto.createdDateTo != null and dto.createdDateTo != ''">
+                and qih.CREATED_DATE &lt;= #{dto.createdDateTo}
+            </if>
+    </select>
+
+    <select id="selectIqcLine" resultType="com.ruike.qms.domain.vo.QmsIqcAuditQueryLineVO">
+        SELECT
+            qil.NUMBER,
+            qil.INSPECTION_TYPE,
+            qil.SAMPLE_TYPE,
+            qst.sample_type_code,
+            qil.defect_levels,
+            qil.SAMPLE_SIZE,
+            CONCAT( qil.ac, '/', qil.RE ) AC_AND_RE,
+            qil.STANDARD_TEXT,
+            CONCAT( ROUND( qil.STANDARD_FROM, 2 ), '~', ROUND( qil.standard_to, 2 ) ) STANDARD_RANGE,
+            qil.STANDARD_UOM,
+            mu.UOM_CODE STANDARD_UOM_CODE,
+            qil.NG_QTY,
+            qil.OK_QTY,
+            qil.INSPECTION_RESULT,
+            qil.IQC_LINE_ID,
+            qil.INSPECTION,
+            qil.ATTACHMENT_UUID
+        FROM
+            QMS_IQC_LINE qil
+            LEFT JOIN qms_sample_type qst ON qil.SAMPLE_TYPE = qst.sample_type_id
+            LEFT JOIN mt_uom mu ON qil.STANDARD_UOM = mu.UOM_ID
+        WHERE
+            qil.TENANT_ID = #{tenantId}
+            AND qil.IQC_HEADER_ID = #{iqcHeaderId}
+            AND qil.ENABLE_FLAG = "Y"
+    </select>
+
+    <select id="selectIqcDetail" resultType="com.ruike.qms.domain.entity.QmsIqcDetails">
+        SELECT
+            qid.IQC_DETAILS_ID,
+            qid.number,
+            qid.REMARK,
+            qid.RESULT
+        FROM
+            QMS_IQC_DETAILS qid
+        WHERE
+            qid.TENANT_ID = #{tenantId}
+            AND qid.IQC_LINE_ID = #{iqcLineId}
+    </select>
+
+    <select id="selectIqcByLimit" resultType="java.lang.Long">
+        SELECT
+            count(*)
+        FROM
+            QMS_IQC_hEADER qih
+        WHERE
+            qih.TENANT_ID = #{tenantId}
+            AND qih.INSPECTION_STATUS = 'COMPLETED'
+            AND qih.material_id = #{vo.materialId}
+            AND qih.SUPPLIER_ID = #{vo.supplierId}
+            AND qih.INSPECTION_RESULT = 'NG'
+        ORDER BY
+            qih.INSPECTION_FINISH_DATE DESC
+            LIMIT #{vo.limitCount}
+    </select>
+
+    <select id="queryTransitionRule" resultType="com.ruike.qms.domain.entity.QmsTransitionRule">
+        SELECT
+	        *
+        FROM
+	        qms_transition_rule
+        WHERE
+        TENANT_ID = #{tenantId}
+	    AND SITE_ID = #{siteId}
+	    AND (MATERIAL_ID = "" OR MATERIAL_ID IS NULL)
+    </select>
+
+    <select id="getLocatorIdByInstructionId" resultType="java.lang.String">
+        select mml.LOCATOR_ID
+        from mt_instruction_actual mia
+        left join mt_instruction_actual_detail miad
+        on miad.ACTUAL_ID = mia.ACTUAL_ID
+        and miad.TENANT_ID = mia.TENANT_ID
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+        where mia.TENANT_ID = #{tenantId}
+        and mia.INSTRUCTION_ID = #{instructionId}
+        limit 1
+    </select>
+
+    <select id="exportIqcHeader" resultType="com.ruike.qms.domain.vo.QmsIqcAuditQueryVO2">
+        SELECT
+        qih.IQC_HEADER_ID,
+        qih.DOC_HEADER_ID,
+        mid.INSTRUCTION_DOC_NUM,
+        CONCAT(mid.INSTRUCTION_DOC_NUM,'#',mia.ATTR_VALUE) SOURCE_ORDER_NUM,
+        qih.IQC_NUMBER,
+        qih.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        qih.MATERIAL_VERSION,
+        qih.QUANTITY,
+        mml.locator_code,
+        mml.locator_name,
+        qih.SUPPLIER_ID,
+        ms.SUPPLIER_NAME,
+        ms.SUPPLIER_CODE,
+        qih.RECEIPT_LOT,
+        qih.INSPECTION_TYPE,
+        qih.INSPECTION_FINISH_DATE,
+        qih.CREATED_DATE,
+        qih.RECEIPT_BY,
+        qih.IDENTIFICATION,
+        qih.INSPECTION_STATUS,
+        qih.RECEIPT_LOT,
+        qih.DOC_TYPE,
+        mu.UOM_CODE,
+        qih.INSPECTION_METHOD,
+        IFNULL(qih.INSPECTION_START_DATE,SYSDATE()) INSPECTION_START_DATE,
+        qih.INSPECTION_TIME,
+        qih.REMARK,
+        qih.INSPECTION_RESULT,
+        qih.OK_QTY,
+        qih.NG_QTY,
+        qih.AUDIT_OPINION,
+        qih.OBJECT_VERSION_NUMBER,
+        qih.FINAL_DECISION
+        FROM
+        QMS_IQC_HEADER qih
+        LEFT JOIN mt_instruction_doc mid ON qih.DOC_HEADER_ID = mid.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_material mm ON qih.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_supplier ms ON qih.SUPPLIER_ID = ms.SUPPLIER_ID
+        left join mt_instruction_attr mia on qih.DOC_LINE_ID = mia.INSTRUCTION_ID and mia.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        left join mt_uom mu on qih.UOM_ID = mu.UOM_ID
+        LEFT JOIN mt_instruction mi ON mi.INSTRUCTION_ID = QIH.DOC_LINE_ID
+        LEFT JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mi.TO_LOCATOR_ID
+        WHERE
+        qih.TENANT_ID = #{tenantId}
+        <if test="dto.locatorCode !=null and dto.locatorCode !='' ">
+            AND QIH.DOC_LINE_ID IN (
+            SELECT
+            mi.INSTRUCTION_ID
+            FROM
+            mt_instruction mi
+            WHERE
+            mi.TENANT_ID = #{tenantId}
+            AND mi.to_locator_id IN (
+            SELECT
+            mml.locator_id
+            FROM
+            mt_mod_locator mml
+            WHERE
+            mml.TENANT_ID = #{tenantId}
+            AND mml.locator_code LIKE CONCAT('%',#{dto.locatorCode}, '%')
+            )
+            )
+        </if>
+        <if test="dto.relFlag == 'REL'">
+        and EXISTS(
+        select hiigr.rel_id
+        from mt_material_site mms,
+        mt_material_basic mmb,
+        hme_inspector_item_group_rel hiigr
+        where mms.TENANT_ID = qih.TENANT_ID
+        and mms.MATERIAL_ID = qih.MATERIAL_ID
+        and mms.SITE_ID = qih.SITE_ID
+        and mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and hiigr.user_id = #{userId}
+        and hiigr.privilege_type = 'CHECKER'
+        and hiigr.item_group_id = mmb.item_group
+        and hiigr.enable_flag = 'Y'
+        )
+        </if>
+        <if test="dto.inspectionResult != null and dto.inspectionResult != ''">
+            AND qih.INSPECTION_RESULT = #{dto.inspectionResult}
+        </if>
+        <if test="dto.inspectionStatus != null and dto.inspectionStatus != ''">
+            AND qih.INSPECTION_STATUS = #{dto.inspectionStatus}
+        </if>
+        <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+            AND mid.INSTRUCTION_DOC_NUM like CONCAT('%',#{dto.instructionDocNum},'%')
+        </if>
+        <if test="dto.iqcNumber != null and dto.iqcNumber != ''">
+            AND qih.IQC_NUMBER like CONCAT('%',#{dto.iqcNumber},'%')
+        </if>
+        <if test="dto.inspectionStatus != null and dto.inspectionStatus != ''">
+            AND qih.INSPECTION_STATUS = #{dto.inspectionStatus}
+        </if>
+        <if test="dto.identification != null and dto.identification != ''">
+            AND qih.IDENTIFICATION = #{dto.identification}
+        </if>
+        <if test="dto.iqcHeaderId != null and dto.iqcHeaderId != ''">
+            AND qih.IQC_HEADER_ID = #{dto.iqcHeaderId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND qih.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.finalDecision != null and dto.finalDecision != ''">
+            AND qih.FINAL_DECISION = #{dto.finalDecision}
+        </if>
+        <if test="dto.supplierId != null and dto.supplierId != ''">
+            AND qih.supplier_id = #{dto.supplierId}
+        </if>
+        <if test="dto.receiptLot != null and dto.receiptLot != ''">
+            AND qih.receipt_lot like CONCAT('%',#{dto.receiptLot},'%')
+        </if>
+        <if test="dto.createdDateFrom != null and dto.createdDateFrom != ''">
+            and qih.CREATED_DATE >= #{dto.createdDateFrom}
+        </if>
+        <if test="dto.createdDateTo != null and dto.createdDateTo != ''">
+            and qih.CREATED_DATE &lt;= #{dto.createdDateTo}
+        </if>
+    </select>
+</mapper>

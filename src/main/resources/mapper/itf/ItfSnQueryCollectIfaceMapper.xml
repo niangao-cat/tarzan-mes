@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfSnQueryCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+    <select id="getEoJobId" resultType="com.ruike.itf.api.dto.SnQueryCollectItfDTO1">
+        SELECT
+            hwer.eo_id,
+            hwer.job_id
+        FROM
+            hme_wkc_eo_rel hwer
+        WHERE
+            hwer.wkc_id =#{wkcId}
+        AND hwer.tenant_id =#{tenantId}
+        <if test="operationId != null and operationId != ''">
+        AND hwer.operation_id=#{operationId}
+        </if>
+        ORDER BY
+            hwer.last_update_date DESC
+        LIMIT 1
+    </select>
+    <select id="getfacMaterialCode" resultType="java.lang.String">
+        SELECT
+            mm.MATERIAL_CODE
+        FROM
+            hme_eo_job_sn_lot_material t,
+            mt_material_site mms,
+            mt_material_site_attr mmsa,
+            mt_material mm
+        WHERE
+            mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mms.MATERIAL_ID = t.material_id
+        AND mmsa.ATTR_NAME = 'attribute5'
+        AND mmsa.ATTR_VALUE = 'B05FAC'
+        AND t.material_id = mm.MATERIAL_ID
+        AND t.job_id = #{jobId}
+        ORDER BY
+            t.last_update_date DESC
+        LIMIT 1
+    </select>
+    <select id="getResultList" resultType="com.ruike.itf.api.dto.SnQueryCollectItfReturnDTO1">
+        SELECT
+            hejdr.tag_id,
+            hejdr.minimum_value,
+            hejdr.maximal_value,
+            (
+            hejdr.minimum_value + hejdr.maximal_value
+            ) / 2 standard_Value,
+            mt.tag_code,
+            mt.tag_description,
+            mta.attr_value
+        FROM
+            hme_eo_job_data_record hejdr,
+            mt_tag mt,
+            mt_tag_attr mta
+        WHERE
+            hejdr.group_purpose = 'DATA'
+        AND hejdr.job_id =#{jobId}
+        AND hejdr.tag_id = mt.tag_id
+        AND mt.tag_id = mta.tag_id
+        AND mta.attr_name = 'TAG_TYPE'
+        <if test="tagTypes != null and tagTypes.size() > 0">
+         AND mta.attr_value  IN
+            <foreach collection="tagTypes" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+    <select id="selectCosNum" resultType="java.lang.String">
+        SELECT
+            t.QUANTITY
+        FROM
+            hme_virtual_num t
+        WHERE
+            t.tenant_Id = #{tenantId}
+        AND t.EO_ID = #{eoId}
+        ORDER BY
+            t.last_updated_by desc
+        LIMIT 1
+    </select>
+</mapper>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoWorkingMapper">
+
+    <select id="queryForEoWorkingNew" resultType="com.ruike.hme.domain.vo.HmeEoWorkingVO2">
+        SELECT
+            me.material_id AS materialid,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mmw_process.workcell_id AS workcellid,
+            mmw_process.workcell_name,
+            mmor_pl_wkc.sequence,
+            mmor_wkc_prc.sequence sequence_two,
+            ifnull(sum(meswa.working_qty), 0) AS working_qty_sum,
+            ifnull(sum(meswa.completed_qty), 0) AS completed_qty_sum
+        FROM
+            mt_mod_workcell mmw_process,
+            mt_mod_organization_rel mmor_pl_wkc,
+            mt_mod_organization_rel mmor_wkc_prc,
+            mt_mod_organization_rel mmor_prc_site
+        LEFT JOIN mt_eo_step_wip meswa ON mmor_prc_site.ORGANIZATION_ID = meswa.workcell_id
+        LEFT JOIN mt_eo_step_actual mesa ON meswa.eo_step_actual_id = mesa.eo_step_actual_id
+        LEFT JOIN mt_eo_router_actual mera ON mesa.eo_router_actual_id = mera.eo_router_actual_id
+        LEFT JOIN mt_eo me ON mera.EO_ID = me.EO_ID,
+         mt_material mm
+        WHERE
+            mmor_pl_wkc.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mmor_pl_wkc.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor_pl_wkc.ORGANIZATION_ID = mmor_wkc_prc.PARENT_ORGANIZATION_ID
+        AND mmor_wkc_prc.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor_wkc_prc.ORGANIZATION_ID = mmw_process.WORKCELL_ID
+        AND mmor_wkc_prc.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor_prc_site.PARENT_ORGANIZATION_ID = mmw_process.WORKCELL_ID
+        AND mmor_prc_site.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor_prc_site.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor_pl_wkc.TOP_SITE_ID = mmor_wkc_prc.TOP_SITE_ID
+        AND mmor_wkc_prc.TOP_SITE_ID = mmor_prc_site.TOP_SITE_ID
+        AND mmor_pl_wkc.TOP_SITE_ID = #{dto.siteId}
+        AND mmor_pl_wkc.TENANT_ID = #{tenantId}
+        AND mmor_pl_wkc.PARENT_ORGANIZATION_ID = #{dto.prodLineId}
+        AND mm.MATERIAL_ID = me.material_id
+        AND me. STATUS = 'WORKING'
+        <if test="dto.typeName != null and dto.typeName != ''">
+            AND mm.MATERIAL_CODE LIKE concat('%',concat(#{dto.typeName},'%'))
+        </if>
+        GROUP BY
+            me.material_id,
+            mmw_process.workcell_id,
+            mmw_process.workcell_name,
+            mmor_pl_wkc.SEQUENCE,
+            mmor_wkc_prc.SEQUENCE
+        ORDER BY
+            mmor_pl_wkc.SEQUENCE,
+            mmor_wkc_prc.SEQUENCE
+    </select>
+</mapper>

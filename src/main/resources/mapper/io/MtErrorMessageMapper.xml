@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtErrorMessageMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtErrorMessage">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MESSAGE_ID" property="messageId" jdbcType="VARCHAR"/>
+        <result column="MESSAGE_CODE" property="messageCode" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="MODULE" property="module" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    
+    <select id="selectAllErrorMessage" resultMap="BaseResultMap">
+        SELECT b.TENANT_ID,
+               b.MESSAGE_ID,
+               b.MESSAGE_CODE,
+               t.MESSAGE,
+               b.MODULE,
+               b.CID,
+               b.OBJECT_VERSION_NUMBER,
+               b.CREATED_BY,
+               b.CREATION_DATE,
+               b.LAST_UPDATED_BY,
+               b.LAST_UPDATE_DATE
+          FROM mt_error_message b,
+               mt_error_message_tl t
+         WHERE b.MESSAGE_ID = t.MESSAGE_ID
+           AND t.LANG = #{language}           
+    </select>
+</mapper>

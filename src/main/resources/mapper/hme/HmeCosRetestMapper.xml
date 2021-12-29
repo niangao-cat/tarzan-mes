@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosRetestMapper">
+
+    <select id="queryLineSideLocator" resultType="java.lang.String">
+        SELECT
+	        mmlor.LOCATOR_ID
+        FROM
+	        mt_mod_locator_org_rel mmlor,
+	        mt_mod_organization_rel mmor,
+	        mt_mod_organization_rel mmor2
+        WHERE
+	        mmlor.TENANT_ID = #{tenantId}
+	    AND mmlor.TENANT_ID = mmor.TENANT_ID
+      	AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+	    AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+	    AND mmor.ORGANIZATION_ID = #{workcellId}
+	    AND mmor.TOP_SITE_ID = #{siteId}
+		AND mmor.PARENT_ORGANIZATION_ID = mmor2.ORGANIZATION_ID
+		AND mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		AND mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mmor2.TOP_SITE_ID = mmor.TOP_SITE_ID
+	    AND mmlor.ORGANIZATION_ID = mmor2.PARENT_ORGANIZATION_ID
+	    AND mmlor.ORGANIZATION_TYPE = mmor2.ORGANIZATION_TYPE
+    </select>
+
+    <select id="queryRouteOperation" resultType="tarzan.method.domain.entity.MtRouterOperation">
+		SELECT
+			mro.OPERATION_ID,
+  			mro.ROUTER_STEP_ID,
+  			mro.ROUTER_OPERATION_ID
+		FROM
+			mt_router_step mrs,
+			mt_router_operation mro
+		WHERE
+			mrs.TENANT_ID = #{tenantId}
+		AND mrs.TENANT_ID = mro.TENANT_ID
+		AND mrs.ROUTER_ID = #{routerId}
+		AND mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+		AND mro.OPERATION_ID = #{operationId}
+	</select>
+
+    <select id="queryCosMaterialByBomId" resultType="java.lang.String">
+		SELECT
+			mbc.MATERIAL_ID
+		FROM
+			mt_bom_component mbc,
+			mt_material_site mms,
+			mt_material_basic mmb
+		WHERE
+			mbc.TENANT_ID = #{tenantId}
+		AND mbc.BOM_ID = #{bomId}
+		AND mms.MATERIAL_ID = mbc.MATERIAL_ID
+		AND mms.SITE_ID = #{siteId}
+		AND mms.MATERIAL_SITE_ID = mmb.MATERIAL_SITE_ID
+		AND mmb.ITEM_GROUP = '3101'
+	</select>
+
+    <select id="queryReturnMaterialLotCodeList" resultType="com.ruike.hme.domain.vo.HmeCosRetestVO10">
+		SELECT
+			mml.MATERIAL_LOT_ID,
+  			mml.MATERIAL_LOT_CODE,
+  			mlr.return_qty PRIMARY_UOM_QTY,
+  			mm.material_id,
+  			mm.material_code
+		FROM
+			hme_material_lot_return mlr,
+			mt_material_lot mml,
+			mt_material mm
+		WHERE mlr.tenant_id = #{tenantId}
+		AND mlr.tenant_id = mml.TENANT_ID
+		AND mlr.return_material_lot_id = mml.MATERIAL_LOT_ID
+		AND mlr.target_material_lot_id = #{materialLotId}
+		AND mm.material_id = mml.material_id
+	</select>
+
+    <select id="queryFeelMaterialLotCodeList" resultType="com.ruike.hme.domain.vo.HmeCosRetestVO10">
+		SELECT
+			mml.MATERIAL_LOT_ID,
+			mml.MATERIAL_LOT_CODE,
+			mml.PRIMARY_UOM_QTY,
+			mm.MATERIAL_CODE,
+			mm.MATERIAL_ID
+		FROM
+			hme_material_lot_return rmlr,
+			hme_material_lot_return tmlr,
+			mt_material_lot mml,
+			mt_material mm
+		WHERE rmlr.TENANT_ID = #{tenantId}
+		AND tmlr.TENANT_ID = rmlr.TENANT_ID
+		AND mml.TENANT_ID = tmlr.TENANT_ID
+		AND rmlr.RETURN_MATERIAL_LOT_ID = tmlr.RETURN_MATERIAL_LOT_ID
+		AND mml.MATERIAL_LOT_ID = tmlr.TARGET_MATERIAL_LOT_ID
+		AND mm.MATERIAL_ID = mml.MATERIAL_ID
+		AND rmlr.TARGET_MATERIAL_LOT_ID = #{materialLotId}
+		AND tmlr.TARGET_MATERIAL_LOT_ID <![CDATA[<>]]> #{materialLotId}
+		GROUP BY
+			mml.MATERIAL_LOT_ID,
+			mml.MATERIAL_LOT_CODE,
+			mml.PRIMARY_UOM_QTY,
+			mm.MATERIAL_CODE,
+			mm.MATERIAL_ID
+	</select>
+
+    <update id="updateCosRetestPrintFlag">
+		UPDATE hme_retest_import_data
+		SET print_flag = 'Y'
+		WHERE
+		tenant_id = #{tenantId}
+		AND target_barcode in
+		<foreach collection="targetBarcodeList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</update>
+
+    <select id="cosRetestImportHeaderDataList" resultType="com.ruike.hme.domain.vo.HmeCosRetestImportVO3">
+		SELECT
+		MIN(ria.retest_import_data_id) retest_import_data_id,
+		ria.work_num,
+		ria.target_barcode,
+		ria.print_flag,
+		ria.source_barcode,
+		ria.import_type,
+		mm.material_code,
+		SUM(ria.qty) qty,
+		ria.cos_type,
+		ria.import_lot,
+		ria.fox_num,
+		ria.workcell,
+		ria.ATTRIBUTE1,
+		ria.ATTRIBUTE2,
+		ria.ATTRIBUTE3,
+		ria.created_by create_by,
+		ria.a25 operator,
+		MAX(ria.creation_date) creation_date
+		FROM
+		hme_retest_import_data ria,
+		mt_material_lot mml,
+		mt_material mm
+		WHERE 1=1
+		AND ria.source_barcode = mml.MATERIAL_LOT_CODE
+		AND ria.TENANT_ID = #{tenantId}
+		AND mml.TENANT_ID = ria.TENANT_ID
+		AND mm.TENANT_ID = mml.TENANT_ID
+		AND mml.MATERIAL_ID = mm.MATERIAL_ID
+        <if test="dto.printFlag != null and dto.printFlag != ''">
+            AND ria.print_flag = #{dto.printFlag}
+        </if>
+        <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+            AND ria.work_num LIKE CONCAT('%', #{dto.workOrderNum}, '%')
+        </if>
+        <if test="dto.startTime != null and dto.startTime != ''">
+            AND ria.creation_date >= #{dto.startTime}
+        </if>
+        <if test="dto.endTime != null and dto.endTime != ''">
+            AND ria.creation_date <![CDATA[<=]]> #{dto.endTime}
+        </if>
+		<if test="dto.endTime != null and dto.endTime != ''">
+			AND ria.creation_date <![CDATA[<=]]> #{dto.endTime}
+		</if>
+		<if test="dto.foxNum != null and dto.foxNum != ''">
+			AND ria.fox_num = #{dto.foxNum}
+		</if>
+		<if test="dto.sourceBarcode != null and dto.sourceBarcode != ''">
+			AND ria.source_barcode = #{dto.sourceBarcode}
+		</if>
+		<if test="dto.createBy != null and dto.createBy != ''">
+			AND ria.created_by = #{dto.createBy}
+		</if>
+		<if test="dto.operator != null and dto.operator != ''">
+			AND ria.a25 = #{dto.operator}
+		</if>
+		GROUP BY
+		ria.work_num,
+		ria.target_barcode,
+		ria.print_flag,
+		ria.source_barcode,
+		mm.material_code,
+		ria.import_type,
+		ria.cos_type,
+		ria.import_lot,
+		ria.fox_num,
+		ria.workcell,
+		ria.ATTRIBUTE1,
+		ria.ATTRIBUTE2,
+		ria.ATTRIBUTE3,
+		ria.created_by,
+		ria.a25
+		ORDER BY MAX(ria.creation_date) DESC
+	</select>
+
+    <select id="cosRetestImportLineList" resultType="com.ruike.hme.domain.entity.HmeRetestImportData">
+		SELECT
+			ria.WORK_NUM,
+			ria.COS_TYPE,
+			ria.WORKCELL,
+			ria.IMPORT_LOT,
+			ria.IMPORT_TYPE,
+			ria.TARGET_BARCODE,
+			ria.SOURCE_BARCODE,
+			ria.FOX_NUM,
+			ria.SUPPLIER_CODE,
+			ria.RC_NUM,
+			ria.WAFER,
+			ria.CONTAINER_TYPE,
+			ria.LOTNO,
+			ria.AVG_WAVELENGHT,
+			ria.TYPE,
+			ria.REMARK,
+			ria.POSITION,
+			ria.QTY,
+			ria.CURRENT,
+			ria.A01,
+			ria.A02,
+			ria.A03,
+			ria.A04,
+			ria.A05,
+			ria.A06,
+			ria.A07,
+			ria.A08,
+			ria.A09,
+			ria.A010,
+			ria.A011,
+			ria.A012,
+			ria.A013,
+			ria.A014,
+			ria.A15,
+			ria.A16,
+			ria.A17,
+			ria.A18,
+			ria.A19,
+			ria.A20,
+			ria.A21,
+			ria.A22,
+			ria.A23,
+			ria.A24,
+			ria.A25,
+			ria.A26,
+			ria.ATTRIBUTE1,
+			ria.ATTRIBUTE2,
+			ria.ATTRIBUTE3,
+			ria.ATTRIBUTE4,
+			ria.ATTRIBUTE5
+		FROM
+			hme_retest_import_data ria
+		WHERE ria.TENANT_ID = #{tenantId}
+		AND ria.TARGET_BARCODE = #{targetBarcode}
+	</select>
+
+	<update id="batchLoadUpdate">
+		update hme_material_lot_load
+		<set>
+			object_version_number = object_version_number + 1,
+			last_updated_by = #{userId},
+			last_update_date = CURRENT_TIMESTAMP,
+			ATTRIBUTE3 =
+			<foreach collection="materialLotLoadList" item="clause" index="index"
+					 separator=" " open="case material_lot_load_id" close="end">
+				when #{clause.materialLotLoadId} then #{clause.attribute3}
+			</foreach>
+		</set>
+		<where>
+		    tenant_id = #{tenantId}
+			AND material_lot_load_id in
+			<foreach collection="materialLotLoadList" item="clause"
+					 separator="," open="(" close=")">
+				#{clause.materialLotLoadId}
+			</foreach>
+		</where>
+	</update>
+
+	<select id="queryLastMaterialLotLoad" resultType="java.lang.String">
+		SELECT
+			ATTRIBUTE2
+		FROM
+			hme_material_lot_load mll
+		WHERE mll.tenant_id = #{tenantId}
+		AND mll.material_lot_id = #{materialLotId}
+		ORDER BY last_update_date DESC
+		LIMIT 1
+	</select>
+</mapper>

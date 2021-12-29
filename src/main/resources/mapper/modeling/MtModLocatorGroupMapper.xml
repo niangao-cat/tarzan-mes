@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModLocatorGroupMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModLocatorGroup">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="LOCATOR_GROUP_ID" property="locatorGroupId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_CODE" property="locatorGroupCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_NAME" property="locatorGroupName" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select t1.TENANT_ID,
+        t1.LOCATOR_GROUP_ID,
+        t1.LOCATOR_GROUP_CODE,
+        t2.LOCATOR_GROUP_NAME,
+        t1.ENABLE_FLAG,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_mod_locator_group t1 INNER join mt_mod_locator_group_tl t2 on (t1.LOCATOR_GROUP_ID=t2.LOCATOR_GROUP_ID and t2.LANG=#{lang})
+        where t1.TENANT_ID = ${tenantId}
+        and t1.LOCATOR_GROUP_ID IN
+        <foreach collection="locatorGroupIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectLikeQuery" resultType="tarzan.modeling.domain.vo.MtModLocatorGroupVO3">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select t1.LOCATOR_GROUP_ID locatorGroupId,
+        t1.LOCATOR_GROUP_CODE locatorGroupCode,
+        t2.LOCATOR_GROUP_NAME locatorGroupName,
+        t1.ENABLE_FLAG enableFlag
+        from mt_mod_locator_group t1 INNER join mt_mod_locator_group_tl t2 on (t1.LOCATOR_GROUP_ID=t2.LOCATOR_GROUP_ID and t2.LANG=#{lang})
+        where t1.TENANT_ID = ${tenantId}
+        <if test="dto.locatorGroupId != null">
+            and t1.LOCATOR_GROUP_ID = #{dto.locatorGroupId}
+        </if>
+        <if test="dto.locatorGroupCode != null">
+            and t1.LOCATOR_GROUP_CODE = #{dto.locatorGroupCode}
+        </if>
+        <if test="dto.locatorGroupName != null">
+            and t2.LOCATOR_GROUP_NAME like concat('%',concat(#{dto.locatorGroupName},'%'))
+        </if>
+        <if test="dto.enableFlag != null">
+            and t1.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        order by t1.LOCATOR_GROUP_ID + 0
+    </select>
+</mapper>

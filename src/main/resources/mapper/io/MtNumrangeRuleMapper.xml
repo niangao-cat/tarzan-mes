@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtNumrangeRuleMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtNumrangeRule">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NUMRANGE_RULE_ID" property="numrangeRuleId" jdbcType="VARCHAR"/>
+        <result column="NUM_RULE" property="numRule" jdbcType="VARCHAR"/>
+        <result column="FIX_INPUT" property="fixInput" jdbcType="VARCHAR"/>
+        <result column="NUM_LOWER_LIMIT" property="numLowerLimit" jdbcType="VARCHAR"/>
+        <result column="NUM_UPPER_LIMIT" property="numUpperLimit" jdbcType="VARCHAR"/>
+        <result column="NUM_ALERT" property="numAlert" jdbcType="VARCHAR"/>
+        <result column="NUM_ALERT_TYPE" property="numAlertType" jdbcType="VARCHAR"/>
+        <result column="NUM_RADIX" property="numRadix" jdbcType="VARCHAR"/>
+        <result column="NUM_INCREMENT" property="numIncrement" jdbcType="VARCHAR"/>
+        <result column="NUM_CURRENT" property="numCurrent" jdbcType="VARCHAR"/>
+        <result column="NUM_RESET_TYPE" property="numResetType" jdbcType="VARCHAR"/>
+        <result column="NUM_RESET_PERIOD" property="numResetPeriod" jdbcType="DECIMAL"/>
+        <result column="NUM_RESET_LASTDATE" property="numResetLastdate" jdbcType="VARCHAR"/>
+        <result column="DATE_FORMAT" property="dateFormat" jdbcType="VARCHAR"/>
+        <result column="TIME_FORMAT" property="timeFormat" jdbcType="VARCHAR"/>
+        <result column="CALL_STANDARD_OBJECT" property="callStandardObject" jdbcType="VARCHAR"/>
+        <result column="INCOME_VALUE_LENGTH" property="incomeValueLength" jdbcType="DECIMAL"/>
+        <result column="INCOME_VALUE_LENGTH_LIMIT" property="incomeValueLengthLimit" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VoMap" type="io.tarzan.common.domain.vo.MtNumrangeRuleVO2" extends="BaseResultMap">
+        <result column="CALL_STANDARD_OBJECT_CODE" property="callStandardObjectCode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryNumrangeRule" resultMap="VoMap">
+        select t.*,m.OBJECT_COLUMN_CODE as CALL_STANDARD_OBJECT_CODE
+         from mt_numrange_rule t
+        left join mt_numrange_object_column m on
+        m.OBJECT_COLUMN_ID = t.CALL_STANDARD_OBJECT
+        and t.tenant_id = m.tenant_id
+        where t.TENANT_ID = #{tenantId}
+        and t.NUMRANGE_RULE_ID = #{numrangeRuleId}
+    </select>
+
+    <select id="queryNumrangeRuleByCondition" resultMap="BaseResultMap">
+        select t.* from mt_numrange_rule t
+        where 1=1
+        AND t.TENANT_ID = #{tenantId}
+        and t.NUMRANGE_RULE_ID in
+        <foreach collection="numrangeRuleIds" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+    </select>
+
+    <select id="selectForUpdates" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        mt_numrange_rule t
+        WHERE
+        t.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+        and t.NUMRANGE_RULE_ID in
+        <foreach collection="numrangeRuleIds" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        FOR UPDATE
+    </select>
+</mapper>

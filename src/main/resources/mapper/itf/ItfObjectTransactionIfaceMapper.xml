@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfObjectTransactionIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfObjectTransactionIface">
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="MERGE_ID" property="mergeId" jdbcType="VARCHAR"/>
+        <result column="SYSTEM" property="system" jdbcType="VARCHAR"/>
+        <result column="TRANSACTION_TYPE_CODE" property="transactionTypeCode" jdbcType="VARCHAR"/>
+        <result column="MOVE_TYPE" property="moveType" jdbcType="VARCHAR"/>
+        <result column="MOVE_REASON" property="moveReason" jdbcType="VARCHAR"/>
+        <result column="ACCOUNT_DATE" property="accountDate" jdbcType="DATE"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="TRANSACTION_TIME" property="transactionTime" jdbcType="DATE"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="TRANSACTION_QTY" property="transactionQty" jdbcType="DECIMAL"/>
+        <result column="LOT_NUMBER" property="lotNumber" jdbcType="VARCHAR"/>
+        <result column="TRANSACTION_UOM" property="transactionUom" jdbcType="VARCHAR"/>
+        <result column="WAREHOUSE_CODE" property="warehouseCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_PLANT_CODE" property="transferPlantCode" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_WAREHOUSE_CODE" property="transferWarehouseCode" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_LOCATOR_CODE" property="transferLocatorCode" jdbcType="VARCHAR"/>
+        <result column="COSTCENTER_CODE" property="costcenterCode" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_CODE" property="supplierCode" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_CODE" property="supplierSiteCode" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_CODE" property="customerCode" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_CODE" property="customerSiteCode" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_TYPE" property="sourceDocType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_NUM" property="sourceDocNum" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_LINE_NUM" property="sourceDocLineNum" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="OPERATION_SEQUENCE" property="operationSequence" jdbcType="VARCHAR"/>
+        <result column="BOM_RESERVE_NUM" property="bomReserveNum" jdbcType="VARCHAR"/>
+        <result column="BOM_RESERVE_LINE_NUM" property="bomReserveLineNum" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_FLAG" property="completeFlag" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_CODE" property="prodLineCode" jdbcType="VARCHAR"/>
+        <result column="DELIVERY_BATCH" property="deliveryBatch" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_CODE" property="containerCode" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE_CODE" property="containerTypeCode" jdbcType="VARCHAR"/>
+        <result column="SO_NUM" property="soNum" jdbcType="VARCHAR"/>
+        <result column="SO_LINE_NUM" property="soLineNum" jdbcType="VARCHAR"/>
+        <result column="SN_NUM" property="snNum" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="INSIDE_ORDER" property="insideOrder" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE16" property="attribute16" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE17" property="attribute17" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE18" property="attribute18" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE19" property="attribute19" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE20" property="attribute20" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE21" property="attribute21" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE22" property="attribute22" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE23" property="attribute23" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE24" property="attribute24" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE25" property="attribute25" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE26" property="attribute26" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE27" property="attribute27" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE28" property="attribute28" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE29" property="attribute29" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE30" property="attribute30" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_SO_LINE_NUM" property="transferSoLineNum" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_LOT_NUMBER" property="transferLotNumber" jdbcType="VARCHAR"/>
+        <result column="SPEC_STOCK_FLAG" property="specStockFlag" jdbcType="VARCHAR"/>
+        <result column="PO_NUM" property="poNum" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_SO_NUM" property="transferSoNum" jdbcType="VARCHAR"/>
+        <result column="GMCODE" property="gmcode" jdbcType="VARCHAR"/>
+        <result column="PO_LINE_NUM" property="poLineNum" jdbcType="VARCHAR"/>
+        <result column="BACK_FLAG" property="backFlag" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE1" property="lineAttribute1" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE2" property="lineAttribute2" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE3" property="lineAttribute3" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE4" property="lineAttribute4" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE5" property="lineAttribute5" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE6" property="lineAttribute6" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE7" property="lineAttribute7" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE8" property="lineAttribute8" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE9" property="lineAttribute9" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE10" property="lineAttribute10" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE11" property="lineAttribute11" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE12" property="lineAttribute12" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectMaterialVoucher" resultType="com.ruike.itf.domain.vo.ItfMaterialVoucherVO"
+            parameterType="com.ruike.itf.api.dto.SapMaterialVoucherDTO">
+        select
+        move_type as moveType,
+        attribute1 as voucherNo,
+        attribute2 as years,
+        attribute3 as voucherLineNo
+        from itf_object_transaction_iface
+        where
+        PROCESS_STATUS = 'S'
+        AND attribute1 IS NOT NULL
+        AND attribute1 != ""
+        AND account_date >= #{startDate}
+        AND account_date &lt;= #{endDate}
+        AND plant_code = #{siteCode}
+        <if test="moveType != null">
+            AND move_type = #{moveType}
+        </if>
+        <if test="materialCode != null">
+            AND material_code = #{materialCode}
+        </if>
+        <if test="locatorCode != null">
+            AND locator_code = #{locatorCode}
+        </if>
+        ORDER BY attribute1,
+        attribute2 ASC
+    </select>
+
+    <update id="updateStatusAndMsgByKey" parameterType="com.ruike.itf.domain.entity.ItfObjectTransactionIface">
+        UPDATE itf_object_transaction_iface
+        SET process_message = #{processMessage},
+        process_status = #{processStatus},
+        attribute1 = #{attribute1},
+        attribute2 = #{attribute2}
+        WHERE
+            iface_id = #{ifaceId}
+    </update>
+
+    <insert id="batchInsertIface" parameterType="com.ruike.itf.domain.entity.ItfObjectTransactionIface">
+        INSERT INTO itf_object_transaction_iface(
+        IFACE_ID
+        ,MERGE_ID
+        ,`SYSTEM`
+        ,TRANSACTION_TYPE_CODE
+        ,MOVE_TYPE
+        ,MOVE_REASON
+        ,ACCOUNT_DATE
+        ,PLANT_CODE
+        ,TRANSACTION_TIME
+        ,MATERIAL_CODE
+        ,TRANSACTION_QTY
+        ,LOT_NUMBER
+        ,TRANSACTION_UOM
+        ,WAREHOUSE_CODE
+        ,LOCATOR_CODE
+        ,TRANSFER_PLANT_CODE
+        ,TRANSFER_WAREHOUSE_CODE
+        ,TRANSFER_LOCATOR_CODE
+        ,COSTCENTER_CODE
+        ,SUPPLIER_CODE
+        ,SUPPLIER_SITE_CODE
+        ,CUSTOMER_CODE
+        ,CUSTOMER_SITE_CODE
+        ,SOURCE_DOC_TYPE
+        ,SOURCE_DOC_NUM
+        ,SOURCE_DOC_LINE_NUM
+        ,WORK_ORDER_NUM
+        ,OPERATION_SEQUENCE
+        ,BOM_RESERVE_NUM
+        ,BOM_RESERVE_LINE_NUM
+        ,COMPLETE_FLAG
+        ,PROD_LINE_CODE
+        ,DELIVERY_BATCH
+        ,CONTAINER_CODE
+        ,CONTAINER_TYPE_CODE
+        ,SO_NUM
+        ,SO_LINE_NUM
+        ,SN_NUM
+        ,REMARK
+        ,PROCESS_DATE
+        ,PROCESS_MESSAGE
+        ,PROCESS_STATUS
+        ,tenant_id
+        ,object_version_number
+        ,creation_date
+        ,created_by
+        ,last_updated_by
+        ,last_update_date
+        ,ATTRIBUTE_CATEGORY
+        ,ATTRIBUTE1
+        ,ATTRIBUTE2
+        ,ATTRIBUTE3
+        ,ATTRIBUTE4
+        ,ATTRIBUTE5
+        ,ATTRIBUTE6
+        ,ATTRIBUTE7
+        ,ATTRIBUTE8
+        ,ATTRIBUTE9
+        ,ATTRIBUTE10
+        ,ATTRIBUTE11
+        ,ATTRIBUTE12
+        ,ATTRIBUTE13
+        ,ATTRIBUTE14
+        ,ATTRIBUTE15
+        ,ATTRIBUTE16
+        ,ATTRIBUTE17
+        ,ATTRIBUTE18
+        ,ATTRIBUTE19
+        ,ATTRIBUTE20
+        ,ATTRIBUTE21
+        ,ATTRIBUTE22
+        ,ATTRIBUTE23
+        ,ATTRIBUTE24
+        ,ATTRIBUTE25
+        ,ATTRIBUTE26
+        ,ATTRIBUTE27
+        ,ATTRIBUTE28
+        ,ATTRIBUTE29
+        ,ATTRIBUTE30
+        ,LINE_ATTRIBUTE1
+        ,LINE_ATTRIBUTE2
+        ,LINE_ATTRIBUTE3
+        ,LINE_ATTRIBUTE4
+        ,LINE_ATTRIBUTE5
+        ,LINE_ATTRIBUTE6
+        ,LINE_ATTRIBUTE7
+        ,LINE_ATTRIBUTE8
+        ,LINE_ATTRIBUTE9
+        ,LINE_ATTRIBUTE10
+        ,LINE_ATTRIBUTE11
+        ,LINE_ATTRIBUTE12
+        ,TRANSFER_SO_LINE_NUM
+        ,TRANSFER_LOT_NUMBER
+        ,SPEC_STOCK_FLAG
+        ,TRANSFER_SO_NUM
+        ,PO_NUM
+        ,GMCODE
+        ,PO_LINE_NUM
+        ,BACK_FLAG
+        ) VALUES
+        <foreach collection="ifaceList" index="index" item="item" separator=",">
+            (
+            #{item.ifaceId},
+            #{item.mergeId},
+            #{item.system},
+            #{item.transactionTypeCode},
+            #{item.moveType},
+            #{item.moveReason},
+            #{item.accountDate},
+            #{item.plantCode},
+            #{item.transactionTime},
+            #{item.materialCode},
+            #{item.transactionQty},
+            #{item.lotNumber},
+            #{item.transactionUom},
+            #{item.warehouseCode},
+            #{item.locatorCode},
+            #{item.transferPlantCode},
+            #{item.transferWarehouseCode},
+            #{item.transferLocatorCode},
+            #{item.costcenterCode},
+            #{item.supplierCode},
+            #{item.supplierSiteCode},
+            #{item.customerCode},
+            #{item.customerSiteCode},
+            #{item.sourceDocType},
+            #{item.sourceDocNum},
+            #{item.sourceDocLineNum},
+            #{item.workOrderNum},
+            #{item.operationSequence},
+            #{item.bomReserveNum},
+            #{item.bomReserveLineNum},
+            #{item.completeFlag},
+            #{item.prodLineCode},
+            #{item.deliveryBatch},
+            #{item.containerCode},
+            #{item.containerTypeCode},
+            #{item.soNum},
+            #{item.soLineNum},
+            #{item.snNum},
+            #{item.remark},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15},
+            #{item.attribute16},
+            #{item.attribute17},
+            #{item.attribute18},
+            #{item.attribute19},
+            #{item.attribute20},
+            #{item.attribute21},
+            #{item.attribute22},
+            #{item.attribute23},
+            #{item.attribute24},
+            #{item.attribute25},
+            #{item.attribute26},
+            #{item.attribute27},
+            #{item.attribute28},
+            #{item.attribute29},
+            #{item.attribute30},
+            #{item.lineAttribute1},
+            #{item.lineAttribute2},
+            #{item.lineAttribute3},
+            #{item.lineAttribute4},
+            #{item.lineAttribute5},
+            #{item.lineAttribute6},
+            #{item.lineAttribute7},
+            #{item.lineAttribute8},
+            #{item.lineAttribute9},
+            #{item.lineAttribute10},
+            #{item.lineAttribute11},
+            #{item.lineAttribute12},
+            #{item.transferSoLineNum},
+            #{item.transferLotNumber},
+            #{item.specStockFlag},
+            #{item.transferSoNum},
+            #{item.poNum},
+            #{item.gmcode},
+            #{item.poLineNum},
+            #{item.backFlag}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectNotSnByStatus" resultType="com.ruike.itf.domain.entity.ItfObjectTransactionIface">
+        select * from itf_object_transaction_iface where TRANSACTION_TYPE_CODE != 'HME_WORK_REPORT' and PROCESS_STATUS IN ${status} AND SN_NUM IS NULL
+    </select>
+
+    <select id="selectSnByStatus" resultType="com.ruike.itf.domain.entity.ItfObjectTransactionIface">
+        select * from itf_object_transaction_iface where TRANSACTION_TYPE_CODE != 'HME_WORK_REPORT' and PROCESS_STATUS IN ${status} AND SN_NUM IS NOT NULL
+    </select>
+
+    <select id="selectObjectTransactionByStatus" resultType="com.ruike.itf.domain.entity.ItfObjectTransactionIface">
+        select * from itf_object_transaction_iface where TRANSACTION_TYPE_CODE != 'HME_WORK_REPORT' and PROCESS_STATUS IN ${status}
+    </select>
+
+    <select id="selectDataByStatusAndType" resultType="com.ruike.itf.domain.entity.ItfObjectTransactionIface">
+        SELECT
+            ioti.*,
+            mm.MATERIAL_CODE AS WO_MATERIAL_CODE
+        FROM
+            itf_object_transaction_iface ioti
+            LEFT JOIN mt_work_order wo ON wo.WORK_ORDER_NUM = ioti.WORK_ORDER_NUM
+            AND wo.TENANT_ID = ioti.tenant_id
+            LEFT JOIN mt_material mm ON mm.MATERIAL_ID = wo.MATERIAL_ID
+        WHERE
+            ioti.TRANSACTION_TYPE_CODE = 'HME_WORK_REPORT'
+        AND ioti.PROCESS_STATUS IN ${status}
+    </select>
+
+    <select id="queryAllWorkReportData" resultType="com.ruike.itf.domain.vo.ItfRouterStepAttrVO">
+        select mwo.WORK_ORDER_NUM ,mr.ROUTER_NAME, mrs.STEP_NAME, mrs.SEQUENCE, mwo.QTY, mrsa.ATTR_NAME, mrsa.ATTR_VALUE
+        from mt_work_order mwo,
+        mt_router mr,
+        mt_router_step mrs,
+        mt_router_step_attr mrsa
+        where mr.ROUTER_NAME = mwo.WORK_ORDER_NUM
+        and mr.TENANT_ID = mwo.TENANT_ID
+        and mr.ROUTER_ID = mrs.ROUTER_ID
+        and mrsa.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        and mwo.TENANT_ID = #{tenantId}
+        and mwo.WORK_ORDER_NUM in
+        <foreach collection="workOrderNumList" item="item"
+                 separator="," open="(" close=")">
+            #{item,jdbcType=VARCHAR}
+        </foreach>
+        and mrs.SEQUENCE in
+        <foreach collection="operationSequenceList" item="item"
+                 separator="," open="(" close=")">
+            #{item,jdbcType=VARCHAR}
+        </foreach>
+    </select>
+
+    <select id="querySilentAccountSet" resultType="date">
+        select sas.account_date
+          from wms_silent_account_set sas
+         where sas.tenant_id = 0
+           and sas.start_date &lt; now()
+           and sas.end_date >= now()
+         order by sas.creation_date
+         limit 1
+    </select>
+    <update id="batchUpdateStatusByPrimaryKey">
+        update itf_object_transaction_iface
+        set
+        process_message = '临时状态',
+        process_status = 'P'
+        WHERE
+        iface_id IN
+        <foreach collection="keyId" index="index" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="selectList" parameterType="com.ruike.itf.api.dto.ItfObjectTransactionResultQueryDTO" resultType="com.ruike.itf.domain.vo.ItfObjectTransactionIfaceVO">
+        SELECT
+            ioti.IFACE_ID,
+            ioti.ATTRIBUTE1,
+            ioti.ATTRIBUTE2,
+            ioti.MERGE_ID,
+            ioti.TRANSACTION_TYPE_CODE,
+            ioti.MOVE_TYPE,
+            ioti.ACCOUNT_DATE,
+            ioti.PLANT_CODE,
+            ioti.MATERIAL_CODE,
+            ioti.TRANSACTION_QTY,
+            ioti.LOT_NUMBER,
+            ioti.TRANSACTION_UOM,
+            ioti.WAREHOUSE_CODE,
+            ioti.LOCATOR_CODE,
+            ioti.TRANSFER_WAREHOUSE_CODE,
+            ioti.TRANSFER_LOCATOR_CODE,
+            ioti.COSTCENTER_CODE,
+            ioti.SUPPLIER_CODE,
+            ioti.SUPPLIER_SITE_CODE,
+            ioti.CUSTOMER_CODE,
+            ioti.CUSTOMER_SITE_CODE,
+            ioti.SOURCE_DOC_NUM,
+            ioti.SOURCE_DOC_NUM,
+            ioti.SOURCE_DOC_LINE_NUM,
+            ioti.WORK_ORDER_NUM,
+            ioti.OPERATION_SEQUENCE,
+            ioti.BOM_RESERVE_NUM,
+            ioti.BOM_RESERVE_LINE_NUM,
+            ioti.COMPLETE_FLAG,
+            ioti.PROD_LINE_CODE,
+            ioti.CONTAINER_CODE,
+            ioti.CONTAINER_TYPE_CODE,
+            ioti.SO_NUM,
+            ioti.SO_LINE_NUM,
+            ioti.REMARK,
+            ioti.PROCESS_DATE,
+            ioti.PROCESS_MESSAGE,
+            ioti.PROCESS_STATUS,
+            ioti.TRANSFER_SO_NUM,
+            ioti.TRANSFER_SO_LINE_NUM,
+            ioti.TRANSFER_LOT_NUMBER,
+            ioti.PO_NUM,
+            ioti.PO_LINE_NUM,
+            ioti.GMCODE,
+            ioti.created_by,
+            iu.real_name created_by_name,
+            ioti.creation_date,
+            ioti.last_updated_by,
+            iu.real_name last_updated_by_name,
+            ioti.last_update_date
+        FROM
+            itf_object_transaction_iface ioti
+            LEFT JOIN hzero_platform.iam_user iu ON ioti.created_by = iu.id
+            LEFT JOIN hzero_platform.iam_user iul ON ioti.last_updated_by = iul.id
+        WHERE
+        ioti.tenant_id=#{tenantId}
+        AND ioti.creation_date &gt;= DATE_FORMAT(#{dto.transactionDateStart},'%Y-%m-%d %H:%i:%S')
+        AND ioti.creation_date &lt;= DATE_FORMAT(#{dto.transactionDateEnd},'%Y-%m-%d %H:%i:%S')
+        <if test="dto.materialCode!=null and dto.materialCode!=''">
+            and ioti.MATERIAL_CODE = #{dto.materialCode}
+        </if>
+        <if test="dto.lotNumber!=null and dto.lotNumber!=''">
+            and ioti.LOT_NUMBER = #{dto.lotNumber}
+        </if>
+        <if test="dto.moveType!=null and dto.moveType!=''">
+            and ioti.MOVE_TYPE = #{dto.moveType}
+        </if>
+        <if test="dto.warehouseCode!=null and dto.warehouseCode!=''">
+            and ioti.WAREHOUSE_CODE = #{dto.warehouseCode}
+        </if>
+        <if test="dto.locatorCode!=null and dto.locatorCode!=''">
+            and ioti.LOCATOR_CODE = #{dto.locatorCode}
+        </if>
+        <if test="dto.workOrderNum!=null and dto.workOrderNum!=''">
+            and ioti.WORK_ORDER_NUM = #{dto.workOrderNum}
+        </if>
+        <if test="dto.processStatus!=null and dto.processStatus!=''">
+            and ioti.PROCESS_STATUS = #{dto.processStatus}
+        </if>
+        <if test="dto.mergeId!=null and dto.mergeId!=''">
+            and ioti.MERGE_ID = #{dto.mergeId}
+        </if>
+    </select>
+
+    <select id="selectWorkOrderMaterial" resultType="com.ruike.itf.domain.entity.ItfObjectTransactionIface">
+        SELECT
+            wo.WORK_ORDER_NUM,
+            mm.MATERIAL_CODE AS wo_material_code
+        FROM
+            mt_work_order wo,
+            mt_material mm
+        WHERE
+            mm.MATERIAL_ID = wo.MATERIAL_ID
+        AND wo.TENANT_ID = #{tenantId}
+        AND wo.WORK_ORDER_NUM IN
+        <foreach collection="workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

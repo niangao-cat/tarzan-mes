@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialSubstituteRelMapper">
+    <select id="selectMaterialSubstituteRel" resultType="com.ruike.wms.domain.entity.WmsMaterialSubstituteRel">
+            SELECT
+        wmsrt.MATERIAL_ID
+    FROM
+        wms_material_substitute_rel wmsr,
+        wms_material_substitute_rel wmsrt
+    WHERE
+        wmsr.TENANT_ID = #{tenantId}
+        AND wmsr.MATERIAL_ID = #{materialId}
+        AND wmsrt.TENANT_ID = #{tenantId}
+        AND wmsrt.MATERIAL_ID != #{materialId}
+        AND wmsrt.SUBSTITUTE_GROUP = wmsr.SUBSTITUTE_GROUP
+    </select>
+</mapper>

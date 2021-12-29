@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtEventRequestMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtEventRequest">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EVENT_REQUEST_ID" property="eventRequestId" jdbcType="VARCHAR"/>
+        <result column="REQUEST_TYPE_ID" property="requestTypeId" jdbcType="VARCHAR"/>
+        <result column="REQUEST_BY" property="requestBy" jdbcType="DECIMAL"/>
+        <result column="REQUEST_TIME" property="requestTime" jdbcType="TIMESTAMP"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        SELECT *
+        FROM mt_event_request
+        WHERE 1=1
+        AND TENANT_ID = ${tenantId}
+        AND EVENT_REQUEST_ID IN
+        <foreach collection="eventRequestIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+
+    </select>
+
+    <select id="selectByConditionCustom" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        mt_event_request er
+        WHERE 1=1
+        AND er.TENANT_ID = ${tenantId}
+        <if test="condition.requestTypeCode != null">
+            AND er.REQUEST_TYPE_ID = (
+            SELECT REQUEST_TYPE_ID
+            FROM mt_event_request_type
+            WHERE REQUEST_TYPE_CODE = #{condition.requestTypeCode}
+            )
+        </if>
+        <if test="condition.requestBy != null">
+            AND er.REQUEST_BY = #{condition.requestBy}
+        </if>
+        <if test="condition.requestStartTime != null">
+            AND DATE_FORMAT(er.REQUEST_TIME,'%Y-%m-%d %H:%i:%S') &gt;= #{condition.requestStartTime}
+        </if>
+        <if test="condition.requestEndTime != null">
+            AND DATE_FORMAT(er.REQUEST_TIME,'%Y-%m-%d %H:%i:%S') &lt;= #{condition.requestEndTime}
+        </if>
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.general.domain.vo.MtEventRequestVO4">
+        SELECT tb.*,
+        mert.REQUEST_TYPE_CODE as requestTypeCode,
+        mert.DESCRIPTION as requestTypeDescription
+        FROM MT_EVENT_REQUEST tb
+        join MT_EVENT_REQUEST_TYPE mert
+        on tb.REQUEST_TYPE_ID=mert.REQUEST_TYPE_ID
+        WHERE tb.TENANT_ID = ${tenantId}
+        and mert.TENANT_ID=${tenantId}
+        <if test="dto.eventRequestId != null">
+            AND tb.EVENT_REQUEST_ID = #{dto.eventRequestId}
+        </if>
+        <if test="dto.requestTypeId != null">
+            AND tb.REQUEST_TYPE_ID = #{dto.requestTypeId}
+        </if>
+        <if test="dto.requestBy != null">
+            AND tb.REQUEST_BY = #{dto.requestBy}
+        </if>
+        <if test="dto.requestTimeFrom != null">
+            AND tb.REQUEST_TIME &gt; DATE_FORMAT(#{dto.requestTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.requestTimeTo != null">
+            AND tb.REQUEST_TIME &lt; DATE_FORMAT(#{dto.requestTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        order by tb.EVENT_REQUEST_ID asc
+    </select>
+</mapper>

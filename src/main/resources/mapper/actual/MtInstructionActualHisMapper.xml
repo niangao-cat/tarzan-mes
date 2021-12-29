@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtInstructionActualHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtInstructionActualHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ACTUAL_HIS_ID" property="actualHisId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_ID" property="actualId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_TYPE" property="instructionType" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_TYPE" property="sourceOrderType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_ID" property="sourceOrderId" jdbcType="VARCHAR"/>
+        <result column="FROM_SITE_ID" property="fromSiteId" jdbcType="VARCHAR"/>
+        <result column="TO_SITE_ID" property="toSiteId" jdbcType="VARCHAR"/>
+        <result column="FROM_LOCATOR_ID" property="fromLocatorId" jdbcType="VARCHAR"/>
+        <result column="TO_LOCATOR_ID" property="toLocatorId" jdbcType="VARCHAR"/>
+        <result column="FROM_OWNER_TYPE" property="fromOwnerType" jdbcType="VARCHAR"/>
+        <result column="TO_OWNER_TYPE" property="toOwnerType" jdbcType="VARCHAR"/>
+        <result column="COST_CENTER_ID" property="costCenterId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_QTY" property="actualQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectRecent" resultType="tarzan.actual.domain.vo.MtInstructionActualHisVO">
+      SELECT ACTUAL_HIS_ID, EVENT_ID FROM
+      (
+	       SELECT
+	            his.ACTUAL_HIS_ID,
+	            his.EVENT_ID
+	        FROM
+	            mt_instruction_actual_his his
+	        WHERE
+	            his.ACTUAL_ID= #{actualId}
+	            and his.TENANT_ID = #{tenantId}
+	        ORDER BY his.ACTUAL_HIS_ID + 0 DESC	            
+      )
+      WHERE ROWNUM = 1
+    </select>
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsCheckScrapMapper">
+
+    <select id="selectDocCondition" resultType="com.ruike.qms.api.dto.QmsCheckScrapDocLineDTO">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        mid.INSTRUCTION_DOC_ID,
+        mid.INSTRUCTION_DOC_NUM,
+        mid.INSTRUCTION_DOC_STATUS,
+        mid.SUPPLIER_ID,
+        ms.SUPPLIER_CODE,
+        mstl.SUPPLIER_NAME,
+        mida.ATTR_VALUE AS URGENT_FLAG,
+        mi.INSTRUCTION_ID,
+        mi.INSTRUCTION_NUM,
+        mi.INSTRUCTION_STATUS,
+        mi.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmtl.MATERIAL_NAME,
+        miad.ACTUAL_DETAIL_ID,
+        mid.REMARK
+        FROM
+        mt_instruction_actual_detail miad
+        JOIN mt_instruction_actual mia ON miad.ACTUAL_ID = mia.ACTUAL_ID
+        JOIN mt_instruction mi ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        JOIN mt_instruction_doc mid ON mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_instruction_doc_attr mida ON mida.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+          AND mida.ATTR_NAME = 'URGENT_FLAG'
+        LEFT JOIN mt_supplier ms ON mid.SUPPLIER_ID = ms.SUPPLIER_ID
+        LEFT JOIN mt_supplier_tl mstl ON mstl.SUPPLIER_ID = ms.SUPPLIER_ID AND mstl.LANG = #{lang}
+        LEFT JOIN mt_material mm ON mi.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_material_tl mmtl ON mmtl.MATERIAL_ID = mm.MATERIAL_ID AND mmtl.LANG = #{lang}
+        WHERE miad.TENANT_ID = #{tenantId}
+        AND mi.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        AND mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        AND mid.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+        <if test="materialLotId != null">
+            AND miad.MATERIAL_LOT_ID = #{materialLotId}
+        </if>
+    </select>
+
+    <select id="sumScrapQtyGet" resultType="java.math.BigDecimal">
+        SELECT
+        sum(attr.ATTR_VALUE) AS SCRAP_QTY
+        FROM
+        mt_instruction_actual act,
+        mt_instruction_actual_detail actd,
+        mt_instruct_act_detail_attr attr
+        WHERE
+        act.TENANT_ID = #{tenantId}
+        AND act.ACTUAL_ID = actd.ACTUAL_ID
+        AND attr.ACTUAL_DETAIL_ID = actd.ACTUAL_DETAIL_ID
+        AND attr.ATTR_NAME = 'SCRAP_QTY'
+        <if test="instructionId != null">
+            AND act.INSTRUCTION_ID = #{instructionId}
+        </if>
+    </select>
+
+</mapper>

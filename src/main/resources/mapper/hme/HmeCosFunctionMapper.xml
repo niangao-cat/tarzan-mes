@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosFunctionMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosFunction">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="COS_FUNCTION_ID" property="cosFunctionId" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="DECIMAL"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="CURRENT" property="current" jdbcType="VARCHAR"/>
+        <result column="A01" property="a01" jdbcType="VARCHAR"/>
+        <result column="A02" property="a02" jdbcType="DECIMAL"/>
+        <result column="A03" property="a03" jdbcType="VARCHAR"/>
+        <result column="A04" property="a04" jdbcType="DECIMAL"/>
+        <result column="A05" property="a05" jdbcType="DECIMAL"/>
+        <result column="A06" property="a06" jdbcType="DECIMAL"/>
+        <result column="A07" property="a07" jdbcType="DECIMAL"/>
+        <result column="A08" property="a08" jdbcType="DECIMAL"/>
+        <result column="A09" property="a09" jdbcType="DECIMAL"/>
+        <result column="A010" property="a010" jdbcType="DECIMAL"/>
+        <result column="A011" property="a011" jdbcType="DECIMAL"/>
+        <result column="A012" property="a012" jdbcType="DECIMAL"/>
+        <result column="A013" property="a013" jdbcType="DECIMAL"/>
+        <result column="A014" property="a014" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="cosFunctionHeadQuery" resultType="com.ruike.hme.api.dto.HmeCosFunctionHeadDTO">
+        SELECT
+            mm.MATERIAL_CODE,
+            hmll.attribute1 COS_TYPE,
+            hmll.load_sequence,
+            mmt.MATERIAL_LOT_CODE,
+            hmll.attribute2 WAFER,
+            CONCAT(
+                hmll.load_row,
+                ',',
+                hmll.load_column
+            ) row_cloumn,
+            hmll.hot_sink_code,
+            mml.LOCATOR_CODE,
+            hmll.`status`
+        FROM
+            hme_material_lot_load hmll,
+            mt_material_lot mmt,
+            mt_material mm,
+            mt_mod_locator mml
+        WHERE
+            hmll.material_lot_id = Mmt.MATERIAL_LOT_ID
+        AND mm.MATERIAL_ID = mmt.MATERIAL_ID
+        AND mml.LOCATOR_ID = mmt.LOCATOR_ID
+        AND hmll.hot_sink_code is not null
+        AND hmll.tenant_id=#{tenantId}
+        <if test="dto.materialCode != null and dto.materialCode != '' ">
+            AND  mm.MATERIAL_CODE  = #{dto.materialCode}
+        </if>
+        <if test="dto.cosType != null and dto.cosType != '' ">
+            AND  hmll.attribute1  = #{dto.cosType}
+        </if>
+        <if test="dto.hotSinkCode != null and dto.hotSinkCode != '' ">
+            AND  hmll.hot_sink_code  = #{dto.hotSinkCode}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != '' ">
+            AND  mmt.MATERIAL_LOT_CODE  = #{dto.materialLotCode}
+        </if>
+        <if test="dto.wafer != null and dto.wafer != '' ">
+            AND  hmll.attribute2 =  #{dto.wafer}
+        </if>
+        ORDER BY hmll.material_lot_id, hmll.load_row, hmll.load_column
+    </select>
+
+    <select id="selectByLoadSequence" resultType="com.ruike.hme.domain.entity.HmeCosFunction">
+       SELECT h.*
+        FROM
+            hme_cos_function h
+        WHERE
+            h.tenant_id=#{tenantId}
+        AND h.load_sequence = #{loadSequence}
+        AND h.`current` = #{current}
+        limit 1
+    </select>
+
+    <select id="cosFunctionReport" resultType="com.ruike.hme.api.dto.HmeFunctionReportDTO">
+        SELECT
+        mm.MATERIAL_CODE,
+        hmll.attribute1 COS_TYPE,
+        hmll.load_sequence,
+        mmt.MATERIAL_LOT_CODE,
+        hmll.attribute2 WAFER,
+        CONCAT(
+        hmll.load_row,
+        ',',
+        hmll.load_column
+        ) row_cloumn,
+        hmll.hot_sink_code,
+        mml.LOCATOR_CODE,
+        hcf.`current`,
+        hcf.A01,
+        hcf.A02,
+        hcf.A03,
+        hcf.A04,
+        hcf.A05,
+        hcf.A06,
+        hcf.A07,
+        hcf.A08,
+        he.ASSET_NAME,
+        hcf.A09,
+        hcf.A010,
+        hcf.A011,
+        hcf.A012,
+        hcf.A013,
+        hcf.A014,
+        hcf.A15,
+        hcf.A16,
+        hcf.A17,
+        hcf.A18,
+        hcf.A19,
+        hcf.A20,
+        hcf.A21,
+        hcf.A22,
+        hcf.A23,
+        hcf.A24,
+        mnc.DESCRIPTION,
+        hcf.A25,
+        hcf.A26
+        FROM
+        hme_material_lot_load hmll,
+        mt_material_lot mmt,
+        mt_material mm,
+        mt_mod_locator mml,
+        hme_cos_function hcf
+        LEFT JOIN hme_equipment he ON he.ASSET_ENCODING = hcf.A08
+        LEFT JOIN mt_nc_code mnc ON mnc.NC_CODE = hcf.A24
+        WHERE
+        hmll.material_lot_id = Mmt.MATERIAL_LOT_ID
+        AND mm.MATERIAL_ID = mmt.MATERIAL_ID
+        AND mml.LOCATOR_ID = mmt.LOCATOR_ID
+        AND hmll.hot_sink_code is not null
+        and hmll.load_sequence=hcf.load_sequence
+        and hcf.creation_date between #{dto.startDate} AND #{dto.endDate}
+        AND hmll.tenant_id=#{tenantId}
+        <if test="dto.materialCode != null and dto.materialCode != '' ">
+            AND  mm.MATERIAL_CODE  like CONCAT('%',#{dto.materialCode} ,'%')
+        </if>
+        <if test="dto.cosType != null and dto.cosType != '' ">
+            AND  hmll.attribute1 = #{dto.cosType}
+        </if>
+        <if test="dto.hotSinkCode != null and dto.hotSinkCode != '' ">
+            AND  hmll.hot_sink_code  like CONCAT('%',#{dto.hotSinkCode} ,'%')
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != '' ">
+            AND  mmt.MATERIAL_LOT_CODE  like CONCAT(#{dto.materialLotCode} ,'%')
+        </if>
+        <if test="dto.wafer != null and dto.wafer != '' ">
+            AND  hmll.attribute2 like CONCAT('%',#{dto.wafer} ,'%')
+        </if>
+    </select>
+
+    <select id="hmeCosFunctionPropertyBatchGet">
+        SELECT
+            *
+        FROM
+            hme_cos_function hcf
+        WHERE hcf.TENANT_ID = #{tenantId}
+        <if test="loadSequenceList!=null and loadSequenceList.size()>0">
+            and hcf.load_sequence in
+            <foreach collection="loadSequenceList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="current != null and current != '' ">
+            AND hcf.current = #{current}
+        </if>
+    </select>
+</mapper>

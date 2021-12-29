@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeProductionGroupMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeProductionGroup">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PRODUCTION_GROUP_ID" property="productionGroupId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_GROUP_CODE" property="productionGroupCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="listQuery" resultType="com.ruike.hme.domain.vo.HmeProductionGroupVO">
+        select hpg.PRODUCTION_GROUP_ID, hpg.SITE_ID, mms.SITE_CODE, mms.SITE_NAME,
+               hpg.PRODUCTION_GROUP_CODE, hpg.DESCRIPTION, hpg.ENABLE_FLAG
+        from hme_production_group hpg,
+             mt_mod_site mms
+        where hpg.TENANT_ID = #{tenantId}
+        and mms.SITE_ID = hpg.SITE_ID
+        <if test="dto.siteId != null and dto.siteId != ''">
+            and hpg.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.productionGroupCode != null and dto.productionGroupCode != ''">
+            and hpg.PRODUCTION_GROUP_CODE like CONCAT('%',#{dto.productionGroupCode},'%')
+        </if>
+        <if test="dto.description != null and dto.description != ''">
+            and hpg.DESCRIPTION like CONCAT('%',#{dto.description},'%')
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and EXISTS (
+            select 1
+            from hme_production_group_line hpgl
+            where hpgl.PRODUCTION_GROUP_ID = hpg.PRODUCTION_GROUP_ID
+            and hpgl.MATERIAL_ID = #{dto.materialId}
+            <if test="dto.productionVersion != null and dto.productionVersion != ''">
+                and hpgl.PRODUCTION_VERSION = #{dto.productionVersion}
+            </if>
+            )
+        </if>
+        order by hpg.creation_date desc
+    </select>
+
+    <select id="linePageQuery" resultType="com.ruike.hme.domain.vo.HmeProductionGroupVO2">
+        select hpgl.PRODUCTION_GROUP_ID, hpgl.PRODUCTION_GROUP_LINE_ID,
+               hpgl.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               hpgl.PRODUCTION_VERSION, hpgl.ENABLE_FLAG
+        from hme_production_group_line hpgl,
+             mt_material mm
+        where hpgl.PRODUCTION_GROUP_ID = #{productionGroupId}
+        and hpgl.TENANT_ID = #{tenantId}
+        and mm.MATERIAL_ID = hpgl.MATERIAL_ID
+        order by hpgl.creation_date desc
+    </select>
+</mapper>

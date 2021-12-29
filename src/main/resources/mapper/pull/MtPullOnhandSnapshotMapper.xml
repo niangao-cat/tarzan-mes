@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.pull.infra.mapper.MtPullOnhandSnapshotMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.pull.domain.entity.MtPullOnhandSnapshot">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ONHAND_SNAPSHOT_ID" property="onhandSnapshotId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="ONHAND_QTY" property="onhandQty" jdbcType="DECIMAL"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="SNAPSHOT_REVISION" property="snapshotRevision" jdbcType="VARCHAR"/>
+        <result column="LATEST_REVISION_FLAG" property="latestRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="ViewResultMap" type="tarzan.pull.domain.vo.MtPullOnhandSnapshotVO6">
+        <result column="ONHAND_SNAPSHOT_ID" property="onhandSnapshotId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="ONHAND_QTY" property="onhandQty" jdbcType="DECIMAL"/>
+        <result column="SNAPSHOT_REVISION" property="snapshotRevision" jdbcType="VARCHAR"/>
+        <result column="LATEST_REVISION_FLAG" property="latestRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+    </resultMap>
+    <select id="pullOnhandSnapshotQuery" resultMap="ViewResultMap">
+        select
+        t.ONHAND_SNAPSHOT_ID,
+        t.SITE_ID,
+        t.MATERIAL_ID,
+        t.LOCATOR_ID,
+        t.AREA_ID,
+        t.ONHAND_QTY,
+        t.SNAPSHOT_REVISION,
+        t.LATEST_REVISION_FLAG,
+        t.CREATED_BY
+        from mt_pull_onhand_snapshot t
+        where t.TENANT_ID=${tenantId}
+        <if test="dto.onhandSnapshotId != null">
+            and t.ONHAND_SNAPSHOT_ID=#{dto.onhandSnapshotId}
+        </if>
+        <if test="dto.siteId != null">
+            and t.SITE_ID=#{dto.siteId}
+        </if>
+        <if test="dto.materialId != null">
+            and t.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.locatorId != null">
+            and t.LOCATOR_ID=#{dto.locatorId}
+        </if>
+        <if test="dto.areaId != null">
+            and t.AREA_ID=#{dto.areaId}
+        </if>
+        <if test="dto.snapshotRevision != null">
+            and t.SNAPSHOT_REVISION=#{dto.snapshotRevision}
+        </if>
+        <if test="dto.latestRevisionFlag != null">
+            and t.LATEST_REVISION_FLAG=#{dto.latestRevisionFlag}
+        </if>
+        <if test="dto.createdBy != null">
+            and t.CREATED_BY=#{dto.createdBy}
+        </if>
+    </select>
+</mapper>

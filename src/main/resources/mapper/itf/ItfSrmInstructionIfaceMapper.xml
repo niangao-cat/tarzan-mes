@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfSrmInstructionIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfSrmInstructionIface">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="iface_id" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_NUM" property="instructionDocNum" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_TYPE" property="instructionDocType" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_STATUS" property="instructionDocStatus" jdbcType="VARCHAR"/>
+        <result column="ZFLAG" property="zflag" jdbcType="VARCHAR"/>
+        <result column="ZMESSAGE" property="zmessage" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="selectMtDocStatus" resultMap="BaseResultMap">
+        select
+            mid.INSTRUCTION_DOC_NUM,
+            mid.INSTRUCTION_DOC_TYPE,
+            mid.SITE_ID,
+            mid.SUPPLIER_ID,
+            mid.INSTRUCTION_DOC_STATUS,
+            mida.ATTR_VALUE as ATTRIBUTE1
+        from tarzan_mes.mt_instruction_doc mid
+                LEFT join tarzan_mes.mt_instruction_doc_attr mida
+                      on mida.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID and mida.ATTR_NAME = 'SRM_FLAG'
+        WHERE 1=1
+        AND mida.INSTRUCTION_DOC_ID = #{instructionDocId}
+        AND mida.TENANT_ID = #{tenantId}
+    </select>
+</mapper>

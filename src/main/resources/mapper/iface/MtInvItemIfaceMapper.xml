@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtInvItemIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtInvItemIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="ITEM_ID" property="itemId" jdbcType="DECIMAL"/>
+        <result column="ITEM_CODE" property="itemCode" jdbcType="VARCHAR"/>
+        <result column="OLD_ITEM_CODE" property="oldItemCode" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM" property="primaryUom" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTIONS" property="descriptions" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION_MIR" property="descriptionMir" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="ITEM_TYPE" property="itemType" jdbcType="VARCHAR"/>
+        <result column="PLANNING_MAKE_BUY_CODE" property="planningMakeBuyCode" jdbcType="VARCHAR"/>
+        <result column="LOT_CONTROL_CODE" property="lotControlCode" jdbcType="VARCHAR"/>
+        <result column="PRERPOCESSING_LEAD_TIME" property="prerpocessingLeadTime" jdbcType="DECIMAL"/>
+        <result column="PURCHASE_LEADTIME" property="purchaseLeadtime" jdbcType="DECIMAL"/>
+        <result column="WIP_LEAD_TIME" property="wipLeadTime" jdbcType="DECIMAL"/>
+        <result column="INSTOCK_LEAD_TIME" property="instockLeadTime" jdbcType="DECIMAL"/>
+        <result column="MIN_PACK_QTY" property="minPackQty" jdbcType="DECIMAL"/>
+        <result column="MINIMUM_ORDER_QUANTITY" property="minimumOrderQuantity" jdbcType="DECIMAL"/>
+        <result column="BUYER_CODE" property="buyerCode" jdbcType="VARCHAR"/>
+        <result column="QC_FLAG" property="qcFlag" jdbcType="VARCHAR"/>
+        <result column="RECEIVING_ROUTING_ID" property="receivingRoutingId" jdbcType="VARCHAR"/>
+        <result column="WIP_SUPPLY_TYPE" property="wipSupplyType" jdbcType="VARCHAR"/>
+        <result column="VMI_FLAG" property="vmiFlag" jdbcType="VARCHAR"/>
+        <result column="ERP_CREATION_DATE" property="erpCreationDate" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATED_BY" property="erpCreatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATED_BY" property="erpLastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATE_DATE" property="erpLastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="VOLUME" property="volume" jdbcType="DECIMAL"/>
+        <result column="WEIGHT" property="weight" jdbcType="DECIMAL"/>
+        <result column="SHELF_LIFE" property="shelfLife" jdbcType="DECIMAL"/>
+        <result column="CONVERSION_RATE" property="conversionRate" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_DESIGN_CODE" property="materialDesignCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_IDENTIFY_CODE" property="materialIdentifyCode" jdbcType="VARCHAR"/>
+        <result column="SIZE_UOM_CODE" property="sizeUomCode" jdbcType="VARCHAR"/>
+        <result column="VOLUME_UOM_CODE" property="volumeUomCode" jdbcType="VARCHAR"/>
+        <result column="WEIGHT_UOM_CODE" property="weightUomCode" jdbcType="VARCHAR"/>
+        <result column="SHELF_LIFE_UOM_CODE" property="shelfLifeUomCode" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_UOM_CODE" property="secondaryUomCode" jdbcType="VARCHAR"/>
+        <result column="STOCK_LOCATOR_CODE" property="stockLocatorCode" jdbcType="VARCHAR"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE16" property="attribute16" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE17" property="attribute17" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE18" property="attribute18" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE19" property="attribute19" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE20" property="attribute20" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE21" property="attribute21" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE22" property="attribute22" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE23" property="attribute23" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE24" property="attribute24" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE25" property="attribute25" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE26" property="attribute26" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE27" property="attribute27" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE28" property="attribute28" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE29" property="attribute29" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE30" property="attribute30" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="resuleView" type="tarzan.material.domain.vo.MtUomVO">
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="UOM_TYPE" property="uomType" jdbcType="VARCHAR"/>
+        <result column="UOM_CODE" property="uomCode" jdbcType="VARCHAR"/>
+        <result column="UOM_NAME" property="uomName" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_FLAG" property="primaryFlag" jdbcType="VARCHAR"/>
+        <result column="CONVERSION_VALUE" property="conversionValue" jdbcType="DECIMAL"/>
+        <result column="DECIMAL_NUMBER" property="decimalNumber" jdbcType="DECIMAL"/>
+        <result column="PROCESS_MODE" property="processMode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="UOM_TYPE_DESC" property="uomTypeDesc" jdbcType="VARCHAR"/>
+        <result column="PROCESS_MODE_DESC" property="processModeDesc" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <resultMap id="resultView2" type="tarzan.material.domain.entity.MtMaterial">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_DESIGN_CODE" property="materialDesignCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_IDENTIFY_CODE" property="materialIdentifyCode" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="VOLUME" property="volume" jdbcType="DECIMAL"/>
+        <result column="VOLUME_UOM_ID" property="volumeUomId" jdbcType="VARCHAR"/>
+        <result column="WEIGHT" property="weight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="SHELF_LIFE" property="shelfLife" jdbcType="DECIMAL"/>
+        <result column="SHELF_LIFE_UOM_ID" property="shelfLifeUomId" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_ID" property="primaryUomId" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_UOM_ID" property="secondaryUomId" jdbcType="VARCHAR"/>
+        <result column="CONVERSION_RATE" property="conversionRate" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="resultView3" type="tarzan.iface.domain.entity.MtSitePlantReleation">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="RELEATION_ID" property="releationId" jdbcType="VARCHAR"/>
+        <result column="SITE_TYPE" property="siteType" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <resultMap id="resultView4" type="tarzan.material.domain.entity.MtMaterialSite">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="resultView5" type="tarzan.material.domain.entity.MtPfepSchedule">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_SCHEDULE_ID" property="pfepScheduleId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="KEY_COMPONENT_FLAG" property="keyComponentFlag" jdbcType="VARCHAR"/>
+        <result column="SCHEDULE_FLAG" property="scheduleFlag" jdbcType="VARCHAR"/>
+        <result column="MAKE_TO_ORDER_FLAG" property="makeToOrderFlag" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_RULE" property="prodLineRule" jdbcType="VARCHAR"/>
+        <result column="PRE_PROCESSING_LEAD_TIME" property="preProcessingLeadTime" jdbcType="DECIMAL"/>
+        <result column="PROCESSING_LEAD_TIME" property="processingLeadTime" jdbcType="DECIMAL"/>
+        <result column="POST_PROCESSING_LEAD_TIME" property="postProcessingLeadTime" jdbcType="DECIMAL"/>
+        <result column="SAFETY_LEAD_TIME" property="safetyLeadTime" jdbcType="DECIMAL"/>
+        <result column="EXCEED_LEAD_TIME" property="exceedLeadTime" jdbcType="DECIMAL"/>
+        <result column="DEMAND_TIME_FENCE" property="demandTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="ORDER_TIME_FENCE" property="orderTimeFence" jdbcType="DECIMAL"/>
+        <result column="DEMAND_MERGE_TIME_FENCE" property="demandMergeTimeFence" jdbcType="DECIMAL"/>
+        <result column="SUPPLY_MERGE_TIME_FENCE" property="supplyMergeTimeFence" jdbcType="DECIMAL"/>
+        <result column="SAFETY_STOCK_METHOD" property="safetyStockMethod" jdbcType="VARCHAR"/>
+        <result column="SAFETY_STOCK_PERIOD" property="safetyStockPeriod" jdbcType="DECIMAL"/>
+        <result column="SAFETY_STOCK_VALUE" property="safetyStockValue" jdbcType="DECIMAL"/>
+        <result column="ECONOMIC_LOT_SIZE" property="economicLotSize" jdbcType="DECIMAL"/>
+        <result column="ECONOMIC_SPLIT_PARAMETER" property="economicSplitParameter" jdbcType="DECIMAL"/>
+        <result column="MIN_ORDER_QTY" property="minOrderQty" jdbcType="DECIMAL"/>
+        <result column="FIXED_LOT_MULTIPLE" property="fixedLotMultiple" jdbcType="DECIMAL"/>
+        <result column="RATE_TYPE" property="rateType" jdbcType="VARCHAR"/>
+        <result column="RATE" property="rate" jdbcType="DECIMAL"/>
+        <result column="ACTIVITY" property="activity" jdbcType="DECIMAL"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="PROCESS_BATCH" property="processBatch" jdbcType="DECIMAL"/>
+        <result column="STANDARD_RATE_TYPE" property="standardRateType" jdbcType="VARCHAR"/>
+        <result column="STANDARD_RATE" property="standardRate" jdbcType="DECIMAL"/>
+        <result column="AUTO_ASSIGN_FLAG" property="autoAssignFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="resultView6" type="tarzan.material.domain.entity.MtPfepPurchase">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_PURCHASE_ID" property="pfepPurchaseId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="RECEIVE_LOCATOR_ID" property="receiveLocatorId" jdbcType="VARCHAR"/>
+        <result column="ECONOMIC_LOT_SIZE" property="economicLotSize" jdbcType="DECIMAL"/>
+        <result column="ECONOMIC_SPLIT_PARAMETER" property="economicSplitParameter" jdbcType="DECIMAL"/>
+        <result column="AUTO_LOCK_TIME" property="autoLockTime" jdbcType="DECIMAL"/>
+        <result column="LIMIT_HOUR" property="limitHour" jdbcType="DECIMAL"/>
+        <result column="PAST_DY_NOTIFY_CLOSE_TIME" property="pastDyNotifyCloseTime" jdbcType="DECIMAL"/>
+        <result column="PURCHASE_CYCLE" property="purchaseCycle" jdbcType="DECIMAL"/>
+        <result column="MIN_PACKAGE_QTY" property="minPackageQty" jdbcType="DECIMAL"/>
+        <result column="MIN_PURCHASE_QTY" property="minPurchaseQty" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="COLLECT_TYPE" property="collectType" jdbcType="VARCHAR"/>
+        <result column="REQUIREMENT_TYPE" property="requirementType" jdbcType="VARCHAR"/>
+        <result column="DLY_CANLENDER_TYPE" property="dlyCanlenderType" jdbcType="VARCHAR"/>
+        <result column="NOTIFY_AUTO_CAL_TYPE" property="notifyAutoCalType" jdbcType="VARCHAR"/>
+        <result column="REQUIREMENT_LEAD_TIME" property="requirementLeadTime" jdbcType="DECIMAL"/>
+        <result column="PAST_REQUIREMENT_TIME" property="pastRequirementTime" jdbcType="DECIMAL"/>
+        <result column="PAST_DELIVERY_NOTIFY_TIME" property="pastDeliveryNotifyTime" jdbcType="DECIMAL"/>
+        <result column="PAST_DELIVERY_TICKET_TIME" property="pastDeliveryTicketTime" jdbcType="DECIMAL"/>
+        <result column="ONHAND_QTY_MODEL" property="onhandQtyModel" jdbcType="VARCHAR"/>
+        <result column="ISSUE_TYPE" property="issueType" jdbcType="VARCHAR"/>
+        <result column="AUTO_PERCENT" property="autoPercent" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="resultView7" type="tarzan.iface.domain.entity.MtMaterialBasic">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OLD_ITEM_CODE" property="oldItemCode" jdbcType="VARCHAR"/>
+        <result column="LONG_DESCRIPTION" property="longDescription" jdbcType="VARCHAR"/>
+        <result column="ITEM_TYPE" property="itemType" jdbcType="VARCHAR"/>
+        <result column="MAKE_BUY_CODE" property="makeBuyCode" jdbcType="VARCHAR"/>
+        <result column="LOT_CONTROL_CODE" property="lotControlCode" jdbcType="VARCHAR"/>
+        <result column="QC_FLAG" property="qcFlag" jdbcType="VARCHAR"/>
+        <result column="RECEIVING_ROUTING_ID" property="receivingRoutingId" jdbcType="VARCHAR"/>
+        <result column="WIP_SUPPLY_TYPE" property="wipSupplyType" jdbcType="VARCHAR"/>
+        <result column="VMI_FLAG" property="vmiFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="resultView9" type="tarzan.material.domain.entity.MtPfepInventory">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_INVENTORY_ID" property="pfepInventoryId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="IDENTIFY_TYPE" property="identifyType" jdbcType="VARCHAR"/>
+        <result column="IDENTIFY_ID" property="identifyId" jdbcType="VARCHAR"/>
+        <result column="STOCK_LOCATOR_ID" property="stockLocatorId" jdbcType="VARCHAR"/>
+        <result column="PACKAGE_LENGTH" property="packageLength" jdbcType="DECIMAL"/>
+        <result column="PACKAGE_WIDTH" property="packageWidth" jdbcType="DECIMAL"/>
+        <result column="PACKAGE_HEIGHT" property="packageHeight" jdbcType="DECIMAL"/>
+        <result column="PACKAGE_SIZE_UOM_ID" property="packageSizeUomId" jdbcType="VARCHAR"/>
+        <result column="PACKAGE_WEIGHT" property="packageWeight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_STOCK_QTY" property="maxStockQty" jdbcType="DECIMAL"/>
+        <result column="MIN_STOCK_QTY" property="minStockQty" jdbcType="DECIMAL"/>
+        <result column="ISSUED_LOCATOR_ID" property="issuedLocatorId" jdbcType="VARCHAR"/>
+        <result column="COMPLETION_LOCATOR_ID" property="completionLocatorId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="resultView8" type="tarzan.iface.domain.vo.MtInvIfaceVO">
+        <result column="ITEM_CODE" property="itemCode" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+    <update id="updateStatusByBatchId">
+        update mt_inv_item_iface set status = #{status},message = #{message} where batch_id = #{batchId}
+    </update>
+    <delete id="deleteMaterialSiteAttrData">
+        ${sql}
+    </delete>
+
+    <select id="getUomList" resultMap="resuleView" fetchSize="5000">
+        <bind name="lang"
+              value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        u.UOM_ID,
+        u.UOM_TYPE,
+        u.UOM_CODE,
+        tl.UOM_NAME,
+        u.PRIMARY_FLAG,
+        u.CONVERSION_VALUE,
+        u.DECIMAL_NUMBER,
+        u.PROCESS_MODE,
+        u.ENABLE_FLAG,
+        u.CID,
+        l1.DESCRIPTION UOM_TYPE_DESC,
+        l2.DESCRIPTION PROCESS_MODE_DESC
+        FROM
+        mt_uom u
+        LEFT JOIN mt_gen_type t1 ON t1.type_code = u.UOM_TYPE AND t1.type_group = 'UOM_TYPE'
+        AND t1.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_gen_type_tl l1 ON l1.GEN_TYPE_ID = t1.gen_type_id
+        AND l1.LANG =#{lang}
+        LEFT JOIN mt_gen_type t2 ON t2.type_code = u.PROCESS_MODE
+        AND t2.type_group = 'DECIMAL_PROCESS_MODE'
+        AND t2.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_gen_type_tl l2 ON l2.GEN_TYPE_ID = t2.gen_type_id
+        AND l2.LANG = #{lang}
+        INNER JOIN mt_uom_tl tl ON u.UOM_ID = tl.UOM_ID
+        AND tl.LANG = #{lang}
+        WHERE
+        u.TENANT_ID = ${tenantId}
+        <if test="uomCodes!=null">
+            and ${uomCodes}
+        </if>
+        <if test="uomCodes==null">
+            and 1=-1
+        </if>
+    </select>
+    <select id="getMaterialList" resultMap="resultView2" fetchSize="5000">
+        <bind name="lang"
+              value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        item.TENANT_ID,
+        item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        item.MATERIAL_DESIGN_CODE,
+        item.MATERIAL_IDENTIFY_CODE,
+        item.LENGTH,
+        item.WIDTH,
+        item.HEIGHT,
+        item.SIZE_UOM_ID,
+        item.MODEL,
+        item.VOLUME,
+        item.VOLUME_UOM_ID,
+        item.WEIGHT,
+        item.WEIGHT_UOM_ID,
+        item.SHELF_LIFE,
+        item.SHELF_LIFE_UOM_ID,
+        item.PRIMARY_UOM_ID,
+        item.SECONDARY_UOM_ID,
+        item.CONVERSION_RATE,
+        item.ENABLE_FLAG,
+        item.cid,
+        item.OBJECT_VERSION_NUMBER,
+        item.CREATED_BY,
+        item.CREATION_DATE,
+        item.LAST_UPDATED_BY,
+        item.LAST_UPDATE_DATE
+        FROM
+        mt_material item
+        INNER JOIN mt_material_tl tl on tl.MATERIAL_ID = item.MATERIAL_ID AND tl.LANG = #{lang}
+        WHERE
+        item.TENANT_ID = ${tenantId}
+        <if test="materialList!= null">
+            and ${materialList}
+        </if>
+    </select>
+    <select id="getMateriaSiteReleationList" resultMap="resultView3" fetchSize="5000">
+        select
+        t.*
+        from
+        mt_site_plant_releation t
+        where
+        t.TENANT_ID = ${tenantId}
+        <if test="materialList!=null and materialList.size>0">
+            and t.PLANT_CODE in
+            <foreach collection="materialList" item="i" separator="," open="(" close=")" index="index">
+                #{i}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getMateriaSitelList" resultMap="resultView4">
+        select
+        t.*
+        from
+        MT_MATERIAL_SITE t
+        where
+        t.TENANT_ID = ${tenantId}
+        <if test="materialList!= null and materialList.size()>0">
+            <foreach collection="materialList" item="item" separator="OR" open="and (" close=")" index="index">
+                (
+                t.MATERIAL_ID=#{item.materialId}
+                and t.SITE_ID=#{item.siteId}
+                )
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getPfepSchedule" resultMap="resultView5">
+        select
+        t.*
+        from
+        mt_pfep_schedule t
+        where
+        t.TENANT_ID = ${tenantId}
+        and t.MATERIAL_SITE_ID in
+        <if test="materialSiteList!= null and materialSiteList.size()>0">
+            <foreach collection="materialSiteList" item="item" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getPfepPurchase" resultMap="resultView6">
+        select
+        t.*
+        from
+        mt_pfep_purchase t
+        where
+        t.TENANT_ID = ${tenantId}
+        and t.MATERIAL_SITE_ID in
+        <if test="materialSiteList!= null and materialSiteList.size()>0">
+            <foreach collection="materialSiteList" item="item" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getUnprocessedList" resultMap="BaseResultMap" fetchSize="5000">
+        select 
+        	*
+        from 
+        	mt_inv_item_iface
+        where 
+	        TENANT_ID = ${tenantId}
+	        AND STATUS in ('N', 'E')
+    </select>
+
+    <select id="getMateriaSitelList1" resultMap="resultView4" fetchSize="5000">
+        select
+        s.*
+        from
+        mt_material t
+        inner join mt_material_site s on t.MATERIAL_ID = s.MATERIAL_ID
+        where
+        t.TENANT_ID = ${tenantId}
+        AND s.TENANT_ID = ${tenantId}
+        <if test="codeList!=null">
+            and ${codeList}
+        </if>
+        <if test="codeList==null">
+            and 1=-1
+        </if>
+    </select>
+
+    <select id="getMtPfepPurchaseList" resultMap="resultView6" fetchSize="5000">
+        select
+        p.*
+        from
+        mt_pfep_purchase p
+        inner join mt_material_site s on p.MATERIAL_SITE_ID=s.MATERIAL_SITE_ID
+        where
+        p.TENANT_ID = ${tenantId}
+        AND s.TENANT_ID = ${tenantId}
+        AND p.ORGANIZATION_TYPE IS NULL
+        AND p.ORGANIZATION_ID IS NULL
+        <if test="list!=null">
+            and ${list}
+        </if>
+        <if test="list==null">
+            and 1=-1
+        </if>
+
+    </select>
+
+    <select id="getMtPfepScheduleList" resultMap="resultView5" fetchSize="5000">
+        select
+        p.*
+        from
+        mt_pfep_schedule p
+        inner join mt_material_site s on p.MATERIAL_SITE_ID=s.MATERIAL_SITE_ID
+        where
+        p.TENANT_ID = ${tenantId}
+        AND s.TENANT_ID = ${tenantId}
+        AND p.ORGANIZATION_TYPE IS NULL
+        AND p.ORGANIZATION_ID IS NULL
+        <if test="list!=null">
+            and ${list}
+        </if>
+        <if test="list==null">
+            and 1=-1
+        </if>
+    </select>
+
+    <select id="getMtPfepInventoryList" resultMap="resultView9" fetchSize="5000">
+        select
+        p.*
+        from
+        mt_pfep_inventory p
+        inner join mt_material_site s on p.MATERIAL_SITE_ID=s.MATERIAL_SITE_ID
+        where
+        p.TENANT_ID = ${tenantId}
+        AND s.TENANT_ID = ${tenantId}
+        AND p.ORGANIZATION_TYPE IS NULL
+        AND p.ORGANIZATION_ID IS NULL
+        <if test="list!=null">
+            and ${list}
+        </if>
+        <if test="list==null">
+            and 1=-1
+        </if>
+    </select>
+
+    <select id="getMtMaterialBasisList" resultMap="resultView7" fetchSize="5000">
+        select
+        p.*
+        from
+        mt_material_basic p
+        inner join mt_material_site s on p.MATERIAL_SITE_ID=s.MATERIAL_SITE_ID
+        where
+        p.TENANT_ID = ${tenantId}
+        AND s.TENANT_ID = ${tenantId}
+        <if test="list!=null">
+            and ${list}
+        </if>
+        <if test="list==null">
+            and 1=-1
+        </if>
+    </select>
+    <select id="getItemTlList" resultMap="resultView8" fetchSize="5000">
+        select
+        p.*
+        from
+        mt_inv_item_iface_tl p
+        where
+        1=1
+        <if test="list!=null">
+            AND ${list}
+        </if>
+        <if test="list==null">
+            AND 1&lt;&gt;1
+        </if>
+    </select>
+    <select id="lockTable">
+        LOCK TABLE ${tableName} WRITE
+    </select>
+
+    <select id="unlockTable">
+        UNLOCK TABLES
+    </select>
+    <resultMap id="BaseResultLocatorMap" type="tarzan.modeling.domain.entity.MtModLocator">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_NAME" property="locatorName" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_LOCATION" property="locatorLocation" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_TYPE" property="locatorType" jdbcType="VARCHAR"/>
+
+    </resultMap>
+    <resultMap id="BaseResultMaterialSiteMap" type="tarzan.material.domain.entity.MtMaterialSite">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_IDENTIFICATION_ID" property="sourceIdentificationId" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectMaterialByItemCodes" resultMap="resultView2">
+        select * from mt_material where tenant_id = ${tenantId} and material_code in ${itemCodes}
+    </select>
+    <select id="selectSiteByPlantCode" resultMap="resultView3">
+        select * from mt_site_plant_releation where tenant_id = ${tenantId} and plant_code in ${plantCodes}
+    </select>
+    <select id="selectPrimaryUom" resultMap="resuleView">
+        select * from mt_uom where tenant_id = ${tenantId} and uom_code in ${primaryUoms}
+    </select>
+    <select id="selectStockLocatorByLocatorCode" resultMap="BaseResultLocatorMap">
+        select * from mt_mod_locator where tenant_id = ${tenantId} and locator_code in ${stockLocatorCodes}
+    </select>
+    <select id="selectMaterialSite" resultMap="BaseResultMaterialSiteMap">
+        select * from mt_material_site where tenant_id = ${tenantId} and material_id in ${materialIds}
+    </select>
+</mapper>

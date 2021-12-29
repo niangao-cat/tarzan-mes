@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtStocktakeActualHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtStocktakeActualHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="STOCKTAKE_ACTUAL_HIS_ID" property="stocktakeActualHisId" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_ACTUAL_ID" property="stocktakeActualId" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_ID" property="stocktakeId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="LOT_CODE" property="lotCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+        <result column="RESERVED_OBJECT_TYPE" property="reservedObjectType" jdbcType="VARCHAR"/>
+        <result column="RESERVED_OBJECT_ID" property="reservedObjectId" jdbcType="VARCHAR"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="CURRENT_QUANTITY" property="currentQuantity" jdbcType="DECIMAL"/>
+        <result column="FIRSTCOUNT_MATERIAL_ID" property="firstcountMaterialId" jdbcType="VARCHAR"/>
+        <result column="FIRSTCOUNT_UOM_ID" property="firstcountUomId" jdbcType="VARCHAR"/>
+        <result column="FIRSTCOUNT_LOCATOR_ID" property="firstcountLocatorId" jdbcType="VARCHAR"/>
+        <result column="FIRSTCOUNT_CONTAINER_ID" property="firstcountContainerId" jdbcType="VARCHAR"/>
+        <result column="FIRSTCOUNT_LOCATION_ROW" property="firstcountLocationRow" jdbcType="DECIMAL"/>
+        <result column="FIRSTCOUNT_LOCATION_COLUMN" property="firstcountLocationColumn" jdbcType="DECIMAL"/>
+        <result column="FIRSTCOUNT_OWNER_TYPE" property="firstcountOwnerType" jdbcType="VARCHAR"/>
+        <result column="FIRSTCOUNT_OWNER_ID" property="firstcountOwnerId" jdbcType="VARCHAR"/>
+        <result column="FIRSTCOUNT_RESERVED_OBJECT_TY" property="firstcountReservedObjectTy" jdbcType="VARCHAR"/>
+        <result column="FIRSTCOUNT_RESERVED_OBJECT_ID" property="firstcountReservedObjectId" jdbcType="VARCHAR"/>
+        <result column="FIRSTCOUNT_QUANTITY" property="firstcountQuantity" jdbcType="DECIMAL"/>
+        <result column="FIRSTCOUNT_REMARK" property="firstcountRemark" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_MATERIAL_ID" property="recountMaterialId" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_UOM_ID" property="recountUomId" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_LOCATOR_ID" property="recountLocatorId" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_CONTAINER_ID" property="recountContainerId" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_LOCATION_ROW" property="recountLocationRow" jdbcType="DECIMAL"/>
+        <result column="RECOUNT_LOCATION_COLUMN" property="recountLocationColumn" jdbcType="DECIMAL"/>
+        <result column="RECOUNT_OWNER_TYPE" property="recountOwnerType" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_OWNER_ID" property="recountOwnerId" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_RESERVED_OBJECT_TYPE" property="recountReservedObjectType" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_RESERVED_OBJECT_ID" property="recountReservedObjectId" jdbcType="VARCHAR"/>
+        <result column="RECOUNT_QUANTITY" property="recountQuantity" jdbcType="DECIMAL"/>
+        <result column="RECOUNT_REMARK" property="recountRemark" jdbcType="VARCHAR"/>
+        <result column="ADJUST_FLAG" property="adjustFlag" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

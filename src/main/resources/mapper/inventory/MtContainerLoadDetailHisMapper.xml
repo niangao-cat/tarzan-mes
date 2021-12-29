@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtContainerLoadDetailHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtContainerLoadDetailHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CONTAINER_LOAD_DETAIL_HIS_ID" property="containerLoadDetailHisId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_LOAD_DETAIL_ID" property="containerLoadDetailId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ROW" property="locationRow" jdbcType="DECIMAL"/>
+        <result column="LOCATION_COLUMN" property="locationColumn" jdbcType="DECIMAL"/>
+        <result column="LOAD_OBJECT_TYPE" property="loadObjectType" jdbcType="VARCHAR"/>
+        <result column="LOAD_QTY" property="loadQty" jdbcType="DECIMAL"/>
+        <result column="LOAD_EO_STEP_ACTUAL_ID" property="loadEoStepActualId" jdbcType="VARCHAR"/>
+        <result column="LOAD_OBJECT_ID" property="loadObjectId" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="TRX_LOAD_QTY" property="trxLoadQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VoResultMap" type="tarzan.inventory.domain.vo.MtContLoadDtlHisVO3">
+        <result column="CONTAINER_LOAD_DETAIL_ID" property="containerLoadDetailId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="LOAD_OBJECT_TYPE" property="loadObjectType" jdbcType="VARCHAR"/>
+        <result column="LOAD_OBJECT_ID" property="loadObjectId" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ROW" property="locationRow" jdbcType="DECIMAL"/>
+        <result column="LOCATION_COLUMN" property="locationColumn" jdbcType="DECIMAL"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="DECIMAL"/>
+        <result column="TRX_LOAD_QTY" property="trxLoadQty" jdbcType="DECIMAL"/>
+        <result column="LOAD_QTY" property="loadQty" jdbcType="DECIMAL"/>
+        <result column="LOAD_EO_STEP_ACTUAL_ID" property="loadEoStepActualId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--根据事件id获取数据-->
+    <select id="containerLoadDetailBatchQueryByEventId" resultMap="BaseResultMap">
+        select * from mt_container_load_detail_his t
+        where
+        t.TENANT_ID = #{tenantId}
+        and t.EVENT_ID in
+        <foreach collection="eventIds" item="item" open=" ( " separator=" , " close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!--获取容器装载明细历史记录-->
+    <select id="containerLoadDetailHisQuery" resultMap="VoResultMap">
+        SELECT
+        t.CONTAINER_LOAD_DETAIL_ID,
+        t.CONTAINER_ID,
+        t.EVENT_ID,
+        e.EVENT_TIME,
+        e.EVENT_BY,
+        t.LOAD_OBJECT_TYPE,
+        t.LOAD_OBJECT_ID,
+        t.TRX_LOAD_QTY,
+        t.LOAD_QTY,
+        t.LOAD_EO_STEP_ACTUAL_ID,
+        t.LOCATION_ROW,
+        t.LOCATION_COLUMN,
+        t.LOAD_SEQUENCE
+        FROM
+        mt_container_load_detail_his t,
+        mt_event e
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        and e.TENANT_ID = #{tenantId}
+        and t.EVENT_ID=e.EVENT_ID
+        <if test="dto.containerLoadDetailId!=null">
+            and t.CONTAINER_LOAD_DETAIL_ID=#{dto.containerLoadDetailId}
+        </if>
+        <if test="dto.containerId!=null">
+            and t.CONTAINER_ID=#{dto.containerId}
+        </if>
+        <if test="dto.loadObjectType!=null">
+            and t.LOAD_OBJECT_TYPE=#{dto.loadObjectType}
+        </if>
+        <if test="dto.loadObjectId!=null">
+            and t.LOAD_OBJECT_ID=#{dto.loadObjectId}
+        </if>
+        <if test="dto.locationRow!=null">
+            and t.LOCATION_ROW=#{dto.locationRow}
+        </if>
+        <if test="dto.locationColumn!=null">
+            and t.LOCATION_COLUMN=#{dto.locationColumn}
+        </if>
+        <if test="dto.loadSequence!=null">
+            and t.LOAD_SEQUENCE=#{dto.loadSequence}
+        </if>
+        <if test="dto.eventId!=null">
+            and t.EVENT_ID=#{dto.eventId}
+        </if>
+        <if test="dto.eventBy!=null">
+            and e.EVENT_BY=#{dto.eventBy}
+        </if>
+        <if test="dto.eventTimeFrom!=null">
+            and e.EVENT_TIME &gt;=DATE_FORMAT(#{dto.eventTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.eventTimeTo!=null">
+            and e.EVENT_TIME &lt;= DATE_FORMAT(#{dto.eventTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+</mapper>

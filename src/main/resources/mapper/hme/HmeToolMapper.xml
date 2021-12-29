@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeToolMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeTool">
+        <result column="tool_id" property="toolId" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="tool_name" property="toolName" jdbcType="VARCHAR"/>
+        <result column="area_id" property="areaId" jdbcType="VARCHAR"/>
+        <result column="work_shop_id" property="workShopId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="brand_name" property="brandName" jdbcType="VARCHAR"/>
+        <result column="specification" property="specification" jdbcType="VARCHAR"/>
+        <result column="uom_id" property="uomId" jdbcType="VARCHAR"/>
+        <result column="qty" property="qty" jdbcType="DECIMAL"/>
+        <result column="rate" property="rate" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectHmeTOOLs" resultType="com.ruike.hme.domain.vo.HmeToolVO">
+        SELECT
+            tool_id,
+            m.area_id,
+            m.description AS area_name1,
+            mt.area_id AS area_code,
+            mt.description AS area_name2,
+            mt_mod_workcell.workcell_id,
+            mt_mod_workcell.workcell_name,
+            tool_name,
+            brand_name,
+            specification,
+            mt_uom.uom_id,
+            uom_name,
+            qty,
+            rate,
+            hme_tool.enable_flag,
+            APPLY_TYPE
+        FROM
+            hme_tool,
+            mt_mod_area m,
+            mt_mod_area mt,
+            mt_mod_workcell,
+            mt_uom
+        WHERE
+            hme_tool.area_id = m.area_id
+            AND hme_tool.work_shop_id = mt.area_id
+            AND hme_tool.workcell_id = mt_mod_workcell.workcell_id
+            AND hme_tool.uom_id = mt_uom.uom_id
+            and hme_tool.tenant_id = #{tenantId}
+        <if test="hmeTooldto.areaId != null and hmeTooldto.areaId != ''">
+            and hme_tool.area_id = #{hmeTooldto.areaId}
+        </if>
+        <if test="hmeTooldto.areaCode != null and hmeTooldto.areaCode != ''">
+            and mt.area_id = #{hmeTooldto.areaCode}
+        </if>
+        <if test="hmeTooldto.workcellId != null and hmeTooldto.workcellId != ''">
+            and hme_tool.workcell_id = #{hmeTooldto.workcellId}
+        </if>
+        <if test="hmeTooldto.toolName != null and hmeTooldto.toolName != ''">
+            and hme_tool.tool_name = #{hmeTooldto.toolName}
+        </if>
+        <if test="hmeTooldto.brandName != null and hmeTooldto.brandName != ''">
+            <bind name="brandNameLike" value="'%'+hmeTooldto.brandName+'%'"/>
+            and hme_tool.brand_name like #{brandNameLike}
+        </if>
+        <if test="hmeTooldto.specification != null and hmeTooldto.specification != ''">
+            <bind name="specificationLike" value="'%'+hmeTooldto.specification+'%'"/>
+            and hme_tool.specification like #{specificationLike}
+        </if>
+    </select>
+
+    <select id="selectToolByWorkcellId" resultType="com.ruike.hme.domain.vo.HmeToolVO2">
+        SELECT
+        t.tool_id,
+        t.tool_name,
+        t.brand_name,
+        t.specification,
+        t.qty,
+        t.rate,
+        t.uom_id,
+        mu.UOM_CODE,
+        mu.UOM_NAME,
+        t.apply_type
+    FROM
+        hme_tool t,
+	    mt_uom mu
+    WHERE
+        mu.UOM_ID = t.uom_id
+        AND mu.ENABLE_FLAG = 'Y'
+        AND t.tenant_id = #{tenantId}
+        AND t.enable_flag = 'Y'
+        AND t.workcell_id = #{workcellId}
+    </select>
+</mapper>

@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsProductReceiptMapper">
+
+    <select id="receiptDocQuery" resultType="com.ruike.wms.domain.vo.WmsReceiptDocVO" parameterType="com.ruike.wms.domain.vo.WmsReceiptDocReqVO">
+        SELECT
+            ms.SITE_CODE,
+            ms.SITE_NAME,
+            ms.SITE_ID,
+            doc.INSTRUCTION_DOC_ID,
+            doc.INSTRUCTION_DOC_NUM AS receipt_doc_num,
+            doc.INSTRUCTION_DOC_STATUS AS doc_status,
+            doc.DEMAND_TIME AS creation_date,
+            doc.PERSON_ID AS created_by,
+            doc.REMARK,
+            iu.real_name AS created_by_name
+        FROM
+            tarzan_mes.mt_instruction_doc doc
+        LEFT JOIN tarzan_mes.mt_mod_site ms ON ms.SITE_ID = doc.SITE_ID
+        LEFT JOIN tarzan_mes.mt_instruction mi ON mi.SOURCE_DOC_ID = doc.INSTRUCTION_DOC_ID
+        LEFT JOIN tarzan_mes.mt_material mm ON mm.MATERIAL_ID = mi.MATERIAL_ID
+        LEFT JOIN iam_user iu ON iu.id = doc.PERSON_ID
+        WHERE doc.TENANT_ID = #{tenantId}
+        AND doc.INSTRUCTION_DOC_TYPE = 'PRODUCT_RECEIPT'
+        <if test="reqVO.receiptDocNum != null and reqVO.receiptDocNum != ''">
+            AND doc.INSTRUCTION_DOC_NUM LIKE CONCAT("%",#{reqVO.receiptDocNum},"%")
+        </if>
+        <if test="reqVO.siteId != null and reqVO.siteId != ''">
+            AND ms.SITE_ID = #{reqVO.siteId}
+        </if>
+        <if test="reqVO.docStatus != null and reqVO.docStatus != ''">
+            AND doc.INSTRUCTION_DOC_STATUS = #{reqVO.docStatus}
+        </if>
+        <if test="reqVO.materialCode != null and reqVO.materialCode != ''">
+            AND mm.MATERIAL_CODE LIKE CONCAT("%",#{reqVO.materialCode},"%")
+        </if>
+        <if test="reqVO.materialName != null and reqVO.materialName != ''">
+            AND mm.MATERIAL_NAME LIKE CONCAT("%",#{reqVO.materialName},"%")
+        </if>
+        <if test="reqVO.creationDateFrom != null and reqVO.creationDateFrom != ''">
+            AND doc.DEMAND_TIME >= #{reqVO.creationDateFrom}
+        </if>
+        <if test="reqVO.creationDateTo != null and reqVO.creationDateTo != ''">
+            AND doc.DEMAND_TIME <![CDATA[ <= ]]>  #{reqVO.creationDateTo}
+        </if>
+        <if test="reqVO.createdByName != null and reqVO.createdByName != ''">
+            AND iu.real_name LIKE CONCAT("%",#{reqVO.createdByName},"%")
+        </if>
+        <if test="reqVO.materialLotCode != null and reqVO.materialLotCode != ''">
+          <bind name="materialLotCodeLike" value="'%'+reqVO.materialLotCode+'%'"/>
+          and doc.instruction_doc_id in (
+            SELECT mi.SOURCE_DOC_ID
+            FROM
+            mt_material_lot ml,
+            mt_instruction_actual_detail ad,
+            mt_instruction_actual ia,
+            mt_instruction mi
+            WHERE ml.MATERIAL_LOT_ID = ad.MATERIAL_LOT_ID
+            AND ad.ACTUAL_ID = ia.ACTUAL_ID
+            AND ia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+            AND ml.material_lot_code LIKE #{materialLotCodeLike}
+            UNION
+            SELECT mi.SOURCE_DOC_ID
+            FROM
+            mt_material_lot ml,
+            mt_instruction_detail id,
+            mt_instruction mi
+            WHERE ml.MATERIAL_LOT_ID = id.MATERIAL_LOT_ID
+            AND id.INSTRUCTION_ID = mi.INSTRUCTION_ID
+            AND ml.material_lot_code LIKE #{materialLotCodeLike}
+            )
+        </if>
+        GROUP BY
+        ms.SITE_CODE,
+        ms.SITE_NAME,
+        ms.SITE_ID,
+        doc.INSTRUCTION_DOC_ID,
+        doc.INSTRUCTION_DOC_NUM,
+        doc.INSTRUCTION_DOC_STATUS,
+        doc.DEMAND_TIME,
+        doc.PERSON_ID,
+        doc.REMARK,
+        iu.real_name
+    </select>
+
+    <select id="receiptDocPrintQuery" resultType="com.ruike.wms.domain.vo.WmsReceiptDocVO">
+        SELECT
+        ms.SITE_CODE,
+        ms.SITE_NAME,
+        ms.SITE_ID,
+        doc.INSTRUCTION_DOC_ID,
+        doc.INSTRUCTION_DOC_NUM AS receipt_doc_num,
+        doc.INSTRUCTION_DOC_STATUS AS doc_status,
+        doc.DEMAND_TIME AS creation_date,
+        doc.PERSON_ID AS created_by,
+        doc.REMARK,
+        iu.real_name AS created_by_name
+        FROM
+        tarzan_mes.mt_instruction_doc doc
+        LEFT JOIN tarzan_mes.mt_mod_site ms ON ms.SITE_ID = doc.SITE_ID
+        LEFT JOIN tarzan_mes.mt_instruction mi ON mi.SOURCE_DOC_ID = doc.INSTRUCTION_DOC_ID
+        LEFT JOIN tarzan_mes.mt_material mm ON mm.MATERIAL_ID = mi.MATERIAL_ID
+        LEFT JOIN iam_user iu ON iu.id = doc.PERSON_ID
+        WHERE doc.TENANT_ID = #{tenantId}
+        AND doc.INSTRUCTION_DOC_TYPE = 'PRODUCT_RECEIPT'
+        AND doc.INSTRUCTION_DOC_ID = #{instructionDocId}
+        GROUP BY
+        ms.SITE_CODE,
+        ms.SITE_NAME,
+        ms.SITE_ID,
+        doc.INSTRUCTION_DOC_ID,
+        doc.INSTRUCTION_DOC_NUM,
+        doc.INSTRUCTION_DOC_STATUS,
+        doc.DEMAND_TIME,
+        doc.PERSON_ID,
+        doc.REMARK,
+        iu.real_name
+    </select>
+
+    <select id="receiptDocLineQuery" resultType="com.ruike.wms.domain.vo.WmsReceiptLineVO">
+        SELECT
+            mi.INSTRUCTION_ID,
+	        mi.INSTRUCTION_STATUS AS line_status,
+	        mi.QUANTITY AS receipt_qty,
+	        mi.REMARK,
+	        SUM(ia.ACTUAL_QTY) AS execute_qty,
+	        mu.UOM_CODE AS uom,
+	        ml.LOCATOR_CODE AS target_warehouse,
+	        mm.MATERIAL_CODE,
+	        mm.MATERIAL_NAME,
+            attr1.ATTR_VALUE AS MATERIAL_VERSION,
+            attr.ATTR_VALUE AS line_num
+        FROM
+	        mt_instruction mi
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mi.MATERIAL_ID
+        LEFT JOIN mt_instruction_actual ia ON ia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = mi.UOM_ID
+        LEFT JOIN mt_mod_locator ml ON ml.LOCATOR_ID = mi.TO_LOCATOR_ID
+        LEFT JOIN mt_instruction_attr attr ON attr.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr attr1 ON attr1.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr1.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE mi.TENANT_ID = #{tenantId}
+        <if test="instructionIdList != null and instructionIdList.size() > 0">
+            AND mi.INSTRUCTION_ID IN
+            <foreach collection="instructionIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+            mi.INSTRUCTION_ID,
+	        mi.INSTRUCTION_STATUS,
+	        mi.QUANTITY,
+	        mi.REMARK,
+	        mu.UOM_CODE,
+	        ml.LOCATOR_CODE,
+	        mm.MATERIAL_CODE,
+	        mm.MATERIAL_NAME,
+            attr.ATTR_VALUE,
+            attr1.ATTR_VALUE
+        ORDER BY attr.ATTR_VALUE
+    </select>
+
+    <select id="receiptLinePrintQuery" resultType="com.ruike.wms.domain.vo.WmsReceiptLinePrintVO">
+        SELECT
+        mi.INSTRUCTION_ID,
+        round(mi.QUANTITY,2) AS receipt_qty,
+        mi.REMARK,
+        SUM(ia.ACTUAL_QTY) AS execute_qty,
+        COUNT( CASE iad.CONTAINER_ID WHEN ''  THEN NULL ELSE iad.CONTAINER_ID END ) AS container_qty,
+        mu.UOM_CODE AS uom,
+        ml.LOCATOR_CODE AS target_warehouse,
+        mlf.LOCATOR_CODE AS from_warehouse,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        attr1.ATTR_VALUE AS MATERIAL_VERSION,
+        attr.ATTR_VALUE AS line_num,
+        mmb.OLD_ITEM_CODE
+        FROM
+        mt_instruction_doc mid,
+        mt_instruction mi
+        LEFT JOIN mt_material_site mms ON mms.MATERIAL_ID = mi.MATERIAL_ID
+        AND mms.site_id = mi.site_id
+        LEFT JOIN mt_material_basic mmb ON mi.MATERIAL_ID = mmb.MATERIAL_ID
+        AND mmb.MATERIAL_site_id = mms.MATERIAL_site_id
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mi.MATERIAL_ID
+        LEFT JOIN mt_instruction_actual ia ON ia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_actual_detail iad ON ia.ACTUAL_ID = iad.ACTUAL_ID
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = mi.UOM_ID
+        LEFT JOIN mt_mod_locator ml ON ml.LOCATOR_ID = mi.TO_LOCATOR_ID
+        LEFT JOIN mt_mod_locator mlf ON mlf.LOCATOR_ID = mi.FROM_LOCATOR_ID
+        LEFT JOIN mt_instruction_attr attr ON attr.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr attr1 ON attr1.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr1.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE 1=1
+        AND mid.INSTRUCTION_DOC_ID = #{instructionDocId}
+        AND mid.TENANT_ID = #{tenantId}
+        AND mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        GROUP BY
+        mi.INSTRUCTION_ID,
+        mi.INSTRUCTION_STATUS,
+        mi.QUANTITY,
+        mi.REMARK,
+        mu.UOM_CODE,
+        ml.LOCATOR_CODE,
+        mlf.LOCATOR_CODE,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        attr.ATTR_VALUE,
+        attr1.ATTR_VALUE,
+        mmb.OLD_ITEM_CODE
+        ORDER BY attr.ATTR_VALUE ASC
+    </select>
+
+    <select id="receiptDocLineDetail" resultType="com.ruike.wms.domain.vo.WmsReceiptDetailVO" parameterType="com.ruike.wms.domain.vo.WmsReceiptDetailReqVO">
+        SELECT
+	        lot.MATERIAL_LOT_CODE,
+            la.ATTR_VALUE AS materialLotStatus,
+	        mml.QUALITY_STATUS,
+	        mml.LOT,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+	        lot.quantity,
+	        lot.UOM,
+	        lot.CONTAINER_CODE,
+	        sn.ATTR_VALUE AS soNum,
+	        sln.ATTR_VALUE AS soLineNum,
+	        wo.WORK_ORDER_NUM AS wo_num,
+	        loc.LOCATOR_CODE AS locator_code,
+	        plo.LOCATOR_CODE AS warehouse_code,
+            lot.executed_by,
+            lot.receipt_date,
+            lot.flag,
+            lot.INSTRUCTION_ID,
+            attr.ATTR_VALUE AS line_num,
+            attr1.ATTR_VALUE AS MATERIAL_VERSION
+        FROM
+	        mt_material_lot mml
+	    LEFT JOIN (
+	    SELECT
+		    ml.MATERIAL_LOT_ID,
+		    ml.MATERIAL_LOT_CODE,
+		    ml.PRIMARY_UOM_QTY AS quantity,
+		    mu.UOM_CODE AS uom,
+		    mid.INSTRUCTION_ID,
+		    mc.CONTAINER_CODE,
+            NULL AS receipt_date,
+            NULL AS executed_by,
+            '0' AS flag
+	    FROM
+		    mt_instruction_detail mid
+		LEFT JOIN mt_material_lot ml ON ml.MATERIAL_LOT_ID = mid.MATERIAL_LOT_ID
+		LEFT JOIN mt_uom mu ON mu.UOM_ID = ml.PRIMARY_UOM_ID
+		LEFT JOIN mt_container_load_detail cld ON cld.LOAD_OBJECT_ID = ml.MATERIAL_LOT_ID AND cld.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+		LEFT JOIN mt_container mc ON mc.CONTAINER_ID = cld.CONTAINER_ID
+        WHERE
+        1=1
+        <if test="reqVO.instructionIdList != null and reqVO.instructionIdList.size() > 0">
+            AND mid.INSTRUCTION_ID IN
+            <foreach collection="reqVO.instructionIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="reqVO.materialLotCode != null and reqVO.materialLotCode != ''">
+            AND ml.MATERIAL_LOT_CODE LIKE CONCAT("%",#{reqVO.materialLotCode},"%")
+        </if>
+        <if test="reqVO.qualityStatus != null and reqVO.qualityStatus != ''">
+            AND ml.QUALITY_STATUS = #{reqVO.qualityStatus}
+        </if>
+        <if test="reqVO.container != null and reqVO.container != ''">
+            AND mc.CONTAINER_CODE LIKE CONCAT("%",#{reqVO.container},"%")
+        </if>
+		UNION
+	    SELECT
+		    ml.MATERIAL_LOT_ID,
+		    ml.MATERIAL_LOT_CODE,
+		    ad.ACTUAL_QTY AS quantity,
+		    mu.UOM_CODE AS uom,
+		    ia.INSTRUCTION_ID,
+		    mc.CONTAINER_CODE,
+            ad.LAST_UPDATE_DATE AS receipt_date,
+            ad.LAST_UPDATED_BY AS executed_by,
+            '1' AS flag
+	    FROM
+		    mt_instruction_actual ia
+		LEFT JOIN mt_instruction_actual_detail ad ON ad.ACTUAL_ID = ia.ACTUAL_ID
+		LEFT JOIN mt_material_lot ml ON ml.MATERIAL_LOT_ID = ad.MATERIAL_LOT_ID
+	    LEFT JOIN mt_uom mu ON mu.UOM_ID = ad.UOM_ID
+	    LEFT JOIN mt_container mc ON mc.CONTAINER_ID = ad.CONTAINER_ID
+	    WHERE
+	     1=1
+	     <if test="reqVO.instructionIdList != null and reqVO.instructionIdList.size() > 0">
+                AND ia.INSTRUCTION_ID IN
+            <foreach collection="reqVO.instructionIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="reqVO.materialLotCode != null and reqVO.materialLotCode != ''">
+            AND ml.MATERIAL_LOT_CODE LIKE CONCAT("%",#{reqVO.materialLotCode},"%")
+        </if>
+        <if test="reqVO.qualityStatus != null and reqVO.qualityStatus != ''">
+            AND ml.QUALITY_STATUS = #{reqVO.qualityStatus}
+        </if>
+        <if test="reqVO.container != null and reqVO.container != ''">
+            AND mc.CONTAINER_CODE LIKE CONCAT("%",#{reqVO.container},"%")
+        </if>
+        <if test="reqVO.receiptDateFrom != null and reqVO.receiptDateFrom != ''">
+            AND ad.LAST_UPDATE_DATE >= #{reqVO.receiptDateFrom}
+        </if>
+        <if test="reqVO.receiptDateTo != null and reqVO.receiptDateTo != ''">
+            AND ad.LAST_UPDATE_DATE <![CDATA[ <= ]]>  #{reqVO.receiptDateTo}
+        </if>
+	    ) lot ON lot.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+	    LEFT JOIN mt_material_lot_attr la ON la.MATERIAL_LOT_ID = lot.MATERIAL_LOT_ID AND la.ATTR_NAME = 'STATUS'
+	    LEFT JOIN mt_material_lot_attr sn ON sn.MATERIAL_LOT_ID = lot.MATERIAL_LOT_ID AND sn.ATTR_NAME = 'SO_NUM'
+	    LEFT JOIN mt_material_lot_attr sln ON sln.MATERIAL_LOT_ID = lot.MATERIAL_LOT_ID AND sln.ATTR_NAME = 'SO_LINE_NUM'
+	    LEFT JOIN mt_eo me ON me.EO_ID = mml.EO_ID
+	    LEFT JOIN mt_work_order wo ON wo.WORK_ORDER_ID = me.WORK_ORDER_ID
+	    LEFT JOIN mt_mod_locator loc ON loc.LOCATOR_ID = mml.LOCATOR_ID
+	    LEFT JOIN mt_mod_locator plo ON plo.LOCATOR_ID = loc.PARENT_LOCATOR_ID
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mml.MATERIAL_ID
+        LEFT JOIN mt_instruction_attr attr ON attr.INSTRUCTION_ID = lot.INSTRUCTION_ID AND attr.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr attr1 ON attr1.INSTRUCTION_ID = lot.INSTRUCTION_ID AND attr1.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE mml.TENANT_ID = #{tenantId}
+        <if test="reqVO.instructionIdList != null and reqVO.instructionIdList.size() > 0">
+            AND lot.INSTRUCTION_ID IN
+            <foreach collection="reqVO.instructionIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="reqVO.materialLotCode != null and reqVO.materialLotCode != ''">
+            AND lot.MATERIAL_LOT_CODE LIKE CONCAT("%",#{reqVO.materialLotCode},"%")
+        </if>
+        <if test="reqVO.materialLotStatus != null and reqVO.materialLotStatus != ''">
+            AND la.ATTR_VALUE  = #{reqVO.materialLotStatus}
+        </if>
+        <if test="reqVO.qualityStatus != null and reqVO.qualityStatus != ''">
+            AND mml.QUALITY_STATUS = #{reqVO.qualityStatus}
+        </if>
+        <if test="reqVO.container != null and reqVO.container != ''">
+            AND lot.CONTAINER_CODE LIKE CONCAT("%",#{reqVO.container},"%")
+        </if>
+        <if test="reqVO.materialCode != null and reqVO.materialCode != ''">
+            AND mm.MATERIAL_CODE LIKE CONCAT("%",#{reqVO.materialCode},"%")
+        </if>
+        <if test="reqVO.materialName != null and reqVO.materialName != ''">
+            AND mm.MATERIAL_NAME LIKE CONCAT("%",#{reqVO.materialName},"%")
+        </if>
+        <if test="reqVO.receiptDateFrom != null and reqVO.receiptDateFrom != ''">
+            AND lot.receipt_date >= #{reqVO.receiptDateFrom}
+        </if>
+        <if test="reqVO.receiptDateTo != null and reqVO.receiptDateTo != ''">
+            AND lot.receipt_date <![CDATA[ <= ]]>  #{reqVO.receiptDateTo}
+        </if>
+        <if test="reqVO.locator != null and reqVO.locator != ''">
+            AND loc.LOCATOR_ID = #{reqVO.locator}
+        </if>
+        GROUP BY
+            lot.MATERIAL_LOT_CODE,
+            la.ATTR_VALUE,
+            mml.QUALITY_STATUS,
+            mml.LOT,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            lot.quantity,
+            lot.UOM,
+            lot.CONTAINER_CODE,
+            sn.ATTR_VALUE,
+            sln.ATTR_VALUE,
+            wo.WORK_ORDER_NUM,
+            loc.LOCATOR_CODE,
+            plo.LOCATOR_CODE,
+            lot.executed_by,
+            lot.receipt_date,
+            lot.flag,
+            lot.INSTRUCTION_ID,
+            attr.ATTR_VALUE,
+            attr1.ATTR_VALUE
+    </select>
+
+    <select id="queryMaterialLotIdList" resultType="java.lang.String">
+        SELECT
+        	mid.MATERIAL_LOT_ID
+        FROM
+        	mt_instruction mi,
+        	mt_instruction_detail mid
+        WHERE
+            mi.TENANT_ID = #{tenantId}
+        AND mi.SOURCE_DOC_ID IN
+        <foreach collection="instructionDocIds" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mid.TENANT_ID = mi.TENANT_ID
+        AND mid.INSTRUCTION_ID = mi.INSTRUCTION_ID
+    </select>
+
+</mapper>

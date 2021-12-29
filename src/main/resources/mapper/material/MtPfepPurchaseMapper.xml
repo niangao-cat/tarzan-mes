@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtPfepPurchaseMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtPfepPurchase">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_PURCHASE_ID" property="pfepPurchaseId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="RECEIVE_LOCATOR_ID" property="receiveLocatorId" jdbcType="VARCHAR"/>
+        <result column="ECONOMIC_LOT_SIZE" property="economicLotSize" jdbcType="DECIMAL"/>
+        <result column="ECONOMIC_SPLIT_PARAMETER" property="economicSplitParameter" jdbcType="DECIMAL"/>
+        <result column="AUTO_LOCK_TIME" property="autoLockTime" jdbcType="DECIMAL"/>
+        <result column="LIMIT_HOUR" property="limitHour" jdbcType="DECIMAL"/>
+        <result column="PAST_DY_NOTIFY_CLOSE_TIME" property="pastDyNotifyCloseTime" jdbcType="DECIMAL"/>
+        <result column="PURCHASE_CYCLE" property="purchaseCycle" jdbcType="DECIMAL"/>
+        <result column="MIN_PACKAGE_QTY" property="minPackageQty" jdbcType="DECIMAL"/>
+        <result column="MIN_PURCHASE_QTY" property="minPurchaseQty" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="COLLECT_TYPE" property="collectType" jdbcType="VARCHAR"/>
+        <result column="REQUIREMENT_TYPE" property="requirementType" jdbcType="VARCHAR"/>
+        <result column="DLY_CANLENDER_TYPE" property="dlyCanlenderType" jdbcType="VARCHAR"/>
+        <result column="NOTIFY_AUTO_CAL_TYPE" property="notifyAutoCalType" jdbcType="VARCHAR"/>
+        <result column="REQUIREMENT_LEAD_TIME" property="requirementLeadTime" jdbcType="DECIMAL"/>
+        <result column="PAST_REQUIREMENT_TIME" property="pastRequirementTime" jdbcType="DECIMAL"/>
+        <result column="PAST_DELIVERY_NOTIFY_TIME" property="pastDeliveryNotifyTime" jdbcType="DECIMAL"/>
+        <result column="PAST_DELIVERY_TICKET_TIME" property="pastDeliveryTicketTime" jdbcType="DECIMAL"/>
+        <result column="ONHAND_QTY_MODEL" property="onhandQtyModel" jdbcType="VARCHAR"/>
+        <result column="ISSUE_TYPE" property="issueType" jdbcType="VARCHAR"/>
+        <result column="AUTO_PERCENT" property="autoPercent" jdbcType="DECIMAL"/>
+        <result column="BUYER" property="buyer" jdbcType="VARCHAR"/>
+        <result column="VMI_FLAG" property="vmiFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

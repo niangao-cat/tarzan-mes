@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfFsmCollectIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfFsmCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_CATEGORY" property="equipmentCategory" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="FSM_FUSION_SPOT" property="fsmFusionSpot" jdbcType="DECIMAL"/>
+        <result column="FSM_FUSION_TIME" property="fsmFusionTime" jdbcType="DATE"/>
+        <result column="FSM_DISCHARGE_POWER" property="fsmDischargePower" jdbcType="DECIMAL"/>
+        <result column="FSM_DISCHARGE_TIMES" property="fsmDischargeTimes" jdbcType="DECIMAL"/>
+        <result column="FSM_FUSION_LOSS" property="fsmFusionLoss" jdbcType="VARCHAR"/>
+        <result column="FSM_CUTANGLE_LEFT" property="fsmCutangleLeft" jdbcType="DECIMAL"/>
+        <result column="FSM_CUTANGLE_RIGHT" property="fsmCutangleRight" jdbcType="DECIMAL"/>
+        <result column="FSM_AXIAL_OFFSET" property="fsmAxialOffset" jdbcType="DECIMAL"/>
+        <result column="FSM_FIBER_SPACE" property="fsmFiberSpace" jdbcType="DECIMAL"/>
+        <result column="FSM_FIBER_LEFT" property="fsmFiberLeft" jdbcType="VARCHAR"/>
+        <result column="FSM_FIBER_RIGHT" property="fsmFiberRight" jdbcType="VARCHAR"/>
+        <result column="FSM_L_R" property="fsmLR" jdbcType="DECIMAL"/>
+        <result column="FSM_ERR_MSG" property="fsmErrMsg" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE1" property="fsmAttribute1" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE2" property="fsmAttribute2" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE3" property="fsmAttribute3" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE4" property="fsmAttribute4" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE5" property="fsmAttribute5" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE6" property="fsmAttribute6" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE7" property="fsmAttribute7" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE8" property="fsmAttribute8" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE9" property="fsmAttribute9" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE10" property="fsmAttribute10" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE11" property="fsmAttribute11" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE12" property="fsmAttribute12" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE13" property="fsmAttribute13" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE14" property="fsmAttribute14" jdbcType="VARCHAR"/>
+        <result column="FSM_ATTRIBUTE15" property="fsmAttribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_fsm_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        EQUIPMENT_CATEGORY,
+        SN,
+        FSM_FUSION_SPOT,
+        FSM_FUSION_TIME,
+        FSM_DISCHARGE_POWER,
+        FSM_DISCHARGE_TIMES,
+        FSM_FUSION_LOSS,
+        FSM_CUTANGLE_LEFT,
+        FSM_CUTANGLE_RIGHT,
+        FSM_AXIAL_OFFSET,
+        FSM_FIBER_SPACE,
+        FSM_FIBER_LEFT,
+        FSM_FIBER_RIGHT,
+        FSM_L_R,
+        FSM_ERR_MSG,
+        PRIMARY_KEY,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        FSM_ATTRIBUTE1,
+        fsm_ATTRIBUTE2,
+        fsm_ATTRIBUTE3,
+        fsm_ATTRIBUTE4,
+        fsm_ATTRIBUTE5,
+        fsm_ATTRIBUTE6,
+        fsm_ATTRIBUTE7,
+        fsm_ATTRIBUTE8,
+        fsm_ATTRIBUTE9,
+        fsm_ATTRIBUTE10,
+        fsm_ATTRIBUTE11,
+        fsm_ATTRIBUTE12,
+        fsm_ATTRIBUTE13,
+        fsm_ATTRIBUTE14,
+        fsm_ATTRIBUTE15
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.interfaceId},
+            #{item.assetEncoding},
+            #{item.equipmentCategory},
+            #{item.sn},
+            #{item.fsmFusionSpot},
+            #{item.fsmFusionTime},
+            #{item.fsmDischargePower},
+            #{item.fsmDischargeTimes},
+            #{item.fsmFusionLoss},
+            #{item.fsmCutangleLeft},
+            #{item.fsmCutangleRight},
+            #{item.fsmAxialOffset},
+            #{item.fsmFiberSpace},
+            #{item.fsmFiberLeft},
+            #{item.fsmFiberRight},
+            #{item.fsmLR},
+            #{item.fsmErrMsg},
+            #{item.primaryKey},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.fsmAttribute1},
+            #{item.fsmAttribute2},
+            #{item.fsmAttribute3},
+            #{item.fsmAttribute4},
+            #{item.fsmAttribute5},
+            #{item.fsmAttribute6},
+            #{item.fsmAttribute7},
+            #{item.fsmAttribute8},
+            #{item.fsmAttribute9},
+            #{item.fsmAttribute10},
+            #{item.fsmAttribute11},
+            #{item.fsmAttribute12},
+            #{item.fsmAttribute13},
+            #{item.fsmAttribute14},
+            #{item.fsmAttribute15}
+            )
+        </foreach>
+    </insert>
+    <update id="updateIface">
+        UPDATE itf_fsm_collect_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = -1,
+            last_update_date = CURRENT_TIMESTAMP,
+            process_date=CURRENT_TIMESTAMP,
+            process_message =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processMessage}
+            </foreach>,
+            process_status =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processStatus}
+            </foreach>
+        </set>
+        <where>
+            interface_id in
+            <foreach collection="domains" item="item"
+                     separator="," open="(" close=")">
+                #{item.interfaceId}
+            </foreach>
+        </where>
+
+    </update>
+</mapper>

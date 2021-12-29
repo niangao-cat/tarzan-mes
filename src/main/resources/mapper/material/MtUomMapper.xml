@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtUomMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtUom">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="UOM_TYPE" property="uomType" jdbcType="VARCHAR"/>
+        <result column="UOM_CODE" property="uomCode" jdbcType="VARCHAR"/>
+        <result column="UOM_NAME" property="uomName" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_FLAG" property="primaryFlag" jdbcType="VARCHAR"/>
+        <result column="CONVERSION_VALUE" property="conversionValue" jdbcType="DECIMAL"/>
+        <result column="DECIMAL_NUMBER" property="decimalNumber" jdbcType="DECIMAL"/>
+        <result column="PROCESS_MODE" property="processMode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="ViewMap" type="tarzan.material.domain.vo.MtUomVO">
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="UOM_TYPE" property="uomType" jdbcType="VARCHAR"/>
+        <result column="UOM_CODE" property="uomCode" jdbcType="VARCHAR"/>
+        <result column="UOM_NAME" property="uomName" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_FLAG" property="primaryFlag" jdbcType="VARCHAR"/>
+        <result column="CONVERSION_VALUE" property="conversionValue" jdbcType="DECIMAL"/>
+        <result column="DECIMAL_NUMBER" property="decimalNumber" jdbcType="DECIMAL"/>
+        <result column="PROCESS_MODE" property="processMode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="UOM_TYPE_DESC" property="uomTypeDesc" jdbcType="VARCHAR"/>
+        <result column="PROCESS_MODE_DESC" property="processModeDesc" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="selectOneView" resultMap="ViewMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        u.UOM_ID,
+        u.UOM_TYPE,
+        u.UOM_CODE,
+        tl.UOM_NAME,
+        u.PRIMARY_FLAG,
+        u.CONVERSION_VALUE,
+        u.DECIMAL_NUMBER,
+        u.PROCESS_MODE,
+        u.ENABLE_FLAG,
+        u.CID,
+        l1.DESCRIPTION UOM_TYPE_DESC,
+        l2.DESCRIPTION PROCESS_MODE_DESC
+        FROM
+        mt_uom u
+        INNER JOIN mt_uom_tl tl ON u.UOM_ID = tl.UOM_ID
+        AND tl.LANG = #{locale}
+        LEFT JOIN mt_gen_type t1 ON t1.type_code = u.UOM_TYPE
+        AND t1.type_group = 'UOM_TYPE'
+        AND t1.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_gen_type_tl l1 ON l1.GEN_TYPE_ID = t1.gen_type_id
+        AND l1.LANG = #{locale}
+        LEFT JOIN mt_gen_type t2 ON t2.type_code = u.PROCESS_MODE
+        AND t2.type_group = 'DECIMAL_PROCESS_MODE'
+        AND t2.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_gen_type_tl l2 ON l2.GEN_TYPE_ID = t2.gen_type_id
+        AND l2.LANG = #{locale}
+        WHERE
+        1 = 1
+        AND u.TENANT_ID = ${tenantId}
+        <if test="dto.uomId!=null">
+            and u.UOM_ID = #{dto.uomId}
+        </if>
+        <if test="dto.uomTypeDesc!=null">
+            and l1.DESCRIPTION = #{dto.uomTypeDesc}
+        </if>
+        <if test="dto.uomType!=null">
+            and u.UOM_TYPE = #{dto.uomType}
+        </if>
+        <if test="dto.uomCode!=null">
+            and u.UOM_CODE = #{dto.uomCode}
+        </if>
+        <if test="dto.uomName!=null">
+            and tl.UOM_NAME = #{dto.uomName}
+        </if>
+        <if test="dto.enableFlag!=null">
+            and u.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.primaryFlag!=null">
+            and u.PRIMARY_FLAG = #{dto.primaryFlag}
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="ViewMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        u.UOM_ID,
+        u.UOM_TYPE,
+        u.UOM_CODE,
+        tl.UOM_NAME,
+        u.PRIMARY_FLAG,
+        u.CONVERSION_VALUE,
+        u.DECIMAL_NUMBER,
+        u.PROCESS_MODE,
+        u.ENABLE_FLAG,
+        u.CID,
+        l1.DESCRIPTION UOM_TYPE_DESC,
+        l2.DESCRIPTION PROCESS_MODE_DESC
+        FROM
+        mt_uom u
+        INNER JOIN mt_uom_tl tl ON u.UOM_ID = tl.UOM_ID
+        AND tl.LANG = #{locale}
+        LEFT JOIN mt_gen_type t1 ON t1.type_code = u.UOM_TYPE
+        AND t1.type_group = 'UOM_TYPE'
+        AND t1.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_gen_type_tl l1 ON l1.GEN_TYPE_ID = t1.gen_type_id
+        AND l1.LANG = #{locale}
+        LEFT JOIN mt_gen_type t2 ON t2.type_code = u.PROCESS_MODE
+        AND t2.type_group = 'DECIMAL_PROCESS_MODE'
+        AND t2.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_gen_type_tl l2 ON l2.GEN_TYPE_ID = t2.gen_type_id
+        AND l2.LANG = #{locale}
+        WHERE
+        1 = 1
+        AND u.TENANT_ID = ${tenantId}
+        AND u.UOM_ID IN
+        <foreach collection="uomIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.material.domain.vo.MtUomVO5">
+        SELECT tb.* FROM MT_UOM tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.uomId != null">
+            AND tb.UOM_ID = #{dto.uomId}
+        </if>
+        <if test="dto.uomType != null">
+            AND tb.UOM_TYPE = #{dto.uomType}
+        </if>
+        <if test="dto.uomCode != null">
+            AND tb.UOM_CODE = #{dto.uomCode}
+        </if>
+        <if test="dto.uomName != null">
+            AND tb.UOM_NAME = #{dto.uomName}
+        </if>
+        <if test="dto.primaryFlag != null">
+            AND tb.PRIMARY_FLAG = #{dto.primaryFlag}
+        </if>
+        <if test="dto.enableFlag != null">
+            AND tb.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+    </select>
+    <select id="selectByUomCode" resultMap="BaseResultMap">
+        SELECT tb.* FROM MT_UOM tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="codes!=null">
+            and ${codes}
+        </if>
+        <if test="codes==null">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+    <select id="selectUomBatch" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT tb.TENANT_ID,
+        tb.UOM_ID,
+        tb.UOM_TYPE,
+        tb.UOM_CODE,
+        tl.UOM_NAME,
+        tb.PRIMARY_FLAG,
+        tb.CONVERSION_VALUE,
+        tb.DECIMAL_NUMBER,
+        tb.PROCESS_MODE,
+        tb.ENABLE_FLAG,
+        tb.CID,
+        tb.OBJECT_VERSION_NUMBER,
+        tb.CREATED_BY,
+        tb.CREATION_DATE,
+        tb.LAST_UPDATED_BY,
+        tb.LAST_UPDATE_DATE
+        FROM MT_UOM tb
+        INNER JOIN mt_uom_tl tl ON tb.UOM_ID = tl.UOM_ID
+        AND tl.LANG = #{locale}
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="ids!=null and  ids.size()>0">
+            and tb.UOM_ID in
+            <foreach collection="ids" separator="," item="i" index="in" open="(" close=")">
+                #{i}
+            </foreach>
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeVisualInspectionMapper">
+
+    <select id="materialLotQuery" resultType="com.ruike.hme.domain.vo.HmeVisualInspectionVO">
+        SELECT
+            hejs.job_id,
+            hejs.material_lot_id,
+            mml.MATERIAL_LOT_CODE,
+            mml.PRIMARY_UOM_QTY AS sn_qty,
+            hejs.work_order_id,
+            mwo.WORK_ORDER_NUM,
+            mmla.ATTR_VALUE AS wafer_num,
+            mmla2.ATTR_VALUE AS cos_type,
+            hejs.eo_step_num
+        FROM
+            hme_eo_job_sn hejs
+        LEFT JOIN mt_material_lot_attr mmla ON mmla.TENANT_ID = hejs.tenant_id
+        AND mmla.MATERIAL_LOT_ID = hejs.material_lot_id
+        AND mmla.ATTR_NAME = 'WAFER_NUM'
+        LEFT JOIN mt_material_lot_attr mmla2 ON mmla2.TENANT_ID = hejs.tenant_id
+        AND mmla2.MATERIAL_LOT_ID = hejs.material_lot_id
+        AND mmla2.ATTR_NAME = 'COS_TYPE',
+         mt_material_lot mml,
+         mt_work_order mwo
+        WHERE
+            hejs.tenant_id = #{tenantId}
+        AND hejs.workcell_id = #{dto.workcellId}
+        AND hejs.operation_id = #{dto.operationId}
+        AND hejs.job_type = #{jobType}
+        AND mml.MATERIAL_LOT_ID = hejs.material_lot_id
+        AND mwo.WORK_ORDER_ID = hejs.work_order_id
+        AND hejs.site_out_date IS NULL
+        ORDER BY
+            hejs.site_in_date desc
+    </select>
+
+    <select id="materialLotQuery2" resultType="com.ruike.hme.domain.vo.HmeVisualInspectionVO">
+        SELECT
+            hejs.job_id,
+            hejs.material_lot_id,
+            mml.MATERIAL_LOT_CODE,
+            mml.PRIMARY_UOM_QTY AS sn_qty,
+            hejs.work_order_id,
+            mwo.WORK_ORDER_NUM,
+            mmla.ATTR_VALUE AS wafer_num,
+            mmla2.ATTR_VALUE AS cos_type,
+            hejs.eo_step_num,
+            hejs.site_out_date,
+            hejs.site_in_date
+        FROM
+            hme_eo_job_sn hejs
+        LEFT JOIN mt_material_lot_attr mmla ON mmla.TENANT_ID = hejs.tenant_id
+        AND mmla.MATERIAL_LOT_ID = hejs.material_lot_id
+        AND mmla.ATTR_NAME = 'WAFER_NUM'
+        LEFT JOIN mt_material_lot_attr mmla2 ON mmla2.TENANT_ID = hejs.tenant_id
+        AND mmla2.MATERIAL_LOT_ID = hejs.material_lot_id
+        AND mmla2.ATTR_NAME = 'COS_TYPE',
+         mt_material_lot mml,
+         mt_work_order mwo
+        WHERE
+            hejs.tenant_id = #{tenantId}
+        AND hejs.workcell_id = #{dto.workcellId}
+        AND hejs.operation_id = #{dto.operationId}
+        AND hejs.job_type = #{jobType}
+        AND mml.MATERIAL_LOT_ID = hejs.material_lot_id
+        AND mwo.WORK_ORDER_ID = hejs.work_order_id
+        ORDER BY
+            hejs.site_in_date desc
+    </select>
+
+    <select id="ncCountByMaterialLotId" resultType="java.lang.Long">
+        SELECT
+            count(hmlnl.nc_load_id)
+        FROM
+            hme_material_lot_load hmll,
+            hme_material_lot_nc_load hmlnl
+        WHERE
+            hmll.tenant_id = #{tenantId}
+        AND hmll.material_lot_id = #{materialLotId}
+        AND hmlnl.tenant_id = hmll.tenant_id
+        AND hmlnl.load_sequence = hmll.load_sequence
+    </select>
+
+    <select id="countByMaterialLotId" resultType="java.lang.Long">
+        SELECT
+            count(1)
+        FROM
+            hme_material_lot_load hmll
+        WHERE
+            hmll.tenant_id = #{tenantId}
+        AND hmll.material_lot_id = #{materialLotId}
+        AND hmll.cos_num != 1
+    </select>
+
+    <select id="getCountByContainerId" resultType="java.lang.Long">
+        SELECT
+            COUNT(1)
+        FROM
+            mt_material_lot mml
+        WHERE
+            mml.TENANT_ID = #{tenantId}
+        AND mml.CURRENT_CONTAINER_ID = #{containerId}
+        AND mml.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="cosOperationRecordQuery" resultType="com.ruike.hme.domain.entity.HmeCosOperationRecord">
+        SELECT
+            hcor.*
+        FROM
+            hme_cos_operation_record hcor
+        WHERE
+            hcor.tenant_id = #{tenantId}
+        AND hcor.work_order_id = #{dto.workOrderId}
+        AND hcor.cos_type = #{dto.cosType}
+        AND hcor.wafer = #{dto.waferNum}
+        AND hcor.operation_id = #{operationId}
+        AND hcor.workcell_id = #{workcellId}
+        AND hcor.surplus_cos_num > 0
+        ORDER BY
+            hcor.creation_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="noHotSinkDataQuery" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.load_row, hmll.load_column
+        from hme_material_lot_load hmll
+        where hmll.tenant_id = #{tenantId}
+        and hmll.material_lot_id = #{materialLotId}
+        and (hmll.hot_sink_code is null or hmll.hot_sink_code = '')
+    </select>
+
+    <select id="noFunctionTestDataQuery" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.load_row, hmll.load_column
+        from hme_material_lot_load hmll
+        where hmll.material_lot_id = #{materialLotId}
+        and hmll.tenant_id = #{tenantId}
+        and (hmll.ATTRIBUTE15 is NULL
+        OR hmll.ATTRIBUTE15 != 'Y')
+    </select>
+
+    <select id="ncCodeQuery" resultType="com.ruike.hme.domain.vo.HmeVisualInspectionVO9">
+        SELECT mlnl.load_sequence, mnc.NC_CODE_ID
+        FROM
+            hme_material_lot_nc_load mlnl,
+            hme_material_lot_nc_record mlnr,
+            mt_nc_code mnc
+        WHERE
+            mlnl.tenant_id = #{tenantId}
+        AND mlnl.load_sequence in
+        <foreach collection="loadSequenceList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND mlnl.nc_load_id = mlnr.nc_load_id
+        AND mnc.NC_CODE = mlnr.nc_code
+        group by mlnl.load_sequence, mnc.NC_CODE_ID
+    </select>
+
+    <select id="ncCountByMaterialLotIdList" resultType="java.lang.String">
+        SELECT
+        mml.MATERIAL_LOT_CODE
+        FROM
+        hme_material_lot_load hmll,
+        mt_material_lot mml,
+        hme_material_lot_nc_load hmlnl
+        WHERE
+        hmll.tenant_id = #{tenantId}
+        AND hmll.material_lot_id IN
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND hmlnl.tenant_id = hmll.tenant_id
+        AND hmlnl.load_sequence = hmll.load_sequence
+        AND mml.MATERIAL_LOT_ID = hmll.material_lot_id
+        GROUP BY
+        mml.MATERIAL_LOT_CODE
+        HAVING
+        count(hmlnl.nc_load_id) > 0
+    </select>
+
+    <select id="cosTypeWaferAttrQuery" resultType="com.ruike.hme.domain.vo.HmeVisualInspectionVO3">
+        select mmla.ATTR_VALUE as cosType, mmla2.ATTR_VALUE as wafer
+        from mt_material_lot mml,
+             mt_material_lot_attr mmla,
+             mt_material_lot_attr mmla2
+        where mml.MATERIAL_LOT_ID = #{materialLotId}
+        and mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'COS_TYPE'
+        and mmla2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla2.ATTR_NAME = 'WAFER_NUM'
+    </select>
+
+    <select id="getMaterialLotAttrValueByAttrName" resultType="java.lang.String">
+        select mmla.ATTR_VALUE
+        from mt_material_lot_attr mmla
+        where mmla.MATERIAL_LOT_ID = #{materialLotId}
+        and mmla.ATTR_NAME = #{attrName}
+        and mmla.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="getMfIsNMaterialLot" resultType="java.lang.String">
+        select mml.MATERIAL_LOT_CODE
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'MF_FLAG'
+        and mmla.TENANT_ID = mml.TENANT_ID
+        where mml.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and (mmla.ATTR_VALUE is null
+        or mmla.ATTR_VALUE  != 'Y')
+        limit 1
+    </select>
+
+    <select id="materialLotFreezeStocktakeFlagQuery" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mml.FREEZE_FLAG, mml.STOCKTAKE_FLAG
+        from mt_material_lot mml
+        where mml.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

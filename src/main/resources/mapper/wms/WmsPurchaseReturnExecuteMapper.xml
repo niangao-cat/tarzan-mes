@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsPurchaseReturnExecuteMapper">
+
+    <select id="queryPurchaseLineInfo" resultType="com.ruike.wms.domain.vo.WmsPurchaseLineVO">
+		SELECT
+  			mi.*,
+  			mi.INSTRUCTION_STATUS,
+			mm.MATERIAL_CODE,
+			mm.MATERIAL_NAME,
+			attr.ATTR_VALUE MATERIAL_VERSION,
+			ifnull((
+				SELECT
+					ACTUAL_QTY
+				FROM
+					mt_instruction_actual mia
+				WHERE
+			 		mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+					LIMIT 1
+				),
+				0
+			) ACTUAL_QTY,
+			ifnull((
+				SELECT
+					count( miad.MATERIAL_LOT_ID )
+				FROM
+					mt_instruction_actual mia,
+					mt_instruction_actual_detail miad
+				WHERE
+					mia.ACTUAL_ID = miad.ACTUAL_ID
+				AND mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+				),
+				0
+			) code_qty,
+			mu.UOM_CODE,
+			ml.LOCATOR_CODE,
+			ml.LOCATOR_NAME,
+			CONCAT_WS('-',attr2.ATTR_VALUE,attr3.ATTR_VALUE) delivery_number
+		FROM
+			mt_instruction mi
+		LEFT JOIN mt_material mm ON mi.MATERIAL_ID = mm.MATERIAL_ID
+		LEFT JOIN mt_instruction_attr attr ON attr.INSTRUCTION_ID = mi.INSTRUCTION_ID
+		AND attr.ATTR_NAME = 'MATERIAL_VERSION'
+		LEFT JOIN mt_uom mu ON mu.UOM_ID = mi.UOM_ID
+		LEFT JOIN mt_mod_locator ml ON ml.LOCATOR_ID = mi.TO_LOCATOR_ID
+		LEFT JOIN mt_instruction_attr attr2 ON attr2.INSTRUCTION_ID = mi.INSTRUCTION_ID
+		AND attr2.ATTR_NAME = 'SO_NUM'
+		LEFT JOIN mt_instruction_attr attr3 ON attr3.INSTRUCTION_ID = mi.INSTRUCTION_ID
+		AND attr3.ATTR_NAME = 'SO_LINE_NUM'
+		WHERE mi.TENANT_ID = #{tenantId}
+		AND mi.INSTRUCTION_ID IN
+		<foreach collection="instructionIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+    </select>
+
+	<select id="queryPurchaseMaterialLotList" resultType="com.ruike.wms.domain.vo.WmsPurchaseReturnCodeVO">
+		SELECT
+			mml.*,
+  			mu.UOM_CODE,
+  			mu.UOM_NAME,
+  			mm.MATERIAL_CODE,
+			mm.MATERIAL_NAME,
+			attr.ATTR_VALUE MATERIAL_VERSION,
+			attr2.ATTR_VALUE CODE_STATUS,
+			attr3.ATTR_VALUE SO_NUM,
+			attr4.ATTR_VALUE SO_LINE_NUM,
+			attr5.ATTR_VALUE MF_FLAG,
+			ml.PARENT_LOCATOR_ID
+		FROM
+			mt_material_lot mml
+		LEFT JOIN mt_uom mu ON mu.UOM_ID = mml.PRIMARY_UOM_ID
+		LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mml.MATERIAL_ID
+		LEFT JOIN mt_mod_locator ml ON ml.LOCATOR_ID = mml.LOCATOR_ID
+		LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'MATERIAL_VERSION'
+		LEFT JOIN mt_material_lot_attr attr2 ON attr2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr2.ATTR_NAME = 'STATUS'
+		LEFT JOIN mt_material_lot_attr attr3 ON attr3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr3.ATTR_NAME = 'SO_NUM'
+		LEFT JOIN mt_material_lot_attr attr4 ON attr4.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr4.ATTR_NAME = 'SO_LINE_NUM'
+		LEFT JOIN mt_material_lot_attr attr5 ON attr5.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr5.ATTR_NAME = 'MF_FLAG'
+		WHERE mml.TENANT_ID = #{tenantId}
+		AND mml.MATERIAL_LOT_ID IN
+		<foreach collection="mtMaterialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="queryScanCodeList" resultType="java.lang.String">
+		SELECT
+			miad.MATERIAL_LOT_ID
+		FROM
+			mt_instruction_actual mia,
+			mt_instruction_actual_detail miad
+		WHERE
+			mia.ACTUAL_ID = miad.ACTUAL_ID
+		AND mia.TENANT_ID = #{tenantId}
+		AND mia.INSTRUCTION_ID IN
+		<foreach collection="lineIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="queryLineByBarcodeAndDocNum" resultType="com.ruike.wms.domain.vo.WmsPurchaseLineVO">
+		SELECT
+			ins.*,
+			doc.INSTRUCTION_DOC_NUM,
+			mia_ver.attr_value material_version,
+		(
+		SELECT
+			IFNULL(sum(mia.ACTUAL_QTY), 0)
+		FROM
+			mt_instruction_actual mia
+		WHERE
+			ins.instruction_id = mia.INSTRUCTION_ID
+		AND mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+		LIMIT 1
+		) actual_qty
+		FROM
+			mt_instruction ins
+		LEFT JOIN mt_instruction_attr mia_ver ON ins.INSTRUCTION_ID = mia_ver.INSTRUCTION_ID
+		AND mia_ver.ATTR_NAME = 'MATERIAL_VERSION',
+			mt_instruction_doc doc
+		WHERE
+			doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+		AND ins.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+		AND doc.TENANT_ID = #{tenantId}
+		AND doc.INSTRUCTION_DOC_NUM = #{instructionDocNum}
+		AND EXISTS (
+		SELECT
+			1
+		FROM
+			mt_material_lot mml
+			LEFT JOIN mt_material_lot_attr mmla ON mmla.material_lot_id = mml.material_lot_id
+			AND mmla.attr_name = 'MATERIAL_VERSION'
+		WHERE
+			mml.material_id = ins.material_id
+			AND case WHEN ifnull( mia_ver.attr_value, '' ) = '' THEN 1=1
+	    ELSE ifnull( mmla.attr_value, '' ) = mia_ver.attr_value	END
+			AND mml.material_lot_id = #{materialLotId}
+			)
+	</select>
+
+	<select id="queryBarcodeListByLineId" resultType="com.ruike.wms.domain.vo.WmsPurchaseCodeDetailsVO">
+		SELECT
+			iad.CONTAINER_ID,
+		    mia.INSTRUCTION_ID,
+  			mia.ACTUAL_QTY,
+  			mml.MATERIAL_LOT_CODE,
+  			mml.MATERIAL_LOT_ID,
+  			mm.MATERIAL_ID,
+			mm.MATERIAL_CODE,
+  			mm.MATERIAL_NAME,
+  			attr.ATTR_VALUE MATERIAL_VERSION,
+			mml.PRIMARY_UOM_QTY,
+			mu.UOM_CODE,
+ 			mu.UOM_NAME,
+ 			mml.QUALITY_STATUS,
+ 			mml.lot,
+ 			mml.site_id,
+ 			mml.locator_id,
+ 			attr2.ATTR_VALUE SUPPLIER_LOT,
+ 			attr3.ATTR_VALUE CODE_STATUS
+		FROM
+			mt_instruction_actual mia,
+			mt_instruction_actual_detail iad
+		LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = iad.MATERIAL_LOT_ID
+  		LEFT JOIN mt_material mm ON mm.Material_id = mml.material_id
+  		LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'MATERIAL_VERSION'
+  		LEFT JOIN mt_material_lot_attr attr2 ON attr2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr2.ATTR_NAME = 'SUPPLIER_LOT'
+  		LEFT JOIN mt_material_lot_attr attr3 ON attr3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr3.ATTR_NAME = 'STATUS'
+		LEFT JOIN mt_uom mu ON mu.UOM_ID = mml.PRIMARY_UOM_ID
+		WHERE mia.TENANT_ID = #{tenantId}
+		AND mia.ACTUAL_ID = iad.ACTUAL_ID
+		AND mia.INSTRUCTION_ID = #{instructionId}
+	</select>
+
+	<select id="queryScannedMaterialLot" resultType="java.lang.Long">
+		SELECT
+			COUNT(iad.MATERIAL_LOT_ID)
+		FROM
+			mt_instruction mi,
+			mt_instruction_actual mia,
+			mt_instruction_actual_detail iad,
+			mt_material_lot mml
+			LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'STATUS'
+		WHERE mi.TENANT_ID = #{tenantId}
+		AND mi.INSTRUCTION_ID = mia.INSTRUCTION_ID
+		AND mia.ACTUAL_ID = iad.ACTUAL_ID
+	    AND iad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+		AND mi.SOURCE_DOC_ID = #{instructionDocId}
+		AND attr.ATTR_VALUE = 'SCANNED'
+		AND mi.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+	</select>
+
+	<select id="queryActualQtyCount" resultType="java.lang.Long">
+		SELECT
+			COUNT(mi.INSTRUCTION_ID)
+		FROM
+			mt_instruction mi,
+			mt_instruction_actual mia
+		WHERE mi.TENANT_ID = #{tenantId}
+		AND mi.INSTRUCTION_ID = mia.INSTRUCTION_ID
+		AND mi.SOURCE_DOC_ID = #{instructionDocId}
+		AND mi.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+		AND mia.ACTUAL_QTY > 0
+	</select>
+
+</mapper>

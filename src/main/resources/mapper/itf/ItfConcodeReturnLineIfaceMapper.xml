@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruike.itf.infra.mapper.ItfConcodeReturnLineIfaceMapper">
+  <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfConcodeReturnLineIface">
+    <!--@mbg.generated-->
+    <!--@Table itf_concode_return_line_iface-->
+    <result column="LINE_ID" jdbcType="VARCHAR" property="lineId" />
+    <result column="HEADER_ID" jdbcType="VARCHAR" property="headerId" />
+    <result column="MATERIAL_LOT_CODE" jdbcType="VARCHAR" property="materialLotCode" />
+    <result column="CID" jdbcType="BIGINT" property="cid" />
+    <result column="tenant_id" jdbcType="BIGINT" property="tenantId" />
+    <result column="object_version_number" jdbcType="BIGINT" property="objectVersionNumber" />
+    <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+    <result column="created_by" jdbcType="BIGINT" property="createdBy" />
+    <result column="last_updated_by" jdbcType="BIGINT" property="lastUpdatedBy" />
+    <result column="last_update_date" jdbcType="TIMESTAMP" property="lastUpdateDate" />
+    <result column="ATTRIBUTE_CATEGORY" jdbcType="VARCHAR" property="attributeCategory" />
+    <result column="ATTRIBUTE1" jdbcType="VARCHAR" property="attribute1" />
+    <result column="ATTRIBUTE2" jdbcType="VARCHAR" property="attribute2" />
+    <result column="ATTRIBUTE3" jdbcType="VARCHAR" property="attribute3" />
+    <result column="ATTRIBUTE4" jdbcType="VARCHAR" property="attribute4" />
+    <result column="ATTRIBUTE5" jdbcType="VARCHAR" property="attribute5" />
+    <result column="ATTRIBUTE6" jdbcType="VARCHAR" property="attribute6" />
+    <result column="ATTRIBUTE7" jdbcType="VARCHAR" property="attribute7" />
+    <result column="ATTRIBUTE8" jdbcType="VARCHAR" property="attribute8" />
+    <result column="ATTRIBUTE9" jdbcType="VARCHAR" property="attribute9" />
+    <result column="ATTRIBUTE10" jdbcType="VARCHAR" property="attribute10" />
+    <result column="ATTRIBUTE11" jdbcType="VARCHAR" property="attribute11" />
+    <result column="ATTRIBUTE12" jdbcType="VARCHAR" property="attribute12" />
+    <result column="ATTRIBUTE13" jdbcType="VARCHAR" property="attribute13" />
+    <result column="ATTRIBUTE14" jdbcType="VARCHAR" property="attribute14" />
+    <result column="ATTRIBUTE15" jdbcType="VARCHAR" property="attribute15" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    LINE_ID, HEADER_ID, MATERIAL_LOT_CODE, CID, tenant_id, object_version_number, creation_date, 
+    created_by, last_updated_by, last_update_date, ATTRIBUTE_CATEGORY, ATTRIBUTE1, ATTRIBUTE2, 
+    ATTRIBUTE3, ATTRIBUTE4, ATTRIBUTE5, ATTRIBUTE6, ATTRIBUTE7, ATTRIBUTE8, ATTRIBUTE9, 
+    ATTRIBUTE10, ATTRIBUTE11, ATTRIBUTE12, ATTRIBUTE13, ATTRIBUTE14, ATTRIBUTE15
+  </sql>
+  <insert id="batchInsertItfConcodeReturnLineIface">
+    <!--@mbg.generated-->
+    INSERT INTO itf_concode_return_line_iface (LINE_ID,HEADER_ID,MATERIAL_LOT_CODE,CID) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (#{item.lineId,jdbcType=VARCHAR}, #{item.headerId,jdbcType=VARCHAR}, #{item.materialLotCode,jdbcType=VARCHAR}, #{item.cid,jdbcType=VARCHAR})
+    </foreach>
+  </insert>
+
+
+</mapper>

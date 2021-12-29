@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCommonExportMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+	<select id="tagExport" resultType="com.ruike.hme.domain.vo.HmeTagExportVO">
+		SELECT
+		    mt.TAG_ID,
+			mt.TAG_CODE,
+			mt.TAG_DESCRIPTION,
+			mt.COLLECTION_METHOD,
+			mt.VALUE_TYPE,
+			mt.ENABLE_FLAG,
+			mt.MINIMUM_VALUE,
+			mt.MAXIMAL_VALUE,
+			mt.UNIT,
+			mu.UOM_CODE UNIT_CODE,
+			mt.TRUE_VALUE,
+			mt.FALSE_VALUE,
+			mt.MANDATORY_NUM,
+			mt.OPTIONAL_NUM,
+			mt.REMARK
+		FROM
+			mt_tag mt
+		LEFT JOIN mt_uom mu ON mu.UOM_ID = mt.UNIT
+		WHERE
+			mt.TENANT_ID = #{tenantId}
+		<if test="dto.tagCode != null and dto.tagCode != ''">
+			AND mt.TAG_CODE LIKE CONCAT('%', #{dto.tagCode}, '%')
+		</if>
+		<if test="dto.tagDescription != null and dto.tagDescription != ''">
+			AND mt.TAG_DESCRIPTION LIKE CONCAT('%', #{dto.tagDescription}, '%')
+		</if>
+		<if test="dto.valueType != null and dto.valueType != ''">
+			AND mt.VALUE_TYPE = #{dto.valueType}
+		</if>
+		<if test="dto.collectionMethod != null and dto.collectionMethod != ''">
+			AND mt.COLLECTION_METHOD = #{dto.collectionMethod}
+		</if>
+		<if test="dto.valueAllowMissing != null and dto.valueAllowMissing != ''">
+			AND mt.VALUE_ALLOW_MISSING = #{dto.valueAllowMissing}
+		</if>
+		<if test="dto.enableFlag != null and dto.enableFlag != ''">
+			AND mt.ENABLE_FLAG = #{dto.enableFlag}
+		</if>
+	</select>
+
+	<select id="tagGroupExport" resultType="com.ruike.hme.domain.vo.HmeTagGroupExportVO">
+		<bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()" />
+		SELECT
+			tb.TAG_GROUP_ID,
+			tb.TAG_GROUP_CODE,
+			tga.SERIAL_NUMBER,
+			mt.TAG_ID,
+			mt.TAG_CODE,
+			mt.TAG_DESCRIPTION,
+			mt.COLLECTION_METHOD,
+			mt.ENABLE_FLAG,
+			CASE mt.VALUE_ALLOW_MISSING WHEN 'Y' THEN 'Y'
+			ELSE 'N' END VALUE_ALLOW_MISSING,
+			mt.TRUE_VALUE,
+			mt.FALSE_VALUE,
+			mt.MINIMUM_VALUE,
+			mt.MAXIMAL_VALUE,
+			mt.UNIT,
+			mu.UOM_CODE UNIT_CODE,
+			mt.MANDATORY_NUM,
+			mt.OPTIONAL_NUM
+		FROM
+			mt_tag_group tb
+		INNER JOIN mt_tag_group_tl t ON tb.TAG_GROUP_ID = t.TAG_GROUP_ID
+		LEFT JOIN mt_tag_group_assign tga ON tga.TAG_GROUP_ID = tb.TAG_GROUP_ID AND tga.TENANT_ID = tb.TENANT_ID
+		LEFT JOIN mt_tag_group_object tgo ON tgo.tag_group_id = tb.TAG_GROUP_ID AND tgo.TENANT_ID = tb.TENANT_ID
+		LEFT JOIN mt_tag mt ON mt.TAG_ID = tga.TAG_ID
+		LEFT JOIN mt_uom mu ON mu.UOM_ID = mt.UNIT
+		WHERE tb.TENANT_ID = #{tenantId}
+		AND t.LANG = #{lang}
+		<if test="dto.tagGroupDescription != null">
+			AND t.TAG_GROUP_DESCRIPTION like concat('%',concat(#{dto.tagGroupDescription}),'%')
+		</if>
+		<if test="dto.tagGroupCode != null">
+			AND tb.TAG_GROUP_CODE like CONCAT('%',#{dto.tagGroupCode},'%')
+		</if>
+		<choose>
+			<when  test="dto.status != null">
+				AND tb.STATUS = #{dto.status}
+			</when >
+			<otherwise >
+				AND tb.STATUS != 'INEFFECT'
+			</otherwise>
+		</choose>
+		<if test="dto.operationId != null and dto.operationId != ''">
+			AND tgo.operation_id = #{dto.operationId}
+		</if>
+		<if test="dto.materialId != null and dto.materialId != ''">
+			AND tgo.material_id = #{dto.materialId}
+		</if>
+		<if test="dto.productionVersion != null and dto.productionVersion != ''">
+			AND tgo.production_version = #{dto.productionVersion}
+		</if>
+		order by tb.last_update_date desc, tga.SERIAL_NUMBER ASC
+	</select>
+
+	<select id="tagGroupObjectExport" resultType="com.ruike.hme.domain.vo.HmeTagGroupObjectExportVO">
+		<bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()" />
+		SELECT
+		tb.TAG_GROUP_ID,
+		tb.TAG_GROUP_CODE,
+		t.TAG_GROUP_DESCRIPTION,
+		tb.STATUS,
+		tb.BUSINESS_TYPE,
+		tb.TAG_GROUP_TYPE,
+		tb.SOURCE_GROUP_ID,
+		tb.COLLECTION_TIME_CONTROL,
+		tb.USER_VERIFICATION,
+		mm.MATERIAL_CODE,
+		mo.OPERATION_ID,
+		mo.OPERATION_NAME,
+		mmw.WORKCELL_ID,
+		mmw.WORKCELL_CODE,
+		nc.NC_CODE_ID,
+		nc.NC_CODE,
+		mr.ROUTER_NAME,
+		mrs.STEP_NAME ROUTER_STEP_NAME,
+		mb.BOM_NAME,
+		tgo.BOM_COMPONENT_ID,
+		wo.WORK_ORDER_NUM,
+		me.EO_NUM
+		FROM
+		mt_tag_group tb
+		INNER JOIN mt_tag_group_tl t ON tb.TAG_GROUP_ID = t.TAG_GROUP_ID
+		LEFT JOIN mt_tag_group_object tgo ON tgo.tag_group_id = tb.TAG_GROUP_ID AND tgo.TENANT_ID = tb.TENANT_ID
+		LEFT JOIN mt_material mm ON mm.MATERIAL_ID = tgo.MATERIAL_ID
+		LEFT JOIN mt_operation mo ON mo.OPERATION_ID = tgo.OPERATION_ID
+		LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = tgo.WORKCELL_ID
+		LEFT JOIN mt_nc_code nc ON nc.NC_CODE_ID = tgo.NC_CODE_ID
+		LEFT JOIN mt_router mr ON mr.ROUTER_ID = tgo.ROUTER_ID
+		LEFT JOIN mt_router_step mrs ON mrs.ROUTER_STEP_ID = tgo.ROUTER_STEP_ID
+		LEFT JOIN mt_bom mb ON mb.BOM_ID = tgo.BOM_ID
+		LEFT JOIN mt_work_order wo ON wo.WORK_ORDER_ID = tgo.WORK_ORDER_ID
+		LEFT JOIN mt_eo me ON me.EO_ID = tgo.EO_ID
+		WHERE tb.TENANT_ID = #{tenantId}
+		AND t.LANG = #{lang}
+		<if test="dto.tagGroupDescription != null">
+			AND t.TAG_GROUP_DESCRIPTION like concat('%',concat(#{dto.tagGroupDescription}),'%')
+		</if>
+		<if test="dto.tagGroupCode != null">
+			AND tb.TAG_GROUP_CODE like CONCAT('%',#{dto.tagGroupCode},'%')
+		</if>
+		<choose>
+			<when  test="dto.status != null">
+				AND tb.STATUS = #{dto.status}
+			</when >
+			<otherwise >
+				AND tb.STATUS != 'INEFFECT'
+			</otherwise>
+		</choose>
+		<if test="dto.operationId != null and dto.operationId != ''">
+			AND tgo.operation_id = #{dto.operationId}
+		</if>
+		<if test="dto.materialId != null and dto.materialId != ''">
+			AND tgo.material_id = #{dto.materialId}
+		</if>
+		<if test="dto.productionVersion != null and dto.productionVersion != ''">
+			AND tgo.production_version = #{dto.productionVersion}
+		</if>
+		order by tb.last_update_date desc
+	</select>
+
+</mapper>

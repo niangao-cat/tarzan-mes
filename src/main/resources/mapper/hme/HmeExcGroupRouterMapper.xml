@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeExcGroupRouterMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeExcGroupRouter">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="exception_group_router_id" property="exceptionGroupRouterId" jdbcType="VARCHAR"/>
+        <result column="exception_group_assign_id" property="exceptionGroupAssignId" jdbcType="VARCHAR"/>
+        <result column="exception_level" property="exceptionLevel" jdbcType="DECIMAL"/>
+        <result column="respond_position_id" property="respondPositionId" jdbcType="DECIMAL"/>
+        <result column="upgrade_time" property="upgradeTime" jdbcType="DECIMAL"/>
+        <result column="is_top" property="isTop" jdbcType="VARCHAR"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRouterByAssignId"
+            resultType="com.ruike.hme.domain.entity.HmeExcGroupRouter">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select exr.tenant_id,
+        exr.exception_group_router_id,
+        exr.exception_group_assign_id,
+        exr.exception_level,
+        exr.respond_position_id,
+        hpp.position_name respond_position_name,
+        exr.upgrade_time,
+        exr.is_top,
+        exr.object_version_number,
+        exr.creation_date,
+        exr.created_by,
+        exr.last_updated_by,
+        exr.last_update_date
+        from   hme_exc_group_router exr,
+        hpfm_position hpp
+        where exr.respond_position_id = hpp.position_id
+        and   exr.exception_group_assign_id = #{assignId}
+        and   exr.tenant_id = #{tenantId}
+        order by exr.exception_level
+    </select>
+</mapper>

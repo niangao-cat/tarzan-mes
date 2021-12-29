@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDocPrivilegeMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsDocPrivilege">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PRIVILEGE_ID" property="privilegeId" jdbcType="VARCHAR"/>
+        <result column="USER_ORGANIZATION_ID" property="userOrganizationId" jdbcType="VARCHAR"/>
+        <result column="DOC_TYPE" property="docType" jdbcType="VARCHAR"/>
+        <result column="LOCATION_TYPE" property="locationType" jdbcType="VARCHAR"/>
+        <result column="OPERATION_TYPE" property="operationType" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="userPrivilegeForUi" resultType="com.ruike.wms.domain.vo.WmsDocPrivilegeVO">
+        SELECT wdp.privilege_id,
+               wdp.doc_type,
+               wdp.location_type,
+               wdp.operation_type,
+               wdp.enable_flag
+        FROM wms_doc_privilege wdp
+        WHERE wdp.USER_ORGANIZATION_ID = #{dto.userOrganizationId}
+    </select>
+
+    <select id="selectWarehousePrivilegeCount" resultType="java.lang.Integer">
+        select count(*)
+        from mt_user_organization muo
+        ,wms_doc_privilege wdp
+        where muo.ORGANIZATION_TYPE = 'LOCATOR'
+        and muo.ENABLE_FLAG = 'Y'
+        and muo.USER_ORGANIZATION_ID = wdp.user_organization_id
+        and muo.TENANT_ID = #{tenantId}
+        and muo.ORGANIZATION_ID = #{dto.locatorId}
+        and muo.USER_ID = #{dto.userId}
+        and wdp.doc_type = #{dto.docType}
+        and wdp.operation_type = #{dto.operationType}
+        <if test="dto.locationType != null and dto.locationType != ''">
+            and wdp.location_type = #{dto.locationType}
+        </if>
+        and wdp.enable_flag = 'Y'
+    </select>
+
+    <select id="selectPrivilege" resultType="com.ruike.wms.domain.entity.WmsDocPrivilege">
+        SELECT
+            wdp.*
+        FROM
+            wms_doc_privilege wdp,
+            mt_user_organization muo
+        WHERE
+            wdp.TENANT_ID = #{tenantId}
+            AND wdp.USER_ORGANIZATION_ID = muo.USER_ORGANIZATION_ID
+            AND muo.USER_ID = #{importVO.userId}
+            AND muo.ORGANIZATION_TYPE = #{importVO.organizationType}
+            AND muo.ORGANIZATION_ID = #{importVO.organizationId}
+            AND wdp.DOC_TYPE = #{importVO.docType}
+            AND wdp.OPERATION_TYPE = #{importVO.operationType}
+        <choose>
+            <when test="importVO.locationType != null and importVO.locationType.length() != 0 ">
+                AND wdp.LOCATION_TYPE = #{importVO.locationType}
+            </when>
+            <otherwise>
+                AND (wdp.LOCATION_TYPE is NULL or wdp.LOCATION_TYPE = '')
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtMaterialSiteMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtMaterialSite">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="SOURCE_IDENTIFICATION_ID" property="sourceIdentificationId" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <insert id="batchInsert">
+        insert into mt_material_site values
+        <foreach collection="sites" item="item" separator="," index="index">
+            (
+            #{item.tenantId},
+            #{item.materialSiteId},
+            #{item.materialId},
+            #{item.siteId},
+            #{item.enableFlag},
+            #{item.sourceIdentificationId},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+
+    <resultMap id="UiResultMap" type="tarzan.material.domain.vo.MaterialSiteVO">
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="SITE_TYPE" property="siteType" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectMaterialSiteById" resultMap="UiResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        mcs.MATERIAL_SITE_ID,
+        mcs.MATERIAL_ID,
+        ms.SITE_ID,
+        ms.SITE_CODE,
+        tp_l.DESCRIPTION as SITE_TYPE,
+        mst.SITE_NAME,
+        mcs.ENABLE_FLAG
+        FROM
+        mt_material_site mcs
+        JOIN mt_mod_site ms ON mcs.SITE_ID = ms.SITE_ID
+        LEFT JOIN mt_mod_site_tl mst ON ms.SITE_ID = mst.SITE_ID
+        AND mst.LANG = #{locale}
+        LEFT JOIN mt_gen_type tp ON tp.TYPE_CODE = ms.SITE_TYPE and tp.TENANT_ID = ms.TENANT_ID AND tp.TYPE_GROUP =
+        'ORGANIZATION_REL_TYPE' LEFT JOIN mt_gen_type_tl tp_l ON tp.GEN_TYPE_ID = tp_l.GEN_TYPE_ID AND tp_l.LANG =
+        #{locale}
+        WHERE
+        mcs.TENANT_ID = #{tenantId}
+        AND ms.TENANT_ID = #{tenantId}
+        AND mcs.MATERIAL_ID = #{materialId}
+        ORDER BY mcs.CREATION_DATE DESC
+    </select>
+
+    <select id="selectEnableMaterial" resultMap="BaseResultMap">
+        SELECT
+        item_site.TENANT_ID,
+        item_site.MATERIAL_SITE_ID,
+        item_site.MATERIAL_ID,
+        item_site.SITE_ID,
+        item_site.ENABLE_FLAG,
+        item_site.SOURCE_IDENTIFICATION_ID,
+        item_site.CID,
+        item_site.OBJECT_VERSION_NUMBER,
+        item_site.CREATED_BY,
+        item_site.CREATION_DATE,
+        item_site.LAST_UPDATED_BY,
+        item_site.LAST_UPDATE_DATE
+        FROM
+        MT_MATERIAL_SITE item_site
+        LEFT JOIN mt_material b ON b.MATERIAL_ID = item_site.MATERIAL_ID
+        AND b.TENANT_ID = ${tenantId}
+        WHERE
+        1 = 1
+        AND item_site.TENANT_ID = ${tenantId}
+        AND b.ENABLE_FLAG = 'Y'
+        <if test="dto.materialId!=null">
+            and item_site.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.siteId!=null">
+            and item_site.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.materialSiteId!=null">
+            and item_site.MATERIAL_SITE_ID = #{dto.materialSiteId}
+        </if>
+        <if test="dto.enableFlag != null">
+            and item_site.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+    </select>
+
+    <select id="selectPfepItem" resultMap="BaseResultMap">
+        SELECT
+        b.TENANT_ID,
+        b.MATERIAL_SITE_ID,
+        b.MATERIAL_ID,
+        b.SITE_ID,
+        b.SOURCE_IDENTIFICATION_ID,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        FROM
+        mt_material_site b
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        AND (
+        EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_distribution f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_SITE_ID = f.MATERIAL_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_inventory f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_SITE_ID = f.MATERIAL_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_manufacturing f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_SITE_ID = f.MATERIAL_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_purchase f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_SITE_ID = f.MATERIAL_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_schedule f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_SITE_ID = f.MATERIAL_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_purchase_supplier f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_SITE_ID = f.MATERIAL_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_shipping f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_SITE_ID = f.MATERIAL_SITE_ID
+        )
+        )
+        <if test="dto.materialId!=null">
+            and b.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.siteId!=null">
+            and b.SITE_ID = #{dto.siteId}
+        </if>
+    </select>
+
+    <select id="queryMaterialSiteByMaterialId" resultMap="BaseResultMap">
+        select * from mt_material_site where TENANT_ID = ${tenantId} and MATERIAL_ID in
+        <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="queryMaterialSiteByItemId" resultMap="BaseResultMap">
+        select * from mt_material_site where TENANT_ID = ${tenantId} and ${itemIds}
+    </select>
+    <select id="queryByMaterialSiteId" resultMap="BaseResultMap">
+        select * from mt_material_site where TENANT_ID = ${tenantId}
+        <if test="materialSiteIds != null and materialSiteIds.size() != 0">
+            and MATERIAL_SITE_ID in
+            <foreach collection="materialSiteIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeRepairSnBindMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+	<select id="queryWorkingEoByOldMaterialLotCode" resultType="java.lang.String">
+		select
+			eo.EO_ID
+        from
+        mt_material_lot mml
+        left join mt_eo_attr ea on ea.tenant_id = mml.tenant_id and ea.attr_name = 'REWORK_MATERIAL_LOT' and ea.attr_value = mml.material_lot_code
+        left join mt_eo eo on ea.eo_id = eo.eo_id
+        where
+        mml.tenant_id = #{tenantId}
+        and mml.material_lot_code =  #{reworkMaterialLot}
+        and mml.enable_flag = 'Y'
+        and eo.`STATUS` = 'WORKING'
+	</select>
+
+</mapper>

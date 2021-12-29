@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsIqcLineHisMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsIqcLineHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IQC_LINE_HIS_ID" property="iqcLineHisId" jdbcType="VARCHAR"/>
+        <result column="IQC_HEADER_ID" property="iqcHeaderId" jdbcType="VARCHAR"/>
+        <result column="IQC_LINE_ID" property="iqcLineId" jdbcType="VARCHAR"/>
+        <result column="NUMBER" property="number" jdbcType="DECIMAL"/>
+        <result column="INSPECTION_TYPE" property="inspectionType" jdbcType="VARCHAR"/>
+        <result column="INSPECTION" property="inspection" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_DESC" property="inspectionDesc" jdbcType="VARCHAR"/>
+        <result column="SAMPLE_TYPE" property="sampleType" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_LEVELS" property="inspectionLevels" jdbcType="VARCHAR"/>
+        <result column="DEFECT_LEVELS" property="defectLevels" jdbcType="VARCHAR"/>
+        <result column="ACCEPTANCE_QUANTITY_LIMIT" property="acceptanceQuantityLimit" jdbcType="DECIMAL"/>
+        <result column="SAMPLE_SIZE" property="sampleSize" jdbcType="DECIMAL"/>
+        <result column="AC" property="ac" jdbcType="DECIMAL"/>
+        <result column="RE" property="re" jdbcType="DECIMAL"/>
+        <result column="STANDARD_TEXT" property="standardText" jdbcType="VARCHAR"/>
+        <result column="STANDARD_FROM" property="standardFrom" jdbcType="DECIMAL"/>
+        <result column="STANDARD_TO" property="standardTo" jdbcType="DECIMAL"/>
+        <result column="STANDARD_UOM" property="standardUom" jdbcType="DECIMAL"/>
+        <result column="STANDARD_TYPE" property="standardType" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_TOOL" property="inspectionTool" jdbcType="VARCHAR"/>
+        <result column="NG_QTY" property="ngQty" jdbcType="DECIMAL"/>
+        <result column="OK_QTY" property="okQty" jdbcType="DECIMAL"/>
+        <result column="INSPECTION_RESULT" property="inspectionResult" jdbcType="VARCHAR"/>
+        <result column="ATTACHMENT_UUID" property="attachmentUuid" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="ADDED_FLAG" property="addedFlag" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+</mapper>

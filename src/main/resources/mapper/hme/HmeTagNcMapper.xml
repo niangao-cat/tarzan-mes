@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeTagNcMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeTagNc">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_NC_ID" property="tagNcId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="TAG_TYPE" property="tagType" jdbcType="VARCHAR"/>
+        <result column="MIN_VALUE" property="minValue" jdbcType="DECIMAL"/>
+        <result column="STANDARD_VALUE" property="standardValue" jdbcType="DECIMAL"/>
+        <result column="MAX_VALUE" property="maxValue" jdbcType="DECIMAL"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="NC_CODE_GROUP_ID" property="ncCodeGroupId" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="NC_DEAL_WAY" property="ncDealWay" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getTagNcList" resultType="com.ruike.hme.api.dto.HmeTagNcDTO">
+        SELECT
+            htn.tenant_id,
+            htn.tag_nc_id,
+            mtg.TAG_GROUP_ID,
+            mtg.TAG_GROUP_CODE,
+            mtg.TAG_GROUP_DESCRIPTION TAG_GROUP_DESC,
+            mo.OPERATION_ID,
+            mo.OPERATION_NAME OPERATION_CODE,
+            mo.DESCRIPTION OPERATION_DESC,
+            mt.TAG_ID,
+            mt.TAG_CODE,
+            mt.TAG_DESCRIPTION TAG_DESC,
+            htn.tag_type,
+            htn.min_value,
+            htn.max_value,
+            htn.priority,
+            mcg.NC_GROUP_ID NC_CODE_GROUP_ID,
+            mcg.NC_GROUP_CODE NC_CODE_GROUP_CODE,
+            mcg.DESCRIPTION NC_CODE_GROUP_DESC,
+            mcc.NC_CODE_ID,
+            mcc.NC_CODE,
+            mcc.DESCRIPTION NC_CODE_DESC,
+            htn.nc_deal_way
+        FROM
+            hme_tag_nc htn
+            LEFT JOIN mt_operation mo ON htn.operation_id = mo.OPERATION_ID
+            LEFT JOIN mt_tag_group mtg ON htn.tag_group_id = mtg.tag_group_id
+            LEFT JOIN mt_tag mt ON htn.tag_id = mt.TAG_ID
+            LEFT JOIN mt_nc_group mcg ON htn.nc_code_group_id = mcg.NC_GROUP_ID
+            LEFT JOIN mt_nc_code mcc ON mcc.NC_CODE_ID = htn.NC_CODE_ID
+        WHERE
+            1 = 1
+            AND htn.tenant_id = #{tenantId}
+        <if test="vo.tagGroupId != null ">
+            AND htn.tag_group_id = #{vo.tagGroupId}
+        </if>
+        <if test="vo.operationId != null ">
+            AND htn.OPERATION_ID = #{vo.operationId}
+        </if>
+        <if test="vo.tagGroupId != null ">
+            AND htn.tag_group_id = #{vo.tagGroupId}
+        </if>
+        <if test="vo.tagId != null ">
+            AND htn.TAG_ID = #{vo.tagId}
+        </if>
+        <if test="vo.ncCodeGroupId != null ">
+            AND htn.nc_code_group_id = #{vo.ncCodeGroupId}
+        </if>
+        <if test="vo.ncCodeId != null ">
+            AND htn.NC_CODE_ID = #{vo.ncCodeId}
+        </if>
+    </select>
+
+</mapper>

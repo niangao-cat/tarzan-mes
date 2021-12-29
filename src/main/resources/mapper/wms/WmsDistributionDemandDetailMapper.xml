@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDistributionDemandDetailMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsDistributionDemandDetail">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="demand_detail_id" property="demandDetailId" jdbcType="VARCHAR"/>
+        <result column="dist_demand_id" property="distDemandId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_version" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="dispatch_qty" property="dispatchQty" jdbcType="DECIMAL"/>
+        <result column="usage_qty" property="usageQty" jdbcType="DECIMAL"/>
+        <result column="requirement_qty" property="requirementQty" jdbcType="DECIMAL"/>
+        <result column="substitute_flag" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="instruction_qty" property="instructionQty" jdbcType="DECIMAL"/>
+        <result column="instruction_doc_id" property="instructionDocId" jdbcType="VARCHAR"/>
+        <result column="instruction_id" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="demand_record_id" property="demandRecordId" jdbcType="VARCHAR"/>
+        <result column="source_detail_id" property="sourceDetailId" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE16" property="attribute16" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE17" property="attribute17" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE18" property="attribute18" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE19" property="attribute19" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE20" property="attribute20" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectSubstituteByDemandId" resultType="com.ruike.wms.domain.vo.WmsDistributeSubstitutionVO">
+        select wddd.dist_demand_id
+        ,wddd.material_id
+        ,mm.MATERIAL_CODE
+        ,wddd.requirement_qty substitute_qty
+        ,wdd.CALENDAR_SHIFT_ID
+        from wms_distribution_demand_detail wddd
+        inner join wms_distribution_demand wdd on wddd.dist_demand_id = wdd.dist_demand_id
+        inner join mt_material mm on wddd.material_id = mm.MATERIAL_ID
+        where wddd.substitute_flag = 'Y'
+        and wddd.tenant_id = #{tenantId}
+        and wddd.dist_demand_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectListByDemandId" resultType="com.ruike.wms.domain.entity.WmsDistributionDemandDetail">
+        select wddd.*
+             , mwo.work_order_num
+             , mm.material_code
+             , wddd.dispatch_qty * wddd.usage_qty component_demand_qty
+             , ifnull(mbc.attrition_chance, 0)    attrition_chance
+             , doc.instruction_doc_num
+             , ins_line.attr_value                instruction_line_num
+        from wms_distribution_demand_detail wddd
+                 left join mt_instruction_doc doc on wddd.instruction_doc_id = doc.instruction_doc_id
+                 left join mt_instruction_attr ins_line on wddd.instruction_id = ins_line.instruction_id
+            and ins_line.attr_name = 'INSTRUCTION_LINE_NUM'
+                 join mt_work_order mwo on wddd.work_order_id = mwo.WORK_ORDER_ID
+                 join mt_material mm on wddd.material_id = mm.MATERIAL_ID
+                 left join wms_component_demand_record wcdr
+                           on wcdr.demand_record_id = wddd.demand_record_id and wddd.substitute_flag = 'N'
+                 left join mt_bom_component mbc on wcdr.bom_component_id = mbc.BOM_COMPONENT_ID
+        where wddd.tenant_id = #{tenantId}
+          and wddd.dist_demand_id = #{distDemandId}
+          and wddd.requirement_qty > 0
+    </select>
+
+    <select id="selectCreateListByDemandIdList" resultType="com.ruike.wms.domain.vo.WmsDistDemandCreateVO">
+        select wddd.dist_demand_id
+        ,wddd.demand_detail_id
+        ,wdd.site_id
+        ,wdd.uom_id
+        ,wddd.material_id
+        ,wddd.material_version
+        ,wddd.work_order_id
+        ,wdd.workcell_id
+        ,mmw.WORKCELL_CODE
+        ,wdd.prod_line_id
+        ,mpl.PROD_LINE_CODE
+        ,mlor.LOCATOR_ID
+        ,mml.locator_type
+        ,wdd.calendar_shift_id
+        ,mcs.SHIFT_START_TIME demand_date
+        ,mcs.SHIFT_DATE
+        ,wdd.SHIFT_CODE
+        ,wddd.requirement_qty
+        ,wdd.so_num
+        ,wdd.so_line_num
+        ,wddd.substitute_flag
+        from wms_distribution_demand_detail wddd
+        ,wms_distribution_demand wdd
+        left join mt_mod_workcell mmw on wdd.workcell_id = mmw.WORKCELL_ID
+        left join mt_mod_production_line mpl on mpl.PROD_LINE_ID = wdd.prod_line_id
+        left join mt_mod_locator_org_rel mlor on mlor.ORGANIZATION_ID = wdd.workcell_id and mlor.ORGANIZATION_TYPE =
+        'WORKCELL'
+        left join mt_mod_locator mml on mml.locator_id = mlor.LOCATOR_ID
+        ,mt_calendar_shift mcs
+        where wddd.dist_demand_id = wdd.dist_demand_id
+        and wdd.calendar_shift_id = mcs.CALENDAR_SHIFT_ID
+        and wddd.instruction_id is null
+        and wddd.requirement_qty > 0
+        and wddd.tenant_id = #{tenantId}
+        and wddd.dist_demand_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectCreateListByDemandIdListNew" resultType="com.ruike.wms.domain.vo.WmsDistDemandCreateVO">
+        select wddd.dist_demand_id
+        ,wddd.demand_detail_id
+        ,wdd.site_id
+        ,wdd.uom_id
+        ,wddd.material_id
+        ,wddd.material_version
+        ,wddd.work_order_id
+        ,wdd.workcell_id
+        ,mmw.WORKCELL_CODE
+        ,wdd.prod_line_id
+        ,mpl.PROD_LINE_CODE
+        ,mlor.LOCATOR_ID
+        ,mml.locator_type
+        ,wdd.calendar_shift_id
+        ,mcs.SHIFT_START_TIME demand_date
+        ,mcs.SHIFT_DATE
+        ,wdd.SHIFT_CODE
+        ,wddd.requirement_qty
+        ,wdd.so_num
+        ,wdd.so_line_num
+        ,wddd.substitute_flag
+        from wms_distribution_demand_detail wddd
+        ,wms_distribution_demand wdd
+        left join mt_mod_workcell mmw on wdd.workcell_id = mmw.WORKCELL_ID
+        left join mt_mod_production_line mpl on mpl.PROD_LINE_ID = wdd.prod_line_id
+        left join mt_mod_locator_org_rel mlor on mlor.ORGANIZATION_ID = wdd.workcell_id and mlor.ORGANIZATION_TYPE =
+        'WORKCELL'
+        left join mt_mod_locator mml on mml.locator_id = mlor.LOCATOR_ID
+        ,mt_calendar_shift mcs
+        where wddd.dist_demand_id = wdd.dist_demand_id
+        and wdd.calendar_shift_id = mcs.CALENDAR_SHIFT_ID
+        AND ( wddd.attribute1 IS NULL OR wddd.ATTRIBUTE1 = '' )
+        and wddd.requirement_qty >= 0
+        and wddd.tenant_id = #{tenantId}
+        and wddd.dist_demand_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectAllCreateList" resultType="com.ruike.wms.domain.vo.WmsDistDemandCreateVO">
+        select wddd.dist_demand_id
+        ,wddd.demand_detail_id
+        ,wdd.site_id
+        ,wdd.uom_id
+        ,wddd.material_id
+        ,wddd.material_version
+        ,wddd.work_order_id
+        ,wdd.workcell_id
+        ,mmw.WORKCELL_CODE
+        ,wdd.prod_line_id
+        ,mpl.PROD_LINE_CODE
+        ,mlor.LOCATOR_ID
+        ,wdd.calendar_shift_id
+        ,mcs.SHIFT_START_TIME demand_date
+        ,mcs.SHIFT_DATE
+        ,wdd.SHIFT_CODE
+        ,wddd.requirement_qty
+        ,wdd.so_num
+        ,wdd.so_line_num
+        ,wddd.substitute_flag
+        from wms_distribution_demand_detail wddd
+        ,wms_distribution_demand wdd
+        left join mt_mod_workcell mmw on wdd.workcell_id = mmw.WORKCELL_ID
+        left join mt_mod_production_line mpl on mpl.PROD_LINE_ID = wdd.prod_line_id
+        left join mt_mod_locator_org_rel mlor on mlor.ORGANIZATION_ID = wdd.workcell_id and mlor.ORGANIZATION_TYPE =
+        'WORKCELL'
+        ,mt_calendar_shift mcs
+        where wddd.dist_demand_id = wdd.dist_demand_id
+        and wdd.calendar_shift_id = mcs.CALENDAR_SHIFT_ID
+        and wddd.requirement_qty > 0
+        and wddd.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectListByDetailIdList" resultType="com.ruike.wms.domain.entity.WmsDistributionDemandDetail">
+        select wddd.*
+        from wms_distribution_demand_detail wddd
+        join mt_work_order mwo on wddd.work_order_id = mwo.WORK_ORDER_ID
+        join mt_material mm on wddd.material_id = mm.MATERIAL_ID
+        where wddd.tenant_id = #{tenantId}
+        and wddd.demand_detail_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectAttritionListByDetailIdList" resultType="com.ruike.wms.domain.entity.WmsDistributionDemandDetail">
+        select wddd.*
+        ,ifnull(mbc.attrition_chance,0) ATTRITION_CHANCE
+        from wms_distribution_demand_detail wddd
+        left join wms_component_demand_record wcdr
+        on wcdr.demand_record_id = wddd.demand_record_id and wddd.substitute_flag = 'N'
+        left join mt_bom_component mbc on wcdr.bom_component_id = mbc.BOM_COMPONENT_ID
+        where wddd.tenant_id = #{tenantId}
+        and wddd.demand_detail_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getSubstitute" resultType="java.lang.String">
+        select msr.MATERIAL_ID
+        from   wms_material_substitute_rel msr
+              ,mt_material mm
+              ,wms_distribution_demand wdd
+        where  msr.MATERIAL_ID = mm.MATERIAL_ID
+        and    msr.SITE_ID = wdd.site_id
+        and    msr.MAIN_MATERIAL_ID = wdd.material_id
+        and    wdd.dist_demand_id=#{distDemandId}
+        union all
+        select mbs_sub.MATERIAL_ID
+        from   mt_bom_substitute mbs
+             ,mt_bom_substitute mbs_sub
+             ,mt_bom_substitute_group mbsg
+             ,mt_bom_substitute_group mbsg_sub
+             ,mt_material mm
+             ,mt_bom_component mbc
+             ,mt_bom_component mbc_sub
+             ,mt_work_order wo
+             ,wms_distribution_demand wdd
+        where mbs.BOM_SUBSTITUTE_GROUP_ID = mbsg.BOM_SUBSTITUTE_GROUP_ID
+        and   mbs_sub.BOM_SUBSTITUTE_GROUP_ID = mbsg_sub.BOM_SUBSTITUTE_GROUP_ID
+        and   mbs_sub.MATERIAL_ID = mm.MATERIAL_ID
+        and   mbsg.SUBSTITUTE_GROUP = mbsg_sub.SUBSTITUTE_GROUP
+        and   mbsg.ENABLE_FLAG = 'Y'
+        and   CURDATE() between mbs.DATE_FROM and ifnull(mbs.DATE_TO,CURDATE())
+        and   CURDATE() between mbs_sub.DATE_FROM and ifnull(mbs_sub.DATE_TO,CURDATE())
+        and   wo.BOM_ID = mbc.BOM_ID
+        and   mbc.BOM_COMPONENT_ID = mbsg.BOM_COMPONENT_ID
+        and   mbc.MATERIAL_ID = mbs.MATERIAL_ID
+        and   mbc_sub.BOM_COMPONENT_ID = mbsg_sub.BOM_COMPONENT_ID
+        and    mbc_sub.bom_id = mbc.bom_id
+        and   wo.WORK_ORDER_ID = #{workOrderId}
+        and   mbs_sub.material_Id != wdd.material_id
+        and   mbs.MATERIAL_ID = wdd.material_id
+        and   wdd.dist_demand_id=#{distDemandId}
+
+    </select>
+
+    <select id="selectByInstructionId" resultType="com.ruike.wms.domain.vo.WmsDistributionListQueryVO3">
+        SELECT
+        t.ATTRIBUTE4,
+        t.ATTRIBUTE6,
+        t.instruction_id
+        FROM
+        wms_distribution_demand_detail t
+        WHERE
+        t.tenant_id = #{tenantId}
+        AND t.instruction_doc_id = #{instructionDocId}
+        AND t.instruction_id IN
+        <foreach collection="instructionIds" separator="," open="(" close=")" item="instructionId" index="index">
+            #{instructionId}
+        </foreach>
+    </select>
+
+</mapper>

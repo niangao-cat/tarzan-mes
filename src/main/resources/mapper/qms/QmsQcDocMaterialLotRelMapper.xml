@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsQcDocMaterialLotRelMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsQcDocMaterialLotRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="QC_DOC_MATERIAL_ID" property="qcDocMaterialId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_ID" property="instructionDocId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="IQC_HEADER_ID" property="iqcHeaderId" jdbcType="VARCHAR"/>
+        <result column="DOC_STATUS" property="docStatus" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryInstructionDocInfo" resultType="tarzan.instruction.domain.entity.MtInstructionDoc">
+        SELECT
+	        mid.INSTRUCTION_DOC_ID,
+			mid.INSTRUCTION_DOC_STATUS
+        FROM
+	        mt_instruction_actual ia,
+	        mt_instruction mi,
+	        mt_instruction_doc mid
+        WHERE ia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        AND mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND ia.ACTUAL_ID = #{actualId}
+        AND ia.TENANT_ID = #{tenantId}
+        AND mid.INSTRUCTION_DOC_ID is NOT NULL
+        AND mid.INSTRUCTION_DOC_TYPE IN (
+            'DELIVERY_DOC','OUTSOURCING_DELIVERY_DOC','SRM_SUPP_EXCH_DOC'
+        )
+    </select>
+
+    <select id="queryInstructionHeaderInfo" resultType="com.ruike.qms.domain.vo.QmsDocMaterialLotVO">
+        SELECT
+	        mid.INSTRUCTION_DOC_NUM,
+	        mid.REMARK,
+	        ms.SUPPLIER_NAME,
+	        ms.SUPPLIER_CODE
+        FROM
+	        mt_instruction_doc mid,
+	        mt_supplier ms
+        WHERE
+	        mid.SUPPLIER_ID = ms.SUPPLIER_ID
+	    AND mid.INSTRUCTION_DOC_ID = #{instructionDocId}
+	    AND mid.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="querySecondMaterialLot" resultType="com.ruike.qms.domain.entity.QmsQcDocMaterialLotRel">
+        SELECT
+	        mlr.instruction_doc_id,
+	        mlr.instruction_id,
+	        mlr.doc_status,
+	        mlr.material_lot_id,
+	        mml.PRIMARY_UOM_QTY quantity
+        FROM
+	        qms_qc_doc_material_lot_rel mlr
+	        LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = mlr.material_lot_id
+        WHERE mlr.tenant_id = #{tenantId}
+        AND mlr.iqc_header_id = #{iqcHeaderId}
+    </select>
+</mapper>

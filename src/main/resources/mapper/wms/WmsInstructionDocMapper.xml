@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsInstructionDocMapper">
+
+    <select id="selectByDocNum" resultType="com.ruike.wms.domain.vo.WmsInstructionDocAttrVO">
+        select mid.*
+             , mida_pl.attr_value   prod_line_code
+             , mida_wkc.attr_value  workcell_code
+             , mida_sign.attr_value sign_flag
+             , mida_loc.attr_value  to_locator_id
+             , loc.locator_code     to_locator_code
+        from mt_instruction_doc mid
+                 left join mt_instruction_doc_attr mida_pl on mid.INSTRUCTION_DOC_ID = mida_pl.instruction_doc_id
+            and mida_pl.ATTR_NAME = 'PROD_LINE_CODE'
+                 left join mt_instruction_doc_attr mida_wkc on mid.INSTRUCTION_DOC_ID = mida_wkc.instruction_doc_id
+            and mida_wkc.ATTR_NAME = 'WORKCELL'
+                 left join mt_instruction_doc_attr mida_sign on mid.INSTRUCTION_DOC_ID = mida_sign.instruction_doc_id
+            and mida_sign.ATTR_NAME = 'SIGN_FLAG'
+                 left join mt_instruction_doc_attr mida_loc on mid.INSTRUCTION_DOC_ID = mida_loc.instruction_doc_id
+            and mida_loc.ATTR_NAME = 'TO_LOCATOR_ID'
+                 left join mt_mod_locator loc on mida_loc.ATTR_VALUE = loc.LOCATOR_ID
+        where mid.INSTRUCTION_DOC_NUM = #{instructionDocNum}
+          and mid.INSTRUCTION_DOC_TYPE = #{instructionDocType}
+          and mid.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="selectByDocId" resultType="com.ruike.wms.domain.vo.WmsInstructionDocAttrVO">
+        select mid.*
+             , mida_pl.attr_value   prod_line_code
+             , mida_wkc.attr_value  workcell_code
+             , mida_sign.attr_value sign_flag
+             , mida_loc.attr_value  to_locator_id
+             , loc.locator_code     to_locator_code
+        from mt_instruction_doc mid
+                 left join mt_instruction_doc_attr mida_pl on mid.INSTRUCTION_DOC_ID = mida_pl.instruction_doc_id
+            and mida_pl.ATTR_NAME = 'PROD_LINE_CODE'
+                 left join mt_instruction_doc_attr mida_wkc on mid.INSTRUCTION_DOC_ID = mida_wkc.instruction_doc_id
+            and mida_wkc.ATTR_NAME = 'WORKCELL'
+                 left join mt_instruction_doc_attr mida_sign on mid.INSTRUCTION_DOC_ID = mida_sign.instruction_doc_id
+            and mida_sign.ATTR_NAME = 'SIGN_FLAG'
+                 left join mt_instruction_doc_attr mida_loc on mid.INSTRUCTION_DOC_ID = mida_loc.instruction_doc_id
+            and mida_loc.ATTR_NAME = 'TO_LOCATOR_ID'
+                 left join mt_mod_locator loc on mida_loc.ATTR_VALUE = loc.LOCATOR_ID
+        where mid.INSTRUCTION_DOC_ID = #{instructionDocId}
+          and mid.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="selectListByDocIds" resultType="com.ruike.wms.domain.vo.WmsInstructionDocAttrVO">
+        select mid.*
+        , mida_pl.attr_value prod_line_code
+        , wkc.workcell_id
+        , mida_wkc.attr_value workcell_code
+        , mida_sign.attr_value sign_flag
+        , mida_loc.attr_value to_locator_id
+        , loc.locator_code to_locator_code
+        , mida_rln.attr_value replenishment_doc_id
+        from mt_instruction_doc mid
+        left join mt_instruction_doc_attr mida_pl on mid.INSTRUCTION_DOC_ID = mida_pl.instruction_doc_id
+        and mida_pl.ATTR_NAME = 'PROD_LINE_CODE'
+        left join mt_instruction_doc_attr mida_wkc on mid.INSTRUCTION_DOC_ID = mida_wkc.instruction_doc_id
+        and mida_wkc.ATTR_NAME = 'WORKCELL'
+        left join mt_instruction_doc_attr mida_sign on mid.INSTRUCTION_DOC_ID = mida_sign.instruction_doc_id
+        and mida_sign.ATTR_NAME = 'SIGN_FLAG'
+        left join mt_instruction_doc_attr mida_loc on mid.INSTRUCTION_DOC_ID = mida_loc.instruction_doc_id
+        and mida_loc.ATTR_NAME = 'TO_LOCATOR_ID'
+        left join mt_instruction_doc_attr mida_rln on mid.INSTRUCTION_DOC_ID = mida_rln.instruction_doc_id
+        and mida_rln.ATTR_NAME = 'REPLENISHMENT_LIST_NUM'
+        left join mt_mod_locator loc on mida_loc.ATTR_VALUE = loc.LOCATOR_ID
+        left join mt_mod_workcell wkc on wkc.WORKCELL_CODE = mida_wkc.ATTR_VALUE
+        where mid.TENANT_ID = #{tenantId}
+        and mid.INSTRUCTION_DOC_ID in
+        <foreach collection="idList" separator="," open="(" item="id" close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

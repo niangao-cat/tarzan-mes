@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtEoStepWorkcellActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtEoStepWorkcellActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_STEP_WORKCELL_ACTUAL_ID" property="eoStepWorkcellActualId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="QUEUE_QTY" property="queueQty" jdbcType="DECIMAL"/>
+        <result column="WORKING_QTY" property="workingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_PENDING_QTY" property="completePendingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="QUEUE_DATE" property="queueDate" jdbcType="TIMESTAMP"/>
+        <result column="WORKING_DATE" property="workingDate" jdbcType="TIMESTAMP"/>
+        <result column="COMPLETED_DATE" property="completedDate" jdbcType="TIMESTAMP"/>
+        <result column="COMPLETE_PENDING_DATE" property="completePendingDate" jdbcType="TIMESTAMP"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectCondition" resultType="tarzan.actual.domain.vo.MtEoStepWorkcellActualVO8">
+        select * from mt_eo_step_workcell_actual sa
+        where TENANT_ID = ${tenantId}
+        <if test="dto.eoStepWorkcellActualId!=null">
+            and sa.EO_STEP_WORKCELL_ACTUAL_ID = #{dto.eoStepWorkcellActualId}
+        </if>
+        <if test="dto.eoStepActualId!=null">
+            and sa.EO_STEP_ACTUAL_ID = #{dto.eoStepActualId}
+        </if>
+        <if test="dto.workcellId!=null">
+            and sa.WORKCELL_ID = #{dto.workcellId}
+        </if>
+
+        <if test="dto.queueDateFrom!=null">
+            AND sa.QUEUE_DATE &gt;= DATE_FORMAT(#{dto.queueDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.queueDateTo!=null">
+            AND sa.QUEUE_DATE &lt;= DATE_FORMAT(#{dto.queueDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.workingDateFrom!=null">
+            AND sa.WORKING_DATE &gt;= DATE_FORMAT(#{dto.workingDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.workingDateTo!=null">
+            AND sa.WORKING_DATE &lt;= DATE_FORMAT(#{dto.workingDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.completedDateFrom!=null">
+            AND sa.COMPLETED_DATE &gt;= DATE_FORMAT(#{dto.completedDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.completedDateTo!=null">
+            AND sa.COMPLETED_DATE &lt;= DATE_FORMAT(#{dto.completedDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.completePendingDateFrom!=null">
+            AND sa.COMPLETE_PENDING_DATE &gt;= DATE_FORMAT(#{dto.completePendingDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.completePendingDateTo!=null">
+            AND sa.COMPLETE_PENDING_DATE &lt;= DATE_FORMAT(#{dto.completePendingDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+
+    </select>
+
+    <select id="selectByEoStepActualIdList" resultMap="BaseResultMap">
+        select * from mt_eo_step_workcell_actual sa
+        where sa.TENANT_ID = #{tenantId}
+        <if test="sourceEoStepActualIdList!=null and sourceEoStepActualIdList.size()>0">
+            and sa.EO_STEP_ACTUAL_ID in
+            <foreach collection="sourceEoStepActualIdList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+
+    </select>
+
+    <select id="selectListByCondition" resultType="tarzan.actual.domain.vo.MtEoStepWorkcellActualVO14">
+        select * from mt_eo_step_workcell_actual sa
+        where sa.TENANT_ID = #{tenantId}
+        <if test="dto.eoStepWorkcellActualIdList !=null and dto.eoStepWorkcellActualIdList.size()>0">
+            and sa.EO_STEP_WORKCELL_ACTUAL_ID in
+            <foreach collection="dto.eoStepWorkcellActualIdList" open="(" close=")" separator="," index="index"
+                     item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.eoStepActualIdList !=null and dto.eoStepActualIdList.size()>0">
+            and sa.EO_STEP_ACTUAL_ID in
+            <foreach collection="dto.eoStepActualIdList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.workcellIdList!=null and dto.workcellIdList.size()>0">
+            and sa.WORKCELL_ID in
+            <foreach collection="dto.workcellIdList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="dto.queueDateFrom!=null">
+            AND sa.QUEUE_DATE &gt;= DATE_FORMAT(#{dto.queueDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.queueDateTo!=null">
+            AND sa.QUEUE_DATE &lt;= DATE_FORMAT(#{dto.queueDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.workingDateFrom!=null">
+            AND sa.WORKING_DATE &gt;= DATE_FORMAT(#{dto.workingDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.workingDateTo!=null">
+            AND sa.WORKING_DATE &lt;= DATE_FORMAT(#{dto.workingDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.completedDateFrom!=null">
+            AND sa.COMPLETED_DATE &gt;= DATE_FORMAT(#{dto.completedDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.completedDateTo!=null">
+            AND sa.COMPLETED_DATE &lt;= DATE_FORMAT(#{dto.completedDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.completePendingDateFrom!=null">
+            AND sa.COMPLETE_PENDING_DATE &gt;= DATE_FORMAT(#{dto.completePendingDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.completePendingDateTo!=null">
+            AND sa.COMPLETE_PENDING_DATE &lt;= DATE_FORMAT(#{dto.completePendingDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+    <select id="selectListByConditionList" resultMap="BaseResultMap">
+        select * from mt_eo_step_workcell_actual sa
+        where sa.TENANT_ID = #{tenantId}
+        <if test="dto!=null and dto.size()>0">
+            <foreach collection="dto" open=" AND (" close=")" separator="OR" index="index" item="item">
+                (
+                1=1
+                <if test="item.eoStepWorkcellActualId!=null">
+                    and sa.EO_STEP_WORKCELL_ACTUAL_ID=#{item.eoStepWorkcellActualId}
+                </if>
+                <if test="item.eoStepActualId!=null">
+                    and sa.EO_STEP_ACTUAL_ID=#{item.eoStepActualId}
+                </if>
+                <if test="item.workcellId!=null">
+                    and sa.WORKCELL_ID=#{item.workcellId}
+                </if>
+                )
+            </foreach>
+        </if>
+
+    </select>
+</mapper>

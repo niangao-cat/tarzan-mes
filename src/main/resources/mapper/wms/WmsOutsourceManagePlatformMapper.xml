@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsOutsourceManagePlatformMapper">
+
+    <!--查询外协单头信息-->
+    <select id="queryOutsourceDoc" resultType="com.ruike.wms.domain.vo.WmsOutsourceOrderHeadVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+            MID.INSTRUCTION_DOC_ID,
+            MID.SITE_ID,
+            MMS.SITE_CODE,
+            MID.INSTRUCTION_DOC_NUM,
+            MID.SUPPLIER_ID,
+            MS.SUPPLIER_CODE,
+            MST.SUPPLIER_NAME,
+            MID.SUPPLIER_SITE_ID,
+            MID.INSTRUCTION_DOC_TYPE,
+            MID.INSTRUCTION_DOC_STATUS,
+            MID.EXPECTED_ARRIVAL_TIME,
+            MID.DEMAND_TIME,
+            MID.CUSTOMER_SITE_ID,
+            MSS.SUPPLIER_SITE_NAME,
+            MCST.DESCRIPTION CUSTOMER_SITE_DES,
+            MID.CREATED_BY,
+            IU.REAL_NAME,
+            MID.CREATION_DATE,
+            MID.REMARK,
+            ATTR.ATTR_VALUE SUPPLY_FLAG,
+            MID.REASON,
+            ATTR2.ATTR_VALUE REPLENISHMENT_LIST_NUM,
+            attr_pn.ATTR_VALUE po_line_num
+        FROM MT_INSTRUCTION_DOC MID
+        LEFT JOIN MT_MOD_SITE MMS ON MID.SITE_ID = MMS.SITE_ID
+        LEFT JOIN MT_SUPPLIER_SITE MSS ON MSS.SUPPLIER_SITE_ID = MID.SUPPLIER_SITE_ID
+        LEFT JOIN MT_SUPPLIER MS ON MID.SUPPLIER_ID = MS.SUPPLIER_ID
+        LEFT JOIN MT_SUPPLIER_TL MST ON MS.SUPPLIER_ID = MST.SUPPLIER_ID AND MST.LANG = #{lang}
+        LEFT JOIN MT_CUSTOMER_SITE MCS ON MID.CUSTOMER_SITE_ID = MCS.CUSTOMER_SITE_ID
+        LEFT JOIN MT_CUSTOMER_SITE_TL MCST ON MCS.CUSTOMER_SITE_ID = MCST.CUSTOMER_SITE_ID AND MCST.LANG = #{lang}
+        LEFT JOIN IAM_USER IU ON MID.CREATED_BY = IU.ID
+        LEFT JOIN MT_INSTRUCTION_DOC_ATTR ATTR ON ATTR.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID AND ATTR.ATTR_NAME = 'SUPPLY_FLAG'
+        LEFT JOIN MT_INSTRUCTION_DOC_ATTR ATTR2 ON ATTR2.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID AND ATTR2.ATTR_NAME = 'REPLENISHMENT_LIST_NUM'
+        LEFT JOIN MT_INSTRUCTION_DOC_ATTR attr_pn ON attr_pn.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID AND attr_pn.ATTR_NAME = 'PO_NUM'
+        WHERE 1=1
+            AND MID.TENANT_ID = #{tenantId}
+        <if test="docTypeList != null and docTypeList.size > 0 ">
+            AND MID.INSTRUCTION_DOC_TYPE IN
+            <foreach collection="docTypeList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="lineQueryFlag != null and lineQueryFlag != '' ">
+            AND EXISTS(
+                SELECT MI.SOURCE_DOC_ID,
+                MI.MATERIAL_ID,
+                MIA.ATTR_VALUE
+                FROM MT_INSTRUCTION MI
+                LEFT JOIN MT_INSTRUCTION_ATTR MIA ON MI.INSTRUCTION_ID = MIA.INSTRUCTION_ID AND MIA.ATTR_NAME = 'MATERIAL_VERSION'
+                WHERE 1=1
+                <if test="materialId != null and materialId != '' ">
+                    AND MI.MATERIAL_ID = #{materialId}
+                </if>
+                <if test="materialVersion != null and materialVersion != '' ">
+                    <bind name="materialVersionLike" value="'%' +materialVersion + '%'"/>
+                    AND MIA.ATTR_VALUE LIKE #{materialVersionLike}
+                </if>
+                    AND MI.SOURCE_DOC_ID = MID.INSTRUCTION_DOC_ID
+                )
+        </if>
+        <if test="instructionDocId != null and instructionDocId != '' ">
+            AND MID.INSTRUCTION_DOC_ID = #{instructionDocId}
+        </if>
+        <if test="siteId != null and siteId != '' ">
+            AND MID.SITE_ID = #{siteId}
+        </if>
+        <if test="instructionDocNum != null and instructionDocNum != '' ">
+            <bind name="instructionDocNumLike" value="'%' +instructionDocNum + '%'"/>
+            AND MID.INSTRUCTION_DOC_NUM LIKE #{instructionDocNumLike}
+        </if>
+        <if test="supplierId != null and supplierId != ''">
+            AND MID.SUPPLIER_ID  = #{supplierId}
+        </if>
+        <if test="instructionDocType != null and instructionDocType != '' ">
+            AND MID.INSTRUCTION_DOC_TYPE = #{instructionDocType}
+        </if>
+        <if test="instructionDocStatus != null and instructionDocStatus != ''">
+            AND MID.INSTRUCTION_DOC_STATUS = #{instructionDocStatus}
+        </if>
+        <if test="createdBy != null and createdBy != '' ">
+            AND IU.REAL_NAME LIKE CONCAT("%",#{createdBy},"%")
+        </if>
+        <if test="creationDateStart != null and creationDateStart != ''">
+            AND MID.CREATION_DATE &gt;= #{creationDateStart}
+        </if>
+        <if test="creationDateEnd != null and creationDateEnd != ''">
+            AND MID.CREATION_DATE &lt;= #{creationDateEnd}
+        </if>
+        <if test="reason != null and reason != ''">
+            AND MID.REASON = #{reason}
+        </if>
+        <if test="createSupplyFlag != null and createSupplyFlag != ''">
+            <choose>
+                <when test='createSupplyFlag == "Y"'>
+                    AND (ATTR2.ATTR_VALUE IS NOT NULL AND ATTR2.ATTR_VALUE != '')
+                </when>
+                <otherwise>
+                    AND (ATTR2.ATTR_VALUE IS NULL OR ATTR2.ATTR_VALUE = '')
+                </otherwise>
+            </choose>
+        </if>
+        ORDER BY MID.CREATION_DATE DESC
+    </select>
+
+    <!--查询外协单行信息(当外协单类型为送货单，则限制SOURCE_INSTRUCTION_ID不能为空)-->
+    <select id="queryLineByDocId" resultType="com.ruike.wms.domain.vo.WmsOutsourceOrderLineVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+            MI.REMARK,
+            CAST(MIA.ATTR_VALUE AS SIGNED) INSTRUCTION_LINE_NUM,
+            MI.SOURCE_DOC_ID,
+            MI.INSTRUCTION_ID,
+            MI.INSTRUCTION_TYPE,
+            MI.MATERIAL_ID,
+            MM.MATERIAL_CODE,
+            MMT.MATERIAL_NAME,
+            MIA2.ATTR_VALUE MATERIAL_VERSION,
+            MI.QUANTITY,
+            MIA3.ATTR_VALUE ACTUAL_ORDERED_QTY,
+            MI.UOM_ID,
+            MU.UOM_CODE,
+            MUT.UOM_NAME,
+            MI.INSTRUCTION_STATUS,
+            CASE INSTRUCTION_STATUS WHEN 'RELEASED' THEN 1
+            ELSE 0 END statusSort,
+            MI.FROM_LOCATOR_ID,
+            MML.LOCATOR_CODE FROM_LOCATOR_CODE,
+            MI.TO_LOCATOR_ID,
+            MML2.LOCATOR_CODE TO_LOCATOR_CODE
+        FROM
+            MT_INSTRUCTION MI
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA ON MI.INSTRUCTION_ID = MIA.INSTRUCTION_ID
+            AND MIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+            LEFT JOIN MT_MATERIAL MM ON MI.MATERIAL_ID = MM.MATERIAL_ID
+            LEFT JOIN MT_MATERIAL_TL MMT ON MM.MATERIAL_ID = MMT.MATERIAL_ID
+            AND MMT.LANG = #{lang}
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA2 ON MI.INSTRUCTION_ID = MIA2.INSTRUCTION_ID
+            AND MIA2.ATTR_NAME = 'MATERIAL_VERSION'
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA3 ON MI.INSTRUCTION_ID = MIA3.INSTRUCTION_ID
+            AND MIA3.ATTR_NAME = 'ACTUAL_ORDERED_QTY'
+            LEFT JOIN MT_UOM MU ON MI.UOM_ID = MU.UOM_ID
+            LEFT JOIN MT_UOM_TL MUT ON MU.UOM_ID = MUT.UOM_ID
+            AND MUT.LANG = #{lang}
+            LEFT JOIN MT_MOD_LOCATOR MML ON MI.FROM_LOCATOR_ID = MML.LOCATOR_ID
+            LEFT JOIN MT_MOD_LOCATOR MML2 ON MI.TO_LOCATOR_ID = MML2.LOCATOR_ID
+            LEFT JOIN MT_INSTRUCTION_DOC MID ON MI.SOURCE_DOC_ID = MID.INSTRUCTION_DOC_ID
+        WHERE
+        1 =1
+        <if test="sourceDocId != null and sourceDocId != '' ">
+            AND MI.SOURCE_DOC_ID = #{sourceDocId}
+        </if>
+        <if test="instructionId != null and instructionId !='' ">
+            AND MI.INSTRUCTION_ID = #{instructionId}
+        </if>
+        <if test="instructionType != null and instructionType != '' ">
+            AND MI.INSTRUCTION_TYPE = #{instructionType}
+        </if>
+        ORDER BY statusSort DESC, INSTRUCTION_LINE_NUM ASC
+    </select>
+
+    <!--查询采购订单行号-->
+    <select id="queryPoNum" resultType="com.ruike.wms.domain.vo.WmsOutsourceOrderLineVO">
+        SELECT
+            WPDR.PO_ID,
+            MID.INSTRUCTION_DOC_NUM,
+            WPDR.PO_LINE_ID,
+            MIA.ATTR_VALUE INSTRUCTION_LINE_NUM
+        FROM
+            WMS_PO_DELIVERY_REL WPDR
+            LEFT JOIN MT_INSTRUCTION_DOC MID ON WPDR.PO_ID = MID.INSTRUCTION_DOC_ID
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA ON WPDR.PO_LINE_ID = MIA.INSTRUCTION_ID
+            AND MIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        WHERE
+            1 = 1
+            AND WPDR.BOM_TYPE = 'OUTSOURCING'
+            AND WPDR.DELIVERY_DOC_ID = #{sourceDocId}
+            AND WPDR.DELIVERY_DOC_LINE_ID = #{instructionId}
+    </select>
+
+    <!--退货单创建-查询行信息(当外协单类型为送货单，则限制SOURCE_INSTRUCTION_ID不能为空)-->
+    <select id="listLineForCreateReturnDoc" resultType="com.ruike.wms.domain.vo.WmsOutsourceOrderLineVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+            MIA.ATTR_VALUE INSTRUCTION_LINE_NUM,
+            MI.MATERIAL_ID,
+            MM.MATERIAL_CODE,
+            MMT.MATERIAL_NAME,
+            MIA2.ATTR_VALUE MATERIAL_VERSION,
+            MI.UOM_ID,
+            MU.UOM_CODE
+        FROM MT_INSTRUCTION MI
+        LEFT JOIN MT_INSTRUCTION_ATTR MIA ON MI.INSTRUCTION_ID= MIA.INSTRUCTION_ID AND MIA.ATTR_NAME='INSTRUCTION_LINE_NUM'
+        LEFT JOIN MT_MATERIAL MM ON MI.MATERIAL_ID = MM.MATERIAL_ID
+        LEFT JOIN MT_MATERIAL_TL MMT ON MM.MATERIAL_ID = MMT.MATERIAL_ID AND MMT.LANG = #{lang}
+        LEFT JOIN MT_INSTRUCTION_ATTR MIA2 ON MI.INSTRUCTION_ID= MIA2.INSTRUCTION_ID AND MIA2.ATTR_NAME='MATERIAL_VERSION'
+        LEFT JOIN MT_UOM MU ON MI.UOM_ID = MU.UOM_ID
+        LEFT JOIN MT_INSTRUCTION_DOC MID ON MI.SOURCE_DOC_ID = MID.INSTRUCTION_DOC_ID
+        WHERE 1=1
+            AND MI.INSTRUCTION_TYPE = 'RETURN_TO_SUPPLIER'
+            AND MI.BUSINESS_TYPE='OUTSOURCING_SENDING'
+            AND MI.SOURCE_DOC_ID = #{sourceDocId}
+            AND (
+            CASE
+                WHEN MID.INSTRUCTION_DOC_TYPE = 'OUTSOURCING_INVOICE'
+                AND MI.SOURCE_INSTRUCTION_ID IS NOT NULL
+                AND MI.SOURCE_INSTRUCTION_ID != '' THEN 1
+                WHEN MID.INSTRUCTION_DOC_TYPE != 'OUTSOURCING_INVOICE' THEN 1 ELSE 0
+            END
+            ) =1
+    </select>
+
+    <!--通过站点查询外协仓的库存-->
+    <select id="queryMaterialLocatorQty" resultType="java.math.BigDecimal">
+        SELECT
+	        SUM( MIOQ.ONHAND_QUANTITY )
+        FROM
+	        MT_MOD_LOCATOR_ORG_REL rl,
+	        MT_MOD_LOCATOR ml
+	    LEFT JOIN MT_MOD_LOCATOR pl ON pl.PARENT_LOCATOR_ID = ml.LOCATOR_ID
+	    LEFT JOIN MT_INV_ONHAND_QUANTITY MIOQ ON MIOQ.LOCATOR_ID = pl.LOCATOR_ID
+        WHERE
+            ml.LOCATOR_ID = rl.LOCATOR_ID
+        AND rl.TENANT_ID = #{tenantId}
+        AND pl.TENANT_ID = #{tenantId}
+        AND rl.ORGANIZATION_ID = #{siteId}
+        AND ml.LOCATOR_TYPE = 20
+        AND ORGANIZATION_TYPE = 'SITE'
+        AND pl.LOCATOR_CATEGORY = 'INVENTORY'
+        AND MIOQ.OWNER_TYPE = 'IIS'
+        AND MIOQ.OWNER_ID = #{supplierId}
+        AND MIOQ.MATERIAL_ID = #{materialId}
+    </select>
+
+    <!--通过物料查询状态为下达的外协退料单的该物料的制单数量-->
+    <select id="queryMaterialReleasedQty" resultType="java.math.BigDecimal">
+        SELECT
+            IFNULL(SUM(MI.QUANTITY), 0)
+        FROM MT_INSTRUCTION_DOC MID
+            LEFT JOIN MT_INSTRUCTION MI ON MID.INSTRUCTION_DOC_ID = MI.SOURCE_DOC_ID
+        WHERE 1=1
+            AND MID.INSTRUCTION_DOC_TYPE ='OUTSOURCING_RETURN'
+            AND MID.TENANT_ID = #{tenantId}
+            AND MID.INSTRUCTION_DOC_STATUS = 'RELEASED'
+            AND MI.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="queryPoNumByDocId" resultType="com.ruike.wms.domain.vo.WmsOutsourceOrderLineVO">
+        SELECT
+            WPDR.PO_ID,
+            MID.INSTRUCTION_DOC_NUM,
+            WPDR.PO_LINE_ID,
+            MIA.ATTR_VALUE INSTRUCTION_LINE_NUM
+        FROM
+            WMS_PO_DELIVERY_REL WPDR
+            LEFT JOIN MT_INSTRUCTION_DOC MID ON WPDR.PO_ID = MID.INSTRUCTION_DOC_ID
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA ON WPDR.PO_LINE_ID = MIA.INSTRUCTION_ID
+            AND MIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        WHERE
+            1 = 1
+            AND WPDR.BOM_TYPE = 'OUTSOURCING'
+            AND WPDR.DELIVERY_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="batchQueryLineInventoryQty" resultType="com.ruike.wms.domain.vo.WmsInventoryVO">
+        SELECT
+            IFNULL(SUM(mml.PRIMARY_UOM_QTY),0) inventory_qty,
+	        mi.INSTRUCTION_ID,
+	        IFNULL( attr2.ATTR_VALUE,'') AS MATERIAL_VERSION
+        FROM
+	        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr attr3 ON attr3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr3.ATTR_NAME = 'MF_FLAG'
+        LEFT JOIN mt_mod_locator ml ON ml.LOCATOR_ID = mml.LOCATOR_ID
+        ,mt_instruction mi
+        LEFT JOIN mt_instruction_attr attr2 ON attr2.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr2.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE
+        mi.FROM_LOCATOR_ID = ml.PARENT_LOCATOR_ID
+        AND mi.MATERIAL_ID = mml.MATERIAL_ID
+        AND mi.SITE_ID = mml.SITE_ID
+        AND mml.ENABLE_FLAG = 'Y'
+        AND mml.quality_status = 'OK'
+        AND attr.ATTR_VALUE = 'INSTOCK'
+        AND IFNULL(attr3.ATTR_VALUE,'') != 'Y'
+        AND mi.TENANT_ID = #{tenantId}
+        AND IFNULL( attr1.ATTR_VALUE,'') = IFNULL( attr2.ATTR_VALUE,'')
+        AND mi.INSTRUCTION_ID IN
+        <foreach collection="lineIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        GROUP BY
+        MATERIAL_VERSION,
+        mi.INSTRUCTION_ID
+    </select>
+
+    <select id="queryInventoryQty" resultType="com.ruike.wms.domain.vo.WmsReplenishmentOrderLineVO">
+        SELECT
+            SUM(mml.PRIMARY_UOM_QTY) inventory_quantity,
+			mml.MATERIAL_ID,
+			mml.SITE_ID,
+			IFNULL( attr1.ATTR_VALUE,'')  MATERIAL_VERSION
+        FROM
+            mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr attr3 ON attr3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr3.ATTR_NAME = 'MF_FLAG'
+        LEFT JOIN mt_mod_locator ml ON ml.LOCATOR_ID = mml.LOCATOR_ID
+        WHERE
+            ml.PARENT_LOCATOR_ID = #{deliveryWarehouseId}
+        AND mml.ENABLE_FLAG = 'Y'
+        AND mml.quality_status = 'OK'
+        AND attr.ATTR_VALUE = 'INSTOCK'
+        AND IFNULL(attr3.ATTR_VALUE,'') != 'Y'
+	    GROUP BY
+	    mml.MATERIAL_ID,
+		mml.SITE_ID,
+	    MATERIAL_VERSION
+    </select>
+
+    <select id="queryReplenishmentOrderLine" resultType="com.ruike.wms.domain.vo.WmsReplenishmentOrderLineVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+	        MI.REMARK,
+	        MI.SOURCE_DOC_ID,
+	        MI.INSTRUCTION_ID,
+	        MI.INSTRUCTION_TYPE,
+	        MI.MATERIAL_ID,
+	        MM.MATERIAL_CODE,
+	        MMT.MATERIAL_NAME,
+	        MIA2.ATTR_VALUE MATERIAL_VERSION,
+	        MI.QUANTITY,
+	        MIA3.ATTR_VALUE ACTUAL_ORDERED_QTY,
+	        MI.UOM_ID,
+	        MU.UOM_CODE,
+	        MUT.UOM_NAME,
+	        MI.INSTRUCTION_STATUS,
+	        MI.FROM_LOCATOR_ID,
+	        MI.TO_LOCATOR_ID,
+	        MI.SITE_ID
+        FROM
+	        MT_INSTRUCTION MI
+	    LEFT JOIN MT_MATERIAL MM ON MI.MATERIAL_ID = MM.MATERIAL_ID
+	    LEFT JOIN MT_MATERIAL_TL MMT ON MM.MATERIAL_ID = MMT.MATERIAL_ID
+	    AND MMT.LANG = #{lang}
+	    LEFT JOIN MT_INSTRUCTION_ATTR MIA2 ON MI.INSTRUCTION_ID = MIA2.INSTRUCTION_ID
+	    AND MIA2.ATTR_NAME = 'MATERIAL_VERSION'
+	    LEFT JOIN MT_INSTRUCTION_ATTR MIA3 ON MI.INSTRUCTION_ID = MIA3.INSTRUCTION_ID
+	    AND MIA3.ATTR_NAME = 'ACTUAL_ORDERED_QTY'
+	    LEFT JOIN MT_UOM MU ON MI.UOM_ID = MU.UOM_ID
+	    LEFT JOIN MT_UOM_TL MUT ON MU.UOM_ID = MUT.UOM_ID
+	    AND MUT.LANG = #{lang}
+	    LEFT JOIN MT_MOD_LOCATOR MML ON MI.FROM_LOCATOR_ID = MML.LOCATOR_ID
+	    LEFT JOIN MT_MOD_LOCATOR MML2 ON MI.TO_LOCATOR_ID = MML2.LOCATOR_ID
+	    LEFT JOIN MT_INSTRUCTION_DOC MID ON MI.SOURCE_DOC_ID = MID.INSTRUCTION_DOC_ID
+        WHERE
+	    1 = 1
+		AND MI.SOURCE_DOC_ID = #{instructionDocId}
+		AND MI.INSTRUCTION_ID IN
+        <foreach collection="lineIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryScannedMaterialLot" resultType="java.lang.Integer">
+        SELECT
+	        COUNT(1)
+        FROM
+	        mt_instruction_doc mid
+        LEFT JOIN mt_instruction mi ON mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_instruction_actual mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_actual_detail iad ON iad.ACTUAL_ID = mia.ACTUAL_ID
+        LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = iad.MATERIAL_LOT_ID
+        LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'STATUS'
+        WHERE mid.TENANT_ID = #{tenantId}
+        AND mid.INSTRUCTION_DOC_ID = #{instructionDocId}
+        AND attr.ATTR_VALUE = 'SCANNED'
+    </select>
+
+    <select id="queryOutsourceInstruction" resultType="tarzan.instruction.domain.entity.MtInstruction">
+        SELECT
+            mi.*
+        FROM
+            mt_instruction mi
+        LEFT JOIN mt_instruction_attr attr ON attr.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE
+            mi.TENANT_ID = #{tenantId}
+        AND mi.SOURCE_DOC_ID = #{sourceDocId}
+        AND mi.MATERIAL_ID = #{materialId}
+        <choose>
+            <when test="materialVersion != null and materialVersion != ''">
+                AND attr.ATTR_VALUE = #{materialVersion}
+            </when>
+            <otherwise>
+                AND (attr.ATTR_VALUE is NULL OR attr.ATTR_VALUE = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="listLineDetailForUi" resultType="com.ruike.wms.domain.vo.WmsOutsourceOrderDetailsVO">
+        SELECT
+	        mit.ATTR_VALUE INSTRUCTION_LINE_NUM,
+	        ml.MATERIAL_LOT_CODE,
+	        attr.ATTR_VALUE bar_code_status,
+	        ml.QUALITY_STATUS,
+	        mm.MATERIAL_CODE,
+	        mm.MATERIAL_NAME,
+	        attr1.ATTR_VALUE material_version,
+	        iad.ACTUAL_QTY,
+	        mu.UOM_CODE,
+	        ml.LOT,
+	        hl.LOCATOR_CODE locator_code,
+	        cl.LOCATOR_CODE warehouse_code,
+	        iad.LAST_UPDATE_DATE,
+	        iad.LAST_UPDATED_BY
+        FROM
+	        mt_instruction mi
+	    LEFT JOIN mt_instruction_actual mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+	    LEFT JOIN mt_instruction_actual_detail iad ON iad.ACTUAL_ID = mia.ACTUAL_ID
+	    LEFT JOIN mt_material_lot ml ON ml.MATERIAL_LOT_ID = iad.MATERIAL_LOT_ID
+	    LEFT JOIN mt_material mm ON mm.MATERIAL_ID = ml.MATERIAL_ID
+	    LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = ml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'STATUS'
+		LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = ml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'MATERIAL_VERSION'
+	    LEFT JOIN MT_INSTRUCTION_ATTR mit ON MI.INSTRUCTION_ID = mit.INSTRUCTION_ID
+	    AND mit.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+	    LEFT JOIN mt_uom mu ON mu.UOM_ID = iad.UOM_ID
+	    LEFT JOIN mt_mod_locator hl ON hl.LOCATOR_ID = ml.LOCATOR_ID
+	    LEFT JOIN mt_mod_locator cl	ON cl.LOCATOR_ID = hl.PARENT_LOCATOR_ID
+	   	WHERE
+	        mi.TENANT_ID = #{tenantId}
+	    AND mi.INSTRUCTION_ID = #{lineId}
+	   	AND iad.ACTUAL_DETAIL_ID IS NOT NULL
+    </select>
+
+    <select id="queryInventoryExportInfo" resultType="com.ruike.wms.domain.vo.WmsOutsourceExportVO">
+        SELECT
+        MID.INSTRUCTION_DOC_ID,
+        MID.SITE_ID,
+        MMS.SITE_CODE,
+        MID.INSTRUCTION_DOC_NUM,
+        MID.SUPPLIER_ID,
+        MS.SUPPLIER_CODE,
+        MS.SUPPLIER_NAME,
+        MID.INSTRUCTION_DOC_TYPE,
+        MID.INSTRUCTION_DOC_STATUS,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MIA2.ATTR_VALUE MATERIAL_VERSION,
+        MIA3.ATTR_VALUE ACTUAL_ORDERED_QTY,
+        MI.REMARK,
+        MI.SOURCE_DOC_ID,
+        MI.INSTRUCTION_ID,
+        MI.INSTRUCTION_TYPE,
+        MI.MATERIAL_ID,
+        MI.QUANTITY,
+        MI.UOM_ID,
+        MU.UOM_CODE,
+        MU.UOM_NAME,
+        MI.INSTRUCTION_STATUS,
+        CASE INSTRUCTION_STATUS WHEN 'RELEASED' THEN 1
+        ELSE 0 END statusSort,
+        (
+        SELECT ia.ACTUAL_QTY FROM mt_instruction_actual ia WHERE
+        ia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        AND ia.MATERIAL_ID = mi.MATERIAL_ID LIMIT 1
+        ) actual_qty,
+        CAST(MIA.ATTR_VALUE AS SIGNED) INSTRUCTION_LINE_NUM
+        FROM MT_INSTRUCTION_DOC MID
+        LEFT JOIN MT_MOD_SITE MMS ON MID.SITE_ID = MMS.SITE_ID
+        LEFT JOIN MT_SUPPLIER MS ON MID.SUPPLIER_ID = MS.SUPPLIER_ID
+        LEFT JOIN IAM_USER IU ON MID.CREATED_BY = IU.ID
+        LEFT JOIN MT_INSTRUCTION MI ON MI.SOURCE_DOC_ID = MID.INSTRUCTION_DOC_ID
+        LEFT JOIN MT_MATERIAL MM ON MI.MATERIAL_ID = MM.MATERIAL_ID
+        LEFT JOIN MT_INSTRUCTION_ATTR MIA2 ON MI.INSTRUCTION_ID = MIA2.INSTRUCTION_ID
+        AND MIA2.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN MT_INSTRUCTION_ATTR MIA3 ON MI.INSTRUCTION_ID = MIA3.INSTRUCTION_ID
+        AND MIA3.ATTR_NAME = 'ACTUAL_ORDERED_QTY'
+        LEFT JOIN MT_INSTRUCTION_ATTR MIA ON MI.INSTRUCTION_ID = MIA.INSTRUCTION_ID
+        AND MIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN MT_UOM MU ON MI.UOM_ID = MU.UOM_ID
+        WHERE 1=1
+        AND MID.TENANT_ID = #{tenantId}
+        <if test="condition.docTypeList != null and condition.docTypeList.size > 0 ">
+            AND MID.INSTRUCTION_DOC_TYPE IN
+            <foreach collection="condition.docTypeList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="condition.lineQueryFlag != null and condition.lineQueryFlag != '' ">
+            AND EXISTS(
+            SELECT MI.SOURCE_DOC_ID,
+            MI.MATERIAL_ID,
+            MIA.ATTR_VALUE
+            FROM MT_INSTRUCTION MI
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA ON MI.INSTRUCTION_ID = MIA.INSTRUCTION_ID AND MIA.ATTR_NAME = 'MATERIAL_VERSION'
+            WHERE 1=1
+            <if test="condition.materialId != null and condition.materialId != '' ">
+                AND MI.MATERIAL_ID = #{condition.materialId}
+            </if>
+            <if test="condition.materialVersion != null and condition.materialVersion != '' ">
+                <bind name="materialVersionLike" value="'%' +condition.materialVersion + '%'"/>
+                AND MIA.ATTR_VALUE LIKE #{materialVersionLike}
+            </if>
+            AND MI.SOURCE_DOC_ID = MID.INSTRUCTION_DOC_ID
+            )
+        </if>
+        <if test="condition.instructionDocId != null and condition.instructionDocId != '' ">
+            AND MID.INSTRUCTION_DOC_ID = #{condition.instructionDocId}
+        </if>
+        <if test="condition.siteId != null and condition.siteId != '' ">
+            AND MID.SITE_ID = #{condition.siteId}
+        </if>
+        <if test="condition.instructionDocNum != null and condition.instructionDocNum != '' ">
+            <bind name="instructionDocNumLike" value="'%' +condition.instructionDocNum + '%'"/>
+            AND MID.INSTRUCTION_DOC_NUM LIKE #{instructionDocNumLike}
+        </if>
+        <if test="condition.supplierId != null and condition.supplierId != ''">
+            AND MID.SUPPLIER_ID  = #{condition.supplierId}
+        </if>
+        <if test="condition.instructionDocType != null and condition.instructionDocType != '' ">
+            AND MID.INSTRUCTION_DOC_TYPE = #{condition.instructionDocType}
+        </if>
+        <if test="condition.instructionDocStatus != null and condition.instructionDocStatus != ''">
+            AND MID.INSTRUCTION_DOC_STATUS = #{condition.instructionDocStatus}
+        </if>
+        <if test="condition.createdBy != null and condition.createdBy != '' ">
+            AND IU.REAL_NAME LIKE CONCAT("%",#{condition.createdBy},"%")
+        </if>
+        <if test="condition.creationDateStart != null and condition.creationDateStart != ''">
+            AND MID.CREATION_DATE &gt;= #{condition.creationDateStart}
+        </if>
+        <if test="condition.creationDateEnd != null and condition.creationDateEnd != ''">
+            AND MID.CREATION_DATE &lt;= #{condition.creationDateEnd}
+        </if>
+        <if test="condition.reason != null and condition.reason != ''">
+            AND MID.REASON = #{condition.reason}
+        </if>
+        ORDER BY MID.CREATION_DATE DESC,statusSort DESC, INSTRUCTION_LINE_NUM ASC
+    </select>
+
+</mapper>

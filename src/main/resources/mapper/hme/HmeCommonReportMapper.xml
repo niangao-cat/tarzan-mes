@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCommonReportMapper">
+
+    <select id="nonStandardProductReportQuery" resultType="com.ruike.hme.domain.vo.HmeNonStandardReportVO2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        wo.WORK_ORDER_ID,
+        wo.`STATUS` WO_STATUS,
+        mat.DESCRIPTION WORKSHOP_NAME,
+        plt.DESCRIPTION PROD_LINE_NAME,
+        wa_so.ATTR_VALUE SO_NUM,
+        wo.WORK_ORDER_NUM,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_ID,
+        mmt.MATERIAL_NAME,
+        wo_cr.ATTR_VALUE CREATION_DATE,
+        wo_re.ATTR_VALUE RELEASE_DATE,
+        wo_cu.ATTR_VALUE CUSTOMER_CODE,
+        mc.CUSTOMER_NAME,
+        wo.QTY WO_QTY,
+        (
+        SELECT
+        IFNULL(sum( EO.QTY ), 0)
+        FROM
+        mt_eo eo
+        WHERE
+        eo.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND eo.`STATUS` IN ( 'WORKING', 'NEW', 'RELEASED' )
+        AND NOT EXISTS ( SELECT 1 FROM hme_eo_job_sn sn WHERE sn.eo_id = eo.EO_ID )) WAIT_QTY,
+        (
+        SELECT
+        IFNULL(sum( eo.QTY ), 0)
+        FROM
+        mt_eo eo,
+        mt_eo_router_actual ra,
+        mt_eo_step_actual sa,
+        mt_eo_step_wip sw
+        WHERE
+        sw.EO_STEP_ACTUAL_ID = sa.EO_STEP_ACTUAL_ID
+        AND sa.EO_ROUTER_ACTUAL_ID = ra.EO_ROUTER_ACTUAL_ID
+        AND ra.EO_ID = eo.EO_ID
+        AND eo.WORK_ORDER_ID = wo.work_order_id
+        AND eo.`STATUS` = 'WORKING'
+        AND sw.WORKCELL_ID <![CDATA[<>]]> ''
+        AND sw.WORKCELL_ID IS NOT NULL
+        ) WIP_QTY,
+        wa.COMPLETED_QTY,
+        (
+        SELECT
+        IFNULL(sum( eo.QTY ), 0)
+        FROM
+        mt_eo eo,
+        mt_material_lot mml,
+        mt_material_lot_attr la,
+        mt_mod_locator ml,
+        mt_mod_locator ml_p
+        WHERE
+        eo.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        AND eo.WORK_ORDER_ID = wo.work_order_id
+        AND mml.MATERIAL_LOT_ID = la.MATERIAL_LOT_ID
+        AND la.ATTR_NAME = 'MF_FLAG'
+        AND la.ATTR_VALUE = ''
+        AND mml.ENABLE_FLAG = 'Y'
+        AND mml.LOCATOR_ID = ml.LOCATOR_ID
+        AND ml_p.LOCATOR_ID = ml.PARENT_LOCATOR_ID
+        AND ml_p.LOCATOR_TYPE = '14'
+        ) NOT_STOCK,
+        (
+        SELECT
+        IFNULL(sum( eo.QTY ), 0)
+        FROM
+        mt_eo eo,
+        mt_material_lot mml,
+        mt_material_lot_attr la,
+        mt_mod_locator ml,
+        mt_mod_locator ml_p
+        WHERE
+        eo.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        AND eo.WORK_ORDER_ID = wo.work_order_id
+        AND mml.MATERIAL_LOT_ID = la.MATERIAL_LOT_ID
+        AND la.ATTR_NAME = 'MF_FLAG'
+        AND la.ATTR_VALUE = ''
+        AND mml.ENABLE_FLAG = 'Y'
+        AND mml.LOCATOR_ID = ml.LOCATOR_ID
+        AND ml_p.LOCATOR_ID = ml.PARENT_LOCATOR_ID
+        AND ml_p.LOCATOR_TYPE <![CDATA[<>]]> '14'
+        ) IN_STOCK,
+        wa_re.ATTR_VALUE REMARK
+        FROM
+        mt_work_order wo
+        JOIN mt_mod_production_line pl ON pl.PROD_LINE_ID = wo.PRODUCTION_LINE_ID
+        JOIN mt_mod_production_line_tl plt ON plt.PROD_LINE_ID = pl.PROD_LINE_ID
+        AND plt.LANG = #{lang}
+        JOIN mt_mod_organization_rel mor ON mor.TOP_SITE_ID = #{dto.siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor.ORGANIZATION_id = pl.PROD_LINE_ID
+        JOIN mt_mod_area ma ON ma.AREA_ID = mor.PARENT_ORGANIZATION_ID
+        JOIN mt_mod_area_tl mat ON mat.AREA_ID = ma.AREA_ID
+        AND mat.LANG = #{lang}
+        JOIN mt_work_order_actual wa ON wa.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        LEFT JOIN mt_work_order_attr wa_so ON wa_so.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND wa_so.ATTR_NAME = 'attribute1'
+        LEFT JOIN mt_work_order_attr wa_re ON wa_re.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND wa_re.ATTR_NAME = 'attribute8'
+        LEFT JOIN mt_work_order_attr wo_cr ON wo_cr.WORK_ORDER_ID = wo.WORK_ORDER_ID AND wo_cr.ATTR_NAME = 'attribute12'
+        LEFT JOIN mt_work_order_attr wo_re ON wo_re.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND wo_re.ATTR_NAME = 'attribute13'
+        LEFT JOIN mt_work_order_attr wo_cu ON wo_cu.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND wo_cu.ATTR_NAME = 'attribute14'
+        LEFT JOIN mt_customer mc ON mc.CUSTOMER_CODE = wo_cu.ATTR_VALUE
+        JOIN mt_material mm ON mm.MATERIAL_ID = wo.MATERIAL_ID
+        JOIN mt_material_tl mmt ON mmt.MATERIAL_ID = mm.MATERIAL_ID
+        AND mmt.LANG = #{lang}
+        WHERE wo.WORK_ORDER_TYPE = 'RK02'
+        <if test="dto.woStatus != null and dto.woStatus.size() != 0">
+            AND wo.`STATUS` IN
+            <foreach collection="dto.woStatus" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.workshopId != null and dto.workshopId != ''">
+            AND ma.AREA_ID = #{dto.workshopId}
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            AND pl.PROD_LINE_ID = #{dto.prodLineId}
+        </if>
+        <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+            AND wo.WORK_ORDER_NUM LIKE CONCAT('%', #{dto.workOrderNum}, '%')
+        </if>
+        <if test="dto.soNum != null and dto.soNum != ''">
+            AND wa_so.ATTR_VALUE LIKE CONCAT('%', #{dto.soNum}, '%')
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND mm.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND mm.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.customerCode != null and dto.customerCode != ''">
+            AND wo_cu.ATTR_VALUE LIKE CONCAT('%',#{dto.customerCode}, '%')
+        </if>
+        <if test="dto.creationStartDate != null and dto.creationStartDate != ''">
+            AND wo_cr.ATTR_VALUE >= #{dto.creationStartDate}
+        </if>
+        <if test="dto.creationEndDate != null and dto.creationEndDate != ''">
+            AND wo_cr.ATTR_VALUE <![CDATA[<=]]> #{dto.creationEndDate}
+        </if>
+        <if test="dto.releaseStartDate != null and dto.releaseStartDate != ''">
+            AND wo_re.ATTR_VALUE >= #{dto.releaseStartDate}
+        </if>
+        <if test="dto.releaseEndDate != null and dto.releaseEndDate != ''">
+            AND wo_re.ATTR_VALUE <![CDATA[<=]]> #{dto.releaseEndDate}
+        </if>
+        ORDER BY wo_cr.ATTR_VALUE DESC
+    </select>
+
+    <select id="waitQtyDetailsQuery" resultType="com.ruike.hme.domain.vo.HmeNonStandardDetailsVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        wo.WORK_ORDER_NUM,
+        eo.EO_NUM,
+        eo.IDENTIFICATION,
+        eo.CREATION_DATE,
+        tl.DESCRIPTION EO_STATUS
+        FROM
+        mt_eo eo,
+        mt_work_order wo,
+        mt_gen_status gs,
+        mt_gen_status_tl tl
+        WHERE
+        wo.TENANT_ID = #{tenantId}
+        AND wo.WORK_ORDER_ID = #{workOrderId}
+        AND eo.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND gs.GEN_STATUS_ID = tl.GEN_STATUS_ID
+        AND tl.LANG = #{lang}
+        AND eo.`STATUS` IN ( 'WORKING', 'NEW', 'RELEASED' )
+        AND gs.MODULE = 'ORDER'
+        AND gs.STATUS_GROUP = 'EO_STATUS'
+        AND gs.STATUS_CODE = eo.`STATUS`
+        AND NOT EXISTS ( SELECT 1 FROM hme_eo_job_sn sn WHERE sn.eo_id = eo.EO_ID )
+    </select>
+
+    <select id="onlineQtyDetailsQuery" resultType="com.ruike.hme.domain.vo.HmeNonStandardDetailsVO">
+        SELECT
+            wo.WORK_ORDER_NUM,
+            eo.EO_NUM,
+            eo.IDENTIFICATION,
+            eo.CREATION_DATE,
+            mmw.WORKCELL_NAME PROCESS_NAME,
+            concat(
+            concat( TIMESTAMPDIFF( SECOND, ea.WORKING_DATE, now()) div 3600 div 24, '天' ),
+            concat( TIMESTAMPDIFF( SECOND, ea.WORKING_DATE, now()) div 3600 mod 24, '时' ),
+            concat( TIMESTAMPDIFF( SECOND, ea.WORKING_DATE, now()) mod 3600 div 60, '分' ),
+            concat( TIMESTAMPDIFF( SECOND, ea.WORKING_DATE, now()) mod 60, '秒' )) DELAY_TIME
+        FROM
+            mt_eo eo,
+            mt_work_order wo,
+            mt_eo_router_actual ra,
+            mt_eo_step_actual ea,
+            mt_eo_step_wip sw
+        left join  mt_mod_organization_rel mmor on mmor.organization_id = sw.workcell_id
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.top_site_id = #{siteId}
+        and mmor.tenant_id = #{tenantId}
+        left join mt_mod_workcell mmw on mmw.workcell_id = mmor.PARENT_ORGANIZATION_id
+        WHERE
+            wo.TENANT_ID = #{tenantId}
+        AND wo.WORK_ORDER_ID = #{workOrderId}
+        and eo.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        and eo.EO_ID = ra.eo_id
+        and ra.EO_ROUTER_ACTUAL_ID = ea.EO_ROUTER_ACTUAL_ID
+        and ea.EO_STEP_ACTUAL_ID = sw.EO_STEP_ACTUAL_ID
+        AND eo.`STATUS` = 'WORKING'
+        and sw.TENANT_ID = wo.TENANT_ID
+        AND sw.WORKCELL_ID <![CDATA[<>]]> ''
+        AND sw.WORKCELL_ID IS NOT NULL
+        order by eo.CREATION_DATE
+    </select>
+
+    <select id="completedQtyDetailsQuery" resultType="com.ruike.hme.domain.vo.HmeNonStandardDetailsVO">
+    SELECT
+		wo.WORK_ORDER_NUM,
+		eo.EO_NUM,
+		eo.IDENTIFICATION,
+		wo.PLAN_START_TIME,
+		ea.ACTUAL_END_TIME
+	FROM
+		mt_eo eo,
+		mt_work_order wo,
+		mt_eo_actual ea
+    WHERE wo.TENANT_ID = #{tenantId}
+    AND eo.TENANT_ID = #{tenantId}
+	AND wo.WORK_ORDER_ID = #{workOrderId}
+	AND eo.WORK_ORDER_ID = wo.WORK_ORDER_ID
+	AND eo.EO_ID = ea.eo_id
+	AND ea.ACTUAL_END_TIME is not null
+    </select>
+
+    <select id="queryAreaIdByProdLine" resultType="java.lang.String">
+        SELECT
+        	mma.AREA_ID
+        FROM
+            mt_mod_production_line mpl,
+        	mt_mod_organization_rel mor,
+        	mt_mod_organization_rel mor2,
+        	mt_mod_area mma
+        WHERE mpl.TENANT_ID = #{tenantId}
+        AND mpl.PROD_LINE_ID = #{prodLineId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor.ORGANIZATION_ID = mpl.PROD_LINE_ID
+        AND mor.TENANT_ID = #{tenantId}
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = 'AREA'
+        AND mor2.TENANT_ID = #{tenantId}
+        AND mma.AREA_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mma.AREA_CATEGORY = 'SYB'
+    </select>
+
+    <select id="queryManageDoorRecordList" resultType="com.ruike.hme.domain.vo.HmeManageReturnVO">
+        SELECT
+        	dr.cardid,
+        	dr.dt,
+        	dr.errcode errCode
+        FROM Door_Record dr
+        where dr.dt >= #{startTime}
+        AND dr.cardid= #{loginName}
+    </select>
+
+</mapper>

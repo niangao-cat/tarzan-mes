@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfBneCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfBneCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="DECIMAL"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="DECIMAL"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="A1" property="a1" jdbcType="VARCHAR"/>
+        <result column="A2" property="a2" jdbcType="VARCHAR"/>
+        <result column="A3" property="a3" jdbcType="VARCHAR"/>
+        <result column="A4" property="a4" jdbcType="VARCHAR"/>
+        <result column="A5" property="a5" jdbcType="VARCHAR"/>
+        <result column="A6" property="a6" jdbcType="VARCHAR"/>
+        <result column="A7" property="a7" jdbcType="VARCHAR"/>
+        <result column="A8" property="a8" jdbcType="VARCHAR"/>
+        <result column="B1" property="b1" jdbcType="VARCHAR"/>
+        <result column="B2" property="b2" jdbcType="VARCHAR"/>
+        <result column="B3" property="b3" jdbcType="VARCHAR"/>
+        <result column="B4" property="b4" jdbcType="VARCHAR"/>
+        <result column="B5" property="b5" jdbcType="VARCHAR"/>
+        <result column="B6" property="b6" jdbcType="VARCHAR"/>
+        <result column="B7" property="b7" jdbcType="VARCHAR"/>
+        <result column="B8" property="b8" jdbcType="VARCHAR"/>
+        <result column="C1" property="c1" jdbcType="VARCHAR"/>
+        <result column="C2" property="c2" jdbcType="VARCHAR"/>
+        <result column="C3" property="c3" jdbcType="VARCHAR"/>
+        <result column="C4" property="c4" jdbcType="VARCHAR"/>
+        <result column="C5" property="c5" jdbcType="VARCHAR"/>
+        <result column="C6" property="c6" jdbcType="VARCHAR"/>
+        <result column="C7" property="c7" jdbcType="VARCHAR"/>
+        <result column="C8" property="c8" jdbcType="VARCHAR"/>
+        <result column="D1" property="d1" jdbcType="VARCHAR"/>
+        <result column="D2" property="d2" jdbcType="VARCHAR"/>
+        <result column="D3" property="d3" jdbcType="VARCHAR"/>
+        <result column="D4" property="d4" jdbcType="VARCHAR"/>
+        <result column="D5" property="d5" jdbcType="VARCHAR"/>
+        <result column="D6" property="d6" jdbcType="VARCHAR"/>
+        <result column="D7" property="d7" jdbcType="VARCHAR"/>
+        <result column="D8" property="d8" jdbcType="VARCHAR"/>
+        <result column="E1" property="e1" jdbcType="VARCHAR"/>
+        <result column="E2" property="e2" jdbcType="VARCHAR"/>
+        <result column="E3" property="e3" jdbcType="VARCHAR"/>
+        <result column="E4" property="e4" jdbcType="VARCHAR"/>
+        <result column="E5" property="e5" jdbcType="VARCHAR"/>
+        <result column="E6" property="e6" jdbcType="VARCHAR"/>
+        <result column="E7" property="e7" jdbcType="VARCHAR"/>
+        <result column="E8" property="e8" jdbcType="VARCHAR"/>
+        <result column="F1" property="f1" jdbcType="VARCHAR"/>
+        <result column="F2" property="f2" jdbcType="VARCHAR"/>
+        <result column="F3" property="f3" jdbcType="VARCHAR"/>
+        <result column="F4" property="f4" jdbcType="VARCHAR"/>
+        <result column="F5" property="f5" jdbcType="VARCHAR"/>
+        <result column="F6" property="f6" jdbcType="VARCHAR"/>
+        <result column="F7" property="f7" jdbcType="VARCHAR"/>
+        <result column="F8" property="f8" jdbcType="VARCHAR"/>
+        <result column="G1" property="g1" jdbcType="VARCHAR"/>
+        <result column="G2" property="g2" jdbcType="VARCHAR"/>
+        <result column="G3" property="g3" jdbcType="VARCHAR"/>
+        <result column="G4" property="g4" jdbcType="VARCHAR"/>
+        <result column="G5" property="g5" jdbcType="VARCHAR"/>
+        <result column="G6" property="g6" jdbcType="VARCHAR"/>
+        <result column="G7" property="g7" jdbcType="VARCHAR"/>
+        <result column="G8" property="g8" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="selectWorkType" resultType="com.ruike.itf.api.dto.BneCollectItfDTO1">
+        SELECT
+            mml.PRIMARY_UOM_QTY,
+            mwo.WORK_ORDER_TYPE
+        FROM
+            mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr mmla ON mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'WORK_ORDER_ID'
+        LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = mmla.ATTR_VALUE
+        WHERE
+            mml.MATERIAL_LOT_ID =#{materialLotId}
+    </select>
+</mapper>

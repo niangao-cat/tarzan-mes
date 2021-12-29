@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsLocatorMapper">
+
+    <select id="selectListByType" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        select loc.LOCATOR_CODE
+        , loc.LOCATOR_ID
+        , loc.LOCATOR_NAME
+        from mt_mod_locator loc
+        where loc.LOCATOR_CATEGORY = 'INVENTORY'
+        and loc.PARENT_LOCATOR_ID = #{warehouseId}
+        <if test="locatorType != null and locatorType != ''">
+            and loc.LOCATOR_TYPE = #{locatorType}
+        </if>
+        and loc.TENANT_ID = #{tenantId}
+    </select>
+
+</mapper>

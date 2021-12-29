@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtAssembleConfirmActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtAssembleConfirmActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_CONFIRM_ACTUAL_ID" property="assembleConfirmActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_TYPE" property="componentType" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_EXCESS_FLAG" property="assembleExcessFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_ROUTER_TYPE" property="assembleRouterType" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="BYPASS_FLAG" property="bypassFlag" jdbcType="VARCHAR"/>
+        <result column="BYPASS_BY" property="bypassBy" jdbcType="VARCHAR"/>
+        <result column="CONFIRM_FLAG" property="confirmFlag" jdbcType="VARCHAR"/>
+        <result column="CONFIRMED_BY" property="confirmedBy" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VoResultMap" type="tarzan.actual.domain.vo.MtAssembleConfirmActualVO3">
+        <result column="ASSEMBLE_CONFIRM_ACTUAL_ID" property="assembleConfirmActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_PROCESS_ACTUAL_ID" property="assembleProcessActualId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_TYPE" property="componentType" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_EXCESS_FLAG" property="assembleExcessFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="VoResultMap2" type="tarzan.actual.domain.vo.MtAssembleConfirmActualVO4">
+        <result column="ASSEMBLE_CONFIRM_ACTUAL_ID" property="assembleConfirmActualId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="BYPASS_BY" property="bypassBy" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="assembleConfirmActualPropertyBatchGet" resultMap="BaseResultMap">
+        select *
+        from mt_assemble_confirm_actual t
+        where t.TENANT_ID = ${tenantId}
+        and t.ASSEMBLE_CONFIRM_ACTUAL_ID IN
+        <foreach collection="assembleConfirmActualIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!--获取指定物料的装配实绩-->
+    <select id="materialLimitAssembleActualQuery" resultMap="VoResultMap">
+        SELECT ca.ASSEMBLE_CONFIRM_ACTUAL_ID,
+        ca.SUBSTITUTE_FLAG,
+        ca.MATERIAL_ID,
+        ca.OPERATION_ID,
+        ca.COMPONENT_TYPE,
+        ca.ASSEMBLE_EXCESS_FLAG,
+        pa.ASSEMBLE_PROCESS_ACTUAL_ID
+        FROM mt_assemble_confirm_actual ca LEFT JOIN mt_assemble_process_actual pa ON (ca.ASSEMBLE_CONFIRM_ACTUAL_ID =
+        pa.ASSEMBLE_CONFIRM_ACTUAL_ID AND pa.TENANT_ID = ${tenantId})
+        WHERE ca.TENANT_ID = ${tenantId}
+        <if test="dto.materialId!=null">
+            and ca.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.componentType!=null">
+            and ca.COMPONENT_TYPE = #{dto.componentType}
+        </if>
+        <if test="dto.operationId!=null">
+            and ca.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test='dto.substituteFlag!=null and dto.substituteFlag=="Y"'>
+            and ca.SUBSTITUTE_FLAG = 'Y'
+        </if>
+        <if test='dto.substituteFlag!=null and dto.substituteFlag!="Y"'>
+            and ca.SUBSTITUTE_FLAG &lt;&gt;'Y'
+        </if>
+
+        <if test='dto.assembleExcessFlag!=null and dto.assembleExcessFlag =="Y"'>
+            and ca.ASSEMBLE_EXCESS_FLAG ='Y'
+        </if>
+
+        <if test='dto.assembleExcessFlag !=null and dto.assembleExcessFlag !="Y"'>
+            and ca.ASSEMBLE_EXCESS_FLAG &lt;&gt;'Y'
+        </if>
+        <if test='dto.eoId != null'>
+            and ca.EO_ID = #{dto.eoId}
+        </if>
+        order by ca.COMPONENT_TYPE, ca.MATERIAL_ID+0, ca.OPERATION_ID+0
+    </select>
+
+    <!--获取执行作业未确认的组件-->
+    <select id="eoUnconfirmedComponentQuery" resultMap="VoResultMap2">
+        SELECT ca.ASSEMBLE_CONFIRM_ACTUAL_ID,
+        ca.MATERIAL_ID,
+        ca.OPERATION_ID,
+        ca.BOM_COMPONENT_ID,
+        ca.ROUTER_STEP_ID
+        FROM mt_assemble_confirm_actual ca
+        where ca.TENANT_ID = ${tenantId}
+        and ca.CONFIRM_FLAG &lt;&gt; 'Y'
+        <if test="eoId!=null">
+            and ca.EO_ID = #{eoId}
+        </if>
+    </select>
+
+    <!--获取执行作业被放行的组件-->
+    <select id="eoBypassedComponentQuery" resultMap="VoResultMap2">
+        SELECT ca.ASSEMBLE_CONFIRM_ACTUAL_ID,
+        ca.MATERIAL_ID,
+        ca.OPERATION_ID,
+        ca.BOM_COMPONENT_ID,
+        ca.ROUTER_STEP_ID,
+        ca.BYPASS_BY
+        FROM mt_assemble_confirm_actual ca
+        where ca.TENANT_ID = ${tenantId}
+        and ca.BYPASS_FLAG='Y'
+        <if test="dto.eoId!=null">
+            and ca.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.bypassBy!=null">
+            and ca.BYPASS_BY = #{dto.bypassBy}
+        </if>
+    </select>
+
+    <select id="selectAssesbleConfirmActual" resultMap="BaseResultMap">
+        SELECT t.ASSEMBLE_CONFIRM_ACTUAL_ID
+        FROM mt_assemble_confirm_actual t
+        where t.TENANT_ID = ${tenantId}
+        <if test="dto.assembleConfirmActualId!=null">
+            and t.ASSEMBLE_CONFIRM_ACTUAL_ID = #{dto.assembleConfirmActualId}
+        </if>
+        <if test="dto.eoId!=null">
+            and t.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.operationId!=null">
+            and t.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t.COMPONENT_TYPE = #{dto.componentType}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t.BOM_COMPONENT_ID = #{dto.bomComponentId}
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID = #{dto.bomId}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.assembleExcessFlag!=null">
+            and t.ASSEMBLE_EXCESS_FLAG = #{dto.assembleExcessFlag}
+        </if>
+        <if test="dto.assembleRouterType!=null">
+            and t.ASSEMBLE_ROUTER_TYPE = #{dto.assembleRouterType}
+        </if>
+        <if test="dto.substituteFlag!=null">
+            and t.SUBSTITUTE_FLAG = #{dto.substituteFlag}
+        </if>
+        <if test="dto.bypassFlag!=null">
+            and t.BYPASS_FLAG = #{dto.bypassFlag}
+        </if>
+        <if test="dto.confirmFlag!=null">
+            and t.CONFIRM_FLAG = #{dto.confirmFlag}
+        </if>
+        <if test="dto.bypassBy!=null">
+            and t.BYPASS_BY = #{dto.bypassBy}
+        </if>
+        <if test="dto.confirmedBy!=null">
+            and t.CONFIRMED_BY = #{dto.confirmedBy}
+        </if>
+    </select>
+
+    <resultMap id="VoResultMap3" type="tarzan.actual.domain.vo.MtAssembleConfirmActualVO13">
+        <result column="ASSEMBLE_CONFIRM_ACTUAL_ID" property="assembleConfirmActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_PROCESS_ACTUAL_ID" property="assembleProcessActualId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="SCRAP_QTY" property="scrapQty" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_HIS_ID" property="materialLotHisId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="eoLimitAssembleActualTraceQuery" resultMap="VoResultMap3">
+        SELECT ca.ASSEMBLE_CONFIRM_ACTUAL_ID,
+        ca.MATERIAL_ID,
+        ca.OPERATION_ID,
+        ca.EO_ID,
+        pa.ASSEMBLE_PROCESS_ACTUAL_ID,
+        pa.EVENT_ID,
+        pa.MATERIAL_LOT_ID,
+        pa.WORKCELL_ID,
+        pa.SCRAP_QTY,
+        pa.ASSEMBLE_QTY,
+        pa.MATERIAL_LOT_HIS_ID
+        FROM mt_assemble_confirm_actual ca,
+        mt_assemble_process_actual pa
+        WHERE ca.TENANT_ID = ${tenantId}
+        AND pa.TENANT_ID = ${tenantId}
+        AND ca.ASSEMBLE_CONFIRM_ACTUAL_ID = pa.ASSEMBLE_CONFIRM_ACTUAL_ID
+        <if test="dto.eoId != null">
+            AND ca.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.materialId != null">
+            AND ca.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.operationId != null">
+            AND ca.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.workcellId != null">
+            AND pa.WORKCELL_ID = #{dto.workcellId}
+        </if>
+        <choose>
+            <when test='dto.substituteFlag!=null and dto.substituteFlag=="Y"'>
+                AND ca.SUBSTITUTE_FLAG = 'Y'
+            </when>
+            <when test='dto.substituteFlag!=null and dto.substituteFlag!="Y"'>
+                AND ca.SUBSTITUTE_FLAG &lt;&gt;'Y'
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.assembleExcessFlag!=null and dto.assembleExcessFlag =="Y"'>
+                AND ca.ASSEMBLE_EXCESS_FLAG ='Y'
+            </when>
+            <when test='dto.assembleExcessFlag !=null and dto.assembleExcessFlag !="Y"'>
+                AND ca.ASSEMBLE_EXCESS_FLAG &lt;&gt;'Y'
+            </when>
+        </choose>
+    </select>
+
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        select t.* from mt_assemble_confirm_actual t where t.TENANT_ID = ${tenantId}
+        <if test="dto.assembleConfirmActualId!=null">
+            and t.ASSEMBLE_CONFIRM_ACTUAL_ID=#{dto.assembleConfirmActualId}
+        </if>
+        <if test="dto.eoId!=null">
+            and t.EO_ID=#{dto.eoId}
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.operationId!=null">
+            and t.OPERATION_ID=#{dto.operationId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t.COMPONENT_TYPE=#{dto.componentType}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t.BOM_COMPONENT_ID=#{dto.bomComponentId}
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID=#{dto.bomId}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t.ROUTER_STEP_ID=#{dto.routerStepId}
+        </if>
+        <if test="dto.assembleExcessFlag!=null">
+            and t.ASSEMBLE_EXCESS_FLAG=#{dto.assembleExcessFlag}
+        </if>
+        <if test="dto.assembleRouterType!=null">
+            and t.ASSEMBLE_ROUTER_TYPE=#{dto.assembleRouterType}
+        </if>
+        <if test="dto.substituteFlag!=null">
+            and t.SUBSTITUTE_FLAG=#{dto.substituteFlag}
+        </if>
+        <if test="dto.bypassFlag!=null">
+            and t.BYPASS_FLAG=#{dto.bypassFlag}
+        </if>
+        <if test="dto.bypassBy!=null">
+            and t.BYPASS_BY=#{dto.bypassBy}
+        </if>
+        <if test="dto.confirmFlag!=null">
+            and t.CONFIRM_FLAG=#{dto.confirmFlag}
+        </if>
+        <if test="dto.confirmedBy!=null">
+            and t.CONFIRMED_BY=#{dto.confirmedBy}
+        </if>
+    </select>
+
+    <select id="eoLimitMaterialLotAssembleActualQuery" resultType="tarzan.actual.domain.vo.MtAssembleConfirmActualVO16">
+        select
+        t2.MATERIAL_LOT_ID materialLotId,
+        t1.MATERIAL_ID materialId,
+        t2.ASSEMBLE_QTY assembleQty
+        from mt_assemble_confirm_actual t1
+        left join mt_assemble_process_actual t2
+        on t1.ASSEMBLE_CONFIRM_ACTUAL_ID=t2.ASSEMBLE_CONFIRM_ACTUAL_ID
+        where t1.TENANT_ID = #{tenantId}
+        and t2.TENANT_ID=#{tenantId}
+        and t1.EO_ID=#{dto.eoId}
+        <if test="dto.materialId!=null">
+            and t1.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.operationId!=null">
+            and t1.OPERATION_ID=#{dto.operationId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t1.COMPONENT_TYPE=#{dto.componentType}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t1.BOM_COMPONENT_ID=#{dto.bomComponentId}
+        </if>
+        <if test="dto.bomId!=null">
+            and t1.BOM_ID=#{dto.bomId}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t1.ROUTER_STEP_ID=#{dto.routerStepId}
+        </if>
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.actual.domain.vo.MtAssembleConfirmActualVO18">
+        select t.*
+        from mt_assemble_confirm_actual t
+        where t.TENANT_ID = ${tenantId}
+        <if test="dto.assembleConfirmActualId!=null">
+            and t.ASSEMBLE_CONFIRM_ACTUAL_ID=#{dto.assembleConfirmActualId}
+        </if>
+        <if test="dto.eoId!=null">
+            and t.EO_ID=#{dto.eoId}
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.operationId!=null">
+            and t.OPERATION_ID=#{dto.operationId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t.COMPONENT_TYPE=#{dto.componentType}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t.BOM_COMPONENT_ID=#{dto.bomComponentId}
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID=#{dto.bomId}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t.ROUTER_STEP_ID=#{dto.routerStepId}
+        </if>
+        <if test="dto.assembleExcessFlag!=null">
+            and t.ASSEMBLE_EXCESS_FLAG=#{dto.assembleExcessFlag}
+        </if>
+        <if test="dto.assembleRouterType!=null">
+            and t.ASSEMBLE_ROUTER_TYPE=#{dto.assembleRouterType}
+        </if>
+        <if test="dto.substituteFlag!=null">
+            and t.SUBSTITUTE_FLAG=#{dto.substituteFlag}
+        </if>
+        <if test="dto.bypassFlag!=null">
+            and t.BYPASS_FLAG=#{dto.bypassFlag}
+        </if>
+        <if test="dto.bypassBy!=null">
+            and t.BYPASS_BY=#{dto.bypassBy}
+        </if>
+        <if test="dto.confirmFlag!=null">
+            and t.CONFIRM_FLAG=#{dto.confirmFlag}
+        </if>
+        <if test="dto.confirmedBy!=null">
+            and t.CONFIRMED_BY=#{dto.confirmedBy}
+        </if>
+    </select>
+    
+    <select id="eoLimitAssembleActualBatchQuery" resultType="tarzan.actual.domain.vo.MtAssembleConfirmActualVO20">
+        select 
+        	ca.*,
+        	pa.*
+        from 
+        	mt_assemble_confirm_actual ca 
+        	LEFT JOIN mt_assemble_process_actual pa ON ca.ASSEMBLE_CONFIRM_ACTUAL_ID = pa.ASSEMBLE_CONFIRM_ACTUAL_ID
+        where 
+        	ca.TENANT_ID = ${tenantId}
+        	AND pa.TENANT_ID = ${tenantId}
+        	<if test='dto.operationId !=null and dto.operationId !=""'>
+            	AND ca.OPERATION_ID=#{dto.operationId}
+        	</if>
+        	AND ca.EO_ID IN
+	        <foreach collection="dto.eoIdList" index="index" item="item" open="(" close=")" separator=",">
+	            #{item}
+	        </foreach>
+    </select>
+</mapper>

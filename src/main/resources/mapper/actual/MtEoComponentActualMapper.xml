@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtEoComponentActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtEoComponentActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_COMPONENT_ACTUAL_ID" property="eoComponentActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="COMPONENT_TYPE" property="componentType" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_EXCESS_FLAG" property="assembleExcessFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_ROUTER_TYPE" property="assembleRouterType" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_FIRST_TIME" property="actualFirstTime" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_LAST_TIME" property="actualLastTime" jdbcType="TIMESTAMP"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="limitQueryComponentActual" resultMap="BaseResultMap">
+        select *
+        from mt_eo_component_actual t
+        where t.TENANT_ID = ${tenantId}
+        <if test="dto.eoComponentActualId!=null">
+            and t.EO_COMPONENT_ACTUAL_ID = #{dto.eoComponentActualId}
+        </if>
+        <if test="dto.eoId!=null">
+            and t.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.operationId!=null">
+            and t.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t.COMPONENT_TYPE = #{dto.componentType}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t.BOM_COMPONENT_ID = #{dto.bomComponentId}
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID = #{dto.bomId}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.assembleExcessFlag!=null">
+            and t.ASSEMBLE_EXCESS_FLAG = #{dto.assembleExcessFlag}
+        </if>
+        <if test="dto.assembleRouterType!=null">
+            and t.ASSEMBLE_ROUTER_TYPE = #{dto.assembleRouterType}
+        </if>
+        <if test="dto.substituteFlag!=null">
+            and t.SUBSTITUTE_FLAG = #{dto.substituteFlag}
+        </if>
+        <if test="dto.actualFirstTimeFrom!=null">
+            and t.ACTUAL_FIRST_TIME &gt;= #{dto.actualFirstTimeFrom}
+        </if>
+        <if test="dto.actualFirstTimeTo!=null">
+            and t.ACTUAL_FIRST_TIME &lt;= #{dto.actualFirstTimeTo}
+        </if>
+        <if test="dto.actualLastTimeFrom!=null">
+            and t.ACTUAL_LAST_TIME &gt;= #{dto.actualLastTimeFrom}
+        </if>
+        <if test="dto.actualLastTimeTo!=null">
+            and t.ACTUAL_LAST_TIME &lt;= #{dto.actualLastTimeTo}
+        </if>
+        order by
+        t.BOM_COMPONENT_ID+0,
+        t.OPERATION_ID+0,
+        t.MATERIAL_ID+0
+    </select>
+
+    <select id="limitScrapQueryComponentActual" resultMap="BaseResultMap">
+        select *
+        from mt_eo_component_actual t
+        where t.TENANT_ID = ${tenantId}
+        and t.ASSEMBLE_EXCESS_FLAG &lt;&gt;'Y'
+        and t.SCRAPPED_QTY &lt;&gt; 0
+        and t.SCRAPPED_QTY is not null
+        <if test="dto.eoId!=null">
+            and t.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t.BOM_COMPONENT_ID = #{dto.bomComponentId}
+        </if>
+        <if test="dto.bomComponentId==null">
+            and t.BOM_COMPONENT_ID &lt;&gt; ''
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t.COMPONENT_TYPE = #{dto.componentType}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.operationId!=null">
+            and t.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test='dto.substituteIncludedFlag!=null and dto.substituteIncludedFlag=="N"'>
+            and t.SUBSTITUTE_FLAG &lt;&gt; 'Y'
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID=#{dto.bomId}
+        </if>
+        order by
+        t.BOM_COMPONENT_ID+0,
+        t.OPERATION_ID+0,
+        t.MATERIAL_ID+0
+    </select>
+
+    <select id="materialLimitScrapActualQuery" resultMap="BaseResultMap">
+        select *
+        from mt_eo_component_actual t
+        where t.TENANT_ID = ${tenantId}
+        and t.SCRAPPED_QTY &lt;&gt; 0
+        and t.SCRAPPED_QTY is not null
+        <if test="dto.eoId!=null">
+            and t.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t.COMPONENT_TYPE = #{dto.componentType}
+        </if>
+        <if test="dto.operationId!=null">
+            and t.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID = #{dto.bomId}
+        </if>
+        order by
+        t.BOM_COMPONENT_ID+0,
+        t.OPERATION_ID+0,
+        t.MATERIAL_ID+0
+    </select>
+
+    <select id="limitAssableQueryCompentActul" resultMap="BaseResultMap">
+        select *
+        from mt_eo_component_actual t
+        where t.TENANT_ID = ${tenantId}
+        and t.ASSEMBLE_EXCESS_FLAG &lt;&gt; 'Y'
+        <if test="dto.eoId!=null">
+            and t.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t.BOM_COMPONENT_ID = #{dto.bomComponentId}
+        </if>
+        <if test="dto.bomComponentId==null">
+            and t.BOM_COMPONENT_ID &lt;&gt; ''
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t.COMPONENT_TYPE = #{dto.componentType}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.operationId!=null">
+            and t.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test='dto.substituteIncludedFlag!=null and dto.substituteIncludedFlag=="N"'>
+            and t.SUBSTITUTE_FLAG &lt;&gt; 'Y'
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID = #{dto.bomId}
+        </if>
+        order by
+        t.BOM_COMPONENT_ID+0,
+        t.OPERATION_ID+0,
+        t.MATERIAL_ID+0
+    </select>
+
+    <select id="queryAssembledSubstituteMaterial" resultMap="BaseResultMap">
+        select *
+        from mt_eo_component_actual t
+        where t.TENANT_ID = ${tenantId}
+        <if test="dto.eoId!=null">
+            and t.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t.BOM_COMPONENT_ID = #{dto.bomComponentId}
+        </if>
+        <if test="dto.bomComponentId==null">
+            and t.BOM_COMPONENT_ID &lt;&gt;''
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID = #{dto.bomId}
+        </if>
+        <if test="dto.substituteFlag!=null">
+            and t.SUBSTITUTE_FLAG = #{dto.substituteFlag}
+        </if>
+    </select>
+
+    <select id="propertyLimitEoComponentActualPropertyQuery" resultMap="BaseResultMap">
+        select t.*
+        from mt_eo_component_actual t
+        where t.TENANT_ID = ${tenantId}
+        <if test="dto.eoComponentActualId!=null">
+            and t.EO_COMPONENT_ACTUAL_ID = #{dto.eoComponentActualId}
+        </if>
+        <if test="dto.eoId!=null">
+            and t.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.materialId!=null">
+            and t.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.operationId!=null">
+            and t.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.componentType!=null">
+            and t.COMPONENT_TYPE = #{dto.componentType}
+        </if>
+        <if test="dto.bomComponentId!=null">
+            and t.BOM_COMPONENT_ID = #{dto.bomComponentId}
+        </if>
+        <if test="dto.bomId!=null">
+            and t.BOM_ID = #{dto.bomId}
+        </if>
+        <if test="dto.routerStepId!=null">
+            and t.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.assembleExcessFlag!=null">
+            and t.ASSEMBLE_EXCESS_FLAG = #{dto.assembleExcessFlag}
+        </if>
+        <if test="dto.assembleRouterType!=null">
+            and t.ASSEMBLE_ROUTER_TYPE = #{dto.assembleRouterType}
+        </if>
+        <if test="dto.substituteFlag!=null">
+            and t.SUBSTITUTE_FLAG = #{dto.substituteFlag}
+        </if>
+        <if test="dto.actualFirstTimeFrom!=null">
+            and t.ACTUAL_FIRST_TIME &gt;=DATE_FORMAT(#{dto.actualFirstTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.actualFirstTimeTo!=null">
+            and t.ACTUAL_FIRST_TIME &lt;=DATE_FORMAT(#{dto.actualFirstTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.actualLastTimeFrom!=null">
+            and t.ACTUAL_LAST_TIME &gt;= DATE_FORMAT(#{dto.actualLastTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.actualLastTimeTo!=null">
+            and t.ACTUAL_LAST_TIME &lt;= DATE_FORMAT(#{dto.actualLastTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsInvoiceMapper">
+
+    <select id="queryInvoiceLineList" resultType="tarzan.instruction.domain.entity.MtInstruction">
+        SELECT
+	        mi.*
+        FROM
+	        mt_instruction mi,
+	        mt_instruction ml
+        WHERE mi.INSTRUCTION_ID = ml.SOURCE_INSTRUCTION_ID
+        AND mi.TENANT_ID = #{tenantId}
+        AND mi.SOURCE_DOC_ID = #{instructionDocId}
+        GROUP BY mi.INSTRUCTION_ID
+    </select>
+
+    <select id="queryOverInvoiceInstructionList" resultType="tarzan.instruction.domain.entity.MtInstruction">
+        SELECT
+	        mi.*
+        FROM
+	        mt_instruction_doc mid
+        LEFT JOIN mt_instruction mi ON mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_instruction_attr attr ON attr.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE
+            mid.TENANT_ID = #{tenantId}
+        AND mid.SUPPLIER_ID = #{supplierId}
+        AND mi.MATERIAL_ID = #{materialId}
+        AND mid.INSTRUCTION_DOC_TYPE = 'OVER'
+        <choose>
+            <when test="materialVersion != null">
+                AND attr.ATTR_VALUE = #{materialVersion}
+            </when>
+            <otherwise>
+                AND (attr.ATTR_VALUE is NULL OR attr.ATTR_VALUE = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryInvoiceListByPoNum" resultType="java.lang.Integer">
+        SELECT
+	        COUNT(1)
+        FROM
+	        mt_instruction_doc mid,
+	        mt_instruction_doc_attr attr
+        WHERE
+            mid.TENANT_ID = #{tenantId}
+        AND mid.INSTRUCTION_DOC_ID = attr.INSTRUCTION_DOC_ID
+        AND attr.ATTR_NAME = 'PO_NUM'
+        AND ATTR_VALUE = #{instructionDocNum}
+        AND mid.INSTRUCTION_DOC_STATUS <![CDATA[<>]]> 'CLOSED'
+    </select>
+
+</mapper>

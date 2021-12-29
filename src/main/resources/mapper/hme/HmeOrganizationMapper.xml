@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeOrganizationMapper">
+
+    <select id="lineWorkcellByProdlineQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+             mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.prodLineId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'LINE'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID
+    </select>
+
+    <select id="lineWorkcellByDepartmentQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        SELECT mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.departmentId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor2.TENANT_ID = mmor.TENANT_ID
+        and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor2.ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor3.PARENT_ORGANIZATION_ID = mmor2.ORGANIZATION_ID
+        and mmor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor3.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor3.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'LINE'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+    </select>
+
+    <select id="lineWorkcellAllQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_workcell mmw
+        where mmw.TENANT_ID = #{tenantId}
+        and mmw.WORKCELL_TYPE = 'LINE'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmw.WORKCELL_ID
+    </select>
+
+    <select id="processByLineWorkcellQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+             mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.lineWorkcellId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID
+    </select>
+
+    <select id="processByProdLineQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmor.PARENT_ORGANIZATION_ID, mmor2.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+             mt_mod_organization_rel mmor2,
+             mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.prodLineId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor2.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmor2.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+    </select>
+
+    <select id="processByDepartmentQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        SELECT mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_organization_rel mmor4,
+        mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID ,#{dto.departmentId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor2.TENANT_ID = mmor.TENANT_ID
+        and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor2.ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor3.PARENT_ORGANIZATION_ID = mmor2.ORGANIZATION_ID
+        and mmor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor3.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor4.PARENT_ORGANIZATION_ID = mmor3.ORGANIZATION_ID
+        and mmor4.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor4.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor4.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+    </select>
+
+    <select id="processAllQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_workcell mmw
+        where mmw.TENANT_ID = #{tenantId}
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmw.WORKCELL_ID
+    </select>
+
+    <select id="prodLineByDepartmentQuery" resultType="tarzan.modeling.domain.entity.MtModProductionLine">
+        SELECT mmor.PARENT_ORGANIZATION_ID, mmpl.PROD_LINE_ID, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME
+        from mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_production_line mmpl
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.departmentId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor.ORGANIZATION_TYPE = 'AREA'
+        and mmor2.TENANT_ID = mmor.TENANT_ID
+        and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor2.ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmpl.PROD_LINE_ID = mmor2.ORGANIZATION_ID
+        and mmpl.ENABLE_FLAG = 'Y'
+        <if test="dto.prodLineCode != null and dto.prodLineCode != ''">
+            and mmpl.PROD_LINE_CODE like CONCAT('%',#{dto.prodLineCode},'%')
+        </if>
+        <if test="dto.prodLineName != null and dto.prodLineName != ''">
+            and mmpl.PROD_LINE_NAME like CONCAT('%',#{dto.prodLineName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmpl.PROD_LINE_ID
+    </select>
+
+    <select id="prodLineAllQuery" resultType="tarzan.modeling.domain.entity.MtModProductionLine">
+        select mmpl.PROD_LINE_ID, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME
+        from mt_mod_production_line mmpl
+        where mmpl.TENANT_ID = #{tenantId}
+        and mmpl.ENABLE_FLAG = 'Y'
+        <if test="dto.prodLineCode != null and dto.prodLineCode != ''">
+            and mmpl.PROD_LINE_CODE like CONCAT('%',#{dto.prodLineCode},'%')
+        </if>
+        <if test="dto.prodLineName != null and dto.prodLineName != ''">
+            and mmpl.PROD_LINE_NAME like CONCAT('%',#{dto.prodLineName},'%')
+        </if>
+        order by mmpl.PROD_LINE_ID
+    </select>
+
+    <select id="prodLineByWorkshopQuery" resultType="tarzan.modeling.domain.entity.MtModProductionLine">
+        SELECT
+        mmor.PARENT_ORGANIZATION_ID,
+        mmpl.PROD_LINE_ID,
+        mmpl.PROD_LINE_CODE,
+        mmpl.PROD_LINE_NAME
+        FROM
+        mt_mod_organization_rel mmor,
+        mt_mod_production_line mmpl
+        WHERE
+        mmor.TENANT_ID = #{tenantId}
+        AND FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.workshopId} )
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mmpl.PROD_LINE_ID = mmor.ORGANIZATION_ID
+        AND mmpl.ENABLE_FLAG = 'Y'
+        <if test="dto.prodLineCode != null and dto.prodLineCode != ''">
+            and mmpl.PROD_LINE_CODE like CONCAT('%',#{dto.prodLineCode},'%')
+        </if>
+        <if test="dto.prodLineName != null and dto.prodLineName != ''">
+            and mmpl.PROD_LINE_NAME like CONCAT('%',#{dto.prodLineName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmpl.PROD_LINE_ID
+    </select>
+
+    <select id="workcellByProcessQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+             mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID ,#{dto.processId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'STATION'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID
+    </select>
+
+    <select id="workcellByLineWorkcellQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+             mt_mod_organization_rel mmor2,
+             mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.lineWorkcellId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.TENANT_ID = mmor.TENANT_ID
+        and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor2.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'STATION'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID
+    </select>
+
+    <select id="workcellByProdLineQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+             mt_mod_organization_rel mmor2,
+             mt_mod_organization_rel mmor3,
+             mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.prodLineId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor3.PARENT_ORGANIZATION_ID = mmor2.ORGANIZATION_ID
+        and mmor3.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor3.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor3.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'STATION'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID
+    </select>
+
+    <select id="workcellByDepartmentQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        SELECT mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor,
+             mt_mod_organization_rel mmor2,
+             mt_mod_organization_rel mmor3,
+             mt_mod_organization_rel mmor4,
+             mt_mod_organization_rel mmor5,
+             mt_mod_workcell mmw
+        where mmor.TENANT_ID = #{tenantId}
+        and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID , #{dto.departmentId} )
+        and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor.ORGANIZATION_TYPE = 'AREA'
+        and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor2.ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor3.PARENT_ORGANIZATION_ID = mmor2.ORGANIZATION_ID
+        and mmor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmor3.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor4.PARENT_ORGANIZATION_ID = mmor3.ORGANIZATION_ID
+        and mmor4.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor4.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor5.PARENT_ORGANIZATION_ID = mmor4.ORGANIZATION_ID
+        and mmor5.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor5.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmw.WORKCELL_ID = mmor5.ORGANIZATION_ID
+        and mmw.WORKCELL_TYPE = 'STATION'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmw.WORKCELL_ID
+    </select>
+
+    <select id="workcellAllQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_workcell mmw
+        where mmw.TENANT_ID = #{tenantId}
+        and mmw.WORKCELL_TYPE = 'STATION'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+        order by mmw.WORKCELL_ID
+    </select>
+
+    <select id="prodLineBySiteQuery" resultType="tarzan.modeling.domain.entity.MtModProductionLine">
+        SELECT
+        mmor.PARENT_ORGANIZATION_ID,
+        mmpl.PROD_LINE_ID,
+        mmpl.PROD_LINE_CODE,
+        mmpl.PROD_LINE_NAME
+        FROM
+        mt_mod_organization_rel mmor,
+        mt_mod_production_line mmpl
+        WHERE
+        mmor.TENANT_ID = #{tenantId}
+        AND mmor.TOP_SITE_ID = #{dto.siteId}
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mmpl.PROD_LINE_ID = mmor.ORGANIZATION_ID
+        AND mmpl.ENABLE_FLAG = 'Y'
+        <if test="dto.prodLineCode != null and dto.prodLineCode != ''">
+            and mmpl.PROD_LINE_CODE like CONCAT('%',#{dto.prodLineCode},'%')
+        </if>
+        <if test="dto.prodLineName != null and dto.prodLineName != ''">
+            and mmpl.PROD_LINE_NAME like CONCAT('%',#{dto.prodLineName},'%')
+        </if>
+        order by mmor.PARENT_ORGANIZATION_ID, mmpl.PROD_LINE_ID
+    </select>
+</mapper>

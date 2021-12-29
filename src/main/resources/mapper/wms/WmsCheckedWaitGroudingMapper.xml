@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsCheckedWaitGroudingMapper">
+
+    <select id="queryPutInStorage" resultType="com.ruike.wms.api.dto.WmsCheckedWaitGroudingDTO">
+        SELECT
+            TASK.TENANT_ID,
+            TASK.INSTRUCTION_DOC_ID,
+            TASK.INSTRUCTION_ID,
+            TASK.TASK_STATUS,
+            TASK.INSTRUCTION_DOC_TYPE,
+            TASK.MATERIAL_ID,
+            TASK.TASK_QTY,
+            TASK.EXECUTE_QTY,
+            TASK.CREATION_DATE,
+            TASK.LAST_UPDATE_DATE,
+			ms.SUPPLIER_CODE,
+			ms.SUPPLIER_NAME,
+			attr.ATTR_VALUE urgent_flag,
+			mm.MATERIAL_CODE,
+			mm.MATERIAL_NAME,
+			mu.UOM_CODE,
+			attr2.ATTR_VALUE ACTUAL_RECEIVE_QTY,
+			attr3.ATTR_VALUE uai_flag
+        FROM
+            WMS_PUT_IN_STORAGE_TASK TASK
+		LEFT JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = TASK.instruction_doc_id
+		LEFT JOIN mt_instruction_doc_attr attr ON attr.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID AND attr.ATTR_NAME = 'URGENT_FLAG'
+		LEFT JOIN mt_supplier ms ON mid.SUPPLIER_ID = ms.SUPPLIER_ID
+		LEFT JOIN mt_instruction mi ON mi.INSTRUCTION_ID = TASK.instruction_id
+		LEFT JOIN mt_instruction_attr attr2 ON attr2.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr2.ATTR_NAME = 'ACTUAL_RECEIVED_QTY'
+		LEFT JOIN mt_instruction_attr attr3 ON attr3.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr3.ATTR_NAME = 'UAI_FLAG'
+		LEFT JOIN mt_material mm ON mi.MATERIAL_ID = mm.MATERIAL_ID
+		LEFT JOIN mt_uom mu ON mu.UOM_ID = mi.UOM_ID
+        WHERE TASK.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+        AND TASK.TASK_STATUS IN ('STOCK_PENDING','STOCKING')
+        AND TASK.TENANT_ID = #{tenantId}
+        ORDER BY TASK.CREATION_DATE DESC, ms.SUPPLIER_CODE ASC, mm.MATERIAL_CODE ASC
+    </select>
+
+    <select id="materialStoragedNumQuery" resultType="decimal">
+        SELECT
+        IFNULL(sum(TASK.execute_qty),0)
+        FROM
+        WMS_PUT_IN_STORAGE_TASK TASK
+        WHERE TASK.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+        AND TASK.TASK_STATUS IN ('STOCKING','STOCKED')
+        AND TASK.TENANT_ID = #{tenantId}
+        AND TASK.last_update_date >= #{dailyTimeFrom}
+        AND TASK.last_update_date &lt;=  #{dailyTimeTo}
+    </select>
+
+    <select id="trendDataQuery" resultType="com.ruike.wms.api.dto.WmsCheckedWaitGroudingDTO2">
+		SELECT
+            IFNULL(SUM(TASK.execute_qty), 0 ) AS sumStoragedMonth,
+            IFNULL(
+                CEILING( (SUM( UNIX_TIMESTAMP( TASK.last_update_date ) - UNIX_TIMESTAMP( TASK.creation_date ) ) / COUNT( 1 ))/60 ),
+                0
+            ) AS avgTimeStoraged
+        FROM
+            WMS_PUT_IN_STORAGE_TASK TASK
+        WHERE
+            TASK.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+            AND TASK.TASK_STATUS IN ( 'STOCKING', 'STOCKED' )
+            AND TASK.TENANT_ID = #{tenantId}
+            AND TASK.last_update_date >= #{monthTimeFrom}
+            AND TASK.last_update_date &lt;=  #{monthTimeTo}
+    </select>
+
+
+</mapper>

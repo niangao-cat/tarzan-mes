@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtHoldActualDetailMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtHoldActualDetail">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="HOLD_DETAIL_ID" property="holdDetailId" jdbcType="VARCHAR"/>
+        <result column="HOLD_ID" property="holdId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE" property="objectType" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="ORIGINAL_STATUS" property="originalStatus" jdbcType="VARCHAR"/>
+        <result column="FUTURE_HOLD_ROUTER_STEP_ID" property="futureHoldRouterStepId" jdbcType="VARCHAR"/>
+        <result column="FUTURE_HOLD_STATUS" property="futureHoldStatus" jdbcType="VARCHAR"/>
+        <result column="HOLD_EVENT_ID" property="holdEventId" jdbcType="VARCHAR"/>
+        <result column="RELEASE_FLAG" property="releaseFlag" jdbcType="VARCHAR"/>
+        <result column="RELEASE_COMMENT" property="releaseComment" jdbcType="VARCHAR"/>
+        <result column="RELEASE_TIME" property="releaseTime" jdbcType="TIMESTAMP"/>
+        <result column="RELEASE_BY" property="releaseBy" jdbcType="DECIMAL"/>
+        <result column="RELEASE_REASON_CODE" property="releaseReasonCode" jdbcType="VARCHAR"/>
+        <result column="RELEASE_EVENT_ID" property="releaseEventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="LineHeadMap" type="tarzan.actual.domain.vo.MtHoldActualDetailVO">
+        <!--head-->
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="HOLD_REASON_CODE" property="holdReasonCode" jdbcType="VARCHAR"/>
+        <result column="COMMENT" property="comment" jdbcType="VARCHAR"/>
+        <result column="EXPIRED_RELEASE_TIME" property="expiredReleaseTime" jdbcType="TIMESTAMP"/>
+        <result column="HOLD_TYPE" property="holdType" jdbcType="VARCHAR"/>
+        <result column="HOLD_BY" property="holdBy" jdbcType="DECIMAL"/>
+        <result column="HOLD_TIME" property="holdTime" jdbcType="TIMESTAMP"/>
+        <!--line-->
+        <result column="HOLD_DETAIL_ID" property="holdDetailId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE" property="objectType" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="ORIGINAL_STATUS" property="originalStatus" jdbcType="VARCHAR"/>
+        <result column="FUTURE_HOLD_ROUTER_STEP_ID" property="futureHoldRouterStepId" jdbcType="VARCHAR"/>
+        <result column="FUTURE_HOLD_STATUS" property="futureHoldStatus" jdbcType="VARCHAR"/>
+        <result column="HOLD_EVENT_ID" property="holdEventId" jdbcType="VARCHAR"/>
+        <result column="RELEASE_FLAG" property="releaseFlag" jdbcType="VARCHAR"/>
+        <result column="RELEASE_COMMENT" property="releaseComment" jdbcType="VARCHAR"/>
+        <result column="RELEASE_TIME" property="releaseTime" jdbcType="TIMESTAMP"/>
+        <result column="RELEASE_BY" property="releaseBy" jdbcType="DECIMAL"/>
+        <result column="RELEASE_REASON_CODE" property="releaseReasonCode" jdbcType="VARCHAR"/>
+        <result column="RELEASE_EVENT_ID" property="releaseEventId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="VoResultMap" type="tarzan.actual.domain.vo.MtHoldActualDetailVO3">
+        <result column="HOLD_DETAIL_ID" property="holdDetailId" jdbcType="VARCHAR"/>
+        <result column="HOLD_ID" property="holdId" jdbcType="VARCHAR"/>
+    </resultMap>
+    <resultMap id="VoResultMap5" type="tarzan.actual.domain.vo.MtHoldActualDetailVO5">
+        <result column="EXPIRED_RELEASE_TIME" property="expiredReleaseTime" jdbcType="TIMESTAMP"/>
+        <result column="HOLD_TIME" property="holdTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!--根据对象获取正在保留的实绩明细-->
+    <select id="checkSavingHoldActrualDetail" resultMap="BaseResultMap">
+        SELECT distinct
+        ha.HOLD_ID,
+        had.HOLD_DETAIL_ID
+        FROM
+            mt_hold_actual ha
+            INNER JOIN mt_hold_actual_detail had ON ha.HOLD_ID = had.HOLD_ID
+        WHERE  ha.TENANT_ID = ${tenantId}
+            AND had.TENANT_ID = ${tenantId}
+            AND ha.HOLD_TYPE = 'IMMEDIATE'
+            AND had.RELEASE_FLAG &lt;&gt; 'Y'
+            AND had.OBJECT_TYPE = #{dto.objectType}
+            AND had.OBJECT_ID = #{dto.objectId}
+    </select>
+
+    <!--获取保留实绩明细属性-->
+    <select id="holdDetailPropertyGet" resultMap="LineHeadMap">
+         SELECT
+            ha.SITE_ID,
+            ha.HOLD_REASON_CODE,
+            ha.`COMMENTS`,
+            ha.EXPIRED_RELEASE_TIME,
+            ha.HOLD_TYPE,
+            ha.HOLD_BY,
+            ha.HOLD_TIME,
+            had.OBJECT_TYPE,
+            had.OBJECT_ID,
+            had.EO_STEP_ACTUAL_ID,
+            had.ORIGINAL_STATUS,
+            had.FUTURE_HOLD_ROUTER_STEP_ID,
+            had.FUTURE_HOLD_STATUS,
+            had.HOLD_EVENT_ID,
+            had.RELEASE_FLAG,
+            had.RELEASE_COMMENT,
+            had.RELEASE_TIME,
+            had.RELEASE_BY,
+            had.RELEASE_REASON_CODE,
+            had.RELEASE_EVENT_ID
+        FROM
+            mt_hold_actual_detail had
+            INNER JOIN mt_hold_actual ha ON had.HOLD_ID = ha.HOLD_ID
+        where had.HOLD_DETAIL_ID=#{dto.holdDetailId}
+         AND ha.TENANT_ID = ${tenantId}
+         and had.TENANT_ID = ${tenantId}
+
+     </select>
+
+    <!--根据对象获取正在保留的实绩明细-->
+    <select id="propertyLimitHoldDetailQuery" resultMap="VoResultMap">
+        SELECT
+        ha.HOLD_ID,
+        had.HOLD_DETAIL_ID
+        FROM
+        mt_hold_actual_detail had
+        INNER JOIN mt_hold_actual ha ON had.HOLD_ID = ha.HOLD_ID
+        where ha.TENANT_ID = ${tenantId}
+        AND had.TENANT_ID = ${tenantId}
+        <if test="dto.siteId!=null and dto.siteId!=''">
+            and ha.SITE_ID=#{dto.siteId}
+        </if>
+        <if test="dto.holdReasonCode!=null and dto.holdReasonCode!=''">
+            and ha.HOLD_REASON_CODE=#{dto.holdReasonCode}
+        </if>
+        <if test="dto.comment!=null and dto.comment!=''">
+            and ha.COMMENT like concat('%',concat(#{dto.comment},'%'))
+        </if>
+        <if test="dto.expiredReleaseTime!=null">
+            and ha.EXPIRED_RELEASE_TIME=#{dto.expiredReleaseTime}
+        </if>
+        <if test="dto.holdType!=null and dto.holdType!=''">
+            and ha.HOLD_TYPE=#{dto.holdType}
+        </if>
+        <if test="dto.holdBy!=null and dto.holdBy!=''">
+            and ha.HOLD_BY=#{dto.holdBy}
+        </if>
+        <if test="dto.holdStartTime!=null">
+            and ha.HOLD_TIME &gt;=#{dto.holdStartTime}
+        </if>
+        <if test="dto.holdEndTime!=null">
+            and #{dto.holdEndTime} &gt;= ha.HOLD_TIME
+        </if>
+        <if test="dto.objectType!=null and dto.objectType!=''">
+            and had.OBJECT_TYPE=#{dto.objectType}
+        </if>
+        <if test="dto.objectId!=null and dto.objectId!=''">
+            and had.OBJECT_ID=#{dto.objectId}
+        </if>
+        <if test="dto.eoStepActualId!=null and dto.eoStepActualId!=''">
+            and had.EO_STEP_ACTUAL_ID=#{dto.eoStepActualId}
+        </if>
+        <if test="dto.originalStatus!=null and dto.originalStatus!=''">
+            and had.ORIGINAL_STATUS=#{dto.originalStatus}
+        </if>
+        <if test="dto.futureHoldRouterStepId!=null and dto.futureHoldRouterStepId!=''">
+            and had.FUTURE_HOLD_ROUTER_STEP_ID=#{dto.futureHoldRouterStepId}
+        </if>
+        <if test="dto.futureHoldStatus!=null and dto.futureHoldStatus!=''">
+            and had.FUTURE_HOLD_STATUS=#{dto.futureHoldStatus}
+        </if>
+        <if test="dto.holdEventId!=null and dto.holdEventId!=''">
+            and had.HOLD_EVENT_ID=#{dto.holdEventId}
+        </if>
+        <if test="dto.releaseFlag!=null and dto.releaseFlag!=''">
+            and had.RELEASE_FLAG=#{dto.releaseFlag}
+        </if>
+        <if test="dto.releaseComment!=null and dto.releaseComment!=''">
+            and had.RELEASE_COMMENT like concat('%',concat(#{dto.releaseComment},'%'))
+        </if>
+        <if test="dto.releaseStartTime!=null">
+            and had.RELEASE_TIME &gt;=#{dto.releaseStartTime}
+        </if>
+        <if test="dto.releaseEndTime!=null">
+            and #{dto.releaseEndTime} &gt;=had.RELEASE_TIME
+        </if>
+        <if test="dto.releaseBy!=null and dto.releaseBy!=''">
+            and had.RELEASE_BY=#{dto.releaseBy}
+        </if>
+        <if test="dto.releaseReasonCode!=null and dto.releaseReasonCode!=''">
+            and had.RELEASE_REASON_CODE=#{dto.releaseReasonCode}
+        </if>
+        <if test="dto.releaseEventId!=null and dto.releaseEventId!=''">
+            and had.RELEASE_EVENT_ID=#{dto.releaseEventId}
+        </if>
+
+    </select>
+
+    <!--获取保留到期释放时间-->
+    <select id="holdExpiredReleaseTimeGet" resultMap="VoResultMap5">
+        SELECT DISTINCT
+        ha.EXPIRED_RELEASE_TIME,
+        ha.HOLD_TIME
+        FROM
+        mt_hold_actual ha
+        LEFT JOIN mt_hold_actual_detail had ON ha.HOLD_ID = had.HOLD_ID
+        WHERE
+        ha.TENANT_ID = ${tenantId}
+        AND had.TENANT_ID = ${tenantId}
+        <if test="dto.holdDetailId!=null">
+            and had.HOLD_DETAIL_ID=#{dto.holdDetailId}
+        </if>
+        <if test="dto.holdId!=null">
+            and ha.HOLD_ID=#{dto.holdId}
+        </if>
+    </select>
+
+    <!--根据对象获取保留实绩明细,不包含HOLD_TYPE”为“FUTURE”类型的数据-->
+    <select id="objectLimitAllHoldQuery" resultMap="VoResultMap">
+        SELECT
+            t.HOLD_DETAIL_ID
+        FROM
+            MT_HOLD_ACTUAL_DETAIL t
+        WHERE t.TENANT_ID = ${tenantId}
+            and t.OBJECT_ID = #{dto.objectId}
+            AND t.OBJECT_TYPE = #{dto.objectType}
+    </select>
+
+    <!--根据对象获取将来保留明细，筛选头“HOLD_TYPE”为“FUTURE”类型的数据-->
+    <select id="objectLimitFutureHoldDetailQuery" resultMap="VoResultMap">
+        SELECT
+            t.HOLD_DETAIL_ID
+        FROM
+            MT_HOLD_ACTUAL_DETAIL t
+            INNER JOIN mt_hold_actual ha ON t.HOLD_ID = ha.HOLD_ID
+        WHERE t.TENANT_ID = ${tenantId}
+            and ha.TENANT_ID = ${tenantId}
+            and t.OBJECT_ID = #{dto.objectId}
+            AND t.OBJECT_TYPE = #{dto.objectType}
+            AND ha.HOLD_TYPE = 'FUTURE'
+    </select>
+
+    <!--校验步骤是否为将来保留步骤-->
+    <select id="futureHoldVerify" resultMap="VoResultMap">
+        SELECT
+        t.HOLD_DETAIL_ID
+        FROM
+        MT_HOLD_ACTUAL_DETAIL t
+        WHERE t.TENANT_ID = ${tenantId}
+        AND t.OBJECT_ID = #{dto.objectId}
+        AND t.OBJECT_TYPE = #{dto.objectType}
+        AND t.FUTURE_HOLD_ROUTER_STEP_ID = #{dto.futureHoldRouterStepId}
+        AND t.RELEASE_FLAG &lt;&gt; 'Y'
+        <if test='dto.futureHoldStatus!=null and dto.futureHoldStatus!=""'>
+            AND t.FUTURE_HOLD_STATUS =#{dto.futureHoldStatus}
+        </if>
+        <if test='dto.futureHoldStatus==null or dto.futureHoldStatus==""'>
+            AND t.FUTURE_HOLD_STATUS =''
+        </if>
+    </select>
+
+    <!--根据站点获取正在保留的实绩明细-->
+    <select id="queryHoldActrualDetailBySiteId" resultMap="VoResultMap">
+        SELECT distinct
+        ha.HOLD_ID,
+        had.HOLD_DETAIL_ID
+        FROM
+            mt_hold_actual ha
+            INNER JOIN mt_hold_actual_detail had ON ha.HOLD_ID = had.HOLD_ID
+        WHERE ha.TENANT_ID = ${tenantId}
+            and had.TENANT_ID = ${tenantId}
+            AND ha.HOLD_TYPE = 'IMMEDIATE'
+            AND had.RELEASE_FLAG &lt;&gt; 'Y'
+            AND ha.SITE_ID=#{siteId}
+
+    </select>
+
+
+</mapper>

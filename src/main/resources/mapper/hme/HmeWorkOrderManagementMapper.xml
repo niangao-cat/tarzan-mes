@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWorkOrderManagementMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.vo.HmeWorkOrderVO58"/>
+
+    <resultMap id="BaseTLResultMap" type="tarzan.method.domain.vo.MtRouterOperationVO2">
+        <result column="ROUTER_OPERATION_ID" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="SPECIAL_INTRUCTION" property="specialIntruction" jdbcType="VARCHAR"/>
+    </resultMap>
+    <resultMap id="BaseStepTLResultMap" type="tarzan.method.domain.vo.MtRouterStepVO4">
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="woListQuery" resultMap="BaseResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        item.item_group_description AS material_category,
+        wo.WORK_ORDER_ID,
+        wo.WORK_ORDER_NUM,
+        wo.PRODUCTION_VERSION,
+        wo.WORK_ORDER_TYPE,
+        mgtt.DESCRIPTION AS work_order_type_desc,
+        wo.PRODUCTION_LINE_ID,
+        wo.STATUS,
+        mgst.DESCRIPTION AS order_status_desc,
+        wo.QTY,
+        wo.MATERIAL_ID,
+        wo.BOM_ID,
+        mb.BOM_NAME,
+        wo.ROUTER_ID,
+        mr.ROUTER_NAME,
+        wo.PLAN_START_TIME,
+        wo.PLAN_END_TIME,
+        wo.CREATION_DATE,
+        wo.LAST_UPDATED_BY,
+        wo.LAST_UPDATE_DATE,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        mwor.PARENT_WORK_ORDER_ID,
+        woa_del.ATTR_VALUE AS delivery_date_str,
+        woa_pub.ATTR_VALUE AS publish_date_str,
+        woa_rem.ATTR_VALUE AS remark,
+        woa_att4.ATTR_VALUE AS departmentName,
+        woa_att1.ATTR_VALUE AS MAKE_ORDER_NUM,
+        woa_att2.ATTR_VALUE AS work_command_num,
+        woa_att3.ATTR_VALUE AS wo_remark,
+        mmpl.PROD_LINE_NAME AS PRODUCTION_LINE_NAME,
+        mwoa.COMPLETED_QTY,
+        mwoa.RELEASED_QTY
+        FROM
+        mt_work_order wo
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = wo.MATERIAL_ID
+        AND item.TENANT_ID = wo.TENANT_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        LEFT JOIN (
+        SELECT
+        ig.item_group_description,ms.MATERIAL_ID AS M_Id,ms.SITE_ID
+        FROM
+        mt_material_site ms,
+        mt_material_basic mb,
+        wms_item_group ig
+        WHERE
+        ms.MATERIAL_SITE_ID = mb.MATERIAL_SITE_ID
+        AND mb.ITEM_GROUP = ig.item_group_code
+        ) item ON item.SITE_ID = wo.SITE_ID AND item.M_Id = wo.MATERIAL_ID
+        LEFT JOIN mt_work_order_rel mwor ON mwor.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        LEFT JOIN mt_work_order_attr woa_del ON woa_del.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_del.ATTR_NAME = 'attribute9'
+        LEFT JOIN mt_work_order_attr woa_pub ON woa_pub.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_pub.ATTR_NAME = 'publish_date'
+        LEFT JOIN mt_work_order_attr woa_rem ON woa_rem.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_rem.ATTR_NAME = 'attribute8'
+        LEFT JOIN mt_work_order_attr woa_att4 ON woa_att4.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_att4.ATTR_NAME = 'attribute4'
+        LEFT JOIN mt_work_order_attr woa_att1 ON woa_att1.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_att1.ATTR_NAME = 'attribute1'
+        LEFT JOIN mt_work_order_attr woa_att2 ON woa_att2.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_att2.ATTR_NAME = 'attribute2'
+        LEFT JOIN mt_work_order_attr woa_att3 ON woa_att3.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_att3.ATTR_NAME = 'wo_remark'
+        LEFT JOIN mt_gen_type mgt ON mgt.TYPE_CODE = wo.WORK_ORDER_TYPE
+        AND mgt.TYPE_GROUP = 'WO_TYPE'
+        LEFT JOIN mt_gen_type_tl mgtt ON mgt.GEN_TYPE_ID = mgtt.GEN_TYPE_ID
+        AND mgtt.LANG = #{lang}
+        LEFT JOIN mt_gen_status mgs ON mgs.STATUS_CODE = wo.STATUS
+        AND mgs.STATUS_GROUP = 'WO_STATUS'
+        LEFT JOIN mt_gen_status_tl mgst ON mgs.GEN_STATUS_ID = mgst.GEN_STATUS_ID
+        AND mgst.LANG = #{lang}
+        LEFT JOIN mt_bom mb ON mb.BOM_ID = wo.BOM_ID
+        LEFT JOIN mt_router mr ON mr.ROUTER_ID = wo.ROUTER_ID
+        left join mt_mod_production_line mmpl
+        on mmpl.PROD_LINE_ID = wo.PRODUCTION_LINE_ID
+        left join mt_work_order_actual mwoa
+        on mwoa.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        and mwoa.TENANT_ID = wo.TENANT_ID
+        WHERE
+        wo.TENANT_ID = #{tenantId}
+        <if test="dto.parentWorkOrderId != null">
+            and mwor.PARENT_WORK_ORDER_ID = #{dto.parentWorkOrderId}
+            and wo.WORK_ORDER_ID != #{dto.parentWorkOrderId}
+        </if>
+        <if test="dto.workOrderNum != null">
+            <bind name="workOrderNumLike" value="'%'+dto.workOrderNum+'%'"/>
+            and wo.WORK_ORDER_NUM LIKE #{workOrderNumLike}
+        </if>
+        <if test="dto.productionVersion != null">
+            <bind name="productionVersionLike" value="'%'+dto.productionVersion+'%'"/>
+            and wo.PRODUCTION_VERSION LIKE #{productionVersionLike}
+        </if>
+        <if test="dto.workOrderType != null">
+            and wo.WORK_ORDER_TYPE = #{dto.workOrderType}
+        </if>
+        <if test="dto.status != null">
+            and wo.STATUS = #{dto.status}
+        </if>
+        <if test="dto.bomMaterialId != null">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            mt_bom_component MBC
+            WHERE
+            MBC.BOM_ID = mb.BOM_ID
+            AND MBC.MATERIAL_ID= #{dto.bomMaterialId}
+            )
+        </if>
+        <if test="dto.qty != null">
+            and wo.qty = #{dto.qty}
+        </if>
+        <if test="dto.materialCode != null">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and item.MATERIAL_CODE LIKE #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null">
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            and tl.MATERIAL_NAME LIKE #{materialNameLike}
+        </if>
+        <if test="dto.remark != null">
+            <bind name="remarkLike" value="'%'+dto.remark+'%'"/>
+            and wo.REMARK LIKE #{remarkLike}
+        </if>
+        <if test="dto.woRemark != null">
+            <bind name="woRemarkLike" value="'%'+dto.woRemark+'%'"/>
+            and woa_rem.ATTR_VALUE LIKE #{woRemarkLike}
+        </if>
+        <if test="dto.lastUpdatedByName != null">
+            <bind name="lastUpdatedByNameLike" value="'%'+dto.lastUpdatedByName+'%'"/>
+            and iu.real_name LIKE #{dto.lastUpdatedByName}
+        </if>
+        <if test="dto.isBom != null">
+            and (CASE WHEN wo.BOM_ID IS NULL OR wo.BOM_ID ='' THEN 'N' ELSE 'Y' END) = #{dto.isBom}
+        </if>
+        <if test="dto.isRouter != null">
+            and (CASE WHEN wo.ROUTER_ID IS NULL OR wo.ROUTER_ID ='' THEN 'N' ELSE 'Y' END) = #{dto.isRouter}
+        </if>
+        <if test="dto.planStartTimeFrom != null">
+            and wo.PLAN_START_TIME &gt;= DATE_FORMAT(#{dto.planStartTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planStartTimeTo != null">
+            and wo.PLAN_START_TIME &lt;= DATE_FORMAT(#{dto.planStartTimeTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planEndTimeFrom != null">
+            and wo.PLAN_END_TIME &gt;= DATE_FORMAT(#{dto.planEndTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planEndTimeTo != null">
+            and wo.PLAN_END_TIME &lt;= DATE_FORMAT(#{dto.planEndTimeTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateFrom != null">
+            and wo.CREATION_DATE &gt;= DATE_FORMAT(#{dto.creationDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateTo != null">
+            and wo.CREATION_DATE &lt;= DATE_FORMAT(#{dto.creationDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.lastUpdateDateFrom != null">
+            and wo.LAST_UPDATE_DATE &gt;= DATE_FORMAT(#{dto.lastUpdateDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.lastUpdateDateTo != null">
+            and wo.LAST_UPDATE_DATE &lt;= DATE_FORMAT(#{dto.lastUpdateDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.deliveryDateFrom != null">
+            and DATE_FORMAT(woa_del.ATTR_VALUE,'%Y-%m-%d %T') &gt;= DATE_FORMAT(#{dto.deliveryDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.deliveryDateTo != null">
+            and DATE_FORMAT(woa_del.ATTR_VALUE,'%Y-%m-%d %T') &lt;= DATE_FORMAT(#{dto.deliveryDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.publishDateFrom != null">
+            and DATE_FORMAT(woa_pub.ATTR_VALUE,'%Y-%m-%d %T') &gt;= DATE_FORMAT(#{dto.publishDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.publishDateTo != null">
+            and DATE_FORMAT(woa_pub.ATTR_VALUE,'%Y-%m-%d %T') &lt;= DATE_FORMAT(#{dto.publishDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.departmentName != null">
+            and woa_att4.ATTR_VALUE = #{dto.departmentName}
+        </if>
+        <if test="dto.makeOrderNum != null">
+            and woa_att1.ATTR_VALUE LIKE concat('%', concat(#{dto.makeOrderNum}, '%'))
+        </if>
+        <if test="dto.bomName != null">
+            and mb.bom_name LIKE concat('%', concat(#{dto.bomName}, '%'))
+        </if>
+        <if test="dto.routerName != null">
+            and mr.router_name LIKE concat('%', concat(#{dto.routerName}, '%'))
+        </if>
+        <if test="dto.productionLineId != null">
+            and wo.PRODUCTION_LINE_ID = #{dto.productionLineId}
+        </if>
+        ORDER BY wo.CREATION_DATE DESC
+    </select>
+
+    <select id="getSiteIdByUserId" resultType="java.lang.String">
+        SELECT MUO.ORGANIZATION_ID
+        FROM mt_user_organization MUO
+        WHERE MUO.ORGANIZATION_TYPE = 'SITE'
+          AND MUO.USER_ID = #{userId}
+          AND MUO.ENABLE_FLAG = 'Y'
+          AND MUO.DEFAULT_ORGANIZATION_FLAG = 'Y'
+    </select>
+
+    <select id="prodLineLovQuery" resultType="com.ruike.hme.domain.vo.HmeWorkOrderVO61">
+        select mmpl.PROD_LINE_ID, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME
+        from mt_material_site mms
+        left join mt_pfep_manufacturing mpm
+        on mpm.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and mpm.ORGANIZATION_TYPE = 'PRODUCTIONLINE'
+        and mpm.ENABLE_FLAG = 'Y'
+        left join mt_mod_production_line mmpl
+        on mmpl.PROD_LINE_ID = mpm.ORGANIZATION_ID
+        and mmpl.ENABLE_FLAG = 'Y'
+        where mms.TENANT_ID = #{tenantId}
+        and mms.MATERIAL_ID = #{dto.materialId}
+        and mms.SITE_ID = #{siteId}
+        and mms.ENABLE_FLAG = 'Y'
+        and mmpl.PROD_LINE_ID is not null
+        <if test="dto.prodLineCode != null">
+            and mmpl.PROD_LINE_CODE like CONCAT('%',#{dto.prodLineCode},'%')
+        </if>
+        <if test="dto.prodLineName != null">
+            and mmpl.PROD_LINE_NAME like CONCAT('%',#{dto.prodLineName},'%')
+        </if>
+    </select>
+
+    <select id="selectBomRefPoint" resultType="tarzan.method.domain.entity.MtBomReferencePoint">
+        SELECT
+        poi.TENANT_ID,
+        poi.BOM_REFERENCE_POINT_ID,
+        poi.BOM_COMPONENT_ID,
+        poi.LINE_NUMBER,
+        poi.REFERENCE_POINT,
+        poi.QTY,
+        poi.ENABLE_FLAG,
+        poi.COPIED_FROM_POINT_ID,
+        poi.CID,
+        poi.OBJECT_VERSION_NUMBER,
+        poi.CREATED_BY,
+        poi.CREATION_DATE,
+        poi.LAST_UPDATED_BY,
+        poi.LAST_UPDATE_DATE
+        FROM
+        mt_bom_reference_point poi
+        where poi.TENANT_ID = #{tenantId}
+        and poi.BOM_COMPONENT_ID IN
+        <foreach collection="bomCompIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectBomSubstituteGroup" resultType="tarzan.method.domain.entity.MtBomSubstituteGroup">
+        SELECT
+        bsg.TENANT_ID,
+        bsg.BOM_SUBSTITUTE_GROUP_ID,
+        bsg.BOM_COMPONENT_ID,
+        bsg.SUBSTITUTE_GROUP,
+        bsg.SUBSTITUTE_POLICY,
+        bsg.ENABLE_FLAG,
+        bsg.COPIED_FROM_GROUP_ID,
+        bsg.CID,
+        bsg.OBJECT_VERSION_NUMBER,
+        bsg.CREATED_BY,
+        bsg.CREATION_DATE,
+        bsg.LAST_UPDATED_BY,
+        bsg.LAST_UPDATE_DATE
+        FROM
+        mt_bom_substitute_group bsg
+        where bsg.TENANT_ID = #{tenantId}
+        and bsg.BOM_COMPONENT_ID IN
+        <foreach collection="bomCompIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectBomSubstitute" resultType="tarzan.method.domain.entity.MtBomSubstitute">
+        SELECT
+        mbs.TENANT_ID,
+        mbs.BOM_SUBSTITUTE_ID,
+        mbs.BOM_SUBSTITUTE_GROUP_ID,
+        mbs.MATERIAL_ID,
+        mbs.SUBSTITUTE_VALUE,
+        mbs.SUBSTITUTE_USAGE,
+        mbs.DATE_FROM,
+        mbs.DATE_TO,
+        mbs.COPIED_FROM_SUBSTITUTE_ID,
+        mbs.CID,
+        mbs.OBJECT_VERSION_NUMBER,
+        mbs.CREATED_BY,
+        mbs.CREATION_DATE,
+        mbs.LAST_UPDATED_BY,
+        mbs.LAST_UPDATE_DATE
+        FROM
+        mt_bom_substitute mbs
+        where mbs.TENANT_ID = #{tenantId}
+        and mbs.BOM_SUBSTITUTE_GROUP_ID IN
+        <foreach collection="groupIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterStepGroup" resultType="tarzan.method.domain.entity.MtRouterStepGroup">
+        SELECT
+        rsg.TENANT_ID,
+        rsg.ROUTER_STEP_GROUP_ID,
+        rsg.ROUTER_STEP_ID,
+        rsg.ROUTER_STEP_GROUP_TYPE,
+        rsg.CID,
+        rsg.OBJECT_VERSION_NUMBER,
+        rsg.CREATED_BY,
+        rsg.CREATION_DATE,
+        rsg.LAST_UPDATED_BY,
+        rsg.LAST_UPDATE_DATE
+        FROM
+        mt_router_step_group rsg
+        where rsg.TENANT_ID = #{tenantId}
+        and rsg.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterOperation" resultType="tarzan.method.domain.entity.MtRouterOperation">
+        SELECT
+        ro.TENANT_ID,
+        ro.ROUTER_OPERATION_ID,
+        ro.ROUTER_STEP_ID,
+        ro.OPERATION_ID,
+        ro.MAX_LOOP,
+        ro.SPECIAL_INTRUCTION,
+        ro.REQUIRED_TIME_IN_PROCESS,
+        ro.CID,
+        ro.OBJECT_VERSION_NUMBER,
+        ro.CREATED_BY,
+        ro.CREATION_DATE,
+        ro.LAST_UPDATED_BY,
+        ro.LAST_UPDATE_DATE
+        FROM
+        mt_router_operation ro
+        where ro.TENANT_ID = #{tenantId}
+        and ro.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterOperaComp" resultType="tarzan.method.domain.entity.MtRouterOperationComponent">
+        SELECT
+        roc.TENANT_ID,
+        roc.ROUTER_OPERATION_COMPONENT_ID,
+        roc.ROUTER_OPERATION_ID,
+        roc.BOM_COMPONENT_ID,
+        roc.SEQUENCE,
+        roc.ENABLE_FLAG,
+        roc.CID,
+        roc.OBJECT_VERSION_NUMBER,
+        roc.CREATED_BY,
+        roc.CREATION_DATE,
+        roc.LAST_UPDATED_BY,
+        roc.LAST_UPDATE_DATE
+        FROM
+        mt_router_operation_component roc
+        where roc.TENANT_ID = #{tenantId}
+        and roc.ROUTER_OPERATION_ID IN
+        <foreach collection="routerOperationIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterOperationTL" resultMap="BaseTLResultMap">
+        select t.ROUTER_OPERATION_ID, t.LANG, t.SPECIAL_INTRUCTION from mt_router_operation_tl t where
+        t.ROUTER_OPERATION_ID IN
+        <foreach collection="routerOperationIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterLink" resultType="tarzan.method.domain.entity.MtRouterLink">
+        SELECT
+        rl.TENANT_ID,
+        rl.ROUTER_LINK_ID,
+        rl.ROUTER_STEP_ID,
+        rl.ROUTER_ID,
+        rl.CID,
+        rl.OBJECT_VERSION_NUMBER,
+        rl.CREATED_BY,
+        rl.CREATION_DATE,
+        rl.LAST_UPDATED_BY,
+        rl.LAST_UPDATE_DATE
+        FROM
+        mt_router_link rl
+        where rl.TENANT_ID = #{tenantId}
+        and rl.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterReturnStep" resultType="tarzan.method.domain.entity.MtRouterReturnStep">
+        SELECT
+        rrs.TENANT_ID,
+        rrs.ROUTER_RETURN_STEP_ID,
+        rrs.ROUTER_STEP_ID,
+        rrs.RETURN_TYPE,
+        rrs.OPERATION_ID,
+        rrs.COMPLETE_ORIGINAL_FLAG,
+        rrs.STEP_NAME,
+        rrs.CID,
+        rrs.OBJECT_VERSION_NUMBER,
+        rrs.CREATED_BY,
+        rrs.CREATION_DATE,
+        rrs.LAST_UPDATED_BY,
+        rrs.LAST_UPDATE_DATE
+        FROM
+        mt_router_return_step rrs
+        where rrs.TENANT_ID = #{tenantId}
+        and rrs.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterDoneStep" resultType="tarzan.method.domain.entity.MtRouterDoneStep">
+        SELECT
+        rds.TENANT_ID,
+        rds.ROUTER_DONE_STEP_ID,
+        rds.ROUTER_STEP_ID,
+        rds.CID,
+        rds.OBJECT_VERSION_NUMBER,
+        rds.CREATED_BY,
+        rds.CREATION_DATE,
+        rds.LAST_UPDATED_BY,
+        rds.LAST_UPDATE_DATE
+        FROM
+        mt_router_done_step rds
+        where rds.TENANT_ID = #{tenantId}
+        and rds.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterSubStep" resultType="tarzan.method.domain.entity.MtRouterSubstep">
+        SELECT
+        rs.TENANT_ID,
+        rs.ROUTER_SUBSTEP_ID,
+        rs.ROUTER_STEP_ID,
+        rs.SUBSTEP_ID,
+        rs.SEQUENCE,
+        rs.CID,
+        rs.OBJECT_VERSION_NUMBER,
+        rs.CREATED_BY,
+        rs.CREATION_DATE,
+        rs.LAST_UPDATED_BY,
+        rs.LAST_UPDATE_DATE
+        FROM
+        mt_router_substep rs
+        where rs.TENANT_ID = #{tenantId}
+        and rs.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterSubstepComp" resultType="tarzan.method.domain.entity.MtRouterSubstepComponent">
+        SELECT
+        rsc.TENANT_ID,
+        rsc.ROUTER_SUBSTEP_COMPONENT_ID,
+        rsc.ROUTER_SUBSTEP_ID,
+        rsc.BOM_COMPONENT_ID,
+        rsc.SEQUENCE,
+        rsc.QTY,
+        rsc.CID,
+        rsc.OBJECT_VERSION_NUMBER,
+        rsc.CREATED_BY,
+        rsc.CREATION_DATE,
+        rsc.LAST_UPDATED_BY,
+        rsc.LAST_UPDATE_DATE
+        FROM
+        mt_router_substep_component rsc
+        where rsc.TENANT_ID = #{tenantId}
+        and rsc.ROUTER_SUBSTEP_ID IN
+        <foreach collection="routerSubstepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterStepTL" resultMap="BaseStepTLResultMap">
+        select t.ROUTER_STEP_ID,t.LANG,t.DESCRIPTION from mt_router_step_tl t
+        where t.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterNextStep" resultType="tarzan.method.domain.entity.MtRouterNextStep">
+        SELECT
+        rns.TENANT_ID,
+        rns.ROUTER_NEXT_STEP_ID,
+        rns.ROUTER_STEP_ID,
+        rns.NEXT_STEP_ID,
+        rns.SEQUENCE,
+        rns.NEXT_DECISION_TYPE,
+        rns.NEXT_DECISION_VALUE,
+        rns.CID,
+        rns.OBJECT_VERSION_NUMBER,
+        rns.CREATED_BY,
+        rns.CREATION_DATE,
+        rns.LAST_UPDATED_BY,
+        rns.LAST_UPDATE_DATE
+        FROM
+        mt_router_next_step rns
+        where rns.TENANT_ID = #{tenantId}
+        and rns.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterStepGroupStep" resultType="tarzan.method.domain.entity.MtRouterStepGroupStep">
+        SELECT
+        gs.TENANT_ID,
+        gs.ROUTER_STEP_GROUP_STEP_ID,
+        gs.ROUTER_STEP_GROUP_ID,
+        gs.SEQUENCE,
+        gs.ROUTER_STEP_ID,
+        gs.CID,
+        gs.OBJECT_VERSION_NUMBER,
+        gs.CREATED_BY,
+        gs.CREATION_DATE,
+        gs.LAST_UPDATED_BY,
+        gs.LAST_UPDATE_DATE
+        FROM
+        mt_router_step_group_step gs
+        where gs.TENANT_ID = #{tenantId}
+        and gs.ROUTER_STEP_GROUP_ID IN
+        <foreach collection="routerStepGroupIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectBomSiteIds" resultType="tarzan.method.domain.entity.MtBomSiteAssign">
+        SELECT
+        mbsa.TENANT_ID,
+        mbsa.ASSIGN_ID,
+        mbsa.BOM_ID,
+        mbsa.SITE_ID,
+        mbsa.ENABLE_FLAG,
+        mbsa.CID,
+        mbsa.OBJECT_VERSION_NUMBER,
+        mbsa.CREATED_BY,
+        mbsa.CREATION_DATE,
+        mbsa.LAST_UPDATED_BY,
+        mbsa.LAST_UPDATE_DATE
+        FROM
+        mt_bom_site_assign mbsa
+        where mbsa.TENANT_ID = #{tenantId}
+        and mbsa.ENABLE_FLAG = 'Y'
+        and mbsa.BOM_ID IN
+        <foreach collection="bomIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectBomMaterialList" resultType="tarzan.method.domain.entity.MtBomComponent">
+        select mbc.bom_component_id
+             , mbc.qty
+        from mt_work_order wo,
+             mt_bom mb,
+             mt_bom_component mbc
+        where mb.bom_id = mbc.bom_id
+          and mb.bom_id = wo.bom_id
+          and mb.bom_status = 'CAN_RELEASE'
+          and mbc.bom_component_type = 'ASSEMBLING'
+          and wo.TENANT_ID = #{tenantId}
+          and wo.work_order_id = #{workOrderId}
+          and mbc.material_id = #{materialId}
+    </select>
+
+    <select id="selectBomMaterialTrxList" resultType="com.ruike.hme.domain.vo.HmeBomComponentTrxVO">
+        select mbc.bom_component_id
+        , mbc.material_id
+        , mbc.qty bom_qty
+        , mbca_brn.attr_value bom_reserve_num
+        , mbc.LINE_NUMBER bom_reserve_line_num
+        , case when mbca_sp.attr_value = 'E' then woa_so.attr_value else '' end so_num
+        , case when mbca_sp.attr_value = 'E' then woa_sol.attr_value else '' end so_line_num
+        , ifnull(mbca_dq.attr_value+ 0, 0) demand_qty
+        , mbca_pl.attr_value product_line_num
+        , ifnull((select ifnull(sum(mwoca.assemble_qty),0)
+        from mt_work_order_component_actual mwoca
+        where mwoca.work_order_id = wo.work_order_id
+        and mwoca.material_id = mbc.material_id),0) assemble_qty
+        from mt_work_order wo
+        left join mt_work_order_attr woa_so on woa_so.WORK_ORDER_ID = wo.WORK_ORDER_ID and woa_so.ATTR_NAME =
+        'attribute1'
+        left join mt_work_order_attr woa_sol on woa_sol.WORK_ORDER_ID = wo.WORK_ORDER_ID and woa_sol.ATTR_NAME =
+        'attribute7',
+        mt_bom mb,
+        mt_bom_component mbc
+        left join mt_bom_component_attr mbca_brn on mbca_brn.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID and
+        mbca_brn.ATTR_NAME = 'lineAttribute10'
+        left join mt_bom_component_attr mbca_sp on mbca_sp.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID and mbca_sp.ATTR_NAME
+        = 'lineAttribute11'
+        left join mt_bom_component_attr mbca_dq on mbca_dq.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID and mbca_dq.ATTR_NAME
+        = 'lineAttribute4'
+        left join mt_bom_component_attr mbca_pl on mbca_pl.bom_component_id = mbc.bom_component_id and mbca_pl.attr_name
+        = 'lineAttribute24'
+        where mb.bom_id = mbc.bom_id
+        and mb.bom_id = wo.bom_id
+        and mb.bom_status = 'CAN_RELEASE'
+        and mbc.bom_component_type = 'ASSEMBLING'
+        and wo.TENANT_ID = #{tenantId}
+        and wo.work_order_id = #{workOrderId}
+        and mbc.material_id in
+        <foreach collection="materialIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectRouterStepByWo" resultType="com.ruike.hme.domain.vo.HmeRouterOperationVO">
+        select mrs.step_name
+             , mrs.router_step_id
+             , mro.operation_id
+        from mt_work_order wo,
+             mt_router mr,
+             mt_router_step mrs,
+             mt_router_operation mro,
+             mt_router_done_step mrds
+        where wo.router_id = mr.router_id
+          and mr.router_id = mrs.router_id
+          and mrs.router_step_id = mro.router_step_id
+          and mrs.router_step_id = mrds.router_step_id
+          and mr.router_status = 'CAN_RELEASE'
+          and wo.work_order_id = #{workOrderId}
+          and wo.tenant_id = #{tenantId}
+        limit 1
+    </select>
+    <select id="selectHmeRepairWoSnRelByWorkOrderNum" resultType="java.lang.String">
+        SELECT
+               t.sn_num
+        from (
+                select
+                    wsn.sn_num,
+                    wsn.last_update_date
+                from
+                    hme_repair_wo_sn_rel wsn
+                where
+                    wsn.work_order_num = #{workOrderNum}
+                and wsn.tenant_id = #{tenantId}
+                union
+                select
+                    woc.material_lot_code sn_num,
+                    woc.LAST_UPDATE_DATE
+                from
+                    hme_repair_work_order_create woc
+                where
+                    woc.work_order_num = #{workOrderNum}
+                and woc.tenant_id = #{tenantId}
+            ) t
+        order by t.last_update_date desc
+        LIMIT 1;
+
+    </select>
+
+</mapper>

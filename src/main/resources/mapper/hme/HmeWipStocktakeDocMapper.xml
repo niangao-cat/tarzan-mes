@@ -1,0 +1,2500 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWipStocktakeDocMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeWipStocktakeDoc">
+        <result column="STOCKTAKE_ID" property="stocktakeId" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_NUM" property="stocktakeNum" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_STATUS" property="stocktakeStatus" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_LAST_STATUS" property="stocktakeLastStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="OPEN_FLAG" property="openFlag" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_RANGE_FLAG" property="materialRangeFlag" jdbcType="VARCHAR"/>
+        <result column="ADJUST_TIMELY_FLAG" property="adjustTimelyFlag" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_LOCK_FLAG" property="materialLotLockFlag" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+    <select id="getDepartmentId" resultType="java.lang.String">
+
+                select mma.AREA_ID
+                from mt_user_organization muo
+                left join mt_mod_area mma
+                on mma.AREA_ID = muo.ORGANIZATION_ID
+                and mma.AREA_CATEGORY = 'SYB'
+                and mma.ENABLE_FLAG = 'Y'
+                where muo.TENANT_ID = #{tenantId}
+                and muo.USER_ID = #{userId}
+                and muo.ORGANIZATION_TYPE = 'AREA'
+                and muo.DEFAULT_ORGANIZATION_FLAG = 'Y'
+                and muo.ENABLE_FLAG = 'Y'
+                limit 1
+
+    </select>
+
+    <select id="departmentListQuery" resultType="com.ruike.hme.api.dto.HmeWipStocktakeDocDTO2">
+        select mma.AREA_ID, mma.AREA_CODE, mma.AREA_NAME
+        from mt_mod_area mma
+        where mma.AREA_ID in
+        <foreach collection="areaIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mma.AREA_CATEGORY = 'SYB'
+        <if test="dto.areaCode != null and dto.areaCode != ''">
+            and mma.AREA_CODE like CONCAT('%',#{dto.areaCode},'%')
+        </if>
+        <if test="dto.areaName != null and dto.areaName != ''">
+            and mma.AREA_NAME like CONCAT('%',#{dto.areaName},'%')
+        </if>
+    </select>
+
+    <select id="prodLineListQuery" resultType="com.ruike.hme.api.dto.HmeWipStocktakeDocDTO3">
+        select mmpl.PROD_LINE_ID, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME
+        from mt_mod_production_line mmpl
+        where mmpl.PROD_LINE_ID in
+        <foreach collection="prodLineIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="dto.prodLineCode != null and dto.prodLineCode != ''">
+            and mmpl.PROD_LINE_CODE like CONCAT('%',#{dto.prodLineCode},'%')
+        </if>
+        <if test="dto.prodLineName != null and dto.prodLineName != ''">
+            and mmpl.PROD_LINE_NAME like CONCAT('%',#{dto.prodLineName},'%')
+        </if>
+    </select>
+
+    <select id="workcellListQuery" resultType="com.ruike.hme.api.dto.HmeWipStocktakeDocDTO4">
+        select mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_workcell mmw
+        where mmw.WORKCELL_ID in
+        <foreach collection="workcellIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+        <if test="dto.workcellCode != null and dto.workcellCode != ''">
+            and mmw.WORKCELL_CODE like CONCAT('%',#{dto.workcellCode},'%')
+        </if>
+        <if test="dto.workcellName != null and dto.workcellName != ''">
+            and mmw.WORKCELL_NAME like CONCAT('%',#{dto.workcellName},'%')
+        </if>
+    </select>
+
+    <select id="wipStocktakeDocPageQuery" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO">
+        select hwsd.stocktake_id, hwsd.stocktake_num, hwsd.stocktake_status,
+        hwsd.open_flag, hwsd.site_id, mms.SITE_CODE, mms.SITE_NAME,
+        hwsd.area_id, mma.AREA_CODE, mma.AREA_NAME, hwsd.created_by,
+        iu.real_name as created_by_name, hwsd.creation_date, hwsd.last_updated_by,
+        iu2.real_name as last_updated_by_name, hwsd.last_update_date, hwsd.remark
+        from hme_wip_stocktake_doc hwsd,
+        mt_mod_site mms,
+        mt_mod_area mma,
+        hzero_platform.iam_user iu,
+        hzero_platform.iam_user iu2
+        where hwsd.tenant_id = #{tenantId}
+        and mms.SITE_ID = hwsd.site_id
+        and mma.AREA_ID = hwsd.area_id
+        and iu.id = hwsd.created_by
+        and iu2.id = hwsd.last_updated_by
+        <if test="dto.stocktakeNum != null and dto.stocktakeNum != ''">
+            and hwsd.stocktake_num like CONCAT('%',#{dto.stocktakeNum},'%')
+        </if>
+        <if test="dto.stocktakeStatus != null and dto.stocktakeStatus != ''">
+            and FIND_IN_SET(hwsd.stocktake_status, #{dto.stocktakeStatus})
+        </if>
+        <if test="dto.openFlag != null and dto.openFlag != ''">
+            and hwsd.open_flag like CONCAT('%',#{dto.openFlag},'%')
+        </if>
+        <if test="dto.siteId != null and dto.siteId != ''">
+            and hwsd.site_id like CONCAT('%',#{dto.siteId},'%')
+        </if>
+        <if test="dto.areaId != null and dto.areaId != ''">
+            and hwsd.area_id like CONCAT('%',#{dto.areaId},'%')
+        </if>
+        <if test="dto.userId != null and dto.userId != ''">
+            and hwsd.created_by like CONCAT('%',#{dto.userId},'%')
+        </if>
+        <if test="dto.createdDateFrom != null">
+            and hwsd.creation_date >= #{dto.createdDateFrom}
+        </if>
+        <if test="dto.createdDateTo != null">
+            and hwsd.creation_date &lt;= #{dto.createdDateTo}
+        </if>
+        <if test="dto.siteIdList != null">
+            AND hwsd.site_id IN
+            <foreach collection="dto.siteIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.areaIdList != null">
+            AND hwsd.area_id IN
+            <foreach collection="dto.areaIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            and exists (
+            select 1
+            from hme_wip_stocktake_range hmsr
+            ,mt_material mm
+            where hmsr.STOCKTAKE_ID = hwsd.STOCKTAKE_ID
+            and hmsr.RANGE_OBJECT_TYPE = 'MATERIAL'
+            and hmsr.RANGE_OBJECT_ID = mm.material_id
+            <if test="dto.materialCode != null and dto.materialCode != ''">
+                and mm.material_Code like CONCAT('%',#{dto.materialCode},'%')
+            </if>
+            <if test="dto.materialName != null and dto.materialName != ''">
+                and mm.MATERIAL_NAME like CONCAT('%',#{dto.materialName},'%')
+            </if>
+            )
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and exists (
+            select 1
+            from hme_wip_stocktake_range hmsr2
+            where hmsr2.STOCKTAKE_ID = hwsd.STOCKTAKE_ID
+            and hmsr2.RANGE_OBJECT_TYPE = 'PL'
+            and hmsr2.RANGE_OBJECT_ID = #{dto.prodLineId}
+            )
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and exists (
+            select 1
+            from hme_wip_stocktake_range hmsr2
+            where hmsr2.STOCKTAKE_ID = hwsd.STOCKTAKE_ID
+            and hmsr2.RANGE_OBJECT_TYPE = 'WP'
+            and hmsr2.RANGE_OBJECT_ID = #{dto.workcellId}
+            )
+        </if>
+        order by hwsd.creation_date desc
+    </select>
+
+    <select id="stocktakeRangePageQuery" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO4">
+        <if test="dto.rangeObjectType == 'MATERIAL'">
+            select hwsr.*, mm.MATERIAL_CODE as range_Object_Code, mm.MATERIAL_NAME as range_Object_Name
+            from hme_wip_stocktake_range hwsr,
+            mt_material mm
+            where hwsr.tenant_id = #{tenantId}
+            and hwsr.stocktake_id = #{dto.stocktakeId}
+            and hwsr.range_object_type = 'MATERIAL'
+            and hwsr.range_object_id = mm.MATERIAL_ID
+            <if test="dto.rangeObjectCode != null and dto.rangeObjectCode != ''">
+                and mm.MATERIAL_CODE like CONCAT('%',#{dto.rangeObjectCode},'%')
+            </if>
+            <if test="dto.rangeObjectName != null and dto.rangeObjectName != ''">
+                and mm.MATERIAL_NAME like CONCAT('%',#{dto.rangeObjectName},'%')
+            </if>
+            order by hwsr.creation_date desc
+        </if>
+        <if test="dto.rangeObjectType == 'PL'">
+            select hwsr.*, mmpl.PROD_LINE_CODE as range_Object_Code, mmpl.PROD_LINE_NAME as range_Object_Name
+            from hme_wip_stocktake_range hwsr,
+            mt_mod_production_line mmpl
+            where hwsr.tenant_id = #{tenantId}
+            and hwsr.stocktake_id = #{dto.stocktakeId}
+            and hwsr.range_object_type = 'PL'
+            and hwsr.range_object_id = mmpl.PROD_LINE_ID
+            <if test="dto.rangeObjectCode != null and dto.rangeObjectCode != ''">
+                and mmpl.PROD_LINE_CODE like CONCAT('%',#{dto.rangeObjectCode},'%')
+            </if>
+            <if test="dto.rangeObjectName != null and dto.rangeObjectName != ''">
+                and mmpl.PROD_LINE_NAME like CONCAT('%',#{dto.rangeObjectName},'%')
+            </if>
+            order by hwsr.creation_date desc
+        </if>
+        <if test="dto.rangeObjectType == 'WP'">
+            select hwsr.*, mmw.WORKCELL_CODE as range_Object_Code, mmw.WORKCELL_NAME as range_Object_Name
+            from hme_wip_stocktake_range hwsr,
+            mt_mod_workcell mmw
+            where hwsr.tenant_id = #{tenantId}
+            and hwsr.stocktake_id = #{dto.stocktakeId}
+            and hwsr.range_object_type = 'WP'
+            and hwsr.range_object_id = mmw.WORKCELL_ID
+            <if test="dto.rangeObjectCode != null and dto.rangeObjectCode != ''">
+                and mmw.WORKCELL_CODE like CONCAT('%',#{dto.rangeObjectCode},'%')
+            </if>
+            <if test="dto.rangeObjectName != null and dto.rangeObjectName != ''">
+                and mmw.WORKCELL_NAME like CONCAT('%',#{dto.rangeObjectName},'%')
+            </if>
+            order by hwsr.creation_date desc
+        </if>
+    </select>
+
+    <select id="wipStocktakeDetailPageQuery" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO2">
+        select hwsd.stocktake_id, hwsd.stocktake_num, hwsa.work_order_id, mwo.WORK_ORDER_NUM,
+        mmb.ITEM_GROUP, hwsa.material_id, hpv.PRODUCTION_VERSION as bomProductionVersion, hpv.DESCRIPTION as bomProductionVersionDesc,
+        mm.MATERIAL_CODE, mm.MATERIAL_NAME, hwsa.prod_line_id, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME,
+        hwsa.workcell_id, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, hwsa.material_lot_id, mml.MATERIAL_LOT_CODE,
+        mmla.ATTR_VALUE as rework_flag, hwsa.current_quantity, hwsa.uom_id, mu.UOM_CODE, hwsa.firstcount_quantity,
+        hwsa.firstcount_prod_line_id, mmpl_first.PROD_LINE_CODE as firstcount_prod_line_code,
+        hwsa.firstcount_workcell_id, mmw_first.WORKCELL_CODE as firstcount_workcell_code, hwsa.recount_quantity,
+        hwsa.recount_prod_line_id, mmpl_recount.PROD_LINE_CODE as recount_prod_line_code,
+        hwsa.recount_workcell_id, mmw_recount.WORKCELL_CODE as recount_workcell_code, hwsa.firstcount_by,
+        hwsa.firstcount_date, hwsa.firstcount_remark, hwsa.recount_by, hwsa.recount_date, hwsa.recount_remark,
+        IFNULL(hwsa.firstcount_quantity,0) - IFNULL(hwsa.current_quantity,0) as firstcount_diff,
+        IFNULL(hwsa.recount_quantity,0) - IFNULL(hwsa.current_quantity,0) as recount_diff,
+        mml.CURRENT_CONTAINER_ID, mc.CONTAINER_CODE as CURRENT_CONTAINER_CODE, hwsa.ATTRIBUTE1 as repair_material_lot_id,
+        mml2.MATERIAL_LOT_CODE as repair_material_lot_code
+        from hme_wip_stocktake_doc hwsd
+        left join hme_wip_stocktake_actual hwsa
+        on hwsa.stocktake_id = hwsd.stocktake_id
+        left join mt_work_order mwo
+        on mwo.WORK_ORDER_ID = hwsa.work_order_id
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsa.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsd.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsa.site_id
+        left join mt_material_basic mmb
+        on mmb.TENANT_ID = hwsd.tenant_id
+        and mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_material mm
+        on mm.MATERIAL_ID = hwsa.material_id
+        left join mt_uom mu
+        on mu.UOM_ID = hwsa.uom_id
+        left join mt_mod_production_line mmpl
+        on mmpl.PROD_LINE_ID = hwsa.prod_line_id
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = hwsa.workcell_id
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = hwsa.material_lot_id
+        and mmla.ATTR_NAME = 'REWORK_FLAG'
+        left join mt_mod_production_line mmpl_first
+        on mmpl_first.PROD_LINE_ID = hwsa.firstcount_prod_line_id
+        left join mt_mod_workcell mmw_first
+        on mmw_first.WORKCELL_ID = hwsa.firstcount_workcell_id
+        left join mt_mod_production_line mmpl_recount
+        on mmpl_recount.PROD_LINE_ID = hwsa.recount_prod_line_id
+        left join mt_mod_workcell mmw_recount
+        on mmw_recount.WORKCELL_ID = hwsa.recount_workcell_id
+        left join mt_container mc
+        on mc.CONTAINER_ID = mml.CURRENT_CONTAINER_ID
+        left join mt_bom mb on mb.BOM_ID = mwo.BOM_ID
+        left join mt_router mr on mr.ROUTER_ID = mwo.ROUTER_ID
+        left join mt_material_site mms2 on mms2.MATERIAL_ID = mwo.MATERIAL_ID
+        and mms2.SITE_ID = mwo.SITE_ID
+        and mms2.TENANT_ID = mwo.TENANT_ID
+        left join hme_production_version hpv on hpv.PRODUCTION_VERSION = mwo.PRODUCTION_VERSION
+        and hpv.BOM_NAME = mb.BOM_NAME
+        and hpv.BOM_VERSION = mb.REVISION
+        and hpv.ROUTER_VERSION = mr.REVISION
+        and hpv.MATERIAL_SITE_ID = mms2.MATERIAL_SITE_ID
+        left join mt_material_lot mml2
+        on mml2.MATERIAL_LOT_ID = hwsa.ATTRIBUTE1
+        where hwsd.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.stocktake_actual_id is not null
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            and mml.MATERIAL_LOT_CODE like CONCAT(#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.repairMaterialLotCode != null and dto.repairMaterialLotCode != ''">
+            and mml2.MATERIAL_LOT_CODE like CONCAT(#{dto.repairMaterialLotCode},'%')
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.MATERIAL_CODE like CONCAT(#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.MATERIAL_NAME like CONCAT(#{dto.materialName},'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsa.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsa.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.workOrderNum != null and dto.workOrderNum">
+            and mwo.WORK_ORDER_NUM like CONCAT(#{dto.workOrderNum},'%')
+        </if>
+        <if test="dto.firstcountNullFlag != null and dto.firstcountNullFlag != ''">
+            <choose>
+                <when test="dto.firstcountNullFlag == 'Y'.toString() ">
+                    and hwsa.firstcount_quantity is null
+                </when>
+                <when test="dto.firstcountNullFlag == 'N'.toString() ">
+                    and hwsa.firstcount_quantity is not null
+                </when>
+            </choose>
+        </if>
+        <if test="dto.recountcountNullFlag != null and dto.recountcountNullFlag != ''">
+            <choose>
+                <when test="dto.recountcountNullFlag == 'Y'.toString() ">
+                    and hwsa.recount_quantity is null
+                </when>
+                <when test="dto.recountcountNullFlag == 'N'.toString() ">
+                    and hwsa.recount_quantity is not null
+                </when>
+            </choose>
+        </if>
+        <if test="dto.firstcountRecountFlag != null and dto.firstcountRecountFlag != ''">
+            <choose>
+                <when test="dto.firstcountRecountFlag == 'Y'.toString() ">
+                    and hwsa.firstcount_quantity = hwsa.recount_quantity
+                </when>
+                <when test="dto.firstcountRecountFlag == 'N'.toString() ">
+                    and IFNULL(hwsa.firstcount_quantity, -222222222) != IFNULL(hwsa.recount_quantity, -1111111111)
+                </when>
+            </choose>
+        </if>
+        <if test="dto.workcellFlag != null and dto.workcellFlag != ''">
+            <choose>
+                <when test="dto.workcellFlag == 'Y'.toString() ">
+                    and hwsa.workcell_id = hwsa.firstcount_workcell_id
+                </when>
+                <when test="dto.workcellFlag == 'N'.toString() ">
+                    and hwsa.workcell_id != IFNULL(hwsa.firstcount_workcell_id,'aaaa')
+                </when>
+            </choose>
+        </if>
+        <if test="dto.qtyFlag != null and dto.qtyFlag != ''">
+            <choose>
+                <when test="dto.qtyFlag == 'Y'.toString() ">
+                    and hwsa.current_quantity = hwsa.firstcount_quantity
+                </when>
+                <when test="dto.qtyFlag == 'N'.toString() ">
+                    and hwsa.current_quantity != IFNULL(hwsa.firstcount_quantity, -1111111)
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <select id="noCosItemGroupQuery" resultType="tarzan.method.domain.entity.MtBom">
+
+                select mb.BOM_NAME, mb.DESCRIPTION
+                from mt_eo me
+                left join mt_eo_bom meb
+                on meb.EO_ID = me.EO_ID
+                left join mt_bom mb
+                on mb.BOM_ID = meb.BOM_ID
+                where me.TENANT_ID = #{tenantId}
+                and me.IDENTIFICATION = #{identification}
+                limit 1
+
+    </select>
+
+    <select id="cosItemGroupQuery" resultType="tarzan.method.domain.entity.MtBom">
+
+                select mb.BOM_NAME, mb.DESCRIPTION
+                from mt_material_lot_attr mmla
+                left join mt_work_order mwo
+                on mwo.WORK_ORDER_ID = mmla.ATTR_VALUE
+                left join mt_bom mb
+                on mb.BOM_ID = mwo.BOM_ID
+                where mmla.TENANT_ID = #{tenantId}
+                and mmla.MATERIAL_LOT_ID = #{materialLotId}
+                and mmla.ATTR_NAME = 'WORK_ORDER_ID'
+                limit 1
+
+    </select>
+
+    <select id="wipStocktakeSumPageQuery" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO3">
+        select hwsa.material_id, hwsa.prod_line_id, hwsa.workcell_id
+        from hme_wip_stocktake_actual hwsa
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsa.material_id
+        </if>
+        where hwsa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id is not NULL
+        and hwsa.material_id != ''
+        and hwsa.prod_line_id is not NULL
+        and hwsa.prod_line_id != ''
+        and hwsa.workcell_id is not NULL
+        and hwsa.workcell_id != ''
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.MATERIAL_NAME like CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsa.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsa.workcell_id = #{dto.workcellId}
+        </if>
+        GROUP BY hwsa.material_id, hwsa.prod_line_id, hwsa.workcell_id
+        union
+        select hwsa.material_id, hwsa.firstcount_prod_line_id, hwsa.firstcount_workcell_id
+        from hme_wip_stocktake_actual hwsa
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsa.material_id
+        </if>
+        where hwsa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id is not NULL
+        and hwsa.material_id != ''
+        and hwsa.firstcount_prod_line_id is not NULL
+        and hwsa.firstcount_prod_line_id != ''
+        and hwsa.firstcount_workcell_id is not NULL
+        and hwsa.firstcount_workcell_id != ''
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.MATERIAL_NAME like CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsa.firstcount_prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsa.firstcount_workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsa.material_id, hwsa.firstcount_prod_line_id, hwsa.firstcount_workcell_id
+        union
+        select hwsa.material_id, hwsa.recount_prod_line_id, hwsa.recount_workcell_id
+        from hme_wip_stocktake_actual hwsa
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsa.material_id
+        </if>
+        where hwsa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id is not NULL
+        and hwsa.material_id != ''
+        and hwsa.recount_prod_line_id is not NULL
+        and hwsa.recount_prod_line_id != ''
+        and hwsa.recount_workcell_id is not NULL
+        and hwsa.recount_workcell_id != ''
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.MATERIAL_NAME like CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsa.recount_prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsa.recount_workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsa.material_id, hwsa.recount_prod_line_id, hwsa.recount_workcell_id
+    </select>
+
+    <select id="currentQuantityQuery" resultType="java.math.BigDecimal">
+        select IFNULL(sum(hwsa.current_quantity), 0)
+        from hme_wip_stocktake_actual hwsa
+        where hwsa.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id = #{materialId}
+        and hwsa.prod_line_id = #{prodLineId}
+        and hwsa.workcell_id = #{workcellId}
+    </select>
+
+    <select id="firstcountQuantityQuery" resultType="java.math.BigDecimal">
+        select IFNULL(sum(hwsa.firstcount_quantity), 0)
+        from hme_wip_stocktake_actual hwsa
+        where hwsa.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id = #{materialId}
+        and hwsa.firstcount_prod_line_id = #{prodLineId}
+        and hwsa.firstcount_workcell_id = #{workcellId}
+    </select>
+
+    <select id="recountQuantityQuery" resultType="java.math.BigDecimal">
+        select IFNULL(sum(hwsa.recount_quantity), 0)
+        from hme_wip_stocktake_actual hwsa
+        where hwsa.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id = #{materialId}
+        and hwsa.recount_prod_line_id = #{prodLineId}
+        and hwsa.recount_workcell_id = #{workcellId}
+    </select>
+
+    <select id="getMaterialByMaterialGroup" resultType="tarzan.material.domain.entity.MtMaterial">
+
+                select mms.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME
+                from wms_item_group wig,
+                mt_material_basic mmb,
+                mt_material_site mms,
+                mt_material mm
+                where wig.item_group_id = #{itemGroupId}
+                and mmb.ITEM_GROUP = wig.item_group_code
+                and mms.MATERIAL_SITE_ID = mmb.MATERIAL_SITE_ID
+                and mm.MATERIAL_ID = mms.MATERIAL_ID
+
+    </select>
+
+    <select id="getProdLineByAreaId" resultType="tarzan.modeling.domain.entity.MtModProductionLine">
+
+                select mmpl.PROD_LINE_ID, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME
+                from mt_mod_organization_rel mmor,
+                mt_mod_production_line mmpl
+                where mmor.TENANT_ID = #{tenantId}
+                and mmor.PARENT_ORGANIZATION_ID = #{areaId}
+                and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+                and mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+                and mmpl.PROD_LINE_ID = mmor.ORGANIZATION_ID
+
+    </select>
+
+    <select id="getWorkcellByProdLineId" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+
+                select mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+                from mt_mod_organization_rel mmor
+                left join mt_mod_organization_rel mmor2
+                on mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+                and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+                left join mt_mod_workcell mmw
+                on mmw.WORKCELL_ID = mmor2.ORGANIZATION_ID
+                where mmor.TENANT_ID = #{tenantId}
+                and mmor.PARENT_ORGANIZATION_ID = #{prodLineId}
+                and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+                and mmw.WORKCELL_TYPE = 'PROCESS'
+                and mmw.ENABLE_FLAG = 'Y'
+
+    </select>
+
+    <select id="getProdLineByDepartment" resultType="java.lang.String">
+
+                SELECT mmpl.PROD_LINE_ID
+                from mt_mod_organization_rel mmor,
+                mt_mod_organization_rel mmor2,
+                mt_mod_production_line mmpl
+                where mmor.TENANT_ID = #{tenantId}
+                and mmor.PARENT_ORGANIZATION_ID = #{departmentId}
+                and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+                and mmor2.TENANT_ID = mmor.TENANT_ID
+                and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+                and mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+                and mmor2.ORGANIZATION_TYPE = 'PROD_LINE'
+                and mmpl.PROD_LINE_ID = mmor2.ORGANIZATION_ID
+                and mmpl.ENABLE_FLAG = 'Y'
+
+    </select>
+
+    <select id="getWorkcellByProdLineList" resultType="java.lang.String">
+        select mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor
+        left join mt_mod_organization_rel mmor2
+        on mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = mmor2.ORGANIZATION_ID
+        where mmor.TENANT_ID = #{tenantId}
+        and mmor.PARENT_ORGANIZATION_ID in
+        <foreach collection="prodLineList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+        and mmw.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="errorMeageQuery" resultType="com.ruike.hme.api.dto.HmeWipStocktakeDocDTO8">
+        select hwsd.stocktake_num, mmw.WORKCELL_CODE
+        from hme_wip_stocktake_range hwsr,
+        hme_wip_stocktake_doc hwsd,
+        mt_mod_workcell mmw
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.range_object_type = 'WP'
+        and hwsr.range_object_id in
+        <foreach collection="workcellIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsd.stocktake_id = hwsr.stocktake_id
+        and hwsd.stocktake_status in ('NEW', 'RELEASED')
+        and mmw.WORKCELL_ID = hwsr.range_object_id
+        limit 1
+    </select>
+
+    <select id="stocktakeIdWorkcellQuery" resultType="java.lang.String">
+        select hwsd.stocktake_id
+        from hme_wip_stocktake_range hwsr,
+        hme_wip_stocktake_doc hwsd
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.range_object_type = 'WP'
+        and hwsr.range_object_id in
+        <foreach collection="workcellIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsd.stocktake_id = hwsr.stocktake_id
+        and hwsd.stocktake_status in ('NEW', 'RELEASED')
+    </select>
+
+    <select id="stocktakeIdMaterialQuery" resultType="java.lang.String">
+        select hwsd.stocktake_id
+        from hme_wip_stocktake_range hwsr,
+        hme_wip_stocktake_doc hwsd
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.range_object_type = 'MATERIAL'
+        and hwsr.range_object_id in
+        <foreach collection="materialIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsd.stocktake_id = hwsr.stocktake_id
+        and hwsd.stocktake_status in ('NEW', 'RELEASED')
+    </select>
+
+    <select id="getMaterialIdByDepartment" resultType="java.lang.String">
+        SELECT
+        t.MATERIAL_ID
+        FROM
+        (
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mml.MATERIAL_ID, mmb.ITEM_GROUP
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        left join mt_material_site mms
+        on mms.TENANT_ID = mml.TENANT_ID
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = mml.SITE_ID
+        and mmla.ATTR_NAME = 'MF_FLAG'
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        and mmla.ATTR_VALUE = 'Y'
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        )t,
+        mt_eo me,
+        mt_eo_router_actual era,
+        mt_eo_step_actual esa,
+        mt_eo_step_wip esw,
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_organization_rel mmor4,
+        mt_mod_organization_rel mmor5
+        where
+        me.EO_ID = era.eo_id
+        and era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        and esa.EO_STEP_ACTUAL_ID = esw.EO_STEP_ACTUAL_ID
+        and me.IDENTIFICATION = t.MATERIAL_LOT_CODE
+        and mmor.ORGANIZATION_ID = esw.WORKCELL_ID
+        and mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        and mmor3.ORGANIZATION_ID = mmor2.PARENT_ORGANIZATION_ID
+        and mmor4.ORGANIZATION_ID = mmor3.PARENT_ORGANIZATION_ID
+        and mmor5.ORGANIZATION_ID = mmor4.PARENT_ORGANIZATION_ID
+        and mmor5.PARENT_ORGANIZATION_ID = #{departmentId}
+
+        union
+
+        select a.MATERIAL_ID
+        from (
+        select t.MATERIAL_LOT_ID,
+        t.MATERIAL_ID,
+        (
+        select hejs.workcell_id
+        from hme_eo_job_sn hejs
+        where hejs.material_lot_id = t.MATERIAL_LOT_ID
+        order by hejs.site_in_date DESC
+        limit 1
+        ) workcell_id
+        from (
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_ID
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        left join mt_material_site mms
+        on mms.TENANT_ID = mml.TENANT_ID
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = mml.SITE_ID
+        and mmla.ATTR_NAME = 'MF_FLAG'
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        and mmla.ATTR_VALUE = 'Y'
+        <if test="itemGroupList != null">
+            and mmb.ITEM_GROUP in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        ) t
+        ) a,
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_organization_rel mmor4,
+        mt_mod_organization_rel mmor5
+        where mmor.ORGANIZATION_ID = a.WORKCELL_ID
+        and mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        and mmor3.ORGANIZATION_ID = mmor2.PARENT_ORGANIZATION_ID
+        and mmor4.ORGANIZATION_ID = mmor3.PARENT_ORGANIZATION_ID
+        and mmor5.ORGANIZATION_ID = mmor4.PARENT_ORGANIZATION_ID
+        and mmor5.PARENT_ORGANIZATION_ID = #{departmentId}
+    </select>
+
+    <delete id="deleteStocktakeRange">
+        delete from hme_wip_stocktake_range
+        WHERE
+        TENANT_ID = #{tenantId}
+        and stocktake_range_id IN (
+        <foreach collection="stocktakeRangeIdList" item="id" separator=",">
+            #{id}
+        </foreach>
+        )
+    </delete>
+
+    <select id="getStocktakeRangeByProdLine" resultType="java.lang.String">
+
+                SELECT hwsr.stocktake_range_id
+                from hme_wip_stocktake_range hwsr
+                where hwsr.tenant_id = #{tenantId}
+                and hwsr.stocktake_id = #{stocktakeId}
+                and hwsr.range_object_type = 'WP'
+                and hwsr.range_object_id in (
+                    select mmw.WORKCELL_ID
+                    from mt_mod_organization_rel mmor
+                    left join mt_mod_organization_rel mmor2
+                    on mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+                    and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+                    left join mt_mod_workcell mmw
+                    on mmw.WORKCELL_ID = mmor2.ORGANIZATION_ID
+                    where mmor.TENANT_ID = hwsr.tenant_id
+                    and mmor.PARENT_ORGANIZATION_ID = #{prodLineId}
+                    and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+                    and mmw.WORKCELL_TYPE = 'PROCESS'
+                    and mmw.ENABLE_FLAG = 'Y'
+                )
+                and hwsr.stocktake_range_id is not null
+
+    </select>
+
+    <select id="plStocktakeRangeQuery" resultType="java.lang.String">
+
+                select hwsr.range_object_id
+                from hme_wip_stocktake_range hwsr
+                where hwsr.tenant_id = #{tenantId}
+                and hwsr.stocktake_id = #{stocktakeId}
+                and hwsr.range_object_type = 'PL'
+
+    </select>
+
+    <select id="getStocktakeMaterialLot" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO5">
+        SELECT
+        t.MATERIAL_LOT_ID,
+        t.ITEM_GROUP,
+        mmpl.PROD_LINE_ID,
+        mmw.workcell_id
+        FROM
+        (
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mml.MATERIAL_ID, mmb.ITEM_GROUP
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'MF_FLAG'
+        left join mt_material_site mms
+        on mms.TENANT_ID = mml.TENANT_ID
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = mml.SITE_ID
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{dto.siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        and mmla.ATTR_VALUE = 'Y'
+        and mml.MATERIAL_ID in (
+        select hwsr.range_object_id
+        from hme_wip_stocktake_range hwsr
+        where hwsr.stocktake_id = #{dto.stocktakeId}
+        and hwsr.range_object_type = 'MATERIAL'
+        )
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        )t,
+        mt_eo me,
+        mt_eo_router_actual era,
+        mt_eo_step_actual esa,
+        mt_eo_step_wip esw,
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_organization_rel mmor4,
+        mt_mod_organization_rel mmor5,
+        mt_mod_production_line mmpl,
+        mt_mod_workcell mmw
+        where
+        me.EO_ID = era.eo_id
+        and era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        and esa.EO_STEP_ACTUAL_ID = esw.EO_STEP_ACTUAL_ID
+        and me.IDENTIFICATION = t.MATERIAL_LOT_CODE
+        and mmor.ORGANIZATION_ID = esw.WORKCELL_ID
+        and mmor.PARENT_ORGANIZATION_ID in (
+        select hwsr.range_object_id
+        from hme_wip_stocktake_range hwsr
+        where hwsr.stocktake_id = #{dto.stocktakeId}
+        and hwsr.range_object_type = 'WP'
+        )
+        and mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        and mmor3.ORGANIZATION_ID = mmor2.PARENT_ORGANIZATION_ID
+        and mmor4.ORGANIZATION_ID = mmor3.PARENT_ORGANIZATION_ID
+        and mmor5.ORGANIZATION_ID = mmor4.PARENT_ORGANIZATION_ID
+        and mmor5.PARENT_ORGANIZATION_ID = #{dto.areaId}
+        and mmpl.PROD_LINE_ID = mmor3.PARENT_ORGANIZATION_ID
+        and mmw.workcell_id = mmor.PARENT_ORGANIZATION_ID
+        and mmw.workcell_type = 'PROCESS'
+
+        union
+
+        select a.MATERIAL_LOT_ID,
+        a.ITEM_GROUP,
+        mmpl.PROD_LINE_ID ,
+        mmw.workcell_id
+        from (
+        select t.MATERIAL_LOT_ID,
+        t.MATERIAL_ID,
+        t.ITEM_GROUP,
+        (
+        select hejs.workcell_id
+        from hme_eo_job_sn hejs
+        where hejs.material_lot_id = t.MATERIAL_LOT_ID
+        order by hejs.site_in_date DESC
+        limit 1
+        ) workcell_id
+        from (
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_ID, mmb.ITEM_GROUP
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'MF_FLAG'
+        left join mt_material_site mms
+        on mms.TENANT_ID = mml.TENANT_ID
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = mml.SITE_ID
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{dto.siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        and mmla.ATTR_VALUE = 'Y'
+        and mml.MATERIAL_ID in (
+        select hwsr.range_object_id
+        from hme_wip_stocktake_range hwsr
+        where hwsr.stocktake_id = #{dto.stocktakeId}
+        and hwsr.range_object_type = 'MATERIAL'
+        )
+        <if test="itemGroupList != null">
+            and mmb.ITEM_GROUP in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        ) t
+        ) a,
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_organization_rel mmor4,
+        mt_mod_organization_rel mmor5,
+        mt_mod_production_line mmpl,
+        mt_mod_workcell mmw
+        where mmor.ORGANIZATION_ID = a.WORKCELL_ID
+        and mmor.PARENT_ORGANIZATION_ID in (
+        select hwsr.range_object_id
+        from hme_wip_stocktake_range hwsr
+        where hwsr.stocktake_id = #{dto.stocktakeId}
+        and hwsr.range_object_type = 'WP'
+        )
+        and mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        and mmor3.ORGANIZATION_ID = mmor2.PARENT_ORGANIZATION_ID
+        and mmor4.ORGANIZATION_ID = mmor3.PARENT_ORGANIZATION_ID
+        and mmor5.ORGANIZATION_ID = mmor4.PARENT_ORGANIZATION_ID
+        and mmor5.PARENT_ORGANIZATION_ID = #{dto.areaId}
+        and mmpl.PROD_LINE_ID = mmor3.PARENT_ORGANIZATION_ID
+        and mmw.workcell_id = mmor.PARENT_ORGANIZATION_ID
+        and mmw.workcell_type = 'PROCESS'
+    </select>
+
+    <select id="getStocktakeMaterialLotCos" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO5">
+        select a.MATERIAL_LOT_ID,
+        a.ITEM_GROUP,
+        mmpl.PROD_LINE_ID,
+        mmw.workcell_id,
+        mml2.LOT,
+        mml2.MATERIAL_ID,
+        mml2.CURRENT_CONTAINER_ID,
+        mml2.PRIMARY_UOM_ID,
+        mml2.PRIMARY_UOM_QTY,
+        mmla.ATTR_VALUE as WORK_ORDER_ID
+        from (
+        select t.MATERIAL_LOT_ID,
+        t.MATERIAL_ID,
+        t.ITEM_GROUP,
+        (
+        select hejs.workcell_id
+        from hme_eo_job_sn hejs
+        where hejs.material_lot_id = t.MATERIAL_LOT_ID
+        order by hejs.site_in_date DESC
+        limit 1
+        ) workcell_id
+        from (
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_ID, mmb.ITEM_GROUP
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'MF_FLAG'
+        left join mt_material_site mms
+        on mms.TENANT_ID = mml.TENANT_ID
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = mml.SITE_ID
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{dto.siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        and mmla.ATTR_VALUE = 'Y'
+        <if test='materialFlag == "Y"'>
+            and mml.MATERIAL_ID in (
+            select hwsr.range_object_id
+            from hme_wip_stocktake_range hwsr
+            where hwsr.stocktake_id = #{dto.stocktakeId}
+            and hwsr.range_object_type = 'MATERIAL'
+            )
+        </if>
+        <if test="itemGroupList != null">
+            and mmb.ITEM_GROUP in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        ) t
+        ) a,
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_production_line mmpl,
+        mt_mod_workcell mmw,
+        mt_material_lot mml2
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml2.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'WORK_ORDER_ID'
+        where mmor.ORGANIZATION_ID = a.WORKCELL_ID
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.PARENT_ORGANIZATION_ID in (
+            select hwsr.range_object_id
+            from hme_wip_stocktake_range hwsr
+            where hwsr.stocktake_id = #{dto.stocktakeId}
+            and hwsr.range_object_type = 'WP'
+        )
+        and mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor3.ORGANIZATION_ID = mmor2.PARENT_ORGANIZATION_ID
+        and mmor3.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmpl.PROD_LINE_ID = mmor3.PARENT_ORGANIZATION_ID
+        and mmw.workcell_id = mmor.PARENT_ORGANIZATION_ID
+        and mmw.workcell_type = 'PROCESS'
+        and mml2.MATERIAL_LOT_ID = a.MATERIAL_LOT_ID
+        group by a.MATERIAL_LOT_ID,
+        a.ITEM_GROUP,
+        mmpl.PROD_LINE_ID,
+        mmw.workcell_id,
+        mml2.LOT,
+        mml2.MATERIAL_ID,
+        mml2.CURRENT_CONTAINER_ID,
+        mml2.PRIMARY_UOM_ID,
+        mml2.PRIMARY_UOM_QTY,
+        mmla.ATTR_VALUE
+    </select>
+
+    <select id="getStocktakeMaterialLotNoCos" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO5">
+        SELECT
+        t.MATERIAL_LOT_ID,
+        t.ITEM_GROUP,
+        mmpl.PROD_LINE_ID,
+        mmw.workcell_id,
+        mml2.LOT,
+        mml2.MATERIAL_ID,
+        mml2.CURRENT_CONTAINER_ID,
+        mml2.PRIMARY_UOM_ID,
+        mml2.PRIMARY_UOM_QTY,
+        me.WORK_ORDER_ID,
+        esw.EO_STEP_WIP_ID,
+        esw.LAST_UPDATE_DATE,
+        me.eo_id
+        FROM
+        (
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mml.MATERIAL_ID, mmb.ITEM_GROUP
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'MF_FLAG'
+        left join mt_material_site mms
+        on mms.TENANT_ID = mml.TENANT_ID
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = mml.SITE_ID
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{dto.siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        and mmla.ATTR_VALUE = 'Y'
+        <if test='materialFlag == "Y"'>
+            and mml.MATERIAL_ID in (
+            select hwsr.range_object_id
+            from hme_wip_stocktake_range hwsr
+            where hwsr.stocktake_id = #{dto.stocktakeId}
+            and hwsr.range_object_type = 'MATERIAL'
+            )
+        </if>
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        )t,
+        mt_eo me,
+        mt_eo_router_actual era,
+        mt_eo_step_actual esa,
+        mt_eo_step_wip esw,
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_production_line mmpl,
+        mt_mod_workcell mmw,
+        mt_material_lot mml2
+        where
+        me.IDENTIFICATION = t.MATERIAL_LOT_CODE
+        and me.EO_ID = era.eo_id
+        and era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        and esa.EO_STEP_ACTUAL_ID = esw.EO_STEP_ACTUAL_ID
+        and mmor.ORGANIZATION_ID = esw.WORKCELL_ID
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.PARENT_ORGANIZATION_ID in (
+            select hwsr.range_object_id
+            from hme_wip_stocktake_range hwsr
+            where hwsr.stocktake_id = #{dto.stocktakeId}
+            and hwsr.range_object_type = 'WP'
+        )
+        and mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor3.ORGANIZATION_ID = mmor2.PARENT_ORGANIZATION_ID
+        and mmor3.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmpl.PROD_LINE_ID = mmor3.PARENT_ORGANIZATION_ID
+        and mmw.workcell_id = mmor.PARENT_ORGANIZATION_ID
+        and mmw.workcell_type = 'PROCESS'
+        and mml2.MATERIAL_LOT_ID = t.MATERIAL_LOT_ID
+    </select>
+
+    <select id="getFirstcountQuantityNullData" resultType="java.lang.String">
+        select hwsr.stocktake_actual_id
+        from hme_wip_stocktake_actual hwsr
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id = #{stocktakeId}
+        and (hwsr.firstcount_quantity is null or hwsr.firstcount_quantity = '')
+    </select>
+
+    <select id="getActualMaterialLot" resultType="java.lang.String">
+        select distinct(hwsa.material_lot_id)
+        from hme_wip_stocktake_actual hwsa
+        where hwsa.tenant_id = #{tenantId}
+        and hwsa.stocktake_id = #{stocktakeId}
+    </select>
+
+    <insert id="batchInsertActual">
+        insert into hme_wip_stocktake_actual
+        (
+        stocktake_actual_id,
+        stocktake_id,
+        site_id,
+        material_lot_id,
+        lot_code,
+        material_id,
+        work_order_id,
+        prod_line_id,
+        workcell_id,
+        container_id,
+        owner_type,
+        owner_id,
+        reserved_object_type,
+        reserved_object_id,
+        uom_id,
+        current_quantity,
+        firstcount_material_id,
+        firstcount_uom_id,
+        firstcount_prod_line_id,
+        firstcount_workcell_id,
+        firstcount_container_id,
+        firstcount_location_row,
+        firstcount_location_column,
+        firstcount_owner_type,
+        firstcount_owner_id,
+        firstcount_reserved_object_ty,
+        firstcount_reserved_object_id,
+        firstcount_quantity,
+        firstcount_by,
+        firstcount_date,
+        firstcount_remark,
+        recount_material_id,
+        recount_uom_id,
+        recount_prod_line_id,
+        recount_workcell_id,
+        recount_container_id,
+        recount_location_row,
+        recount_location_column,
+        recount_owner_type,
+        recount_owner_id,
+        recount_reserved_object_type,
+        recount_reserved_object_id,
+        recount_quantity,
+        recount_by,
+        recount_date,
+        recount_remark,
+        adjust_flag,
+        latest_his_id,
+        tenant_id,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15
+        )values
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.stocktakeActualId},
+            #{item.stocktakeId},
+            #{item.siteId},
+            #{item.materialLotId},
+            #{item.lotCode},
+            #{item.materialId},
+            #{item.workOrderId},
+            #{item.prodLineId},
+            #{item.workcellId},
+            #{item.containerId},
+            #{item.ownerType},
+            #{item.ownerId},
+            #{item.reservedObjectType},
+            #{item.reservedObjectId},
+            #{item.uomId},
+            #{item.currentQuantity},
+            #{item.firstcountMaterialId},
+            #{item.firstcountUomId},
+            #{item.firstcountProdLineId},
+            #{item.firstcountWorkcellId},
+            #{item.firstcountContainerId},
+            #{item.firstcountLocationRow},
+            #{item.firstcountLocationColumn},
+            #{item.firstcountOwnerType},
+            #{item.firstcountOwnerId},
+            #{item.firstcountReservedObjectTy},
+            #{item.firstcountReservedObjectId},
+            #{item.firstcountQuantity},
+            #{item.firstcountBy},
+            #{item.firstcountDate},
+            #{item.firstcountRemark},
+            #{item.recountMaterialId},
+            #{item.recountUomId},
+            #{item.recountProdLineId},
+            #{item.recountWorkcellId},
+            #{item.recountContainerId},
+            #{item.recountLocationRow},
+            #{item.recountLocationColumn},
+            #{item.recountOwnerType},
+            #{item.recountOwnerId},
+            #{item.recountReservedObjectType},
+            #{item.recountReservedObjectId},
+            #{item.recountQuantity},
+            #{item.recountBy},
+            #{item.recountDate},
+            #{item.recountRemark},
+            #{item.adjustFlag},
+            #{item.latestHisId},
+            #{item.tenantId},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertActualHis">
+        insert into hme_wip_stocktake_actual_his
+        (
+        stocktake_actual_his_id,
+        stocktake_actual_id,
+        stocktake_id,
+        site_id,
+        material_lot_id,
+        lot_code,
+        material_id,
+        work_order_id,
+        prod_line_id,
+        workcell_id,
+        container_id,
+        owner_type,
+        owner_id,
+        reserved_object_type,
+        reserved_object_id,
+        uom_id,
+        current_quantity,
+        firstcount_material_id,
+        firstcount_uom_id,
+        firstcount_prod_line_id,
+        firstcount_workcell_id,
+        firstcount_container_id,
+        firstcount_location_row,
+        firstcount_location_column,
+        firstcount_owner_type,
+        firstcount_owner_id,
+        firstcount_reserved_object_ty,
+        firstcount_reserved_object_id,
+        firstcount_quantity,
+        firstcount_by,
+        firstcount_date,
+        firstcount_remark,
+        recount_material_id,
+        recount_uom_id,
+        recount_prod_line_id,
+        recount_workcell_id,
+        recount_container_id,
+        recount_location_row,
+        recount_location_column,
+        recount_owner_type,
+        recount_owner_id,
+        recount_reserved_object_type,
+        recount_reserved_object_id,
+        recount_quantity,
+        recount_by,
+        recount_date,
+        recount_remark,
+        adjust_flag,
+        latest_his_id,
+        tenant_id,
+        event_id,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15
+        )values
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.stocktakeActualHisId},
+            #{item.stocktakeActualId},
+            #{item.stocktakeId},
+            #{item.siteId},
+            #{item.materialLotId},
+            #{item.lotCode},
+            #{item.materialId},
+            #{item.workOrderId},
+            #{item.prodLineId},
+            #{item.workcellId},
+            #{item.containerId},
+            #{item.ownerType},
+            #{item.ownerId},
+            #{item.reservedObjectType},
+            #{item.reservedObjectId},
+            #{item.uomId},
+            #{item.currentQuantity},
+            #{item.firstcountMaterialId},
+            #{item.firstcountUomId},
+            #{item.firstcountProdLineId},
+            #{item.firstcountWorkcellId},
+            #{item.firstcountContainerId},
+            #{item.firstcountLocationRow},
+            #{item.firstcountLocationColumn},
+            #{item.firstcountOwnerType},
+            #{item.firstcountOwnerId},
+            #{item.firstcountReservedObjectTy},
+            #{item.firstcountReservedObjectId},
+            #{item.firstcountQuantity},
+            #{item.firstcountBy},
+            #{item.firstcountDate},
+            #{item.firstcountRemark},
+            #{item.recountMaterialId},
+            #{item.recountUomId},
+            #{item.recountProdLineId},
+            #{item.recountWorkcellId},
+            #{item.recountContainerId},
+            #{item.recountLocationRow},
+            #{item.recountLocationColumn},
+            #{item.recountOwnerType},
+            #{item.recountOwnerId},
+            #{item.recountReservedObjectType},
+            #{item.recountReservedObjectId},
+            #{item.recountQuantity},
+            #{item.recountBy},
+            #{item.recountDate},
+            #{item.recountRemark},
+            #{item.adjustFlag},
+            #{item.latestHisId},
+            #{item.tenantId},
+            #{item.eventId},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <select id="processQueryByProdLineIdList" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        select mmw.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME
+        from mt_mod_organization_rel mmor
+        left join mt_mod_organization_rel mmor2
+        on mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = mmor2.ORGANIZATION_ID
+        where mmor.TENANT_ID = #{tenantId}
+        and mmor.PARENT_ORGANIZATION_ID in
+        <foreach collection="dto.prodLineIdList" index="index" item="item" open="(" close=")" separator=",">
+        #{item}
+        </foreach>
+        and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+        and mmw.ENABLE_FLAG = 'Y'
+        <if test ="dto.workcellCode != null">
+            and mmw.WORKCELL_CODE like concat('%',#{dto.workcellCode} ,'%')
+        </if>
+        <if test ="dto.workcellName != null">
+            and mmw.WORKCELL_NAME like concat('%',#{dto.workcellName} ,'%')
+        </if>
+    </select>
+
+    <select id="releaseDetailPageQuery" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO7">
+        select b.stocktake_id, hwsd.stocktake_num, b.work_order_id, mwo.WORK_ORDER_NUM, mwo.BOM_ID, mb.BOM_NAME, mb.DESCRIPTION,
+        b.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME, b.ITEM_GROUP, b.prod_line_id, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME,
+        b.workcell_id, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, b.release_material, mm2.MATERIAL_CODE as release_material_code,
+        mm2.MATERIAL_NAME as release_material_name, b.release_qty, mm2.PRIMARY_UOM_ID uom_id, mu.UOM_CODE
+        from (
+
+        select a.stocktake_id, a.work_order_id, a.material_id, a.prod_line_id, a.ITEM_GROUP,
+        a.workcell_id, a.release_material, sum(a.release_qty) as release_qty
+        from (
+        select hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hwsr.workcell_id, hejslm.material_id as release_material, sum(hejslm.release_qty) as release_qty
+        from hme_wip_stocktake_actual hwsr
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsr.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsr.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsr.site_id
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_eo me
+        on me.TENANT_ID = hwsr.tenant_id
+        and me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        left join hme_eo_job_sn hejs
+        on hejs.eo_id = me.EO_ID
+        left join hme_eo_job_sn_lot_material hejslm
+        on hejslm.job_id = hejs.job_id
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsr.material_id
+        </if>
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        and hejslm.release_qty > 0
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsr.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.material_code like concat('%',#{dto.materialCode} ,'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.material_name like concat('%',#{dto.materialName} ,'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsr.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsr.workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, hwsr.workcell_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hejslm.material_id
+
+        union all
+
+        select hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hwsr.workcell_id, hejm.material_id as release_material, sum(hejm.release_qty) as release_qty
+        from hme_wip_stocktake_actual hwsr
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsr.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsr.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsr.site_id
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_eo me
+        on me.TENANT_ID = hwsr.tenant_id
+        and me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        left join hme_eo_job_sn hejs
+        on hejs.eo_id = me.EO_ID
+        left join hme_eo_job_material hejm
+        on hejm.job_id = hejs.job_id
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsr.material_id
+        </if>
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        and hejm.is_issued = 1
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsr.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.material_code like concat('%',#{dto.materialCode} ,'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.material_name like concat('%',#{dto.materialName} ,'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsr.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsr.workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, hwsr.workcell_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hejm.material_id
+
+        union all
+
+        select hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hwsr.workcell_id, mbc.MATERIAL_ID as release_material, sum(mbc.QTY) * mml.PRIMARY_UOM_QTY as release_qty
+        from hme_wip_stocktake_actual hwsr
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsr.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsr.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsr.site_id
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'WORK_ORDER_ID'
+        left join mt_work_order mwo
+        on mwo.WORK_ORDER_ID = mmla.ATTR_VALUE
+        left join mt_router_step mrs
+        on mrs.ROUTER_ID = mwo.ROUTER_ID
+        and mrs.SEQUENCE &lt; (
+        select IFNULL(mrs.SEQUENCE, -999999)
+        from mt_material_lot_attr mmla
+        left join mt_router_step mrs
+        on mrs.ROUTER_STEP_ID = mmla.ATTR_VALUE
+        where mmla.MATERIAL_LOT_ID = hwsr.material_lot_id
+        and mmla.ATTR_NAME = 'CURRENT_ROUTER_STEP'
+        )
+        left join mt_router_operation mro
+        on mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        left join mt_router_operation_component mroc
+        on mroc.ROUTER_OPERATION_ID = mro.ROUTER_OPERATION_ID
+        left join mt_bom_component mbc
+        on mbc.BOM_COMPONENT_ID = mroc.BOM_COMPONENT_ID
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsr.material_id
+        </if>
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="itemGroupList != null">
+            and mmb.ITEM_GROUP in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsr.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.material_code like concat('%',#{dto.materialCode} ,'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.material_name like concat('%',#{dto.materialName} ,'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsr.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsr.workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, hwsr.workcell_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, mbc.MATERIAL_ID
+        ) a
+
+        GROUP BY a.stocktake_id, a.work_order_id, a.material_id, a.prod_line_id, a.ITEM_GROUP,
+        a.workcell_id, a.release_material
+        ) b
+        left join hme_wip_stocktake_doc hwsd
+        on hwsd.stocktake_id = b.stocktake_id
+        left join mt_work_order mwo
+        on mwo.WORK_ORDER_ID = b.work_order_id
+        left join mt_bom mb
+        on mb.BOM_ID = mwo.BOM_ID
+        left join mt_material mm
+        on mm.material_id = b.material_id
+        left join mt_mod_production_line mmpl
+        on mmpl.PROD_LINE_ID = b.prod_line_id
+        left join mt_mod_workcell mmw
+        on mmw.workcell_id = b.workcell_id
+        left join mt_material mm2
+        on mm2.MATERIAL_ID = b.release_material
+        left join mt_uom mu
+        on mu.UOM_ID = mm2.PRIMARY_UOM_ID
+    </select>
+
+    <select id="releaseDetailPageQueryNoCos" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO7">
+        select b.stocktake_id, hwsd.stocktake_num, b.work_order_id, mwo.WORK_ORDER_NUM, mwo.BOM_ID, mb.BOM_NAME, mb.DESCRIPTION,
+        hpv.PRODUCTION_VERSION as bomProductionVersion, hpv.DESCRIPTION as bomProductionVersionDesc,
+        b.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME, b.ITEM_GROUP, b.prod_line_id, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME,
+        b.workcell_id, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, b.release_material, mm2.MATERIAL_CODE as release_material_code,
+        mm2.MATERIAL_NAME as release_material_name, b.release_qty, mm2.PRIMARY_UOM_ID uom_id, mu.UOM_CODE,mbc.QTY,
+        (
+            select IFNULL(sum(mnr.QTY), 0)
+            from mt_nc_record mnr,
+            hme_nc_record_attr hnra,
+            mt_mod_organization_rel mmor,
+            mt_eo me
+            where mnr.COMPONENT_MATERIAL_ID = b.release_material
+            and mnr.PARENT_NC_RECORD_ID = ''
+            and mnr.TENANT_ID = #{tenantId}
+            and hnra.parent_record_id = mnr.NC_RECORD_ID
+            and hnra.process_method = '3'
+            and mmor.ORGANIZATION_ID = mnr.WORKCELL_ID
+            and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+            and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            and mmor.PARENT_ORGANIZATION_ID = b.workcell_id
+            and me.EO_ID = mnr.EO_ID
+            and me.WORK_ORDER_ID = b.work_order_id
+        ) as scrap_qty,
+        (
+            select IFNULL(sum(hwsa.current_quantity), 0)
+            from hme_wip_stocktake_actual hwsa
+            where hwsa.stocktake_id = b.stocktake_id
+            and hwsa.work_order_id = b.work_order_id
+            and hwsa.material_id = b.material_id
+            and hwsa.prod_line_id = b.prod_line_id
+            and hwsa.workcell_id = b.workcell_id
+        ) as current_quantity
+        from (
+
+        select a.stocktake_id, a.work_order_id, a.material_id, a.prod_line_id, a.ITEM_GROUP,
+        a.workcell_id, a.release_material, sum(a.release_qty) as release_qty
+        from (
+        select hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hwsr.workcell_id, hejslm.material_id as release_material, sum(hejslm.release_qty) as release_qty
+        from hme_wip_stocktake_actual hwsr
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsr.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsr.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsr.site_id
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_eo me
+        on me.TENANT_ID = hwsr.tenant_id
+        and me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        left join hme_eo_job_sn hejs
+        on hejs.eo_id = me.EO_ID
+        left join mt_mod_organization_rel mmor2
+        on mmor2.ORGANIZATION_ID = hejs.WORKCELL_ID
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        left join hme_eo_job_sn_lot_material hejslm
+        on hejslm.tenant_id = hejs.tenant_id and hejslm.job_id = hejs.job_id
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsr.material_id
+        </if>
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        and hejslm.release_qty > 0
+        and mmor2.PARENT_ORGANIZATION_ID = hwsr.workcell_id
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsr.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.material_code like concat('%',#{dto.materialCode} ,'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.material_name like concat('%',#{dto.materialName} ,'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsr.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsr.workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, hwsr.workcell_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hejslm.material_id
+
+        union all
+
+        select hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hwsr.workcell_id, hejm.material_id as release_material, sum(hejm.release_qty) as release_qty
+        from hme_wip_stocktake_actual hwsr
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsr.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsr.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsr.site_id
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_eo me
+        on me.TENANT_ID = hwsr.tenant_id
+        and me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        left join hme_eo_job_sn hejs
+        on hejs.eo_id = me.EO_ID
+        left join mt_mod_organization_rel mmor2
+        on mmor2.ORGANIZATION_ID = hejs.WORKCELL_ID
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        left join hme_eo_job_material hejm
+        on hejm.job_id = hejs.job_id and hejm.tenant_id = hejs.tenant_id
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsr.material_id
+        </if>
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        and mmor2.PARENT_ORGANIZATION_ID = hwsr.workcell_id
+        and hejm.is_issued = 1
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsr.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.material_code like concat('%',#{dto.materialCode} ,'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.material_name like concat('%',#{dto.materialName} ,'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsr.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsr.workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, hwsr.workcell_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hejm.material_id
+        ) a
+
+        GROUP BY a.stocktake_id, a.work_order_id, a.material_id, a.prod_line_id, a.ITEM_GROUP,
+        a.workcell_id, a.release_material
+        ) b
+        left join hme_wip_stocktake_doc hwsd
+        on hwsd.stocktake_id = b.stocktake_id
+        left join mt_work_order mwo
+        on mwo.WORK_ORDER_ID = b.work_order_id
+        left join mt_bom mb
+        on mb.BOM_ID = mwo.BOM_ID
+        LEFT JOIN mt_router mr on mr.ROUTER_ID = mwo.ROUTER_ID
+        LEFT JOIN mt_material_site mms on mms.MATERIAL_ID = mwo.material_id
+        and mms.SITE_ID = mwo.SITE_ID and mms.TENANT_ID = mwo.TENANT_ID
+        left join hme_production_version hpv on hpv.PRODUCTION_VERSION = mwo.PRODUCTION_VERSION
+        and hpv.BOM_NAME = mb.BOM_NAME and hpv.BOM_VERSION = mb.REVISION
+        and hpv.ROUTER_VERSION = mr.REVISION and hpv.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_material mm
+        on mm.material_id = b.material_id
+        left join mt_mod_production_line mmpl
+        on mmpl.PROD_LINE_ID = b.prod_line_id
+        left join mt_mod_workcell mmw
+        on mmw.workcell_id = b.workcell_id
+        left join mt_material mm2
+        on mm2.MATERIAL_ID = b.release_material
+        left join mt_uom mu
+        on mu.UOM_ID = mm2.PRIMARY_UOM_ID
+        left join mt_operation_wkc_dispatch_rel mowdr ON mowdr.WORKCELL_ID = b.workcell_id and  mowdr.TENANT_ID = hwsd.TENANT_ID
+        left join mt_work_order_component_actual mwoca on mwoca.WORK_ORDER_ID = b.work_order_id and mwoca.MATERIAL_ID = b.release_material
+        and mwoca.OPERATION_ID = mowdr.OPERATION_ID and mwoca.TENANT_ID = hwsd.TENANT_ID
+        left join mt_bom_component mbc ON mbc.BOM_COMPONENT_ID = mwoca.BOM_COMPONENT_ID
+    </select>
+
+    <select id="currentQtyQuery" resultType="java.math.BigDecimal">
+        select IFNULL(sum(hwsa.current_quantity), 0)
+        from hme_wip_stocktake_actual hwsa
+        where hwsa.stocktake_id = #{dto.stocktakeId}
+        and hwsa.work_order_id = #{dto.workOrderId}
+        and hwsa.material_id = #{dto.materialId}
+        and hwsa.prod_line_id = #{dto.prodLineId}
+        and hwsa.workcell_id = #{dto.workcellId}
+    </select>
+
+    <select id="prodLinePageQuery" resultType="tarzan.modeling.domain.entity.MtModProductionLine">
+        select mmpl.PROD_LINE_ID, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME
+        from mt_mod_production_line mmpl
+        where mmpl.PROD_LINE_ID in
+        <foreach collection="dto.prodLineIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="dto.prodLineCode != null">
+            and mmpl.PROD_LINE_CODE like concat('%',#{dto.prodLineCode} ,'%')
+        </if>
+        <if test="dto.prodLineName != null">
+            and mmpl.PROD_LINE_NAME like concat('%',#{dto.prodLineName} ,'%')
+        </if>
+    </select>
+
+    <select id="cosInventoryExport" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO8">
+        SELECT
+            wsd.stocktake_num,
+            wo.work_order_num,
+            wo.PRODUCTION_VERSION,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mb.ITEM_GROUP,
+            pl.PROD_LINE_CODE,
+            pl.PROD_LINE_NAME,
+            mml.MATERIAL_LOT_CODE,
+            wh.LOCATOR_CODE warehouseCode,
+            loc.LOCATOR_CODE,
+            mld.load_row,
+            mld.load_column,
+            mld.ATTRIBUTE2 wafer,
+            mld.hot_sink_code,
+            mml.PRIMARY_UOM_QTY,
+            mu.UOM_NAME,
+            fmw.WORKCELL_CODE first_workcell_code,
+            wsa.firstcount_quantity,
+            rmw.WORKCELL_CODE reworkcell_code,
+            wsa.recount_quantity
+        FROM
+            hme_wip_stocktake_doc wsd,
+            hme_wip_stocktake_actual wsa
+            LEFT JOIN mt_work_order wo ON wo.WORK_ORDER_ID = wsa.WORK_ORDER_ID
+            LEFT JOIN mt_material_site ms ON ms.material_id = wsa.material_id AND ms.site_id = wsa.site_id
+            LEFT JOIN mt_material_basic mb ON mb.material_site_id = ms.material_site_id
+            LEFT JOIN mt_mod_production_line pl ON pl.PROD_LINE_ID = wsa.PROD_LINE_ID
+            LEFT JOIN mt_mod_workcell fmw ON fmw.WORKCELL_ID = wsa.firstcount_workcell_id
+            LEFT JOIN mt_mod_workcell rmw ON rmw.WORKCELL_ID = wsa.recount_workcell_id,
+            mt_material mm,
+            mt_material_lot mml,
+            mt_mod_locator loc,
+            mt_mod_locator wh,
+            hme_material_lot_load mld,
+            mt_uom mu
+        WHERE
+            wsd.tenant_id = #{tenantId}
+        AND wsd.tenant_id = wsa.tenant_id
+        AND wsa.stocktake_id = wsd.stocktake_id
+        AND mm.MATERIAL_ID = wsa.material_id
+        AND mml.MATERIAL_LOT_ID = wsa.material_lot_id
+        AND mml.LOCATOR_ID = loc.LOCATOR_ID
+        AND wh.LOCATOR_ID = loc.PARENT_LOCATOR_ID
+        AND mld.tenant_id = mml.TENANT_ID
+        AND mld.material_lot_id = mml.MATERIAL_LOT_ID
+        AND mu.uom_id = mml.PRIMARY_UOM_ID
+        AND wsd.stocktake_num = #{stocktakeNum}
+    </select>
+
+    <select id="stocktakeCountByProdLineQuery" resultType="java.lang.Long">
+        select COUNT(1)
+        from hme_wip_stocktake_range hwsr,
+        hme_wip_stocktake_doc hwsd
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.range_object_type = 'PL'
+        and hwsr.range_object_id in
+        <foreach collection="prodLineIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsd.stocktake_id = hwsr.stocktake_id
+        and hwsd.stocktake_status in ('NEW', 'RELEASED')
+    </select>
+
+    <select id="stocktakeNumByWorkcellQuery" resultType="java.lang.String">
+        select hwsd.stocktake_num
+        from hme_wip_stocktake_range hwsr,
+        hme_wip_stocktake_doc hwsd
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.range_object_type = 'WP'
+        and hwsr.range_object_id in
+        <foreach collection="workcellIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and not EXISTS (
+        select 1
+        from hme_wip_stocktake_range hwsr2
+        where hwsr2.stocktake_id = hwsr.stocktake_id
+        and hwsr2.range_object_type = 'MATERIAL'
+        )
+        and hwsd.stocktake_id =hwsr.stocktake_id
+        and hwsd.stocktake_status in ('NEW', 'RELEASED')
+        limit 1
+    </select>
+
+    <select id="rangeObjectIdByStocktake" resultType="java.lang.String">
+        select hwsr.range_object_id
+        from hme_wip_stocktake_range hwsr
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id = #{stocktakeId}
+        and hwsr.range_object_type = #{rangeObjectType}
+    </select>
+
+    <select id="wipStocktakeDetailExport" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO9">
+        select hwsd.stocktake_id, hwsd.stocktake_num, hwsa.work_order_id, mwo.WORK_ORDER_NUM,
+        mmb.ITEM_GROUP, hwsa.material_id, hpv.PRODUCTION_VERSION as bomProductionVersion, hpv.DESCRIPTION as bomProductionVersionDesc,
+        mm.MATERIAL_CODE, mm.MATERIAL_NAME, hwsa.prod_line_id, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME,
+        hwsa.workcell_id, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, hwsa.material_lot_id, mml.MATERIAL_LOT_CODE,
+        mmla.ATTR_VALUE as rework_flag, hwsa.current_quantity, hwsa.uom_id, mu.UOM_CODE, hwsa.firstcount_quantity,
+        hwsa.firstcount_prod_line_id, mmpl_first.PROD_LINE_CODE as firstcount_prod_line_code,
+        hwsa.firstcount_workcell_id, mmw_first.WORKCELL_CODE as firstcount_workcell_code, hwsa.recount_quantity,
+        hwsa.recount_prod_line_id, mmpl_recount.PROD_LINE_CODE as recount_prod_line_code,
+        hwsa.recount_workcell_id, mmw_recount.WORKCELL_CODE as recount_workcell_code, hwsa.firstcount_by,
+        hwsa.firstcount_date, hwsa.firstcount_remark, hwsa.recount_by, hwsa.recount_date, hwsa.recount_remark,
+        IFNULL(hwsa.firstcount_quantity,0) - IFNULL(hwsa.current_quantity,0) as firstcount_diff,
+        IFNULL(hwsa.recount_quantity,0) - IFNULL(hwsa.current_quantity,0) as recount_diff,
+        mml.CURRENT_CONTAINER_ID, mc.CONTAINER_CODE as CURRENT_CONTAINER_CODE, hwsa.ATTRIBUTE1 as repair_material_lot_id,
+        mml2.MATERIAL_LOT_CODE as repair_material_lot_code
+        from hme_wip_stocktake_doc hwsd
+        left join hme_wip_stocktake_actual hwsa
+        on hwsa.stocktake_id = hwsd.stocktake_id
+        left join mt_work_order mwo
+        on mwo.WORK_ORDER_ID = hwsa.work_order_id
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsa.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsd.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsa.site_id
+        left join mt_material_basic mmb
+        on mmb.TENANT_ID = hwsd.tenant_id
+        and mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_material mm
+        on mm.MATERIAL_ID = hwsa.material_id
+        left join mt_uom mu
+        on mu.UOM_ID = hwsa.uom_id
+        left join mt_mod_production_line mmpl
+        on mmpl.PROD_LINE_ID = hwsa.prod_line_id
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = hwsa.workcell_id
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = hwsa.material_lot_id
+        and mmla.ATTR_NAME = 'REWORK_FLAG'
+        left join mt_mod_production_line mmpl_first
+        on mmpl_first.PROD_LINE_ID = hwsa.firstcount_prod_line_id
+        left join mt_mod_workcell mmw_first
+        on mmw_first.WORKCELL_ID = hwsa.firstcount_workcell_id
+        left join mt_mod_production_line mmpl_recount
+        on mmpl_recount.PROD_LINE_ID = hwsa.recount_prod_line_id
+        left join mt_mod_workcell mmw_recount
+        on mmw_recount.WORKCELL_ID = hwsa.recount_workcell_id
+        left join mt_container mc
+        on mc.CONTAINER_ID = mml.CURRENT_CONTAINER_ID
+        left join mt_bom mb on mb.BOM_ID = mwo.BOM_ID
+        left join mt_router mr on mr.ROUTER_ID = mwo.ROUTER_ID
+        left join mt_material_site mms2 on mms2.MATERIAL_ID = mwo.MATERIAL_ID
+        and mms2.SITE_ID = mwo.SITE_ID
+        and mms2.TENANT_ID = mwo.TENANT_ID
+        left join hme_production_version hpv on hpv.PRODUCTION_VERSION = mwo.PRODUCTION_VERSION
+        and hpv.BOM_NAME = mb.BOM_NAME
+        and hpv.BOM_VERSION = mb.REVISION
+        and hpv.ROUTER_VERSION = mr.REVISION
+        and hpv.MATERIAL_SITE_ID = mms2.MATERIAL_SITE_ID
+        left join mt_material_lot mml2
+        on mml2.MATERIAL_LOT_ID = hwsa.ATTRIBUTE1
+        where hwsd.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.stocktake_actual_id is not null
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            and mml.MATERIAL_LOT_CODE like CONCAT(#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.repairMaterialLotCode != null and dto.repairMaterialLotCode != ''">
+            and mml2.MATERIAL_LOT_CODE like CONCAT(#{dto.repairMaterialLotCode},'%')
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.MATERIAL_CODE like CONCAT(#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.MATERIAL_NAME like CONCAT(#{dto.materialName},'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsa.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsa.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.workOrderNum != null and dto.workOrderNum">
+            and mwo.WORK_ORDER_NUM like CONCAT(#{dto.workOrderNum},'%')
+        </if>
+        <if test="dto.firstcountNullFlag != null and dto.firstcountNullFlag != ''">
+            <choose>
+                <when test="dto.firstcountNullFlag == 'Y'.toString() ">
+                    and hwsa.firstcount_quantity is null
+                </when>
+                <when test="dto.firstcountNullFlag == 'N'.toString() ">
+                    and hwsa.firstcount_quantity is not null
+                </when>
+            </choose>
+        </if>
+        <if test="dto.recountcountNullFlag != null and dto.recountcountNullFlag != ''">
+            <choose>
+                <when test="dto.recountcountNullFlag == 'Y'.toString() ">
+                    and hwsa.recount_quantity is null
+                </when>
+                <when test="dto.recountcountNullFlag == 'N'.toString() ">
+                    and hwsa.recount_quantity is not null
+                </when>
+            </choose>
+        </if>
+        <if test="dto.firstcountRecountFlag != null and dto.firstcountRecountFlag != ''">
+            <choose>
+                <when test="dto.firstcountRecountFlag == 'Y'.toString() ">
+                    and hwsa.firstcount_quantity = hwsa.recount_quantity
+                </when>
+                <when test="dto.firstcountRecountFlag == 'N'.toString() ">
+                    and IFNULL(hwsa.firstcount_quantity, -222222222) != IFNULL(hwsa.recount_quantity, -1111111111)
+                </when>
+            </choose>
+        </if>
+        <if test="dto.workcellFlag != null and dto.workcellFlag != ''">
+            <choose>
+                <when test="dto.workcellFlag == 'Y'.toString() ">
+                    and hwsa.workcell_id = hwsa.firstcount_workcell_id
+                </when>
+                <when test="dto.workcellFlag == 'N'.toString() ">
+                    and hwsa.workcell_id != IFNULL(hwsa.firstcount_workcell_id,'aaaa')
+                </when>
+            </choose>
+        </if>
+        <if test="dto.qtyFlag != null and dto.qtyFlag != ''">
+            <choose>
+                <when test="dto.qtyFlag == 'Y'.toString() ">
+                    and hwsa.current_quantity = hwsa.firstcount_quantity
+                </when>
+                <when test="dto.qtyFlag == 'N'.toString() ">
+                    and hwsa.current_quantity != IFNULL(hwsa.firstcount_quantity, -1111111)
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <select id="wipStocktakeSumExport" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO10">
+        select hwsa.material_id, hwsa.prod_line_id, hwsa.workcell_id
+        from hme_wip_stocktake_actual hwsa
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsa.material_id
+        </if>
+        where hwsa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id is not NULL
+        and hwsa.material_id != ''
+        and hwsa.prod_line_id is not NULL
+        and hwsa.prod_line_id != ''
+        and hwsa.workcell_id is not NULL
+        and hwsa.workcell_id != ''
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.MATERIAL_NAME like CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsa.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsa.workcell_id = #{dto.workcellId}
+        </if>
+        GROUP BY hwsa.material_id, hwsa.prod_line_id, hwsa.workcell_id
+        union
+        select hwsa.material_id, hwsa.firstcount_prod_line_id, hwsa.firstcount_workcell_id
+        from hme_wip_stocktake_actual hwsa
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsa.material_id
+        </if>
+        where hwsa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id is not NULL
+        and hwsa.material_id != ''
+        and hwsa.firstcount_prod_line_id is not NULL
+        and hwsa.firstcount_prod_line_id != ''
+        and hwsa.firstcount_workcell_id is not NULL
+        and hwsa.firstcount_workcell_id != ''
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.MATERIAL_NAME like CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsa.firstcount_prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsa.firstcount_workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsa.material_id, hwsa.firstcount_prod_line_id, hwsa.firstcount_workcell_id
+        union
+        select hwsa.material_id, hwsa.recount_prod_line_id, hwsa.recount_workcell_id
+        from hme_wip_stocktake_actual hwsa
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsa.material_id
+        </if>
+        where hwsa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hwsa.material_id is not NULL
+        and hwsa.material_id != ''
+        and hwsa.recount_prod_line_id is not NULL
+        and hwsa.recount_prod_line_id != ''
+        and hwsa.recount_workcell_id is not NULL
+        and hwsa.recount_workcell_id != ''
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.MATERIAL_NAME like CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsa.recount_prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsa.recount_workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsa.material_id, hwsa.recount_prod_line_id, hwsa.recount_workcell_id
+    </select>
+
+    <select id="releaseDetailExport" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO11">
+        select b.stocktake_id, hwsd.stocktake_num, b.work_order_id, mwo.WORK_ORDER_NUM, mwo.BOM_ID, mb.BOM_NAME, mb.DESCRIPTION,
+        hpv.PRODUCTION_VERSION as bomProductionVersion, hpv.DESCRIPTION as bomProductionVersionDesc,
+        b.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME, b.ITEM_GROUP, b.prod_line_id, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME,
+        b.workcell_id, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, b.release_material, mm2.MATERIAL_CODE as release_material_code,
+        mm2.MATERIAL_NAME as release_material_name, b.release_qty, mm2.PRIMARY_UOM_ID uom_id, mu.UOM_CODE,mbc.QTY,
+        (
+        select IFNULL(sum(mnr.QTY), 0)
+        from mt_nc_record mnr,
+        hme_nc_record_attr hnra,
+        mt_mod_organization_rel mmor,
+        mt_eo me
+        where mnr.COMPONENT_MATERIAL_ID = b.release_material
+        and mnr.PARENT_NC_RECORD_ID = ''
+        and mnr.TENANT_ID = #{tenantId}
+        and hnra.parent_record_id = mnr.NC_RECORD_ID
+        and hnra.process_method = '3'
+        and mmor.ORGANIZATION_ID = mnr.WORKCELL_ID
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.PARENT_ORGANIZATION_ID = b.workcell_id
+        and me.EO_ID = mnr.EO_ID
+        and me.WORK_ORDER_ID = b.work_order_id
+        ) as scrap_qty,
+        (
+        select IFNULL(sum(hwsa.current_quantity), 0)
+        from hme_wip_stocktake_actual hwsa
+        where hwsa.stocktake_id = b.stocktake_id
+        and hwsa.work_order_id = b.work_order_id
+        and hwsa.material_id = b.material_id
+        and hwsa.prod_line_id = b.prod_line_id
+        and hwsa.workcell_id = b.workcell_id
+        ) as current_quantity
+        from (
+
+        select a.stocktake_id, a.work_order_id, a.material_id, a.prod_line_id, a.ITEM_GROUP,
+        a.workcell_id, a.release_material, sum(a.release_qty) as release_qty
+        from (
+        select hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hwsr.workcell_id, hejslm.material_id as release_material, sum(hejslm.release_qty) as release_qty
+        from hme_wip_stocktake_actual hwsr
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsr.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsr.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsr.site_id
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_eo me
+        on me.TENANT_ID = hwsr.tenant_id
+        and me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        left join hme_eo_job_sn hejs
+        on hejs.eo_id = me.EO_ID
+        left join mt_mod_organization_rel mmor2
+        on mmor2.ORGANIZATION_ID = hejs.WORKCELL_ID
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        left join hme_eo_job_sn_lot_material hejslm
+        on hejslm.tenant_id = hejs.tenant_id and hejslm.job_id = hejs.job_id
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsr.material_id
+        </if>
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        and mmor2.PARENT_ORGANIZATION_ID = hwsr.workcell_id
+        and hejslm.release_qty > 0
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsr.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.material_code like concat('%',#{dto.materialCode} ,'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.material_name like concat('%',#{dto.materialName} ,'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsr.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsr.workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, hwsr.workcell_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hejslm.material_id
+
+        union all
+
+        select hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hwsr.workcell_id, hejm.material_id as release_material, sum(hejm.release_qty) as release_qty
+        from hme_wip_stocktake_actual hwsr
+        left join mt_material_lot mml
+        on mml.MATERIAL_LOT_ID = hwsr.material_lot_id
+        left join mt_material_site mms
+        on mms.TENANT_ID = hwsr.tenant_id
+        and mms.MATERIAL_ID = mml.MATERIAL_ID
+        and mms.SITE_ID = hwsr.site_id
+        left join mt_material_basic mmb
+        on mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_eo me
+        on me.TENANT_ID = hwsr.tenant_id
+        and me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        left join hme_eo_job_sn hejs
+        on hejs.eo_id = me.EO_ID
+        left join mt_mod_organization_rel mmor2
+        on mmor2.ORGANIZATION_ID = hejs.WORKCELL_ID
+        and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        left join hme_eo_job_material hejm
+        on hejm.job_id = hejs.job_id and hejm.tenant_id = hejs.tenant_id
+        <if test="dto.materialCode != null and dto.materialCode != '' or dto.materialName != null and dto.materialName != ''">
+            left join mt_material mm
+            on mm.MATERIAL_ID = hwsr.material_id
+        </if>
+        where hwsr.tenant_id = #{tenantId}
+        and hwsr.stocktake_id in
+        <foreach collection="stocktakeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="itemGroupList != null">
+            and (mmb.ITEM_GROUP is null
+            OR mmb.ITEM_GROUP not in
+            <foreach collection="itemGroupList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        and mmor2.PARENT_ORGANIZATION_ID = hwsr.workcell_id
+        and hejm.is_issued = 1
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hwsr.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            and mm.material_code like concat('%',#{dto.materialCode} ,'%')
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            and mm.material_name like concat('%',#{dto.materialName} ,'%')
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hwsr.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hwsr.workcell_id = #{dto.workcellId}
+        </if>
+        group by hwsr.stocktake_id, hwsr.work_order_id, hwsr.material_id, hwsr.prod_line_id, hwsr.workcell_id, mmb.ITEM_GROUP,
+        mml.material_lot_id, hejm.material_id
+        ) a
+
+        GROUP BY a.stocktake_id, a.work_order_id, a.material_id, a.prod_line_id, a.ITEM_GROUP,
+        a.workcell_id, a.release_material
+        ) b
+        left join hme_wip_stocktake_doc hwsd
+        on hwsd.stocktake_id = b.stocktake_id
+        left join mt_work_order mwo
+        on mwo.WORK_ORDER_ID = b.work_order_id
+        left join mt_bom mb
+        on mb.BOM_ID = mwo.BOM_ID
+        LEFT JOIN mt_router mr on mr.ROUTER_ID = mwo.ROUTER_ID
+        LEFT JOIN mt_material_site mms on mms.MATERIAL_ID = mwo.material_id
+        and mms.SITE_ID = mwo.SITE_ID and mms.TENANT_ID = mwo.TENANT_ID
+        left join hme_production_version hpv on hpv.PRODUCTION_VERSION = mwo.PRODUCTION_VERSION
+        and hpv.BOM_NAME = mb.BOM_NAME and hpv.BOM_VERSION = mb.REVISION
+        and hpv.ROUTER_VERSION = mr.REVISION and hpv.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        left join mt_material mm
+        on mm.material_id = b.material_id
+        left join mt_mod_production_line mmpl
+        on mmpl.PROD_LINE_ID = b.prod_line_id
+        left join mt_mod_workcell mmw
+        on mmw.workcell_id = b.workcell_id
+        left join mt_material mm2
+        on mm2.MATERIAL_ID = b.release_material
+        left join mt_uom mu
+        on mu.UOM_ID = mm2.PRIMARY_UOM_ID
+        left join mt_operation_wkc_dispatch_rel mowdr ON mowdr.WORKCELL_ID = b.workcell_id and  mowdr.TENANT_ID = hwsd.TENANT_ID
+        left join mt_work_order_component_actual mwoca on mwoca.WORK_ORDER_ID = b.work_order_id and mwoca.MATERIAL_ID = b.release_material
+        and mwoca.OPERATION_ID = mowdr.OPERATION_ID and mwoca.TENANT_ID = hwsd.TENANT_ID
+        left join mt_bom_component mbc ON mbc.BOM_COMPONENT_ID = mwoca.BOM_COMPONENT_ID
+    </select>
+
+    <select id="currentQtyExportQuery" resultType="java.math.BigDecimal">
+        select IFNULL(sum(hwsa.current_quantity), 0)
+        from hme_wip_stocktake_actual hwsa
+        where hwsa.stocktake_id = #{dto.stocktakeId}
+        and hwsa.work_order_id = #{dto.workOrderId}
+        and hwsa.material_id = #{dto.materialId}
+        and hwsa.prod_line_id = #{dto.prodLineId}
+        and hwsa.workcell_id = #{dto.workcellId}
+    </select>
+
+    <select id="getProductionVersionByWo" resultType="com.ruike.hme.domain.entity.HmeProductionVersion">
+        select hpv.PRODUCTION_VERSION, hpv.DESCRIPTION
+        from mt_work_order mwo,
+             mt_bom mb,
+             mt_router mr,
+             mt_material_site mms,
+             hme_production_version hpv
+        where mwo.WORK_ORDER_ID =#{workOrderId}
+        and mb.BOM_ID = mwo.BOM_ID
+        and mr.ROUTER_ID = mwo.ROUTER_ID
+        and mms.MATERIAL_ID = mwo.MATERIAL_ID
+        and mms.SITE_ID = mwo.SITE_ID
+        and mms.TENANT_ID = mwo.TENANT_ID
+        and hpv.PRODUCTION_VERSION = mwo.PRODUCTION_VERSION
+        and hpv.BOM_NAME = mb.BOM_NAME
+        and hpv.BOM_VERSION = mb.REVISION
+        and hpv.ROUTER_VERSION = mr.REVISION
+        and hpv.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        LIMIT 1
+    </select>
+
+    <select id="eoRelQueryByEoId" resultType="com.ruike.hme.domain.entity.HmeEoRel">
+        select her.eo_id, her.top_eo_id, her.last_update_date
+        from hme_eo_rel her
+        where her.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and her.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getMaterialLotIdByEoId" resultType="com.ruike.hme.domain.vo.HmeWipStocktakeDocVO12">
+        select me.EO_ID, mml.MATERIAL_LOT_ID
+        from mt_eo me,
+             mt_material_lot mml
+        where me.EO_ID in
+        <foreach collection="eoIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mml.MATERIAL_LOT_CODE = me.IDENTIFICATION
+        and mml.TENANT_ID = #{tenantId}
+    </select>
+</mapper>

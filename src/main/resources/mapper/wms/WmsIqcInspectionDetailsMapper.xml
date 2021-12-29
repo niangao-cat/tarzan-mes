@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsIqcInspectionDetailsMapper">
+
+    <select id="queryList" resultType="com.ruike.wms.domain.vo.WmsIqcInspectionDetailsVO">
+        SELECT
+            qih.SITE_ID,
+            mms.SITE_CODE,
+            qih.IQC_HEADER_ID,
+            qih.IQC_NUMBER,
+            qih.INSPECTION_TYPE,
+            qih.INSPECTION_STATUS,
+            mm.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            ms.SUPPLIER_ID,
+            ms.SUPPLIER_CODE,
+            ms.SUPPLIER_NAME,
+            qih.INSPECTION_RESULT,
+            qih.NG_QTY,
+            qih.REMARK,
+            qih.RECEIPT_LOT,
+            iu.real_name qcBy,
+            qih.FINAL_DECISION,
+            qih.AUDIT_OPINION,
+            iu2.real_name lastUpdateBy,
+            qil.IQC_LINE_ID,
+            qil.INSPECTION,
+            qil.INSPECTION_DESC,
+            qil.STANDARD_TEXT,
+            qil.STANDARD_FROM,
+            qil.STANDARD_TO,
+            qst.sample_type_code sampleType,
+            qil.SAMPLE_SIZE,
+            CONCAT_WS('/',qil.AC,qil.RE) acRe,
+            qil.INSPECTION_RESULT lineInspectionResult,
+            qid.IQC_DETAILS_ID,
+            qid.NUMBER,
+            qid.RESULT,
+            qil.INSPECTION_TOOL,
+            qih.INSPECTION_FINISH_DATE,
+            qih.creation_date
+        FROM
+            qms_iqc_header qih
+            LEFT JOIN qms_iqc_line qil ON qih.IQC_HEADER_ID = qil.IQC_HEADER_ID
+            LEFT JOIN qms_iqc_details qid ON qil.IQC_LINE_ID = qid.IQC_LINE_ID
+            LEFT JOIN hzero_platform.iam_user iu ON qih.QC_BY = iu.id
+            LEFT JOIN hzero_platform.iam_user iu2 ON qih.last_updated_by = iu2.id
+            LEFT JOIN qms_sample_type qst ON qil.sample_type = qst.sample_type_id,
+            mt_mod_site mms,
+            mt_material mm,
+            mt_supplier ms
+        WHERE
+          qih.TENANT_ID = #{tenantId}
+            AND qih.TENANT_ID = mms.TENANT_ID
+            AND qih.SITE_ID = mms.SITE_ID
+            AND qih.TENANT_ID = mm.TENANT_ID
+            and qih.MATERIAL_ID = mm.MATERIAL_ID
+            AND qih.TENANT_ID = ms.TENANT_ID
+            and qih.SUPPLIER_ID = ms.SUPPLIER_ID
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND qih.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.iqcNumber != null and dto.iqcNumber != ''">
+            AND qih.IQC_NUMBER like CONCAT('%',CONCAT(#{dto.iqcNumber},'%'))
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and qih.MATERIAL_ID in
+            <foreach collection="dto.materialIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.inspectionStatus != null and dto.inspectionStatus != ''">
+            AND qih.INSPECTION_STATUS = #{dto.inspectionStatus}
+        </if>
+        <if test="dto.inspectionResult != null and dto.inspectionResult != ''">
+            AND qih.INSPECTION_RESULT = #{dto.inspectionResult}
+        </if>
+        <if test="dto.supplierId != null and dto.supplierId != ''">
+            AND qih.SUPPLIER_ID in
+            <foreach collection="dto.supplierIdList" item="index" separator="," open="(" close=")">
+                #{index}
+            </foreach>
+        </if>
+        <if test="dto.inspectionType != null and dto.inspectionType != ''">
+            AND qih.INSPECTION_TYPE= #{dto.inspectionType}
+        </if>
+        <if test="dto.finalDecision != null and dto.finalDecision != ''">
+            AND qih.FINAL_DECISION= #{dto.finalDecision}
+        </if>
+        <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+            AND qih.CREATION_DATE >= #{dto.creationDateFrom}
+        </if>
+        <if test="dto.creationDateTo != null and dto.creationDateTo != ''">
+            AND qih.CREATION_DATE &lt;= #{dto.creationDateTo}
+        </if>
+        <if test="dto.qcBy != null and dto.qcBy != ''">
+            AND qih.QC_BY in
+            <foreach collection="dto.qcByList" item="index" separator="," open="(" close=")">
+                #{index}
+            </foreach>
+        </if>
+        <if test="dto.inspectionFinishDateFrom != null and dto.inspectionFinishDateFrom != ''">
+            AND qih.INSPECTION_FINISH_DATE >= #{dto.inspectionFinishDateFrom}
+        </if>
+        <if test="dto.inspectionFinishDateTo != null and dto.inspectionFinishDateTo != ''">
+            AND qih.INSPECTION_FINISH_DATE &lt;= #{dto.inspectionFinishDateTo}
+        </if>
+    </select>
+</mapper>

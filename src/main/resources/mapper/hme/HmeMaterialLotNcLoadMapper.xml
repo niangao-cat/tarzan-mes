@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeMaterialLotNcLoadMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeMaterialLotNcLoad">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NC_LOAD_ID" property="ncLoadId" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="VARCHAR"/>
+        <result column="LOAD_NUM" property="loadNum" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryNcLoadIdsByLoadSeqs" resultType="string">
+        select mlnl.nc_load_id
+          from hme_material_lot_nc_load mlnl
+         where mlnl.tenant_id = #{tenantId}
+           and mlnl.load_sequence in
+        <foreach collection="loadSequenceList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <delete id="deleteNcLoadByLoadSeqs">
+        delete from hme_material_lot_nc_load
+         where tenant_id = #{tenantId}
+           and load_sequence in
+        <foreach collection="loadSequenceList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="checkHasNcRecodeFlag" resultType="int">
+         select 1
+           from hme_material_lot_nc_record mlnr
+          where mlnr.nc_load_id = #{ncLoadId}
+            and mlnr.tenant_id = #{tenantId}
+          limit 1
+    </select>
+
+    <insert id="batchInsert" parameterType="com.ruike.hme.domain.entity.HmeMaterialLotNcLoad">
+        INSERT INTO hme_material_lot_nc_load
+        (
+        tenant_id,
+        nc_load_id,
+        load_sequence,
+        load_num,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute_category,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10,
+        attribute11,
+        attribute12,
+        attribute13,
+        attribute14,
+        attribute15
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ncLoadId},
+            #{item.loadSequence},
+            #{item.loadNum},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteNcLoadByMaterialLotId">
+        delete from hme_material_lot_nc_load
+         where tenant_id = #{tenantId}
+           and load_sequence in (
+            select load_sequence
+              from hme_material_lot_load
+             where material_lot_id = #{materialLotId}
+               and tenant_id = #{tenantId})
+    </delete>
+
+    <select id="getNcLoadByMaterialLotId" resultType="java.lang.String">
+        select nc_load_id
+        FROM
+            hme_material_lot_nc_load
+        WHERE
+            tenant_id = #{tenantId}
+        AND load_sequence IN (
+            SELECT
+                load_sequence
+            FROM
+                hme_material_lot_load
+            WHERE
+                material_lot_id = #{materialLotId}
+            AND tenant_id = #{tenantId})
+    </select>
+
+    <delete id="deleteNcLoadByPrimarykey">
+        delete from hme_material_lot_nc_load WHERE nc_load_id IN
+        <foreach collection="ncLoadIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="queryNcInfoByLoadSequence" resultType="com.ruike.hme.domain.vo.HmeMaterialLotNcLoadVO3">
+        select mlnl.load_sequence,
+               mlnr.nc_record_id,
+               mlnr.nc_code,
+               nc.nc_code_id,
+               nc.nc_type
+          from hme_material_lot_nc_load mlnl,
+               hme_material_lot_nc_record mlnr,
+               mt_nc_code nc
+         where mlnl.nc_load_id = mlnr.nc_load_id
+           and mlnl.tenant_id = mlnr.tenant_id
+           and nc.nc_code = mlnr.nc_code
+           and nc.tenant_id = mlnr.tenant_id
+           and mlnl.load_sequence = #{loadSequence}
+           and mlnl.tenant_id = #{tenantId}
+         limit 1
+    </select>
+
+    <select id="queryNcLoadByVirtualId" resultType="com.ruike.hme.domain.vo.HmeMaterialLotNcLoadVO4">
+        SELECT
+        hvn.VIRTUAL_ID,
+        nc.nc_load_id
+        FROM
+        hme_virtual_num hvn,
+        hme_selection_details hsd,
+        hme_material_lot_nc_load nc
+        WHERE
+        hsd.tenant_id = hvn.TENANT_ID
+        AND hsd.virtual_num = hvn.VIRTUAL_NUM
+        AND nc.tenant_id = hsd.tenant_id
+        AND nc.load_sequence = hsd.load_sequence
+        AND hvn.VIRTUAL_ID IN
+        <foreach collection="virtualIdList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        GROUP BY hvn.VIRTUAL_ID,
+                  nc.nc_load_id
+    </select>
+</mapper>

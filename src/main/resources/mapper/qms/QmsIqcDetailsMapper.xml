@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.IqcDetailsMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsIqcDetails">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IQC_DETAILS_ID" property="iqcDetailsId" jdbcType="VARCHAR"/>
+        <result column="IQC_HEADER_ID" property="iqcHeaderId" jdbcType="VARCHAR"/>
+        <result column="IQC_LINE_ID" property="iqcLineId" jdbcType="VARCHAR"/>
+        <result column="NUMBER" property="number" jdbcType="DECIMAL"/>
+        <result column="RESULT" property="result" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+</mapper>

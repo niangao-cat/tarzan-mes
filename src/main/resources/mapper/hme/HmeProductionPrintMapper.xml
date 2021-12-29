@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeProductionPrintMapper">
+
+
+    <select id="queryAttrByWorkcellId" resultType="com.ruike.hme.domain.vo.HmeProductionPrintAttr">
+        SELECT
+                mmwa.ATTR_NAME,
+                mmwa.ATTR_VALUE
+        FROM
+                mt_mod_workcell_attr mmwa
+        WHERE
+                mmwa.TENANT_ID =#{tenantId}
+          AND mmwa.ATTR_NAME IN('PRINTER_IP','PRINTER_PORT')
+          AND mmwa.WORKCELL_ID =#{workcellId}
+    </select>
+
+    <select id="queryScanInfo" resultType="com.ruike.hme.api.controller.v1.HmeProductionPrintDTO">
+        SELECT
+        mm.MATERIAL_CODE AS sap_material,
+        mmlt.MATERIAL_LOT_CODE AS scan_bar_code,
+        hejpc.sub_barcode AS sub_code
+        FROM
+        mt_material_lot mml,
+        mt_material mm,
+        hme_eo_job_pump_comb hejpc,
+        mt_material_lot mmlt
+        WHERE
+        mmlt.MATERIAL_LOT_ID = hejpc.material_lot_id
+        AND hejpc.tenant_id = mml.TENANT_ID
+        AND hejpc.comb_material_lot_id = mml.MATERIAL_LOT_ID
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND mml.TENANT_ID = #{tenantId}
+        AND mml.MATERIAL_LOT_CODE = #{dto.snNum}
+    </select>
+
+    <select id="eoComponentActualQueryByEo" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO4">
+        select meca.EO_ID, meca.MATERIAL_ID, meca.ASSEMBLE_QTY as qty
+        from mt_eo_component_actual meca
+        where meca.EO_ID in
+        <foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and meca.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="nameplatePrintRelLineQueryByType" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO4">
+        select head.nameplate_header_id, head.identifying_code, line.material_id, line.qty, line.code
+        from hme_nameplate_print_rel_header head,
+             hme_nameplate_print_rel_line line
+        where head.type = #{type}
+        and head.enable_flag = 'Y'
+        and head.tenant_id = #{tenantId}
+        and line.nameplate_header_id = head.nameplate_header_id
+        and line.enable_flag = 'Y'
+    </select>
+
+    <select id="quantityAnalyzeLineQuery" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO5">
+        select doc.qa_doc_id, line.result
+        from
+             hme_quantity_analyze_doc doc,
+             hme_quantity_analyze_line line
+        where doc.qa_doc_id in
+        <foreach collection="docIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and line.qa_doc_id = doc.qa_doc_id
+        and line.tag_code =
+        case when doc.qa_type = 'G' then #{tagCodeG}
+        when doc.qa_type = 'D' then #{tagCodeD}
+        else  '' end
+        and line.tenant_id = #{tenantId}
+    </select>
+
+    <select id="quantityAnalyzeDocQuery" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO5">
+        select hejs.eo_id, doc.qa_doc_id
+        from hme_eo_job_sn hejs,
+        hme_eo_job_material hejm,
+        hme_quantity_analyze_doc doc
+        where hejs.eo_id in
+        <foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejs.TENANT_ID = #{tenantId}
+        and hejm.job_id = hejs.job_id
+        and hejm.is_issued = 1
+        and hejm.tenant_id = hejs.TENANT_ID
+        and doc.material_lot_id = hejm.MATERIAL_LOT_ID
+        and doc.tenant_id = hejs.TENANT_ID
+    </select>
+
+    <select id="materialIdQueryByCode" resultType="tarzan.material.domain.entity.MtMaterial">
+        select mm.MATERIAL_ID, mm.MATERIAL_CODE
+        from mt_material mm
+        where mm.MATERIAL_CODE in
+        <foreach collection="materialCodeList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mm.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="nameplatePrintRelHeaderQuery" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO4">
+        select line.material_id, line.qty, head.nameplate_header_id, head.identifying_code
+        from hme_nameplate_print_rel_line line,
+             hme_nameplate_print_rel_header head
+        where (line.material_id, line.qty) in
+        <foreach collection="dtoList" item="item" index="index" open="(" close=")" separator=",">
+            (#{item.materialId},#{item.qty})
+        </foreach>
+        and line.enable_flag = 'Y'
+        and line.tenant_id = #{tenantId}
+        and head.nameplate_header_id = line.nameplate_header_id
+    </select>
+
+    <select id="nameplatePrintRelLineCountQuery" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO4">
+        select line.nameplate_header_id, count(1) as line_count
+        from hme_nameplate_print_rel_line line
+        where line.nameplate_header_id in
+        <foreach collection="headIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and line.enable_flag = 'Y'
+        and line.tenant_id = #{tenantId}
+        GROUP BY line.nameplate_header_id
+    </select>
+
+    <select id="worlcellIdQueryByProcessCode" resultType="java.lang.String">
+        select mmor.ORGANIZATION_ID
+        from mt_mod_workcell mmw,
+             mt_mod_organization_rel mmor
+        where mmw.WORKCELL_CODE in
+        <foreach collection="processCodeList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+        and mmw.TENANT_ID = #{tenantId}
+        and mmor.PARENT_ORGANIZATION_ID = mmw.WORKCELL_ID
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.TENANT_ID = mmw.TENANT_ID
+    </select>
+
+    <select id="jobIdQueryByEoAndWorkcell" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        select hejs.job_id, hejs.eo_id, hejs.workcell_id, hejs.site_out_date
+        from hme_eo_job_sn hejs
+        where hejs.eo_id in
+        <foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejs.workcell_id in
+        <foreach collection="workcellIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejs.tenant_id = #{tenantId}
+    </select>
+
+    <select id="eoJobMaterialQuery" resultType="com.ruike.hme.domain.entity.HmeEoJobMaterial">
+        select hejm.job_id, hejm.material_id, hejm.material_lot_id
+        from hme_eo_job_material hejm
+        where hejm.job_id in
+        <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejm.material_id in
+        <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejm.is_issued = 1
+        and hejm.tenant_id = #{tenantId}
+    </select>
+
+    <select id="eoJobPumpCombQuery" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO7">
+        select hejpc.comb_material_lot_id as material_lot_id, hejpc.material_id, hejpc.pump_req_qty as qty
+        from hme_eo_job_pump_comb hejpc
+        where hejpc.comb_material_lot_id in
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejpc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="jobIdQueryByEoId" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        select hejs.job_id, hejs.eo_id
+        from hme_eo_job_sn hejs
+        where hejs.eo_id in
+        <foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejs.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getTagIdByTagCode" resultType="java.lang.String">
+        select mt.TAG_ID
+        from mt_tag mt
+        where mt.TAG_CODE in
+        <foreach collection="tagCodeList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mt.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="eoJobDataRecordQuery" resultType="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        select hejdr.job_id, hejdr.tag_id, hejdr.result
+        from hme_eo_job_data_record hejdr
+        where hejdr.job_id in
+        <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejdr.tag_id in
+        <foreach collection="tagIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejdr.tenant_id = #{tenantId}
+    </select>
+
+    <select id="eoJobMaterialQueryByJobId" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO7">
+        select hejm.job_id, hejm.material_id, hejm.material_lot_code
+        from hme_eo_job_material hejm
+        where hejm.job_id in
+        <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejm.is_issued = 1
+        and hejm.material_lot_code is not null
+        and hejm.tenant_id = #{tenantId}
+    </select>
+
+    <select id="eoJobMaterialQueryByIdentification" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO7">
+        select me.IDENTIFICATION, hejm.material_id, hejm.material_lot_code, hejm.material_lot_code
+        from mt_eo me,
+             hme_eo_job_sn hejs,
+             hme_eo_job_material hejm
+        where me.IDENTIFICATION in
+        <foreach collection="identificationList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and me.TENANT_ID = #{tenantId}
+        and hejs.eo_id = me.EO_ID
+        and hejs.tenant_id = me.TENANT_ID
+        and hejm.job_id = hejs.job_id
+        and hejm.is_issued = 1
+        and hejm.material_lot_code is not null
+        and hejm.tenant_id = me.TENANT_ID
+    </select>
+
+    <select id="materialSiteAttrQuery" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO7">
+        select mms.MATERIAL_ID, mmsa.ATTR_VALUE as attribute5
+        from mt_material_site mms,
+             mt_material_site_attr mmsa
+        where mms.MATERIAL_ID in
+        <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mms.SITE_ID = #{siteId}
+        and mms.TENANT_ID = #{tenantId}
+        and mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and mmsa.ATTR_NAME = 'attribute5'
+        and mmsa.TENANT_ID = mms.TENANT_ID
+    </select>
+
+    <select id="eoReworkMaterialLotAttrQuery" resultType="com.ruike.hme.domain.vo.HmeProductionPrintVO7">
+        select mea.EO_ID, mea.ATTR_VALUE as rework_material_lot
+        from mt_eo_attr mea
+        where mea.EO_ID in
+        <foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mea.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+        and mea.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="afFlagYMaterialLotQuery" resultType="java.lang.String">
+        select mml.MATERIAL_LOT_CODE
+        from mt_material_lot mml,
+             mt_material_lot_attr mmla
+        where mml.MATERIAL_LOT_CODE in
+        <foreach collection="materialLotCodeList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mml.TENANT_ID = #{tenantId}
+        and mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'AF_FLAG'
+        and mmla.ATTR_VALUE = 'Y'
+    </select>
+</mapper>

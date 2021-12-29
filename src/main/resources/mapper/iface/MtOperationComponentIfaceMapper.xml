@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtOperationComponentIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtOperationComponentIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OBJECT_TYPE" property="routerObjectType" jdbcType="VARCHAR"/>
+        <result column="ROUTER_CODE" property="routerCode" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ALTERNATE" property="routerAlternate" jdbcType="VARCHAR"/>
+        <result column="BOM_OBJECT_TYPE" property="bomObjectType" jdbcType="VARCHAR"/>
+        <result column="BOM_CODE" property="bomCode" jdbcType="VARCHAR"/>
+        <result column="BOM_ALTERNATE" property="bomAlternate" jdbcType="VARCHAR"/>
+        <result column="LINE_NUM" property="lineNum" jdbcType="VARCHAR"/>
+        <result column="OPERATION_SEQ_NUM" property="operationSeqNum" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_ITEM_NUM" property="componentItemNum" jdbcType="VARCHAR"/>
+        <result column="BOM_USAGE" property="bomUsage" jdbcType="DECIMAL"/>
+        <result column="UOM" property="uom" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_START_DATE" property="componentStartDate" jdbcType="TIMESTAMP"/>
+        <result column="COMPONENT_END_DATE" property="componentEndDate" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATION_DATE" property="erpCreationDate" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATED_BY" property="erpCreatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATED_BY" property="erpLastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATE_DATE" property="erpLastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="UPDATE_METHOD" property="updateMethod" jdbcType="VARCHAR"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="resultMap" type="tarzan.iface.domain.vo.MtOperationComponentIfaceVO">
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OPERATION_ID" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerCode" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="routerAlternate" jdbcType="VARCHAR"/>
+        <result column="ROUTER_TYPE" property="routerType" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="operationSeqNum" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="resultMap1" type="tarzan.iface.domain.vo.MtOperationComponentIfaceVO1">
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomCode" jdbcType="VARCHAR"/>
+        <result column="BOM_TYPE" property="bomType" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="bomAlternate" jdbcType="VARCHAR"/>
+        <result column="LINE_NUMBER" property="lineNum" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="resultMap2" type="tarzan.method.domain.entity.MtRouterOperationComponent">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_OPERATION_COMPONENT_ID" property="routerOperationComponentId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OPERATION_ID" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="getUnprocessedList" resultMap="BaseResultMap" fetchSize="5000">
+        select 
+        	t.* 
+        from 
+        	mt_operation_component_iface t 
+        where 
+        	t.TENANT_ID = ${tenantId}
+        	AND t.STATUS in ('N', 'E')
+    </select>
+
+    <select id="getMyUnprocessedList" resultMap="BaseResultMap" fetchSize="5000">
+        select
+        	t.*
+        from
+        	mt_operation_component_iface t
+        where
+        	t.TENANT_ID = ${tenantId}
+        	AND t.STATUS in ('N', 'E')
+        	AND t.BATCH_ID = #{batchId}
+    </select>
+
+    <select id="getRouterOperationIdList" resultMap="resultMap" fetchSize="5000">
+        select
+        mr.ROUTER_ID,
+        mro.ROUTER_OPERATION_ID,
+        mr.ROUTER_NAME,
+        mr.REVISION,
+        mr.ROUTER_TYPE,
+        -- 锐科修改点 SEQUENCE字段为int类型，sap传过来的数据为4位，如 0010等，会自动转为‘10’存储，改为取同值字段STEP_NAME
+        -- mrs.SEQUENCE
+        mrs.STEP_NAME AS SEQUENCE
+        from
+        mt_router mr
+        INNER join mt_router_step mrs on mr.ROUTER_ID = mrs.ROUTER_ID AND mrs.TENANT_ID = ${tenantId}
+        INNER join mt_router_operation mro on mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID AND mro.TENANT_ID = ${tenantId}
+        where
+        mr.TENANT_ID = ${tenantId}
+        <foreach collection="headList" item="i" index="index" open="and (" close=")" separator="OR">
+            (
+            mr.ROUTER_NAME = #{i.routerCode}
+            <choose>
+                <when test="i.routerAlternate != '' and i.routerAlternate != null">
+                    and mr.REVISION =#{i.routerAlternate}
+                </when>
+                <otherwise>
+                    and mr.REVISION ='MAIN'
+                </otherwise>
+            </choose>
+            AND mr.ROUTER_TYPE = #{i.routerObjectType}
+            )
+        </foreach>
+    </select>
+
+    <select id="getBomComponentIdList" resultMap="resultMap1" fetchSize="5000">
+        select
+        mb.BOM_ID,
+        mbc.BOM_COMPONENT_ID,
+        mb.BOM_NAME,
+        mb.BOM_TYPE,
+        mb.REVISION,
+        mbc.LINE_NUMBER
+        from
+        mt_bom mb
+        INNER join mt_bom_component mbc on mb.BOM_ID = mbc.BOM_ID AND mbc.TENANT_ID = ${tenantId}
+        where
+        mb.TENANT_ID = ${tenantId}
+        <foreach collection="headList" item="i" index="index" open="and (" close=")" separator="OR">
+            (
+            mb.BOM_NAME = #{i.bomCode}
+            <choose>
+                <when test="i.bomAlternate!='' and i.bomAlternate !=null">
+                    and mb.REVISION =#{i.bomAlternate}
+                </when>
+                <otherwise>
+                    and mb.REVISION ='MAIN'
+                </otherwise>
+            </choose>
+            AND mb.BOM_TYPE = #{i.bomObjectType}
+            )
+        </foreach>
+    </select>
+
+    <select id="getOperationComponent" resultMap="resultMap2" fetchSize="5000">
+        select
+        t.*
+        from
+        mt_router_operation_component t
+        where
+        t.TENANT_ID = ${tenantId}
+        <if test="list!=null">
+            AND ${list}
+        </if>
+        <if test="list==null">
+            AND 1&lt;&gt;1
+        </if>
+
+    </select>
+
+    <select id="getBomComponentId" resultMap="resultMap2" fetchSize="5000">
+        select
+        t.*
+        from
+        mt_router_operation_component t
+        where
+        t.TENANT_ID = ${tenantId}
+        <if test="list!=null">
+            AND ${list}
+        </if>
+        <if test="list==null">
+            AND 1&lt;&gt;1
+        </if>
+    </select>
+
+</mapper>

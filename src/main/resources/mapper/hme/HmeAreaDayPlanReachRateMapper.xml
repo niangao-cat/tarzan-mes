@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeAreaDayPlanReachRateMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeAreaDayPlanReachRate">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="DAY_PLAN_REACH_RATE_ID" property="dayPlanReachRateId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="CHART_DATE" property="chartDate" jdbcType="DATE"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="DISPATCH_QTY" property="dispatchQty" jdbcType="DECIMAL"/>
+        <result column="ACTUAL_DELIVER_QTY" property="actualDeliverQty" jdbcType="DECIMAL"/>
+        <result column="PLAN_REACH_RATE" property="planReachRate" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryCalendarShiftList" resultType="com.ruike.hme.domain.vo.HmeCalendarShiftVO">
+        SELECT
+        mcs.CALENDAR_SHIFT_ID,
+        mcs.CALENDAR_ID,
+        mcs.SHIFT_DATE,
+        mcs.SHIFT_CODE,
+        mcs.SHIFT_START_TIME,
+        mcs.SHIFT_END_TIME
+        FROM
+        mt_calendar_org_rel cor,
+        mt_calendar_shift mcs
+        WHERE
+        cor.ORGANIZATION_ID IN
+        (
+        SELECT
+        mor.ORGANIZATION_ID
+        FROM mt_mod_organization_rel mor
+        WHERE
+        mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor.PARENT_ORGANIZATION_ID IN
+        <foreach collection="prodLineIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.TENANT_ID = #{tenantId}
+        )
+        AND cor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND cor.TENANT_ID = #{tenantId}
+        AND mcs.CALENDAR_ID = cor.CALENDAR_ID
+        AND mcs.SHIFT_DATE >= DATE_SUB(CURRENT_DATE(),INTERVAL 1 day)
+        AND mcs.ENABLE_FLAG = 'Y'
+        AND mcs.TENANT_ID = cor.TENANT_ID
+        AND mcs.SHIFT_START_TIME <![CDATA[<=]]> NOW()
+        AND mcs.SHIFT_END_TIME >= CURRENT_DATE()
+    </select>
+
+    <select id="queryShiftIdList" resultType="java.lang.String">
+        SELECT
+        mws.WKC_SHIFT_ID
+        FROM
+        mt_calendar_shift mcs,
+        mt_wkc_shift mws
+        WHERE
+        mcs.CALENDAR_SHIFT_ID IN
+        <foreach collection="calendarShiftIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mws.TENANT_ID = #{tenantId}
+        AND mws.SHIFT_DATE = mcs.SHIFT_DATE
+        AND mws.SHIFT_CODE = mcs.SHIFT_CODE
+    </select>
+
+    <select id="queryWorkOrderByShiftIdAndProdLineId" resultType="java.lang.String">
+        SELECT
+        ejs.work_order_id
+        FROM
+        hme_eo_job_sn ejs,
+        mt_work_order wo
+        WHERE
+        ejs.TENANT_ID = #{tenantId}
+        <choose>
+            <when test="shiftIdList != null and shiftIdList.size() > 0">
+                AND ejs.shift_id IN
+                <foreach collection="shiftIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1 = 2
+            </otherwise>
+        </choose>
+        AND wo.WORK_ORDER_ID = ejs.WORK_ORDER_ID
+        <choose>
+            <when test="prodLineIdList != null and prodLineIdList.size() > 0">
+                AND wo.PRODUCTION_LINE_ID IN
+                <foreach collection="prodLineIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1 = 2
+            </otherwise>
+        </choose>
+        AND (CASE WHEN IFNULL(ejs.eo_id,'') = '' THEN  ejs.job_type IN
+        <foreach collection="cosJobTypeList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        ELSE 1 = 1 END )
+    </select>
+
+    <select id="queryDispatchWorkOrderByShiftIdAndProdLineId" resultType="java.lang.String">
+        SELECT
+        wdr.WORK_ORDER_ID
+        FROM
+        hme_wo_dispatch_recode wdr,
+        mt_work_order wo
+        WHERE
+        wdr.TENANT_ID = #{tenantId}
+        AND wdr.PROD_LINE_ID IN
+        <foreach collection="prodLineIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND wdr.CALENDAR_SHIFT_ID IN
+        <foreach collection="calendarShiftIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND wo.WORK_ORDER_ID = wdr.WORK_ORDER_ID
+    </select>
+
+    <select id="queryLineWorkcellAndProcess" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO3">
+        SELECT
+        wo.WORK_ORDER_ID,
+        mor.ORGANIZATION_ID PROCESS_ID,
+        mor2.ORGANIZATION_ID LINE_WORKCELL_ID
+        FROM
+        mt_work_order wo,
+        mt_router_step mrs,
+        mt_router_operation mro,
+        mt_operation_wkc_dispatch_rel wdr,
+        mt_mod_organization_rel mor,
+        mt_mod_organization_rel mor2
+        WHERE 1=1
+        AND wo.WORK_ORDER_ID IN
+        <foreach collection="workOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mrs.router_id = wo.router_id
+        AND mrs.TENANT_ID = wo.TENANT_ID
+        AND mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        AND mro.TENANT_ID = mrs.TENANT_ID
+        AND wdr.OPERATION_ID = mro.OPERATION_ID
+        AND wdr.TENANT_ID = mro.TENANT_ID
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = wdr.WORKCELL_ID
+        AND mor.TENANT_ID = #{tenantId}
+        AND mor2.TOP_SITE_ID = mor.TOP_SITE_ID
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor2.PARENT_ORGANIZATION_ID = wo.PRODUCTION_LINE_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+        AND mor2.TENANT_ID = mor.TENANT_ID
+        ORDER BY mrs.SEQUENCE ASC
+    </select>
+
+    <select id="queryActualDeliverQty" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO2">
+        SELECT
+        ejs.sn_material_id SN_MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        attr.ATTR_VALUE MATERIAL_NAME,
+        mor3.ORGANIZATION_ID LINE_WORKCELL_ID,
+        mor3.PARENT_ORGANIZATION_ID PROD_LINE_ID,
+        mmw.WORKCELL_NAME LINE_WORKCELL_NAME,
+        IFNULL(SUM(IFNULL(ejs.sn_qty, 1)), 0) ACTUAL_DELIVER_QTY,
+        ejs.work_order_id,
+        mor.PARENT_ORGANIZATION_ID PROCESS_ID
+        FROM
+        hme_eo_job_sn ejs,
+        mt_material mm
+        LEFT JOIN mt_material_site mms ON mms.MATERIAL_ID = mm.MATERIAL_ID AND mms.SITE_ID = #{siteId} AND mms.TENANT_ID = mm.TENANT_ID
+        LEFT JOIN mt_material_site_attr attr ON attr.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID AND attr.ATTR_NAME = 'attribute5' AND  attr.TENANT_ID = mms.TENANT_ID,
+        mt_mod_organization_rel mor,
+        mt_mod_organization_rel mor2,
+        mt_mod_organization_rel mor3,
+        mt_mod_workcell mmw
+        WHERE
+        ejs.TENANT_ID = #{tenantId}
+        <choose>
+            <when test="shiftIdList != null and shiftIdList.size() > 0">
+                AND ejs.SHIFT_ID IN
+                <foreach collection="shiftIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1 = 2
+            </otherwise>
+        </choose>
+        AND ejs.WORK_ORDER_ID IN
+        <foreach collection="workOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ejs.REWORK_FLAG = 'N'
+        AND ejs.site_out_date is NOT NULL
+        AND mm.MATERIAL_ID = ejs.sn_material_id
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.PARENT_ORGANIZATION_ID IN
+        <foreach collection="endProcessId" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = ejs.WORKCELL_ID
+        AND mor.TENANT_ID = #{tenantId}
+        AND mor2.TOP_SITE_ID = mor.TOP_SITE_ID
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+        AND mor2.TENANT_ID = mor.TENANT_ID
+        AND mor3.TOP_SITE_ID = mor2.TOP_SITE_ID
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.TENANT_ID = mor2.TENANT_ID
+        AND mmw.WORKCELL_ID = mor3.ORGANIZATION_ID
+        GROUP BY
+        ejs.sn_material_id,
+        mm.MATERIAL_CODE,
+        attr.ATTR_VALUE,
+        mmw.WORKCELL_NAME,
+        mor3.ORGANIZATION_ID,
+        mor3.PARENT_ORGANIZATION_ID,
+        ejs.work_order_id,
+        mor.PARENT_ORGANIZATION_ID
+    </select>
+
+    <select id="queryDispatchQty" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO2">
+        SELECT
+        wo.MATERIAL_ID SN_MATERIAL_ID,
+        wdr.WORKCELL_ID LINE_WORKCELL_ID,
+        IFNULL(SUM(wdr.dispatch_qty),0)	DISPATCH_QTY
+        FROM
+        hme_wo_dispatch_recode wdr,
+        mt_work_order wo
+        WHERE wdr.TENANT_ID = #{tenantId}
+        AND wdr.calendar_shift_id IN
+        <foreach collection="shiftIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND wdr.WORK_ORDER_ID IN
+        <foreach collection="workOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND wdr.WORKCELL_ID IN
+        <foreach collection="lineWorkcellIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND wo.work_order_id = wdr.WORK_ORDER_ID
+        GROUP BY
+        wo.MATERIAL_ID,
+        wdr.WORKCELL_ID
+    </select>
+
+    <select id="queryDispatchMaterialList" resultType="com.ruike.hme.domain.vo.HmeMakeCenterProduceBoardVO4">
+        SELECT
+        wo.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        attr.ATTR_VALUE MATERIAL_NAME
+        FROM
+        mt_work_order wo,
+        mt_material mm
+        LEFT JOIN mt_material_site mms ON mms.MATERIAL_ID = mm.MATERIAL_ID AND mms.SITE_ID = #{siteId} AND mms.TENANT_ID = mm.TENANT_ID
+        LEFT JOIN mt_material_site_attr attr ON attr.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID AND attr.ATTR_NAME = 'attribute5' AND  attr.TENANT_ID = mms.TENANT_ID,
+        mt_router_step mrs,
+        mt_router_operation mro,
+        mt_operation_wkc_dispatch_rel wdr,
+        mt_mod_organization_rel mor,
+        mt_mod_organization_rel mor2,
+        mt_mod_workcell mmw
+        WHERE wo.TENANT_ID = #{tenantId}
+        AND wo.WORK_ORDER_ID IN
+        <foreach collection="dispatchWorkOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mm.MATERIAL_ID = wo.MATERIAL_ID
+        AND mrs.router_id = wo.router_id
+        AND mrs.TENANT_ID = wo.TENANT_ID
+        AND mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        AND mro.TENANT_ID = mrs.TENANT_ID
+        AND wdr.OPERATION_ID = mro.OPERATION_ID
+        AND wdr.TENANT_ID = mro.TENANT_ID
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = wdr.WORKCELL_ID
+        AND mor.TENANT_ID = #{tenantId}
+        AND mor2.TOP_SITE_ID = mor.TOP_SITE_ID
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor2.PARENT_ORGANIZATION_ID = wo.PRODUCTION_LINE_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+        AND mor2.TENANT_ID = mor.TENANT_ID
+        AND mmw.WORKCELL_ID = mor2.ORGANIZATION_ID
+        GROUP BY
+        wo.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        attr.ATTR_VALUE
+    </select>
+
+    <delete id="batchDeleteDayPlanReachRate">
+        DELETE
+        FROM
+            hme_area_day_plan_reach_rate
+        WHERE
+            TENANT_ID = #{tenantId} AND chart_date >= current_date()
+    </delete>
+</mapper>

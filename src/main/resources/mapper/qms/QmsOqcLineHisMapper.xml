@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsOqcLineHisMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsOqcLineHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="OQC_LINE_HIS_ID" property="oqcLineHisId" jdbcType="VARCHAR"/>
+        <result column="OQC_HEADER_ID" property="oqcHeaderId" jdbcType="VARCHAR"/>
+        <result column="OQC_LINE_ID" property="oqcLineId" jdbcType="VARCHAR"/>
+        <result column="NUMBER" property="number" jdbcType="DECIMAL"/>
+        <result column="INSPECTION_TYPE" property="inspectionType" jdbcType="VARCHAR"/>
+        <result column="INSPECTION" property="inspection" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_DESC" property="inspectionDesc" jdbcType="VARCHAR"/>
+        <result column="STANDARD_TYPE" property="standardType" jdbcType="VARCHAR"/>
+        <result column="STANDARD_TEXT" property="standardText" jdbcType="VARCHAR"/>
+        <result column="STANDARD_FROM" property="standardFrom" jdbcType="DECIMAL"/>
+        <result column="STANDARD_TO" property="standardTo" jdbcType="DECIMAL"/>
+        <result column="ACCURACY" property="accuracy" jdbcType="DECIMAL"/>
+        <result column="STANDARD_UOM" property="standardUom" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_TOOL" property="inspectionTool" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_RESULT" property="inspectionResult" jdbcType="VARCHAR"/>
+        <result column="ATTACHMENT_UUID" property="attachmentUuid" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="attribute_category" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="attribute1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="attribute2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="attribute3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="attribute4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="attribute5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="attribute6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="attribute7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="attribute8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="attribute9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="attribute10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+</mapper>

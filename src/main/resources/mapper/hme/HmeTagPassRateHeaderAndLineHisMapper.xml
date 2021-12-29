@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeTagPassRateHeaderAndLineHisMapper">
+
+    <select id="queryTagPassRateHeaderAndLineHis" resultType="com.ruike.hme.domain.vo.HmeTagPassRateHeaderAndLineHisVO">
+        SELECT
+                htaprhh.cos_type,
+                htaprhh.test_object,
+                htaprhh.test_type,
+                htaprhh.test_qty,
+                htaprhh.pass_rate,
+                htaprhh.enable_flag,
+                htprlh.priority,
+                htprlh.test_sum_qty,
+                htprlh.add_pass_rate,
+                htprlh.last_updated_by,
+                htprlh.last_update_date
+        FROM
+                hme_tag_pass_rate_header_his htaprhh
+                LEFT JOIN hme_tag_pass_rate_line_his htprlh ON htaprhh.header_his_id = htprlh.header_his_id
+                AND htaprhh.tenant_id = htprlh.tenant_id
+        WHERE
+                htaprhh.tenant_id =#{tenantId}
+                AND htaprhh.header_id = #{heardId}
+        ORDER BY
+                htprlh.last_update_date DESC
+    </select>
+</mapper>

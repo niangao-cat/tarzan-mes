@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtContainerHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtContainerHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CONTAINER_HIS_ID" property="containerHisId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_CODE" property="containerCode" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE_ID" property="containerTypeId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_NAME" property="containerName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+        <result column="RESERVED_FLAG" property="reservedFlag" jdbcType="VARCHAR"/>
+        <result column="RESERVED_OBJECT_TYPE" property="reservedObjectType" jdbcType="VARCHAR"/>
+        <result column="RESERVED_OBJECT_ID" property="reservedObjectId" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="LAST_LOAD_TIME" property="lastLoadTime" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UNLOAD_TIME" property="lastUnloadTime" jdbcType="TIMESTAMP"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CURRENT_CONTAINER_ID" property="currentContainerId" jdbcType="VARCHAR"/>
+        <result column="TOP_CONTAINER_ID" property="topContainerId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!--根据事件id获取数据-->
+    <select id="selectMtContainerHisByEventIds" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        mt_container_his t
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        and t.event_id IN
+        <foreach collection="eventIds" item="item" open=" ( " separator=" , " close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectMtContainerHisByEventTime" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_container_his t,
+        mt_event e
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        and e.TENANT_ID = #{tenantId}
+        and t.EVENT_ID = e.EVENT_ID
+        <if test="dto.containerId!=null">
+            and t.CONTAINER_ID=#{dto.containerId}
+        </if>
+
+        <if test="dto.eventId!=null">
+            and t.EVENT_ID=#{dto.eventId}
+        </if>
+
+        <if test="dto.eventBy!=null">
+            and e.EVENT_BY=#{dto.eventBy}
+        </if>
+
+        <if test="dto.eventTimeFrom!=null">
+            and e.EVENT_TIME &gt;=DATE_FORMAT(#{dto.eventTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.eventTimeTo!=null">
+            and e.EVENT_TIME &lt;=DATE_FORMAT(#{dto.eventTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+    <select id="containerLatestHisGet" resultType="tarzan.inventory.domain.vo.MtContainerHisVO3">
+        SELECT
+            his.CONTAINER_HIS_ID containerHisId,
+            his.EVENT_ID eventId
+        FROM
+            mt_container_his his
+        WHERE
+            his.TENANT_ID = #{tenantId}
+            AND his.CONTAINER_ID = #{containerId}
+        ORDER BY
+            CAST( his.CONTAINER_HIS_ID AS DECIMAL ( 36 ) ) DESC
+            LIMIT 1
+    </select>
+</mapper>

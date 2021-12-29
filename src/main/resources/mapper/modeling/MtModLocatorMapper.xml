@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModLocatorMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModLocator">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_NAME" property="locatorName" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_LOCATION" property="locatorLocation" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_TYPE" property="locatorType" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_ID" property="locatorGroupId" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_WEIGHT" property="maxWeight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_CAPACITY" property="maxCapacity" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="PARENT_LOCATOR_ID" property="parentLocatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CATEGORY" property="locatorCategory" jdbcType="VARCHAR"/>
+        <result column="NEGATIVE_FLAG" property="negativeFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap2" type="tarzan.modeling.domain.vo.MtModLocatorVO2">
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_NAME" property="locatorName" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_LOCATION" property="locatorLocation" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_TYPE" property="locatorType" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CATEGORY" property="locatorCategory" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_ID" property="locatorGroupId" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_WEIGHT" property="maxWeight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_CAPACITY" property="maxCapacity" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="PARENT_LOCATOR_ID" property="parentLocatorId" jdbcType="VARCHAR"/>
+        <result column="NEGATIVE_FLAG" property="negativeFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="typeDesc" property="typeDesc" jdbcType="VARCHAR"/>
+        <result column="locatorGroupCode" property="locatorGroupCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_NAME" property="locatorGroupName" jdbcType="VARCHAR"/>
+        <result column="ownerCode" property="ownerCode" jdbcType="VARCHAR"/>
+        <result column="ownerSiteCode" property="ownerSiteCode" jdbcType="VARCHAR"/>
+        <result column="sizeUomCode" property="sizeUomCode" jdbcType="VARCHAR"/>
+        <result column="weightUomCode" property="weightUomCode" jdbcType="VARCHAR"/>
+
+        <result column="ownerDesc" property="ownerDesc" jdbcType="VARCHAR"/>
+        <result column="ownerSiteDesc" property="ownerSiteDesc" jdbcType="VARCHAR"/>
+        <result column="sizeUomDesc" property="sizeUomDesc" jdbcType="VARCHAR"/>
+        <result column="weightUomDesc" property="weightUomDesc" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap3" type="tarzan.modeling.domain.vo.MtModLocatorVO3">
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_NAME" property="locatorName" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_LOCATION" property="locatorLocation" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_TYPE" property="locatorType" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CATEGORY" property="locatorCategory" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_ID" property="locatorGroupId" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_WEIGHT" property="maxWeight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_CAPACITY" property="maxCapacity" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="PARENT_LOCATOR_ID" property="parentLocatorId" jdbcType="VARCHAR"/>
+        <result column="NEGATIVE_FLAG" property="negativeFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="typeDesc" property="typeDesc" jdbcType="VARCHAR"/>
+        <result column="locatorGroupCode" property="locatorGroupCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_NAME" property="locatorGroupName" jdbcType="VARCHAR"/>
+        <result column="sizeUomCode" property="sizeUomCode" jdbcType="VARCHAR"/>
+        <result column="weightUomCode" property="weightUomCode" jdbcType="VARCHAR"/>
+        <result column="sizeUomDesc" property="sizeUomDesc" jdbcType="VARCHAR"/>
+        <result column="weightUomDesc" property="weightUomDesc" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap4" type="tarzan.modeling.domain.vo.MtModLocatorVO6">
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_NAME" property="locatorName" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_LOCATION" property="locatorLocation" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_TYPE" property="locatorType" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CATEGORY" property="locatorCategory" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_ID" property="locatorGroupId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_GROUP_CODE" property="locatorGroupCode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="NEGATIVE_FLAG" property="negativeFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectLocatorByGroup" resultMap="BaseResultMap">
+        select b.*
+        From mt_mod_locator b
+        where
+        b.TENANT_ID = #{tenantId}
+        and b.LOCATOR_GROUP_ID = #{locatorGroupId}
+        and b.ENABLE_FLAG = 'Y'
+        <if test='parentCheck!=null and parentCheck=="Y"'>
+            and (b.PARENT_LOCATOR_ID is null or b.PARENT_LOCATOR_ID='')
+        </if>
+    </select>
+
+
+    <select id="selectLocatorById" resultMap="BaseResultMap2">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.LOCATOR_ID,
+        b.LOCATOR_CODE,
+        l.LOCATOR_NAME,
+        l.LOCATOR_LOCATION,
+        b.LOCATOR_TYPE,
+        b.LOCATOR_CATEGORY,
+        b.LOCATOR_GROUP_ID,
+        b.LENGTH,
+        b.WIDTH,
+        b.HEIGHT,
+        b.SIZE_UOM_ID,
+        b.WEIGHT_UOM_ID,
+        b.MAX_CAPACITY,
+        b.MAX_WEIGHT,
+        b.ENABLE_FLAG,
+        b.NEGATIVE_FLAG,
+        b1.UOM_CODE sizeUomCode,
+        b2.UOM_CODE weightUomCode,
+        b1_tl.UOM_NAME sizeUomDesc,
+        b2_tl.UOM_NAME weightUomDesc,
+        ware.LOCATOR_GROUP_CODE locatorGroupCode,
+        ware.LOCATOR_GROUP_NAME
+        FROM
+        mt_mod_locator b
+        INNER JOIN mt_mod_locator_tl L ON b.LOCATOR_ID = l.LOCATOR_ID
+        AND l.LANG = #{lang}
+        LEFT JOIN mt_uom b1 ON b1.UOM_ID = b.SIZE_UOM_ID and b1.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_uom b2 ON b2.UOM_ID = b.WEIGHT_UOM_ID and b2.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_uom_tl b1_tl ON b1.UOM_ID = b1_tl.UOM_ID
+        AND b1_tl.LANG = #{lang}
+        LEFT JOIN mt_uom_tl b2_tl ON b2.UOM_ID = b2_tl.UOM_ID
+        AND b2_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator_group ware ON ware.LOCATOR_GROUP_ID = b.LOCATOR_GROUP_ID and ware.TENANT_ID =
+        ${tenantId}
+        LEFT JOIN mt_mod_locator_group_tl ware_tl ON ware_tl.LOCATOR_GROUP_ID = ware.LOCATOR_GROUP_ID
+        AND ware_tl.LANG = #{lang}
+        WHERE
+        b.TENANT_ID = #{tenantId}
+        <if test="dto.locatorId! = null">
+            and b.LOCATOR_ID=#{dto.locatorId}
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap" fetchSize="5000">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select t1.TENANT_ID,
+        t1.LOCATOR_ID,
+        t1.LOCATOR_CODE,
+        t2.LOCATOR_NAME,
+        t2.LOCATOR_LOCATION,
+        t1.LOCATOR_TYPE,
+        t1.LOCATOR_GROUP_ID,
+        t1.LENGTH,
+        t1.WIDTH,
+        t1.HEIGHT,
+        t1.SIZE_UOM_ID,
+        t1.MAX_WEIGHT,
+        t1.WEIGHT_UOM_ID,
+        t1.MAX_CAPACITY,
+        t1.ENABLE_FLAG,
+        t1.PARENT_LOCATOR_ID,
+        t1.LOCATOR_CATEGORY,
+        t1.NEGATIVE_FLAG,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_mod_locator t1 INNER join mt_mod_locator_tl t2 on (t1.LOCATOR_ID=t2.LOCATOR_ID and t2.LANG=#{lang})
+        where t1.TENANT_ID = ${tenantId}
+        <if test="whereSql!=null">
+            and ${whereSql}
+        </if>
+        <if test="whereSql==null">
+            and 1=-1
+        </if>
+    </select>
+
+    <select id="selectByConditionForUi" resultMap="BaseResultMap4">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.LOCATOR_ID,
+        b.LOCATOR_CODE,
+        l.LOCATOR_NAME,
+        l.LOCATOR_LOCATION,
+        b.LOCATOR_TYPE,
+        b.LOCATOR_CATEGORY,
+        b.LOCATOR_GROUP_ID,
+        ware.LOCATOR_GROUP_CODE,
+        b.ENABLE_FLAG,
+        b.NEGATIVE_FLAG
+        FROM
+        mt_mod_locator b
+        INNER JOIN mt_mod_locator_tl L ON b.LOCATOR_ID = l.LOCATOR_ID
+        AND l.LANG = #{lang}
+        LEFT JOIN mt_uom b1 ON b1.UOM_ID = b.SIZE_UOM_ID and b1.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_uom b2 ON b2.UOM_ID = b.WEIGHT_UOM_ID and b2.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_uom_tl b1_tl ON b1.UOM_ID = b1_tl.UOM_ID
+        AND b1_tl.LANG = #{lang}
+        LEFT JOIN mt_uom_tl b2_tl ON b2.UOM_ID = b2_tl.UOM_ID
+        AND b2_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator_group ware ON ware.LOCATOR_GROUP_ID = b.LOCATOR_GROUP_ID and ware.TENANT_ID =
+        ${tenantId}
+        LEFT JOIN mt_mod_locator_group_tl ware_tl ON ware_tl.LOCATOR_GROUP_ID = ware.LOCATOR_GROUP_ID
+        AND ware_tl.LANG = #{lang}
+        WHERE
+        b.TENANT_ID = ${tenantId}
+        <if test='dto.locatorCode !=null and dto.locatorCode !=""'>
+            and b.LOCATOR_CODE like CONCAT('%',#{dto.locatorCode},'%')
+        </if>
+        <if test='dto.locatorName !=null and dto.locatorName !=""'>
+            <bind name="tmpLocatorName" value="'%' + dto.locatorName + '%'"/>
+            and l.LOCATOR_NAME like CONCAT('%',#{tmpLocatorName},'%')
+        </if>
+        <if test='dto.locatorType !=null'>
+            and b.LOCATOR_TYPE = #{dto.locatorType}
+        </if>
+        <if test='dto.locatorCategory !=null'>
+            and b.LOCATOR_CATEGORY = #{dto.locatorCategory}
+        </if>
+        <if test='dto.locatorLocation !=null and dto.locatorLocation !=""'>
+            and l.LOCATOR_LOCATION like CONCAT('%',CONCAT(#{dto.locatorLocation},'%'))
+        </if>
+        <if test='dto.locatorGroupId !=null'>
+            and b.LOCATOR_GROUP_ID = #{dto.locatorGroupId}
+        </if>
+        <if test='dto.enableFlag !=null'>
+            and b.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        ORDER BY b.CREATION_DATE DESC
+    </select>
+
+    <select id="selectByIdCustom" resultMap="BaseResultMap3">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.LOCATOR_ID,
+        b.LOCATOR_CODE,
+        l.LOCATOR_NAME,
+        l.LOCATOR_LOCATION,
+        b.LOCATOR_TYPE,
+        b.LOCATOR_CATEGORY,
+        b.LOCATOR_GROUP_ID,
+        b.LENGTH,
+        b.WIDTH,
+        b.HEIGHT,
+        b.SIZE_UOM_ID,
+        b.WEIGHT_UOM_ID,
+        b.MAX_CAPACITY,
+        b.MAX_WEIGHT,
+        b.ENABLE_FLAG,
+        b.NEGATIVE_FLAG,
+        b1.UOM_CODE sizeUomCode,
+        b2.UOM_CODE weightUomCode,
+        b1_tl.UOM_NAME sizeUomDesc,
+        b2_tl.UOM_NAME weightUomDesc,
+        ware.LOCATOR_GROUP_CODE locatorGroupCode,
+        ware.LOCATOR_GROUP_NAME
+        FROM
+        mt_mod_locator b
+        LEFT JOIN mt_mod_locator_tl L ON b.LOCATOR_ID = l.LOCATOR_ID
+        AND l.LANG = #{lang}
+        LEFT JOIN mt_uom b1 ON b1.UOM_ID = b.SIZE_UOM_ID and b1.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_uom b2 ON b2.UOM_ID = b.WEIGHT_UOM_ID and b2.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_uom_tl b1_tl ON b1.UOM_ID = b1_tl.UOM_ID
+        AND b1_tl.LANG = #{lang}
+        LEFT JOIN mt_uom_tl b2_tl ON b2.UOM_ID = b2_tl.UOM_ID
+        AND b2_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator_group ware ON ware.LOCATOR_GROUP_ID = b.LOCATOR_GROUP_ID and ware.TENANT_ID =
+        ${tenantId}
+        LEFT JOIN mt_mod_locator_group_tl ware_tl ON ware_tl.LOCATOR_GROUP_ID = ware.LOCATOR_GROUP_ID
+        AND ware_tl.LANG = #{lang}
+        WHERE
+        b.TENANT_ID = ${tenantId}
+        and b.LOCATOR_ID = ${locatorId}
+    </select>
+
+    <select id="selectLovByConditionCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select t1.LOCATOR_ID,
+        t1.LOCATOR_CODE,
+        t2.LOCATOR_NAME,
+        t2.LOCATOR_LOCATION,
+        t1.LOCATOR_TYPE,
+        t1.LOCATOR_GROUP_ID,
+        t1.LENGTH,
+        t1.WIDTH,
+        t1.HEIGHT,
+        t1.SIZE_UOM_ID,
+        t1.MAX_WEIGHT,
+        t1.WEIGHT_UOM_ID,
+        t1.MAX_CAPACITY,
+        t1.ENABLE_FLAG,
+        t1.PARENT_LOCATOR_ID,
+        t1.LOCATOR_CATEGORY,
+        t1.NEGATIVE_FLAG,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_mod_locator t1
+        INNER join mt_mod_locator_tl t2 on (t1.LOCATOR_ID=t2.LOCATOR_ID and t2.LANG=#{locale})
+        where
+        t1.TENANT_ID = #{tenantId}
+        and t1.ENABLE_FLAG='Y'
+        and t1.LOCATOR_ID IN
+        <foreach collection="dto.locatorIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="dto.locatorName!=null">
+            and t2.LOCATOR_NAME like concat('%',#{dto.locatorName} ,'%')
+        </if>
+        <if test="dto.locatorCode!=null">
+            and t1.LOCATOR_CODE like concat('%',#{dto.locatorCode} ,'%')
+        </if>
+    </select>
+
+    <select id="selectLikeQuery" resultType="tarzan.modeling.domain.vo.MtModLocatorVO8">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        t1.LOCATOR_ID,
+        t1.LOCATOR_CODE,
+        t2.LOCATOR_NAME,
+        t2.LOCATOR_LOCATION,
+        t1.LOCATOR_TYPE,
+        t1.LOCATOR_GROUP_ID,
+        t1.LENGTH,
+        t1.WIDTH,
+        t1.HEIGHT,
+        t1.SIZE_UOM_ID,
+        t1.MAX_WEIGHT,
+        t1.WEIGHT_UOM_ID,
+        t1.MAX_CAPACITY,
+        t1.ENABLE_FLAG,
+        t1.PARENT_LOCATOR_ID,
+        t1.LOCATOR_CATEGORY,
+        t1.NEGATIVE_FLAG
+        from mt_mod_locator t1 INNER join mt_mod_locator_tl t2 on (t1.LOCATOR_ID=t2.LOCATOR_ID and t2.LANG=#{locale})
+        where
+        t1.TENANT_ID = #{tenantId}
+        <if test="dto.locatorId!=null">
+            and t1.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.locatorCode!=null">
+            and t1.LOCATOR_CODE = #{dto.locatorCode}
+        </if>
+        <if test="dto.locatorName!=null">
+            and t2.LOCATOR_NAME like concat('%',#{dto.locatorName} ,'%')
+        </if>
+        <if test="dto.locatorLocation!=null">
+            and t2.LOCATOR_LOCATION like concat('%',#{dto.locatorLocation} ,'%')
+        </if>
+        <if test="dto.enableFlag!=null">
+            and t1.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.locatorType!=null">
+            and t1.LOCATOR_TYPE = #{dto.locatorType}
+        </if>
+        <if test="dto.locatorCategory!=null">
+            and t1.LOCATOR_CATEGORY = #{dto.locatorCategory}
+        </if>
+        <if test="dto.negativeFlag!=null">
+            and t1.NEGATIVE_FLAG = #{dto.negativeFlag}
+        </if>
+        <if test="dto.locatorGroupId!=null">
+            and t1.LOCATOR_GROUP_ID = #{dto.locatorGroupId}
+        </if>
+        <if test="dto.parentLocatorId!=null">
+            and t1.PARENT_LOCATOR_ID = #{dto.parentLocatorId}
+        </if>
+        order by CAST(t1.LOCATOR_ID AS DECIMAL (36))
+    </select>
+
+    <select id="selectByParentLocatorIds" resultType="java.lang.String">
+        select PARENT_LOCATOR_ID
+        from mt_mod_locator
+        where TENANT_ID = ${tenantId}
+        and ${parentLocatorIds}
+    </select>
+    <select id="selectByLocatorCodes" resultMap="BaseResultMap" fetchSize="5000">
+        select
+        *
+        from mt_mod_locator
+        where TENANT_ID = ${tenantId}
+        AND ${locatorCodes}
+    </select>
+
+    <select id="selectParentLocatorIds" resultType="tarzan.modeling.domain.vo.MtModLocatorVO10">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        t1.LOCATOR_ID,
+        t1.PARENT_LOCATOR_ID
+        from mt_mod_locator t1 INNER join mt_mod_locator_tl t2 on (t1.LOCATOR_ID=t2.LOCATOR_ID and t2.LANG=#{locale})
+        where
+        t1.TENANT_ID = #{tenantId}
+        <if test="dto.locatorId!=null">
+            and t1.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.locatorName!=null">
+            and t2.LOCATOR_NAME = #{dto.locatorName}
+        </if>
+        <if test="dto.locatorLocation!=null">
+            and t2.LOCATOR_LOCATION = #{dto.locatorLocation}
+        </if>
+        <if test="dto.enableFlag!=null">
+            and t1.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.locatorType!=null">
+            and t1.LOCATOR_TYPE = #{dto.locatorType}
+        </if>
+        <if test="dto.locatorCategory!=null">
+            and t1.LOCATOR_CATEGORY = #{dto.locatorCategory}
+        </if>
+        <if test="dto.negativeFlag!=null">
+            and t1.NEGATIVE_FLAG = #{dto.negativeFlag}
+        </if>
+        <if test="dto.locatorGroupId!=null">
+            and t1.LOCATOR_GROUP_ID = #{dto.locatorGroupId}
+        </if>
+        <if test="dto.parentLocatorId!=null">
+            and t1.PARENT_LOCATOR_ID = #{dto.parentLocatorId}
+        </if>
+    </select>
+</mapper>

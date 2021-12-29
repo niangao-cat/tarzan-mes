@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.reports.infra.mapper.HmeEquipmentWorkingMapper">
+
+    <resultMap id="QueryBindWorkcellMap" type="com.ruike.reports.domain.vo.HmeEquipmentWorkingVO3">
+        <result column="ASSET_NAME" property="assetName" jdbcType="VARCHAR" />
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR" />
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_BODY_NUM" property="equipmentBodyNum" jdbcType="VARCHAR" />
+        <result column="USER" property="user" jdbcType="VARCHAR" />
+        <result column="department" property="department" jdbcType="VARCHAR" />
+        <collection property="workcellIdList" ofType="java.lang.String">
+            <result column="station_id" />
+        </collection>
+    </resultMap>
+
+    <select id="selectList" resultType="com.ruike.reports.domain.vo.HmeEquipmentWorkingVO3">
+        SELECT
+            hejs.workcell_id,
+            hejs.site_in_date,
+            hejs.site_out_date,
+            DATE_FORMAT(hejs.site_out_date,'%Y年%m月%d日') date_string
+        FROM
+            hme_eo_job_sn hejs force index(hme_eo_job_sn_n17)
+        WHERE
+            hejs.tenant_id = #{tenantId}
+            <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+                and hejs.site_out_date &gt;= #{dto.creationDateFrom}
+            </if>
+            <if test="dto.creationDateTo != null and dto.creationDateTo != ''">
+                and hejs.site_out_date &lt;= #{dto.creationDateTo}
+            </if>
+            and hejs.WORKCELL_ID IN
+            <foreach collection="dto.workcellIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+    </select>
+
+    <select id="selectEquipmentList" resultMap="QueryBindWorkcellMap">
+        select
+            he.ASSET_NAME,
+            he.ASSET_ENCODING,
+            he.MODEL,
+            he.EQUIPMENT_BODY_NUM,
+            he.BUSINESS_ID,
+            he.USER,
+            mma.DESCRIPTION department,
+            hewr.station_id
+        from
+            hme_equipment he
+            left join mt_mod_area mma on he.BUSINESS_ID = mma.AREA_ID
+            left join hme_equipment_wkc_rel hewr ON hewr.equipment_id = he.equipment_id
+        where
+            he.tenant_id = #{tenantId}
+        AND he.EQUIPMENT_STATUS = 'KY'
+        <if test="dto.equipmentId != null and dto.equipmentId != ''">
+            and he.equipment_id = #{dto.equipmentId}
+        </if>
+        <if test="dto.assetName != null and dto.assetName != ''">
+            and he.ASSET_NAME LIKE CONCAT(#{dto.assetName}, '%')
+        </if>
+        <if test="dto.equipmentCodeList != null and dto.equipmentCodeList.size() > 0">
+            and he.ASSET_ENCODING in
+            <foreach collection="dto.equipmentCodeList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.equipmentCategory != null and dto.equipmentCategory != ''">
+            and he.EQUIPMENT_CATEGORY = #{dto.equipmentCategory}
+        </if>
+        <if test="dto.areaId != null and dto.areaId != ''">
+            and mma.AREA_ID = #{dto.areaId}
+        </if>
+    </select>
+</mapper>

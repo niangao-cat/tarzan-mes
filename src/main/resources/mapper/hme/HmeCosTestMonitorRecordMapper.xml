@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosTestMonitorRecordMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosTestMonitorRecord">
+                    <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+                    <result column="cos_monitor_record_id" property="cosMonitorRecordId" jdbcType="VARCHAR"/>
+                    <result column="cos_monitor_header_id" property="cosMonitorHeaderId" jdbcType="VARCHAR"/>
+                    <result column="monitor_doc_num" property="monitorDocNum" jdbcType="VARCHAR"/>
+                    <result column="doc_status" property="docStatus" jdbcType="VARCHAR"/>
+                    <result column="check_status" property="checkStatus" jdbcType="VARCHAR"/>
+                    <result column="cos_type" property="cosType" jdbcType="VARCHAR"/>
+                    <result column="wafer" property="wafer" jdbcType="VARCHAR"/>
+                    <result column="test_pass_rate" property="testPassRate" jdbcType="DECIMAL"/>
+                    <result column="pass_date" property="passDate" jdbcType="DATE"/>
+                    <result column="pass_by" property="passBy" jdbcType="DECIMAL"/>
+                    <result column="cid" property="cid" jdbcType="DECIMAL"/>
+                    <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+                    <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+                    <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+                    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+                    <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+                    <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+            </resultMap>
+
+    <select id="queryCosTestMonitorRecord" resultType="com.ruike.hme.domain.vo.HmeCosTestMonitorRecordVO">
+        SELECT
+                hctmr.monitor_doc_num,
+                hctmr.doc_status,
+                hctmr.check_status,
+                hctmr.cos_type,
+                hctmr.wafer,
+                hctmr.test_pass_rate,
+                hctmr.pass_date,
+                hctmr.pass_by,
+                hctmr.creation_date
+        FROM
+                hme_cos_test_monitor_record hctmr
+        WHERE
+                hctmr.tenant_id =#{tenantId}
+                AND hctmr.cos_monitor_header_id =#{cosMonitorHeaderId}
+        ORDER BY hctmr.LAST_UPDATE_DATE DESC
+    </select>
+</mapper>

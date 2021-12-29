@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeRepairRecordMapper">
+
+    <select id="queryRepairRecordList" resultType="com.ruike.hme.domain.vo.HmeRepairPermitJudgeVO" >
+        SELECT
+        hre.repair_record_id,
+        hre.material_lot_id,
+        mml.MATERIAL_LOT_CODE,
+        hre.material_id,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        hre.workcell_id,
+        mmw.WORKCELL_CODE,
+        mmw.WORKCELL_NAME,
+        hre.limit_count,
+        hre.permit_count,
+        hre.permit_repair_count,
+        hre.pass_count,
+        hre.repair_count,
+        hre. STATUS,
+        hre.last_update_date,
+        hre.last_updated_by,
+        mma.AREA_CODE AS department_code,
+        mma.AREA_NAME AS department_name,
+        iu.real_name
+        FROM
+        hme_repair_record hre
+        LEFT JOIN hzero_platform.iam_user iu ON iu.id = hre.last_updated_by
+        LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = hre.material_lot_id
+        AND mml.TENANT_ID = hre.tenant_id
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = hre.material_id
+        AND mm.TENANT_ID = hre.tenant_id
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = hre.workcell_id
+        AND mmw.TENANT_ID = hre.tenant_id
+        LEFT JOIN mt_mod_organization_rel org1 ON org1.ORGANIZATION_ID = hre.workcell_id
+        AND org1.ORGANIZATION_TYPE = 'WORKCELL'
+        AND org1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_organization_rel org2 ON org2.ORGANIZATION_ID = org1.PARENT_ORGANIZATION_ID
+        AND org2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND org2.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel org3 ON org3.ORGANIZATION_ID = org2.PARENT_ORGANIZATION_ID
+        AND org3.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND org3.PARENT_ORGANIZATION_TYPE = 'AREA'
+        LEFT JOIN mt_mod_organization_rel org4 ON org4.ORGANIZATION_ID = org3.PARENT_ORGANIZATION_ID
+        AND org4.ORGANIZATION_TYPE = 'AREA'
+        AND org4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        LEFT JOIN mt_mod_area mma ON mma.AREA_ID = org4.PARENT_ORGANIZATION_ID
+        WHERE hre.tenant_id = #{tenantId}
+        <if test="dto.departmentId != null and dto.departmentId !=''">
+            AND mma.AREA_ID = #{dto.departmentId}
+        </if>
+        <if test="dto.snNumArray != null and dto.snNumArray.size() > 0">
+            AND mml.MATERIAL_LOT_CODE IN
+            <foreach collection="dto.snNumArray" separator="," open="(" close=")" item="i" index="index">
+                #{i}
+            </foreach>
+        </if>
+        <if test="dto.materialId != null and dto.materialId !=''">
+            AND mm.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            AND mmw.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.status != null and dto.status != ''">
+            AND hre.status = #{dto.status}
+        </if>
+    </select>
+
+</mapper>

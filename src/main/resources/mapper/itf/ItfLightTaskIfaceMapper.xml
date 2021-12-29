@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfLightTaskIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfLightTaskIface">
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="TASK_NUM" property="taskNum" jdbcType="VARCHAR"/>
+        <result column="DOC_ID" property="docId" jdbcType="VARCHAR"/>
+        <result column="DOC_LINE_ID" property="docLineId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_LABEL_ID" property="locatorLabelId" jdbcType="VARCHAR"/>
+        <result column="TASK_TYPE" property="taskType" jdbcType="VARCHAR"/>
+        <result column="TASK_STATUS" property="taskStatus" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <update id="updateTaskStatus">
+        UPDATE itf_light_task_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = #{nowDate},
+            task_status =
+            <foreach collection="itfLightTaskIfaces" item="item" index="index"
+                     separator=" " open="case task_num" close="end,">
+                when #{item.taskNum} then #{item.taskStatus}
+            </foreach>
+        </set>
+        <where>
+            task_num in
+            <foreach collection="itfLightTaskIfaces" item="item"
+                     separator="," open="(" close=")">
+                #{item.taskNum}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="selectByTaskNum" resultType="com.ruike.itf.domain.entity.ItfLightTaskIface">
+        SELECT
+            *
+        FROM
+            itf_light_task_iface ilt
+        WHERE
+            ilt.TENANT_ID = #{tenantId}
+            AND ilt.TASK_NUM IN
+        <foreach collection="taskNumList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updateIfaceData">
+        update itf_light_task_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            status = 'E',
+            message = #{message}
+        </set>
+        <where>
+            iface_id in
+            <foreach collection="ifaceIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <update id="updateStatusAndMsg">
+        UPDATE itf_light_task_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = #{nowDate},
+            status =
+            <foreach collection="itfLightTaskIfaceList" item="item" index="index"
+                     separator=" " open="case task_num" close="end,">
+                when #{item.taskNum} then #{item.status}
+            </foreach>
+        </set>
+        <where>
+            task_num in
+            <foreach collection="itfLightTaskIfaceList" item="item"
+                     separator="," open="(" close=")">
+                #{item.taskNum}
+            </foreach>
+        </where>
+    </update>
+</mapper>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeChipLabCodeInputMapper">
+
+    <select id="materialLotLoadListQuery" resultType="com.ruike.hme.domain.vo.HmeChipLabCodeInputVO2">
+        select hmll.material_lot_load_id, hmll.load_sequence, hmll.load_row, hmll.load_column,
+               hmll.cos_num, hmll.ATTRIBUTE19 as chip_lab_code, hmll.ATTRIBUTE20 as chip_lab_remark, hmll.ATTRIBUTE4
+        from hme_material_lot_load hmll
+        where hmll.material_lot_id = #{materialLotId}
+        and hmll.tenant_id = #{tenantId}
+        order by hmll.load_row, hmll.load_column
+    </select>
+
+    <select id="materialLotInfoQuery" resultType="com.ruike.hme.domain.vo.HmeChipLabCodeInputVO">
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mml.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               mml.PRIMARY_UOM_QTY, cos_type_attr.ATTR_VALUE as cos_type, wafer_attr.ATTR_VALUE as wafer,
+               lab_code_attr.ATTR_VALUE as barcode_lab_code, lab_remark_attr.ATTR_VALUE as barcode_lab_remark,
+               chip_num_attr.ATTR_VALUE as chip_num, location_row_attr.ATTR_VALUE as location_row,
+               location_column_attr.ATTR_VALUE as location_column
+        from mt_material_lot mml
+        left join mt_material_lot_attr cos_type_attr
+        on cos_type_attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and cos_type_attr.ATTR_NAME = 'COS_TYPE'
+        and cos_type_attr.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr wafer_attr
+        on wafer_attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and wafer_attr.ATTR_NAME = 'WAFER_NUM'
+        and wafer_attr.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr lab_code_attr
+        on lab_code_attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and lab_code_attr.ATTR_NAME = 'LAB_CODE'
+        and lab_code_attr.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr lab_remark_attr
+        on lab_remark_attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and lab_remark_attr.ATTR_NAME = 'LAB_REMARK'
+        and lab_remark_attr.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr chip_num_attr
+        on chip_num_attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and chip_num_attr.ATTR_NAME = 'CHIP_NUM'
+        and chip_num_attr.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr location_row_attr
+        on location_row_attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and location_row_attr.ATTR_NAME = 'LOCATION_ROW'
+        and location_row_attr.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr location_column_attr
+        on location_column_attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and location_column_attr.ATTR_NAME = 'LOCATION_COLUMN'
+        and location_column_attr.TENANT_ID = mml.TENANT_ID,
+        mt_material mm
+        where mml.MATERIAL_LOT_ID = #{materialLotId}
+        and mml.TENANT_ID = #{tenantId}
+        and mm.MATERIAL_ID = mml.MATERIAL_ID
+    </select>
+</mapper>

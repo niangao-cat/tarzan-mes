@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeAfterSaleQuotationHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeAfterSaleQuotationHeader">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="quotation_header_id" property="quotationHeaderId" jdbcType="VARCHAR"/>
+        <result column="service_receive_id" property="serviceReceiveId" jdbcType="VARCHAR"/>
+        <result column="quotation_code" property="quotationCode" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="submission_data" property="submissionData" jdbcType="DATE"/>
+        <result column="submission_by" property="submissionBy" jdbcType="DECIMAL"/>
+        <result column="send_to" property="sendTo" jdbcType="VARCHAR"/>
+        <result column="sold_to" property="soldTo" jdbcType="VARCHAR"/>
+        <result column="optics_no_flag" property="opticsNoFlag" jdbcType="VARCHAR"/>
+        <result column="electric_no_flag" property="electricNoFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getQuotationHeaderBySnNum" resultType="com.ruike.hme.domain.entity.HmeAfterSaleQuotationHeader">
+        select hasqh.quotation_header_id, hasqh.last_update_date
+        from hme_after_sale_quotation_header hasqh
+        where hasqh.sn_num = #{snNum}
+        and hasqh.`status` in
+        <foreach collection="statusList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hasqh.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getQuotationHeaderByMaterialLotId" resultType="com.ruike.hme.domain.entity.HmeAfterSaleQuotationHeader">
+        select hasqh.quotation_header_id, hasqh.last_update_date
+        from hme_after_sale_quotation_header hasqh
+        where hasqh.material_lot_id = #{materialLotId}
+        and hasqh.`status` in
+        <foreach collection="statusList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hasqh.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getServiceReceiveByMaterialLot" resultType="com.ruike.hme.domain.vo.HmeAfterSaleQuotationHeaderVO">
+        select hsr.service_receive_id, hssr.split_record_id, hsr.logistics_info_id
+        from hme_service_split_record hssr,
+             hme_service_receive hsr
+        where hssr.material_lot_id = #{materialLotId}
+        and hssr.top_split_record_id = hssr.split_record_id
+        and hssr.tenant_id = #{tenantId}
+        and hsr.service_receive_id = hssr.service_receive_id
+        and hsr.site_id = #{siteId}
+        and hsr.tenant_id = hssr.tenant_id
+    </select>
+
+    <select id="getServiceReceiveBySnNum" resultType="com.ruike.hme.domain.vo.HmeAfterSaleQuotationHeaderVO">
+        select hsr.service_receive_id, hssr.split_record_id, hsr.logistics_info_id
+        from hme_service_receive hsr,
+             hme_service_split_record hssr
+        where hsr.sn_num = #{snNum}
+        and hsr.tenant_id = #{tenantId}
+        and hssr.service_receive_id = hsr.service_receive_id
+        and hssr.top_split_record_id = hssr.split_record_id
+        and hssr.tenant_id = hsr.tenant_id
+    </select>
+
+    <select id="getCreationDateMaxLogisticsInfoId" resultType="java.lang.String">
+        select hli.logistics_info_id
+        from hme_logistics_info hli
+        where hli.logistics_info_id in
+        <foreach collection="logisticsInfoIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        order by hli.creation_date desc
+        limit 1
+    </select>
+
+    <select id="getServiceSplitRecordByServiceReceiveId" resultType="com.ruike.hme.domain.entity.HmeServiceSplitRecord">
+        select hssr.*
+        from hme_service_split_record hssr
+        where hssr.service_receive_id = #{serviceReceiveId}
+        and hssr.top_split_record_id = hssr.split_record_id
+        and hssr.tenant_id = #{tenantId}
+        limit 1
+    </select>
+
+    <select id="getMaterialInfoByMaterialSite" resultType="tarzan.material.domain.entity.MtMaterial">
+        select mm.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME
+        from mt_material_site mms,
+             mt_material mm
+        where mms.MATERIAL_ID = #{materialId}
+        and mms.SITE_ID = #{siteId}
+        and mms.TENANT_ID = #{tenantId}
+        and mm.MATERIAL_ID = mms.MATERIAL_ID
+    </select>
+
+    <select id="sendToQueryByServiceReceiveId" resultType="tarzan.modeling.domain.entity.MtCustomer">
+        select mc.CUSTOMER_ID, mc.CUSTOMER_NAME
+        from hme_after_sales_repair hasr,
+             mt_customer mc
+        where hasr.service_receive_id = #{serviceReceiveId}
+        and hasr.tenant_id = #{tenantId}
+        and mc.CUSTOMER_ID = hasr.customer_id
+        limit 1
+    </select>
+
+    <select id="currentWorkcellQuery" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+        SELECT
+            mmw.WORKCELL_ID,
+            mmw.WORKCELL_CODE,
+            mmw.workcell_name
+        FROM
+            mt_mod_workcell mmw,
+            mt_eo_step_wip sw,
+            mt_eo_step_actual sa,
+            mt_eo_router_actual ra,
+            mt_eo eo,
+            mt_eo_attr ea
+        WHERE
+            mmw.WORKCELL_ID = sw.WORKCELL_ID
+        AND sw.EO_STEP_ACTUAL_ID = sa.EO_STEP_ACTUAL_ID
+        AND sa.EO_ROUTER_ACTUAL_ID = ra.EO_ROUTER_ACTUAL_ID
+        AND ra.EO_ID = eo.EO_ID
+        AND eo.EO_ID = ea.EO_ID
+        AND ea.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+        AND ea.ATTR_VALUE = #{materialLotCode}
+        LIMIT 1
+    </select>
+
+    <select id="lastSendDateQueryBySnNum" resultType="java.util.Date">
+        select issi.last_update_date
+        from itf_sn_sap_iface issi
+        where issi.sernr = #{snNum}
+        and issi.sttxt = 'ECUS'
+        and issi.`status` = 'Y'
+        and issi.tenant_id = #{tenantId}
+        order by issi.last_update_date desc
+        limit 1
+    </select>
+
+    <select id="lineDataQuery" resultType="com.ruike.hme.domain.vo.HmeAfterSaleQuotationHeaderVO4">
+        select line.quotation_line_id, line.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               line.requset_qty, line.remark, line.ATTRIBUTE1 as situation_desc
+        from hme_after_sale_quotation_line line,
+             mt_material mm
+        where line.quotation_header_id = #{quotationHeaderId}
+        and line.demand_type = #{demandType}
+        and line.tenant_id = #{tenantId}
+        and mm.MATERIAL_ID = line.material_id
+        order by mm.MATERIAL_CODE
+    </select>
+
+    <select id="quotationHeaderUpdateDateQuery" resultType="com.ruike.hme.domain.vo.HmeAfterSaleQuotationHeaderVO5">
+        select head.quotation_header_id, head.last_update_date, line.material_id
+        from hme_after_sale_quotation_header head,
+             hme_after_sale_quotation_line line
+        where
+        <if test="materialLotId != null and materialLotId != ''">
+            head.material_lot_id = #{materialLotId}
+        </if>
+        <if test="snNum != null and snNum != ''">
+            head.sn_num = #{snNum}
+        </if>
+        and head.send_to = #{sendTo}
+        and head.`status` = 'SUBMIT'
+        <if test="quotationHeaderId != null and quotationHeaderId != ''">
+            and head.quotation_header_id != #{quotationHeaderId}
+        </if>
+        and head.tenant_id = #{tenantId}
+        and line.quotation_header_id = head.quotation_header_id
+        and line.material_id in
+        <foreach collection="materialIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and line.tenant_id = head.tenant_id
+    </select>
+
+    <select id="snSapIfaceUpdateDateQuery" resultType="java.util.Date">
+        select issi.last_update_date
+        from itf_sn_sap_iface issi
+        where issi.sernr = #{sernr}
+        and issi.sttxt = 'ECUS'
+        and issi.`status` = 'Y'
+        and issi.last_update_date > DATE_FORMAT(#{lastUpdateDate},'%Y-%m-%d %H:%i:%S')
+        and issi.tenant_id = #{tenantId}
+    </select>
+
+    <delete id="batchDeleteLineData">
+        delete from hme_after_sale_quotation_line where quotation_line_id in
+        <foreach collection="quotationLineIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="batchUpdateLineData">
+        <bind name="userId" value="@io.choerodon.core.oauth.DetailsHelper@getUserDetails().getUserId()"/>
+        update hme_after_sale_quotation_line
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            requset_qty =
+            <foreach collection="updateLineList" item="item" index="index"
+                     separator=" " open="case quotation_line_id" close="end">
+                when #{item.quotationLineId} then #{item.requsetQty}
+            </foreach>,
+            remark =
+            <foreach collection="updateLineList" item="item" index="index"
+                     separator=" " open="case quotation_line_id" close="end">
+                when #{item.quotationLineId} then #{item.remark}
+            </foreach>,
+            ATTRIBUTE1 =
+            <foreach collection="updateLineList" item="item" index="index"
+                     separator=" " open="case quotation_line_id" close="end">
+                when #{item.quotationLineId} then #{item.situationDesc}
+            </foreach>
+        </set>
+        <where>
+            quotation_line_id in
+            <foreach collection="updateLineList" item="item" separator="," open="(" close=")">
+                #{item.quotationLineId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="getEquipmentModelByMaterialSite" resultType="java.lang.String">
+        select mmsa.ATTR_VALUE
+        from mt_material_site mms,
+             mt_material_site_attr mmsa
+        where mms.MATERIAL_ID = #{materialId}
+        and mms.SITE_ID = #{siteId}
+        and mms.TENANT_ID = #{tenantId}
+        and mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and mmsa.ATTR_NAME = 'attribute5'
+        and mmsa.TENANT_ID = mms.TENANT_ID
+    </select>
+
+    <select id="serviceReciveQueryBySnNumOrMaterialLot" resultType="com.ruike.hme.domain.entity.HmeServiceReceive">
+        select hsr.service_receive_id, hsr.creation_date
+        from hme_service_receive hsr
+        where hsr.tenant_id = #{tenantId}
+        <if test="snNum != null and snNum != ''">
+            and hsr.sn_num = #{snNum}
+        </if>
+        <if test="materialLotId != null and materialLotId != ''">
+            and hsr.material_lot_id = #{materialLotId}
+        </if>
+    </select>
+
+    <select id="getQuotationHeaderByServiceReceive"
+            resultType="com.ruike.hme.domain.entity.HmeAfterSaleQuotationHeader">
+        select hasqh.quotation_header_id, hasqh.creation_date, hasqh.last_update_date
+        from hme_after_sale_quotation_header hasqh
+        where hasqh.service_receive_id = #{serviceReceiveId}
+        and hasqh.`status` in
+        <foreach collection="statusList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hasqh.tenant_id = #{tenantId}
+    </select>
+</mapper>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtAssemblePointActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtAssemblePointActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_POINT_ACTUAL_ID" property="assemblePointActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_GROUP_ACTUAL_ID" property="assembleGroupActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_POINT_ID" property="assemblePointId" jdbcType="VARCHAR"/>
+        <result column="FEEDING_SEQUENCE" property="feedingSequence" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="FEEDING_QTY" property="feedingQty" jdbcType="DECIMAL"/>
+        <result column="FEEDING_MATERIAL_LOT_SEQUENCE" property="feedingMaterialLotSequence" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap1" type="tarzan.actual.domain.vo.MtAssemblePointActualVO1">
+        <result column="ASSEMBLE_POINT_ACTUAL_ID" property="assmeblePointActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_GROUP_ACTUAL_ID" property="assembleGroupActualId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_POINT_ID" property="assemblePointId" jdbcType="VARCHAR"/>
+        <result column="FEEDING_SEQUENCE" property="feedingSequence" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="FEEDING_QTY" property="feedingQty" jdbcType="DECIMAL"/>
+        <result column="FEEDING_MATERIAL_LOT_SEQUENCE" property="feedingMaterialLotSequence" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_GROUP_ID" property="assembleGroupId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--确认过将内连接改成外连接，同时驱动表发生变化-->
+    <select id="selectPropertyByIds" resultMap="BaseResultMap1">
+        select p.ASSEMBLE_POINT_ACTUAL_ID,
+        p.ASSEMBLE_GROUP_ACTUAL_ID,
+        p.ASSEMBLE_POINT_ID,
+        p.FEEDING_SEQUENCE,
+        p.MATERIAL_ID,
+        p.QTY,
+        p.FEEDING_QTY,
+        p.FEEDING_MATERIAL_LOT_SEQUENCE,
+        p.MATERIAL_LOT_ID,
+        g.WORKCELL_ID,
+        g.ASSEMBLE_GROUP_ID
+        from mt_assemble_point_actual p left join mt_assemble_group_actual g on (g.ASSEMBLE_GROUP_ACTUAL_ID =
+        p.ASSEMBLE_GROUP_ACTUAL_ID and g.TENANT_ID = ${tenantId})
+        where p.TENANT_ID = ${tenantId}
+        and p.ASSEMBLE_POINT_ACTUAL_ID IN
+        <foreach collection="assemblePointActualIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!--确认过将内连接改成外连接，同时驱动表发生变化-->
+    <select id="selectPropertyById" resultMap="BaseResultMap1">
+        select p.ASSEMBLE_POINT_ACTUAL_ID,
+               p.ASSEMBLE_GROUP_ACTUAL_ID,
+               p.ASSEMBLE_POINT_ID,
+               p.FEEDING_SEQUENCE,
+               p.MATERIAL_ID,
+               p.QTY,
+               p.FEEDING_QTY,
+               p.FEEDING_MATERIAL_LOT_SEQUENCE,
+               p.MATERIAL_LOT_ID,
+               g.WORKCELL_ID,
+               g.ASSEMBLE_GROUP_ID
+          from mt_assemble_point_actual p left join mt_assemble_group_actual g on (g.ASSEMBLE_GROUP_ACTUAL_ID = p.ASSEMBLE_GROUP_ACTUAL_ID and g.TENANT_ID = ${tenantId})
+         where p.TENANT_ID = ${tenantId}
+           and p.ASSEMBLE_POINT_ACTUAL_ID = #{assemblePointActualId}
+    </select>
+
+    <!--确认过将内连接改成外连接，同时驱动表发生变化-->
+    <select id="selectPropertyByCondition" resultType="string">
+        select p.ASSEMBLE_POINT_ACTUAL_ID
+        from mt_assemble_point_actual p left join mt_assemble_group_actual g on (g.ASSEMBLE_GROUP_ACTUAL_ID =
+        p.ASSEMBLE_GROUP_ACTUAL_ID and g.TENANT_ID = ${tenantId})
+        where p.TENANT_ID = ${tenantId}
+        <if test="condition.assembleGroupActualId!=null">
+            and p.ASSEMBLE_GROUP_ACTUAL_ID = #{condition.assembleGroupActualId}
+        </if>
+        <if test="condition.assemblePointId!=null">
+            and p.ASSEMBLE_POINT_ID = #{condition.assemblePointId}
+        </if>
+        <if test="condition.feedingSequence!=null">
+            and p.FEEDING_SEQUENCE = ${condition.feedingSequence}
+        </if>
+        <if test="condition.materialId!=null">
+            and p.MATERIAL_ID = #{condition.materialId}
+        </if>
+        <if test="condition.feedingMaterialLotSequence!=null">
+            and p.FEEDING_MATERIAL_LOT_SEQUENCE = ${condition.feedingMaterialLotSequence}
+        </if>
+        <if test="condition.materialLotId!=null">
+            and p.MATERIAL_LOT_ID = #{condition.materialLotId}
+        </if>
+        <if test="condition.workcellId!=null">
+            and g.WORKCELL_ID = #{condition.workcellId}
+        </if>
+        <if test="condition.assembleGroupId!=null">
+            and g.ASSEMBLE_GROUP_ID = #{condition.assembleGroupId}
+        </if>
+    </select>
+
+    <delete id="deleteByIdsCustom">
+        delete from mt_assemble_point_actual
+        where TENANT_ID = ${tenantId}
+        and ASSEMBLE_POINT_ACTUAL_ID IN
+        <foreach collection="assemblePointActualIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="selectCondition" resultType="tarzan.actual.domain.vo.MtAssemblePointActualVO9">
+        select p.*,g.WORKCELL_ID workcellId
+        from mt_assemble_point_actual p left join mt_assemble_group_actual g on (g.ASSEMBLE_GROUP_ACTUAL_ID =
+        p.ASSEMBLE_GROUP_ACTUAL_ID and g.TENANT_ID = ${tenantId})
+        where p.TENANT_ID = ${tenantId}
+        <if test="condition.assemblePointActualId!=null">
+            and p.ASSEMBLE_POINT_ACTUAL_ID = #{condition.assemblePointActualId}
+        </if>
+        <if test="condition.assemblePointId!=null">
+            and p.ASSEMBLE_POINT_ID = #{condition.assemblePointId}
+        </if>
+        <if test="condition.feedingSequence!=null">
+            and p.FEEDING_SEQUENCE = ${condition.feedingSequence}
+        </if>
+        <if test="condition.materialId!=null">
+            and p.MATERIAL_ID = #{condition.materialId}
+        </if>
+        <if test="condition.feedingMaterialLotSequence!=null">
+            and p.FEEDING_MATERIAL_LOT_SEQUENCE = ${condition.feedingMaterialLotSequence}
+        </if>
+        <if test="condition.materialLotId!=null">
+            and p.MATERIAL_LOT_ID = #{condition.materialLotId}
+        </if>
+        <if test="condition.workcellId!=null">
+            and g.WORKCELL_ID = #{condition.workcellId}
+        </if>
+    </select>
+
+    <!--确认过将内连接改成外连接，同时驱动表发生变化-->
+    <select id="selectPropertyByConditions" resultType="tarzan.actual.domain.vo.MtAssemblePointActualVO11">
+        select
+        g.ASSEMBLE_GROUP_ID,
+        p.ASSEMBLE_POINT_ID,
+        p.MATERIAL_ID,
+        count(p.ASSEMBLE_POINT_ACTUAL_ID) COUNT
+        from mt_assemble_point_actual p
+        left join mt_assemble_group_actual g
+        on (g.ASSEMBLE_GROUP_ACTUAL_ID =p.ASSEMBLE_GROUP_ACTUAL_ID and g.TENANT_ID = #{tenantId,jdbcType=BIGINT})
+        where p.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+        and p.MATERIAL_ID in
+        <foreach collection="materialIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        group by
+        g.ASSEMBLE_GROUP_ID,
+        p.ASSEMBLE_POINT_ID,
+        p.MATERIAL_ID
+
+    </select>
+</mapper>

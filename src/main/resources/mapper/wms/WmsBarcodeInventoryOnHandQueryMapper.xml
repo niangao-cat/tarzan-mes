@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsBarcodeInventoryOnHandQueryMapper">
+
+
+    <select id="headList" resultType="com.ruike.wms.domain.vo.WmsBarcodeInventoryOnHandVO" parameterType="com.ruike.wms.api.dto.WmsBarcodeInventoryOnHandQueryDTO">
+        SELECT
+            mms.SITE_CODE,
+            mmld.LOCATOR_CODE,
+            mmld.LOCATOR_NAME,
+            mmldp.LOCATOR_CODE WAREHOUSE_CODE,
+            mmldp.LOCATOR_NAME WAREHOUSE_NAME,
+            mm.MATERIAL_CODE,
+            mmla.ATTR_VALUE MATERIAL_VERSION,
+            mmlas.ATTR_VALUE SO_NUM,
+            mmlasl.ATTR_VALUE SO_LINE_NUM,
+            mml.LOT,
+            mu.UOM_CODE,
+            sum( mml.PRIMARY_UOM_QTY ) QTY,
+            mmlas2.ATTR_VALUE SAP_ACCOUNT_FLAG
+        FROM
+            mt_material_lot mml
+            LEFT JOIN mt_mod_site mms ON mml.SITE_ID = mms.SITE_ID
+            LEFT JOIN mt_mod_locator mmld ON mml.LOCATOR_ID = mmld.LOCATOR_ID
+            LEFT JOIN mt_mod_locator mmldp ON mmld.PARENT_LOCATOR_ID = mmldp.LOCATOR_ID
+            LEFT JOIN mt_material mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+            LEFT JOIN mt_material_lot_attr mmla ON mml.MATERIAL_Lot_ID = mmla.MATERIAL_LOT_ID
+            AND mmla.ATTR_NAME = 'MATERIAL_VERSION'
+            LEFT JOIN mt_material_lot_attr mmlas ON mml.MATERIAL_Lot_ID = mmlas.MATERIAL_LOT_ID
+            AND mmlas.ATTR_NAME = 'SO_NUM'
+            LEFT JOIN mt_material_lot_attr mmlasl ON mml.MATERIAL_Lot_ID = mmlasl.MATERIAL_LOT_ID
+            AND mmlasl.ATTR_NAME = 'SO_LINE_NUM'
+            LEFT JOIN mt_material_lot_attr mmlas2 ON mml.MATERIAL_Lot_ID = mmlas2.MATERIAL_LOT_ID
+            AND mmlas2.ATTR_NAME = 'SAP_ACCOUNT_FLAG'
+            LEFT JOIN mt_uom mu ON mml.PRIMARY_UOM_ID = mu.UOM_ID
+        WHERE
+                mml.TENANT_ID = #{tenantId}
+            AND mml.SITE_ID = #{dto.siteId}
+            AND mml.ENABLE_FLAG = 'Y'
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND mmldp.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND mml.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            AND mmld.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.soNum != null and dto.soNum != ''">
+            AND mmlas.ATTR_VALUE like concat(#{dto.soNum} ,'%')
+        </if>
+        <if test="dto.soLineNum != null and dto.soLineNum != ''">
+            AND mmlasl.ATTR_VALUE like concat(#{dto.soLineNum} ,'%')
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion != ''">
+            AND mmla.ATTR_VALUE like concat(#{dto.materialVersion} ,'%')
+        </if>
+        <if test="dto.lot != null and dto.lot != ''">
+            AND mml.LOT like concat(#{dto.lot} ,'%')
+        </if>
+        <if test='dto.sapAccountFlag == "N"'>
+            AND mmlas2.ATTR_VALUE = #{dto.sapAccountFlag}
+        </if>
+        <if test='dto.sapAccountFlag == "Y"'>
+            AND mmlas2.ATTR_NAME IS NULL or mmlas2.ATTR_VALUE != 'N'
+        </if>
+
+        GROUP BY
+            mms.SITE_CODE,
+            mmld.LOCATOR_CODE,
+            mmld.LOCATOR_NAME,
+            mmldp.LOCATOR_CODE,
+            mmldp.LOCATOR_NAME,
+            mm.MATERIAL_CODE,
+            mmla.ATTR_VALUE,
+            mmlas.ATTR_VALUE,
+            mmlasl.ATTR_VALUE,
+            mml.LOT,
+            mu.UOM_CODE,
+            mmlas2.ATTR_VALUE
+
+    </select>
+
+    <select id="excelExport" resultType="com.ruike.wms.domain.vo.WmsBarcodeInventoryOnHandQueryExportVO" parameterType="com.ruike.wms.api.dto.WmsBarcodeInventoryOnHandQueryDTO">
+        SELECT
+        mms.SITE_CODE,
+        mmld.LOCATOR_CODE,
+        mmld.LOCATOR_NAME,
+        mmldp.LOCATOR_CODE WAREHOUSE_CODE,
+        mmldp.LOCATOR_NAME WAREHOUSE_NAME,
+        mm.MATERIAL_CODE,
+        mmla.ATTR_VALUE MATERIAL_VERSION,
+        mmlas.ATTR_VALUE SO_NUM,
+        mmlasl.ATTR_VALUE SO_LINE_NUM,
+        mml.LOT,
+        mu.UOM_CODE,
+        sum( mml.PRIMARY_UOM_QTY ) QTY
+        FROM
+        mt_material_lot mml
+        LEFT JOIN mt_mod_site mms ON mml.SITE_ID = mms.SITE_ID
+        LEFT JOIN mt_mod_locator mmld ON mml.LOCATOR_ID = mmld.LOCATOR_ID
+        LEFT JOIN mt_mod_locator mmldp ON mmld.PARENT_LOCATOR_ID = mmldp.LOCATOR_ID
+        LEFT JOIN mt_material mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_material_lot_attr mmla ON mml.MATERIAL_Lot_ID = mmla.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr mmlas ON mml.MATERIAL_Lot_ID = mmlas.MATERIAL_LOT_ID
+        AND mmlas.ATTR_NAME = 'SO_NUM'
+        LEFT JOIN mt_material_lot_attr mmlasl ON mml.MATERIAL_Lot_ID = mmlasl.MATERIAL_LOT_ID
+        AND mmlasl.ATTR_NAME = 'SO_LINE_NUM'
+        LEFT JOIN mt_uom mu ON mml.PRIMARY_UOM_ID = mu.UOM_ID
+        WHERE
+        mml.TENANT_ID = #{tenantId}
+        AND mml.SITE_ID = #{dto.siteId}
+        AND mml.ENABLE_FLAG = 'Y'
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND mmldp.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND mml.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            AND mmld.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.soNum != null and dto.soNum != ''">
+            AND mmlas.ATTR_VALUE like concat('%',#{dto.soNum} ,'%')
+        </if>
+        <if test="dto.soLineNum != null and dto.soLineNum != ''">
+            AND mmlasl.ATTR_VALUE like concat('%',#{dto.soLineNum} ,'%')
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion != ''">
+            AND mmla.ATTR_VALUE like concat('%',#{dto.materialVersion} ,'%')
+        </if>
+        <if test="dto.lot != null and dto.lot != ''">
+            AND mml.LOT like concat('%',#{dto.lot} ,'%')
+        </if>
+
+        GROUP BY
+        mms.SITE_CODE,
+        mmld.LOCATOR_CODE,
+        mmld.LOCATOR_NAME,
+        mmldp.LOCATOR_CODE,
+        mmldp.LOCATOR_NAME,
+        mm.MATERIAL_CODE,
+        mmla.ATTR_VALUE,
+        mmlas.ATTR_VALUE,
+        mmlasl.ATTR_VALUE,
+        mml.LOT,
+        mu.UOM_CODE
+    </select>
+
+    <select id="detailList" resultType="com.ruike.wms.domain.vo.WmsBarcodeInventoryOnHandDetailVO" parameterType="com.ruike.wms.api.dto.WmsBarcodeInventoryOnHandDetailQueryDTO">
+        SELECT
+          mml.MATERIAL_LOT_CODE,
+            mml.QUALITY_STATUS,
+			mmlasla.ATTR_VALUE MATERIAL_LOT_STATUS,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mmla.ATTR_VALUE MATERIAL_VERSION,
+            mmldp.LOCATOR_CODE WAREHOUSE_CODE,
+            mmld.LOCATOR_CODE,
+            mml.LOT,
+            mu.UOM_CODE,
+            mml.PRIMARY_UOM_QTY,
+            mmlas.ATTR_VALUE SO_NUM,
+            mmlasl.ATTR_VALUE SO_LINE_NUM,
+            mmlas2.ATTR_VALUE SAP_ACCOUNT_FLAG
+        FROM
+            mt_material_lot mml
+            LEFT JOIN mt_mod_site mms ON mml.SITE_ID = mms.SITE_ID
+            LEFT JOIN mt_mod_locator mmld ON mml.LOCATOR_ID = mmld.LOCATOR_ID
+            LEFT JOIN mt_mod_locator mmldp ON mmld.PARENT_LOCATOR_ID = mmldp.LOCATOR_ID
+            LEFT JOIN mt_material mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+            LEFT JOIN mt_material_lot_attr mmla ON mml.MATERIAL_Lot_ID = mmla.MATERIAL_LOT_ID
+            AND mmla.ATTR_NAME = 'MATERIAL_VERSION'
+            LEFT JOIN mt_material_lot_attr mmlas ON mml.MATERIAL_Lot_ID = mmlas.MATERIAL_LOT_ID
+            AND mmlas.ATTR_NAME = 'SO_NUM'
+            LEFT JOIN mt_material_lot_attr mmlasl ON mml.MATERIAL_Lot_ID = mmlasl.MATERIAL_LOT_ID
+            AND mmlasl.ATTR_NAME = 'SO_LINE_NUM'
+			LEFT JOIN mt_material_lot_attr mmlasla ON mml.MATERIAL_Lot_ID = mmlasla.MATERIAL_LOT_ID
+            AND mmlasla.ATTR_NAME = 'STATUS'
+            LEFT JOIN mt_material_lot_attr mmlas2 ON mml.MATERIAL_Lot_ID = mmlas2.MATERIAL_LOT_ID
+            AND mmlas2.ATTR_NAME = 'SAP_ACCOUNT_FLAG'
+            LEFT JOIN mt_uom mu ON mml.PRIMARY_UOM_ID = mu.UOM_ID
+        WHERE
+            mml.TENANT_ID = #{tenantId}
+            AND mms.SITE_CODE = #{dto.siteCode}
+            AND mml.ENABLE_FLAG = 'Y'
+            AND IFnuLL(mmldp.LOCATOR_CODE,'') = IFnuLL(#{dto.warehouseCode},'')
+            AND IFnuLL(mm.MATERIAL_CODE,'') = IFnuLL(#{dto.materialCode},'')
+            AND IFnuLL(mmld.LOCATOR_CODE,'') = IFnuLL(#{dto.locatorCode},'')
+            AND IFnuLL(mmlas.ATTR_VALUE,'') = IFnuLL(#{dto.soNum},'')
+            AND IFnuLL(mmlasl.ATTR_VALUE,'') = IFnuLL(#{dto.soLineNum},'')
+            AND IFnuLL(mmla.ATTR_VALUE,'') = IFnuLL(#{dto.materialVersion},'')
+            AND IFnuLL(mml.LOT,'') = IFnuLL(#{dto.lot},'')
+            <if test='dto.sapAccountFlag == "N"'>
+                AND mmlas2.ATTR_VALUE = #{dto.sapAccountFlag}
+            </if>
+            <if test='dto.sapAccountFlag == "Y"'>
+                AND (mmlas2.ATTR_NAME IS NULL or mmlas2.ATTR_VALUE != 'N')
+        </if>
+    </select>
+
+</mapper>

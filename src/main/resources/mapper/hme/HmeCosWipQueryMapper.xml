@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosWipQueryMapper">
+    <select id="cosWipQuery" resultType="com.ruike.hme.domain.vo.HmeCosWipQueryVO">
+        SELECT
+            mms.SITE_NAME,
+            mwo.WORK_ORDER_NUM,
+            mm1.MATERIAL_CODE production_code,
+            mm1.MATERIAL_NAME production_name,
+            mml.MATERIAL_LOT_CODE,
+            mmla2.ATTR_VALUE WAFER_NUM,
+            mmla1.ATTR_VALUE COS_TYPE,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            hej.sn_qty PRIMARY_UOM_QTY,
+            mlp.LOCATOR_CODE parent_locator_code,
+            ml.LOCATOR_CODE,
+            hej.eo_step_num,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME,
+            hej.job_type,
+            hej.site_in_date,
+            iu1.real_name site_in_by,
+            hej.site_out_date,
+            iu2.real_name site_out_by,
+            hej.rework_flag,
+            CONCAT_WS('/', he.ASSET_ENCODING) ASSET_ENCODING,
+            CONCAT_WS('/', he.ASSET_NAME) ASSET_NAME
+            FROM
+            hme_eo_job_sn hej
+            LEFT JOIN iam_user iu2 ON hej.site_out_by = iu2.id
+            LEFT JOIN hme_eo_job_equipment heje ON heje.job_id = hej.job_id
+            LEFT JOIN hme_equipment he ON he.EQUIPMENT_ID = heje.equipment_id,
+            mt_mod_site mms,
+            mt_work_order mwo
+            LEFT JOIN mt_material mm1 ON mwo.MATERIAL_ID = mm1.MATERIAL_ID,
+            mt_material mm,
+            mt_material_lot mml
+            LEFT JOIN mt_material_lot_attr mmla1 ON mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla1.ATTR_NAME = 'COS_TYPE',
+            mt_mod_locator ml
+            LEFT JOIN mt_mod_locator mlp ON mlp.LOCATOR_ID = ml.PARENT_LOCATOR_ID,
+            mt_mod_workcell mmw,
+            iam_user iu1,
+            mt_material_lot_attr mmla2
+            WHERE
+            1 = 1
+            AND hej.work_order_id = mwo.WORK_ORDER_ID
+            AND hej.tenant_id = mwo.TENANT_ID
+            AND hej.material_lot_id = mml.MATERIAL_LOT_ID
+            AND hej.tenant_id = mml.TENANT_ID
+            AND mml.MATERIAL_ID = mm.MATERIAL_ID
+            AND mml.SITE_ID = mms.SITE_ID
+            AND mmla2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla2.ATTR_NAME = 'WAFER_NUM'
+            AND mml.LOCATOR_ID = ml.LOCATOR_ID
+            AND hej.workcell_id = mmw.WORKCELL_ID
+            AND hej.site_in_by = iu1.id
+            AND hej.tenant_id = #{tenantId}
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND mml.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.equipmentId != null and dto.equipmentId != ''">
+            AND EXISTS (
+                SELECT
+                    1
+                FROM
+                    hme_eo_job_equipment t
+                WHERE
+                    t.job_id = hej.job_id
+                AND t.equipment_id = #{dto.equipmentId}
+            )
+        </if>
+        <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+            AND mwo.WORK_ORDER_NUM like CONCAT('%',CONCAT(#{dto.workOrderNum},'%'))
+        </if>
+        <if test="dto.productionCode != null and dto.productionCode != ''">
+            AND mm1.MATERIAL_CODE like CONCAT('%',CONCAT(#{dto.productionCode},'%'))
+        </if>
+        <if test="dto.productionName != null and dto.productionName != ''">
+            AND mm1.MATERIAL_NAME like CONCAT('%',CONCAT(#{dto.productionName},'%'))
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND mml.MATERIAL_LOT_CODE like CONCAT('%',CONCAT(#{dto.materialLotCode},'%'))
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            AND mm.MATERIAL_CODE like CONCAT('%',CONCAT(#{dto.materialCode},'%'))
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            AND mm.MATERIAL_NAME like CONCAT('%',CONCAT(#{dto.materialName},'%'))
+        </if>
+        <if test="dto.workCellId != null and dto.workCellId != ''">
+            AND hej.workcell_id = #{dto.workCellId}
+        </if>
+        <if test="dto.jobType != null and dto.jobType != ''">
+            AND hej.job_type = #{dto.jobType}
+        </if>
+        <if test="dto.siteInDateFrom != null and dto.siteInDateFrom != ''">
+            AND hej.site_in_date <![CDATA[ >= ]]> #{dto.siteInDateFrom}
+        </if>
+        <if test="dto.siteInDateTo != null and dto.siteInDateTo != ''">
+            AND hej.site_in_date <![CDATA[ <= ]]> #{dto.siteInDateTo}
+        </if>
+        <if test="dto.siteOutDateFrom != null and dto.siteOutDateFrom != ''">
+            AND hej.site_out_date <![CDATA[ >= ]]> #{dto.siteOutDateFrom}
+        </if>
+        <if test="dto.siteOutDateTo != null and dto.siteOutDateTo != ''">
+            AND hej.site_out_date <![CDATA[ <= ]]> #{dto.siteOutDateTo}
+        </if>
+        <if test="dto.waferNum != null and dto.waferNum != ''">
+            AND mmla2.ATTR_VALUE LIKE CONCAT("%", #{dto.waferNum}, "%")
+        </if>
+    </select>
+</mapper>

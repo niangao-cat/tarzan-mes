@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeProcessNcDetailMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeProcessNcDetail">
+        <result column="detail_id" property="detailId" jdbcType="VARCHAR"/>
+        <result column="line_id" property="lineId" jdbcType="VARCHAR"/>
+        <result column="header_id" property="headerId" jdbcType="VARCHAR"/>
+        <result column="standard_code" property="standardCode" jdbcType="VARCHAR"/>
+        <result column="solve_method" property="solveMethod" jdbcType="VARCHAR"/>
+        <result column="max_value" property="maxValue" jdbcType="DECIMAL"/>
+        <result column="min_value" property="minValue" jdbcType="DECIMAL"/>
+        <result column="uom_id" property="uomId" jdbcType="VARCHAR"/>
+        <result column="nc_code_id" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectDetail" resultType="com.ruike.hme.domain.vo.HmeProcessNcDetailVO">
+        SELECT
+            pnd.detail_id,
+            pnd.line_id,
+            pnd.header_id,
+            pnd.standard_code,
+            pnd.max_value,
+            pnd.min_value,
+            pnd.nc_code_id,
+            nc.nc_code
+        FROM
+            hme_process_nc_detail pnd
+            LEFT JOIN mt_nc_code nc ON pnd.nc_code_id = nc.nc_code_id
+        WHERE pnd.tenant_id = #{tenantId}
+            and pnd.line_id = #{lineId}
+    </select>
+
+    <delete id="deleteByLine">
+        DELETE
+        FROM
+            hme_process_nc_detail
+        WHERE
+            tenant_id = #{tenantId}
+            and line_id = #{hmeProcessNcLine.lineId}
+    </delete>
+
+    <delete id="deleteDetailByHeader">
+        DELETE
+        FROM
+            hme_process_nc_detail
+        WHERE
+            tenant_id = #{tenantId}
+            and header_id = #{headerId}
+    </delete>
+
+    <update id="batchHeaderUpdate">
+        UPDATE hme_process_nc_detail
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            max_value =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case detail_id" close="end">
+                when #{item.detailId} then #{item.maxValue}
+            </foreach>,
+            min_value =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case detail_id" close="end">
+                when #{item.detailId} then #{item.minValue}
+            </foreach>,
+            nc_code_id =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case detail_id" close="end">
+                when #{item.detailId} then #{item.ncCodeId}
+            </foreach>
+        </set>
+        <where>
+            detail_id in
+            <foreach collection="domains" item="item"
+                     separator="," open="(" close=")">
+                #{item.detailId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

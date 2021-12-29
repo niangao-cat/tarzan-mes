@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDeliveryDocMapper">
+
+
+    <select id="instructionDocQuery" resultType="java.lang.String"
+            parameterType="com.ruike.wms.api.dto.WmsInstructionDocRequestDTO">
+        SELECT DISTINCT
+        MID.INSTRUCTION_DOC_ID
+        FROM
+        mt_instruction_doc MID
+        <if test="(dto.materialCode != null and dto.materialCode != '') or (dto.poNum != null and dto.poNum != '')
+         or (dto.poLineNum != null and dto.poLineNum != '') or (dto.materialLotCode != null and dto.materialLotCode != '')">
+            LEFT JOIN mt_instruction MI ON MI.SOURCE_DOC_ID = MID.INSTRUCTION_DOC_ID
+            LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MI.MATERIAL_ID
+        </if>
+        <if test="(dto.deliveryTimeStart != null and dto.deliveryTimeStart != '') or (dto.deliveryTimeEnd != null and dto.deliveryTimeEnd != '')">
+            LEFT JOIN mt_instruction_doc_attr MIDADELIVERYTIME ON MIDADELIVERYTIME.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID
+            AND MIDADELIVERYTIME.ATTR_NAME = 'DELIVERY_TIME'
+        </if>
+        <if test="dto.asnNum != null and dto.asnNum != ''">
+            LEFT JOIN mt_instruction_doc_attr ASN_NUM ON ASN_NUM.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID AND ASN_NUM.ATTR_NAME = 'ASN_NUM'
+        </if>
+        <if test="dto.shipTo != null and dto.shipTo != ''">
+            LEFT JOIN mt_instruction_doc_attr MIDASHIPTO ON MIDASHIPTO.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID
+            AND MIDASHIPTO.ATTR_NAME = 'SHIP_TO'
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            LEFT JOIN mt_instruction_actual MTIA ON MTIA.INSTRUCTION_ID = MI.INSTRUCTION_ID
+            LEFT JOIN mt_instruction_actual_detail MTIAD ON MTIAD.ACTUAL_ID = MTIA.ACTUAL_ID
+            LEFT JOIN mt_material_lot MML ON MML.MATERIAL_LOT_ID = MTIAD.MATERIAL_LOT_ID
+        </if>
+        <if test="dto.supplierDes != null and dto.supplierDes != ''">
+            LEFT JOIN tarzan_mes.mt_supplier MS ON MS.SUPPLIER_ID = MID.SUPPLIER_ID
+        </if>
+        <where>
+            1=1
+            <if test="typeList != null and typeList.size() != 0">
+                AND MID.INSTRUCTION_DOC_TYPE IN
+                <foreach collection="typeList" item="id" index="index" open="(" close=")"
+                         separator=",">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="dto.isAllNull == 'Y'.toString()">
+                AND DATE_SUB(CURDATE(), INTERVAL 7 DAY) &lt;= MID.CREATION_DATE
+            </if>
+            <if test="dto.materialCode != null and dto.materialCode != ''">
+                AND MM.MATERIAL_CODE LIKE CONCAT('%',CONCAT(#{dto.materialCode},'%'))
+            </if>
+            <if test="dto.asnNum != null and dto.asnNum != ''">
+                AND ASN_NUM.ATTR_VALUE LIKE CONCAT('%',CONCAT(#{dto.asnNum},'%'))
+            </if>
+            <if test="dto.deliveryTimeStart != null and dto.deliveryTimeStart != '' ">
+                AND STR_TO_DATE(MIDADELIVERYTIME.ATTR_VALUE,'%Y-%m-%d') &gt;=
+                STR_TO_DATE(#{dto.deliveryTimeStart},'%Y-%m-%d')
+            </if>
+            <if test="dto.deliveryTimeEnd != null and dto.deliveryTimeEnd != ''">
+                AND STR_TO_DATE(MIDADELIVERYTIME.ATTR_VALUE,'%Y-%m-%d') &lt;=
+                STR_TO_DATE(#{dto.deliveryTimeEnd},'%Y-%m-%d')
+            </if>
+            <if test="dto.expectedArrivalTimeStart != null and dto.expectedArrivalTimeStart != ''">
+                AND STR_TO_DATE(MID.EXPECTED_ARRIVAL_TIME,'%Y-%m-%d') &gt;=
+                STR_TO_DATE(#{dto.expectedArrivalTimeStart},'%Y-%m-%d')
+            </if>
+            <if test="dto.expectedArrivalTimeEnd != null and dto.expectedArrivalTimeEnd != ''">
+                AND STR_TO_DATE(MID.EXPECTED_ARRIVAL_TIME,'%Y-%m-%d') &lt;=
+                STR_TO_DATE(#{dto.expectedArrivalTimeEnd},'%Y-%m-%d')
+            </if>
+            <if test="dto.poNum != null and dto.poNum != ''">
+                AND MI.SOURCE_ORDER_ID LIKE CONCAT('%',CONCAT(#{dto.poNum},'%'))
+            </if>
+            <if test="dto.poLineNum != null and dto.poLineNum != ''">
+                AND MI.SOURCE_ORDER_LINE_ID LIKE CONCAT('%',CONCAT(#{dto.poLineNum},'%'))
+            </if>
+            <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+                AND MML.MATERIAL_LOT_CODE LIKE CONCAT('%',CONCAT(#{dto.materialLotCode},'%'))
+            </if>
+            <if test="dto.shipTo != null and dto.shipTo != ''">
+                AND MIDASHIPTO.ATTR_VALUE LIKE CONCAT('%',CONCAT(#{dto.shipTo},'%'))
+            </if>
+            <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+                AND MID.INSTRUCTION_DOC_NUM LIKE CONCAT('%',CONCAT(#{dto.instructionDocNum},'%'))
+            </if>
+            <if test="dto.instructionDocStatus != null and dto.instructionDocStatus != ''">
+                AND MID.INSTRUCTION_DOC_STATUS = #{dto.instructionDocStatus}
+            </if>
+            <if test="dto.supplierId != null and dto.supplierId != ''">
+                AND MID.SUPPLIER_ID = #{dto.supplierId}
+            </if>
+            <if test="dto.supplierDes != null and dto.supplierDes != ''">
+                AND MS.SUPPLIER_NAME = #{dto.supplierDes}
+            </if>
+            <if test="dto.siteId != null and dto.siteId != ''">
+                AND MID.SITE_ID = #{dto.siteId}
+            </if>
+            <if test="siteIdList != null and siteIdList.size() != 0">
+                AND MID.SITE_ID IN
+                <foreach collection="siteIdList" item="id" index="index" open="(" close=")"
+                         separator=",">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="dto.poNumber != null and dto.poNumber !=''">
+                AND EXISTS (
+                SELECT
+                1
+                FROM
+                wms_po_delivery_rel mdpl
+                JOIN mt_instruction_doc mid2 ON mdpl.po_id = mid2.INSTRUCTION_DOC_ID
+                WHERE
+                mdpl.delivery_doc_id = mid.INSTRUCTION_DOC_ID
+                AND mid2.INSTRUCTION_DOC_NUM LIKE CONCAT( CONCAT( '%', #{dto.poNumber}), '%' )
+                )
+            </if>
+        </where>
+    </select>
+    <select id="instructionDocPropertyBatchGet"
+            resultType="com.ruike.wms.api.dto.WmsInstructionDocResponseDTO">
+        SELECT
+        MID.INSTRUCTION_DOC_ID,
+        MID.INSTRUCTION_DOC_NUM,
+        MGS.DESCRIPTION AS INSTRUCTION_DOC_STATUS,
+        MID.EXPECTED_ARRIVAL_TIME,
+        MID.REMARK,
+        MID.SUPPLIER_ID,
+        MS.SUPPLIER_CODE,
+        MS.SUPPLIER_NAME,
+        MIDADELIVERYTIME.ATTR_VALUE AS DELIVERY_TIME,
+        MIDAACTUALARRIVETIME.ATTR_VALUE AS ACTUAL_ARRIVE_TIME,
+        MIDASHIPTO.ATTR_VALUE AS SHIP_TO,
+        ASN_NUM.ATTR_VALUE AS ASN_NUM,
+        MMS.SITE_ID,
+        MMS.SITE_CODE,
+        MMS.SITE_NAME,
+        mid.CREATION_DATE,
+        mid.CREATED_BY,
+        iu.real_name,
+        mt.CUSTOMER_NAME
+        FROM
+        tarzan_mes.mt_instruction_doc MID
+        LEFT JOIN mt_supplier MS ON MS.SUPPLIER_ID = MID.SUPPLIER_ID
+        LEFT JOIN mt_mod_site MMS ON MMS.SITE_ID = MID.SITE_ID
+        LEFT JOIN mt_gen_status MGS ON MGS.STATUS_CODE = MID.INSTRUCTION_DOC_STATUS AND
+        MGS.STATUS_GROUP='INSTRUCTION_DOC_STATUS'
+        LEFT JOIN mt_instruction_doc_attr MIDADELIVERYTIME ON MIDADELIVERYTIME.INSTRUCTION_DOC_ID =
+        MID.INSTRUCTION_DOC_ID
+        AND MIDADELIVERYTIME.ATTR_NAME = 'DELIVERY_TIME'
+        LEFT JOIN mt_instruction_doc_attr MIDAACTUALARRIVETIME ON MIDAACTUALARRIVETIME.INSTRUCTION_DOC_ID =
+        MID.INSTRUCTION_DOC_ID
+        AND MIDAACTUALARRIVETIME.ATTR_NAME = 'ACTUAL_ARRIVE_TIME'
+        LEFT JOIN mt_instruction_doc_attr MIDASHIPTO ON MIDASHIPTO.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID
+        AND MIDASHIPTO.ATTR_NAME = 'SHIP_TO'
+        LEFT JOIN mt_instruction_doc_attr ASN_NUM ON ASN_NUM.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID
+        AND ASN_NUM.ATTR_NAME = 'ASN_NUM'
+        left join mt_customer mt on mt.CUSTOMER_ID = mid.CUSTOMER_ID
+        left join iam_user iu on iu.id = mid.CREATED_BY
+        <where>
+            <if test="list != null and list.size() != 0">
+                AND MID.INSTRUCTION_DOC_ID IN
+                <foreach collection="list" item="instructionDocId" index="index" open="(" close=")" separator=",">
+                    #{instructionDocId}
+                </foreach>
+            </if>
+        </where>
+        order by mid.CREATION_DATE desc
+    </select>
+    <select id="instructionPropertyBatchGet" resultType="com.ruike.wms.api.dto.WmsInstructionDTO">
+        SELECT
+        mi.INSTRUCTION_NUM,
+        MI.INSTRUCTION_ID,
+        MGS.DESCRIPTION AS INSTRUCTION_STATUS,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MI.QUANTITY,
+        MU.UOM_CODE,
+        MU.UOM_NAME,
+        MI.COVER_QTY,
+        MI.UOM_ID,
+        MI.REMARK,
+        MIA.ACTUAL_QTY,
+        SUM( MMLNGL.PRIMARY_UOM_QTY ) AS PRIMARY_UOM_QTY_NG,
+        SUM( MMLRELEASEL.PRIMARY_UOM_QTY ) AS PRIMARY_UOM_QTY_RELEASE,
+        SUM( MMLOKL.PRIMARY_UOM_QTY ) AS PRIMARY_UOM_QTY_OK,
+        SUM( INSTOCKL.PRIMARY_UOM_QTY ) AS PRIMARY_UOM_QTY_INSTOCK,
+        MI.SOURCE_ORDER_ID AS PO_NUM,
+        MI.SOURCE_ORDER_LINE_ID AS PO_LINE_NUM,
+        MI.INSTRUCTION_STATUS INSTRUCTION_STATUS1,
+        loca.LOCATOR_CODE,
+        loca.LOCATOR_NAME,
+        loca.LOCATOR_ID
+        FROM
+        mt_instruction MI
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MI.UOM_ID
+        LEFT JOIN mt_gen_status MGS ON MGS.STATUS_CODE = MI.INSTRUCTION_STATUS
+        AND MGS.STATUS_GROUP = 'INSTRUCTION_STATUS'
+        LEFT JOIN mt_instruction_actual MIA ON MIA.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_actual_detail MIAD ON MIA.ACTUAL_ID = MIAD.ACTUAL_ID
+        LEFT JOIN mt_material_lot_attr MMLNG ON MMLNG.ATTR_NAME = 'QUALITY_DISPOSAL_STRATEGY'
+        AND MMLNG.ATTR_VALUE = 'RETURN' AND MIAD.MATERIAL_LOT_ID =MMLNG.MATERIAL_LOT_ID
+        LEFT JOIN mt_material_lot MMLNGL ON MMLNG.MATERIAL_LOT_ID = MMLNGL.MATERIAL_LOT_ID
+
+        LEFT JOIN mt_material_lot_attr MMLRELEASE ON MMLRELEASE.ATTR_NAME = 'QUALITY_DISPOSAL_STRATEGY'
+        AND MMLRELEASE.ATTR_VALUE = 'RELEASED' AND MIAD.MATERIAL_LOT_ID =MMLRELEASE.MATERIAL_LOT_ID
+        LEFT JOIN mt_material_lot MMLRELEASEL ON MMLRELEASE.MATERIAL_LOT_ID = MMLRELEASEL.MATERIAL_LOT_ID
+
+        LEFT JOIN mt_material_lot_attr MMLOK ON MMLOK.ATTR_NAME = 'QUALITY_DISPOSAL_STRATEGY'
+        AND MMLOK.ATTR_VALUE = 'OK' AND MIAD.MATERIAL_LOT_ID =MMLOK.MATERIAL_LOT_ID
+        LEFT JOIN mt_material_lot MMLOKL ON MMLOK.MATERIAL_LOT_ID = MMLOKL.MATERIAL_LOT_ID
+
+        LEFT JOIN mt_material_lot_attr INSTOCK ON INSTOCK.ATTR_VALUE = 'INSTOCK'
+        AND INSTOCK.ATTR_NAME = 'STATUS' AND MIAD.MATERIAL_LOT_ID =INSTOCK.MATERIAL_LOT_ID
+        LEFT JOIN mt_material_lot INSTOCKL ON INSTOCK.MATERIAL_LOT_ID = INSTOCKL.MATERIAL_LOT_ID
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MI.MATERIAL_ID
+        LEFT JOIN mt_mod_locator loca ON mi.TO_LOCATOR_ID = loca.LOCATOR_ID
+        <where>
+            <if test="list != null and list.size() != 0">
+                AND
+                 MI.INSTRUCTION_ID IN
+                <foreach collection="list" item="instructionId" index="index" open="(" close=")" separator=",">
+                    #{instructionId}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY
+        MI.INSTRUCTION_ID,
+        MGS.DESCRIPTION,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MI.QUANTITY,
+        MU.UOM_CODE,
+        MU.UOM_NAME,
+        MI.UOM_ID,
+        MI.REMARK,
+        MIA.ACTUAL_QTY,
+        PO_NUM,
+        PO_LINE_NUM,
+        loca.LOCATOR_ID
+        ORDER BY mi.INSTRUCTION_NUM
+    </select>
+    <select id="getMaterialLotIdByDelivery" resultType="java.lang.String"
+            parameterType="com.ruike.wms.api.dto.WmsInstructionDetailRequestDTO">
+        SELECT DISTINCT
+        MML.MATERIAL_LOT_ID
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_instruction_doc_attr MIADA ON MIADA.ATTR_NAME = 'ASN_NUM'
+        LEFT JOIN mt_instruction_doc MIAD ON MIAD.INSTRUCTION_DOC_ID = MIADA.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_material_lot_attr MMLA ON MMLA.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and MMLA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        <where>
+            AND MIADA.ATTR_VALUE = MMLA.ATTR_VALUE
+            <if test="deliveryNum != null and deliveryNum != ''">
+                AND MIAD.INSTRUCTION_DOC_NUM = #{deliveryNum}
+            </if>
+            <if test="deliveryLineNum != null and deliveryLineNum != ''">
+                AND MMLA.ATTR_VALUE = #{deliveryLineNum}
+            </if>
+        </where>
+    </select>
+    <select id="getMaterialLotIdByCondition" resultType="java.lang.String"
+            parameterType="com.ruike.wms.api.dto.WmsInstructionDetailRequestDTO">
+        SELECT DISTINCT
+        MML.MATERIAL_LOT_ID
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr MMLA ON MMLA.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and MMLA.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_instruction_actual_detail MIAD ON MIAD.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+        <where>
+            <if test="status != null and status != ''">
+                AND MMLA.ATTR_VALUE = #{status}
+            </if>
+            <if test="qualityStatus != null and qualityStatus != ''">
+                AND MML.QUALITY_STATUS = #{qualityStatus}
+            </if>
+            <if test="materialLotCode != null and materialLotCode != ''">
+                AND MML.MATERIAL_LOT_CODE LIKE CONCAT('%',CONCAT(#{materialLotCode},'%'))
+            </if>
+            <if test="creationDateStart != null and creationDateStart != ''">
+                AND STR_TO_DATE(MIAD.CREATION_DATE,'%Y-%m-%d') &gt;= STR_TO_DATE(#{creationDateStart},'%Y-%m-%d')
+            </if>
+            <if test="creationDateEnd != null and creationDateEnd != ''">
+                AND STR_TO_DATE(MIAD.CREATION_DATE,'%Y-%m-%d') &lt;= STR_TO_DATE(#{creationDateEnd},'%Y-%m-%d')
+            </if>
+            <if test="inLocatorTimeStart != null and inLocatorTimeStart != ''">
+                AND STR_TO_DATE(MML.IN_LOCATOR_TIME,'%Y-%m-%d') &gt;= STR_TO_DATE(#{inLocatorTimeStart},'%Y-%m-%d
+                %T')
+            </if>
+            <if test="inLocatorTimeEnd != null and inLocatorTimeEnd != ''">
+                AND STR_TO_DATE(MML.IN_LOCATOR_TIME,'%Y-%m-%d') &lt;= STR_TO_DATE(#{inLocatorTimeEnd},'%Y-%m-%d')
+            </if>
+        </where>
+    </select>
+    <select id="instructionDetailQuery"
+            resultType="com.ruike.wms.api.dto.WmsInstructionDetailResponseDTO">
+        SELECT DISTINCT
+        EVENTID.CREATION_DATE AS QC_COMPLETE_TIME,
+        MML.MATERIAL_LOT_ID,
+        MTIA.ATTR_VALUE AS INSTRUCTION_NUM,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MI.SOURCE_ORDER_ID AS PO_NUM,
+        MI.SOURCE_ORDER_LINE_ID AS PO_LINE_NUM,
+        MML.MATERIAL_LOT_CODE,
+        MIAD.CREATION_DATE,
+        MIAD.CREATED_BY,
+        CREATED.REAL_NAME AS CREATED_BY_NAME,
+        MU.UOM_CODE,
+        IFNULL(MIAD.ACTUAL_QTY,MML.PRIMARY_UOM_QTY) AS PRIMARY_UOM_QTY,
+        MGSQ.DESCRIPTION AS QUALITY_STATUS,
+        MML.LOT,
+        MML.IN_LOCATOR_TIME,
+        MMLA_DB.ATTR_VALUE AS DELIVERY_BATCH,
+        MMLA_QB.ATTR_VALUE AS QUALITY_BATCH,
+        MMLA_IB.ATTR_VALUE AS INSTOCK_BY,
+        INSTOCK.REAL_NAME AS INSTOCK_BY_NAME,
+        MGS.DESCRIPTION AS STATUS
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_instruction_actual_detail MIAD ON MIAD.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_instruction_actual MIA ON MIA.ACTUAL_ID = MIAD.ACTUAL_ID
+        LEFT JOIN mt_instruction MI ON MI.INSTRUCTION_ID = MIA.INSTRUCTION_ID AND MI.INSTRUCTION_ID = #{instructionId}
+        LEFT JOIN mt_instruction_attr MTIA ON MTIA.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        AND MTIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_material_lot_attr MMLA_DB ON MMLA_DB.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and MMLA_DB.ATTR_NAME = 'delivery_batch'
+        LEFT JOIN mt_material_lot_attr MMLA_QB ON MMLA_QB.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and MMLA_QB.ATTR_NAME = 'quality_batch'
+        LEFT JOIN mt_material_lot_attr MMLA_IB ON MMLA_IB.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and MMLA_IB.ATTR_NAME = 'instock_by'
+        LEFT JOIN iam_user INSTOCK ON INSTOCK.id = MMLA_IB.ATTR_VALUE
+        LEFT JOIN iam_user CREATED ON CREATED.id = MIAD.CREATED_BY
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_material_lot_attr MMLA_S ON MMLA_S.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and MMLA_S.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_gen_status MGS ON MGS.STATUS_CODE = MMLA_S.ATTR_VALUE
+        AND MGS.STATUS_GROUP = 'MATERIAL_LOT_STATUS'
+        LEFT JOIN mt_gen_status MGSQ ON MGSQ.STATUS_CODE = MML.QUALITY_STATUS
+        AND MGSQ.STATUS_GROUP = 'QUALITY_STATUS'
+        LEFT JOIN (
+        SELECT
+        MTMLH.CREATION_DATE,
+        MTMLH.MATERIAL_LOT_ID
+        FROM
+        mt_material_lot_his MTMLH
+        LEFT JOIN mt_event ME ON MTMLH.EVENT_ID = ME.EVENT_ID
+        LEFT JOIN mt_event_type MET ON ME.EVENT_TYPE_ID = MET.EVENT_TYPE_ID
+        WHERE
+        MET.EVENT_TYPE_CODE = 'QM_MATERIAL_LOT_UPDATE'
+        ) EVENTID ON EVENTID.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+        <where>
+            AND 1=1
+            <if test="list != null and list.size() != 0">
+                AND MML.MATERIAL_LOT_ID IN
+                <foreach collection="list" item="materialLotId" index="index" open="(" close=")" separator=",">
+                    #{materialLotId}
+                </foreach>
+            </if>
+            AND (
+            ( MIA.ACTUAL_ID IS NULL AND MI.INSTRUCTION_ID IS NULL )
+            OR ( MIA.ACTUAL_ID IS NOT NULL AND MI.INSTRUCTION_ID IS NOT NULL )
+            )
+        </where>
+    </select>
+    <select id="getSiteId" resultType="java.lang.String">
+        SELECT M.ORGANIZATION_ID FROM mt_user_organization M
+        WHERE M.organization_type='site' AND M.default_organization_flag="Y" AND M.USER_ID=#{userId}
+    </select>
+
+    <select id="queryInstructionLines" resultType="com.ruike.wms.api.dto.WmsPrdDeliveryLineDTO"
+            parameterType="com.ruike.wms.api.dto.WmsPrdDeliveryVO">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select ins.INSTRUCTION_ID,ins.INSTRUCTION_NUM,ifnull(ia_pd.attr_value,0) PACK_DETAIL, ia_iln.attr_value INSTRUCTION_LINE_NUM,
+        ins.MATERIAL_ID,ins.INSTRUCTION_STATUS,round(ins.QUANTITY) QUANTITY,ins.SOURCE_ORDER_TYPE,
+        ins.SOURCE_ORDER_LINE_ID,wo.WORK_ORDER_ID,mt.MATERIAL_CODE,mt.MATERIAL_NAME,mmt.MATERIAL_LOT_CODE,
+        mt.PRIMARY_UOM_CODE,ifnull(insa.ACTUAL_QTY,0) ACTUAL_QTY,(ifnull(ins.QUANTITY,0) - ifnull(insa.ACTUAL_QTY,0))
+        enableExecuteQty,
+        mmt.LOCATOR_CODE,mmt.LOCATOR_LOCATION,mmt.LOT,0 executeQty,ins.SOURCE_DOC_ID,mmt.`STATUS`,mmt.MATERIAL_LOT_ID,
+        insd.INSTRUCTION_DOC_NUM,mmt.LOCATOR_ID,mmt.PRIMARY_UOM_QTY,mmt.SITE_ID,fc.SITE_NAME
+        from mt_instruction ins
+        inner join mt_instruction_doc insd on ins.SOURCE_DOC_ID = insd.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_instruction_attr ia_pd ON ins.INSTRUCTION_ID = ia_pd.INSTRUCTION_ID and ia_pd.attr_name = 'PACK_DETAIL'
+        LEFT JOIN mt_instruction_attr ia_iln ON ins.INSTRUCTION_ID = ia_iln.INSTRUCTION_ID and ia_iln.attr_name = 'INSTRUCTION_LINE_NUM'
+        left join z_wo_so_relation wsr on ins.SOURCE_ORDER_LINE_ID = wsr.SO_LINE_NUM and ins.SOURCE_ORDER_ID =
+        wsr.SO_NUM
+        left join mt_work_order wo on wsr.WO_NUM = wo.WORK_ORDER_NUM
+        left join (
+        SELECT item.MATERIAL_ID,item.MATERIAL_CODE,tl.MATERIAL_NAME,item.PRIMARY_UOM_ID,
+        b5.UOM_CODE PRIMARY_UOM_CODE,l5.UOM_NAME PRIMARY_UOM_NAME
+        FROM mt_material item
+        INNER JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID and tl.LANG = #{locale}
+        LEFT JOIN mt_uom b5 ON b5.UOM_ID = item.PRIMARY_UOM_ID AND b5.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l5 ON l5.UOM_ID = b5.UOM_ID AND l5.LANG = #{locale}
+        WHERE item.TENANT_ID= ${tenantId}
+        ) mt on ins.MATERIAL_ID = mt.MATERIAL_ID
+        left join mt_instruction_actual insa on ins.INSTRUCTION_ID = insa.INSTRUCTION_ID
+        left join (
+        select mtlav.WORKORDER_ID,mtl.MATERIAL_LOT_ID,mtlav.`STATUS`,lc.LOCATOR_CODE,lc.LOCATOR_LOCATION,mtl.LOT,
+        lc.LOCATOR_ID,mtl.PRIMARY_UOM_QTY,mtl.SITE_ID,mtl.MATERIAL_LOT_CODE
+        from mt_material_lot_attr_view mtlav
+        join mt_material_lot mtl on mtlav.MATERIAL_LOT_ID = mtl.MATERIAL_LOT_ID and mtl.ENABLE_FLAG = 'Y'
+        and mtl.QUALITY_STATUS = 'OK'
+        left join mt_mod_locator lc on mtl.LOCATOR_ID = lc.LOCATOR_ID
+        where mtlav.`STATUS` = 'INSTOCK' and mtlav.WORKORDER_ID is not null
+        group by mtlav.WORKORDER_ID
+        order by mtlav.WORKORDER_ID,lc.LOCATOR_LOCATION
+        ) mmt on wo.WORK_ORDER_ID = mmt.WORKORDER_ID
+        left join mt_mod_site fc on ins.FROM_SITE_ID = fc.SITE_ID
+        where ins.SOURCE_ORDER_TYPE = 'SO'
+        and ins.INSTRUCTION_STATUS != 'CANCEL'
+        <if test='lclFlag == "Y" and isBase != "Y" and siteIds != null'>
+            and ins.FROM_SITE_ID in
+            <foreach collection="siteIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        and ins.SOURCE_DOC_ID in
+        <foreach collection="instructionDocIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        order by ins.SOURCE_DOC_ID,ins.CREATION_DATE
+    </select>
+
+    <select id="queryInstructionDetail" resultType="com.ruike.wms.api.dto.WmsPrdDeliveryLineDetailDTO"
+            parameterType="com.ruike.wms.api.dto.WmsPrdDeliveryVO">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select ins.INSTRUCTION_ID,ia_iln.attr_value INSTRUCTION_LINE_NUM,mt.MATERIAL_CODE,mt.MATERIAL_NAME,mt.PRIMARY_UOM_CODE,
+        mlt.MATERIAL_LOT_CODE,mlt.LOT,ins.INSTRUCTION_STATUS
+        instructionStatus,insa.ACTUAL_QTY,ct.CONTAINER_CODE,mlt.MATERIAL_LOT_ID,
+        mlt.PRIMARY_UOM_QTY,mlt.LOCATOR_ID,mlt.SITE_ID,ins.SOURCE_DOC_ID,mla.ATTR_VALUE STATUS,
+        ins.SOURCE_ORDER_TYPE,lc.LOCATOR_CODE
+        from mt_instruction_doc insd
+        inner join mt_instruction ins on insd.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        inner join mt_instruction_actual insa on ins.INSTRUCTION_ID = insa.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_attr ia_iln ON ins.INSTRUCTION_ID = ia_iln.INSTRUCTION_ID and ia_iln.attr_name = 'INSTRUCTION_LINE_NUM'
+        inner join mt_instruction_actual_detail insad on insa.ACTUAL_ID = insad.ACTUAL_ID
+        left join mt_material_lot mlt on insad.MATERIAL_LOT_ID = mlt.MATERIAL_LOT_ID
+        left join mt_material_lot_attr mla on mlt.MATERIAL_LOT_ID = mla.MATERIAL_LOT_ID and mla.ATTR_NAME = 'STATUS'
+        left join (
+        SELECT item.MATERIAL_ID,item.MATERIAL_CODE,tl.MATERIAL_NAME,item.PRIMARY_UOM_ID,
+        b5.UOM_CODE PRIMARY_UOM_CODE,l5.UOM_NAME PRIMARY_UOM_NAME
+        FROM mt_material item
+        INNER JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID and tl.LANG = #{locale}
+        LEFT JOIN mt_uom b5 ON b5.UOM_ID = item.PRIMARY_UOM_ID AND b5.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l5 ON l5.UOM_ID = b5.UOM_ID AND l5.LANG = #{locale}
+        WHERE item.TENANT_ID= ${tenantId}
+        ) mt on ins.MATERIAL_ID = mt.MATERIAL_ID
+        left join mt_mod_locator lc on mlt.LOCATOR_ID = lc.LOCATOR_ID
+        left join mt_container ct on insad.CONTAINER_ID = ct.CONTAINER_ID
+        where insd.INSTRUCTION_DOC_ID = #{instructionDocId}
+        <if test='lclFlag == "Y" and siteIds != null'>
+            and ins.FROM_SITE_ID in
+            <foreach collection="siteIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="instructionIds != null">
+            and ins.INSTRUCTION_ID in
+            <foreach collection="instructionIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        order by ins.CREATION_DATE desc
+    </select>
+
+    <select id="queryLocatorByInstruction" resultType="com.ruike.wms.api.dto.WmsPrdDeliveryLineDTO">
+        select pl.LOCATOR_ID,pl.LOCATOR_CODE from mt_mod_locator pl
+        where pl.PARENT_LOCATOR_ID in (
+        select lc.LOCATOR_ID from mt_instruction ins
+        inner join mt_mod_locator_org_rel lo on ins.SITE_ID = lo.ORGANIZATION_ID and lo.ORGANIZATION_TYPE = 'SITE'
+        inner join mt_mod_locator lc on lo.LOCATOR_ID = lc.LOCATOR_ID and lc.LOCATOR_TYPE = '12'
+        where ins.INSTRUCTION_ID in
+        <foreach collection="instructionIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ) limit 1
+    </select>
+
+    <select id="queryActualDetailId" parameterType="com.ruike.wms.api.dto.WmsPrdDeliveryLineDetailDTO"
+            resultType="java.lang.String">
+        select actd.ACTUAL_DETAIL_ID from mt_instruction_actual act
+        inner join mt_instruction_actual_detail actd on act.ACTUAL_ID = actd.ACTUAL_ID
+        where act.INSTRUCTION_ID = #{instructionId} and actd.MATERIAL_LOT_ID = #{materialLotId} limit 1
+    </select>
+
+    <select id="queryLikeDocNum" resultType="java.util.Map"
+            parameterType="com.ruike.wms.api.dto.WmsPrdDeliveryQryDTO">
+        SELECT
+        MID.INSTRUCTION_DOC_ID,MID.INSTRUCTION_DOC_NUM
+        FROM
+        mt_instruction_doc MID
+        where MID.INSTRUCTION_DOC_NUM LIKE CONCAT('%',CONCAT(#{instructionDocNum},'%'))
+        and INSTRUCTION_DOC_TYPE = 'SO_DELIVERY'
+
+    </select>
+
+    <select id="queryInstructionDocs" parameterType="com.ruike.wms.api.dto.WmsPrdDeliveryLineDetailDTO"
+            resultType="tarzan.instruction.domain.entity.MtInstructionDoc">
+        SELECT DISTINCT insd.instruction_doc_id, insd.instruction_doc_num
+        FROM mt_instruction_doc insd
+        inner join mt_instruction ins on insd.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        WHERE insd.INSTRUCTION_DOC_TYPE = 'SO_DELIVERY'
+        <if test="instructionDocNum != null">
+            and insd.instruction_doc_num LIKE CONCAT('%',CONCAT(#{instructionDocNum},'%'))
+        </if>
+        <if test="siteId != null">
+            and ins.FROM_SITE_ID = #{siteId}
+        </if>
+        <if test="instructionDocStatus != null">
+            and insd.instruction_doc_status = #{instructionDocStatus}
+        </if>
+        <choose>
+            <when test='dateFlag == "0"'>
+                AND date(insd.EXPECTED_ARRIVAL_TIME) = #{demandTime}
+            </when>
+            <when test='dateFlag == "1"'>
+                AND date(insd.EXPECTED_ARRIVAL_TIME) &lt;= #{demandTime}
+            </when>
+            <when test='dateFlag == "2"'>
+                and date(insd.EXPECTED_ARRIVAL_TIME) &lt;= #{demandTime}
+                and date(insd.EXPECTED_ARRIVAL_TIME) &gt;= date_add(#{demandTime}, interval -2 day)
+            </when>
+            <when test='dateFlag == "3"'>
+                and date(insd.EXPECTED_ARRIVAL_TIME) &lt;= #{demandTime}
+                and date(insd.EXPECTED_ARRIVAL_TIME) &gt;= date_add(#{demandTime}, interval -6 day)
+            </when>
+        </choose>
+        order by insd.instruction_doc_num desc
+    </select>
+
+    <select id="queryNextLocator" resultType="com.ruike.wms.api.dto.WmsPrdDeliveryLineVO"
+            parameterType="com.ruike.wms.api.dto.WmsPrdDeliveryLineVO">
+        select mtlav.WORKORDER_ID,mtl.MATERIAL_LOT_ID,mtlav.`STATUS`,lc.LOCATOR_CODE,lc.LOCATOR_LOCATION
+        from mt_material_lot_attr_view mtlav
+        join mt_material_lot mtl on mtlav.MATERIAL_LOT_ID = mtl.MATERIAL_LOT_ID and mtl.ENABLE_FLAG = 'Y'
+        and mtl.QUALITY_STATUS = 'OK'
+        left join mt_mod_locator lc on mtl.LOCATOR_ID = lc.LOCATOR_ID
+        where mtlav.`STATUS` = 'INSTOCK' and mtlav.WORKORDER_ID is not null
+        and mtlav.WORKORDER_ID in
+        <foreach collection="workOrderIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test=" materialLotIds != null">
+            and mtl.MATERIAL_LOT_ID not in
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        group by mtlav.WORKORDER_ID
+        order by mtlav.WORKORDER_ID,lc.LOCATOR_LOCATION
+        limit 1
+    </select>
+
+    <select id="queryCompleteTran" resultType="com.ruike.wms.api.dto.WmsPrdDeliveryLineDetailDTO">
+        select tr.TRANSACTION_ID,insd.INSTRUCTION_DOC_ID,ins.INSTRUCTION_ID,mlt.MATERIAL_LOT_CODE,mlt.MATERIAL_LOT_ID
+        from mt_instruction_doc insd
+        inner join mt_instruction ins on insd.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        inner join mt_instruction_actual insa on ins.INSTRUCTION_ID = insa.INSTRUCTION_ID
+        inner join mt_instruction_actual_detail insad on insa.ACTUAL_ID = insad.ACTUAL_ID
+        inner join mt_material_lot mlt on insad.MATERIAL_LOT_ID = mlt.MATERIAL_LOT_ID
+        inner join z_object_transcation tr on mlt.MATERIAL_LOT_CODE = tr.BARCODE and tr.TRANSACTION_TYPE_CODE =
+        'SO_DELIVERY'
+        where insd.INSTRUCTION_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="queryInstructionDoc" resultType="com.ruike.wms.api.dto.WmsPdInstructionDocDTO">
+        select insd.INSTRUCTION_DOC_ID,insd.INSTRUCTION_DOC_NUM,insd.INSTRUCTION_DOC_STATUS,
+        insdf.ATTR_VALUE LCL_FLAG,insdb.ATTR_VALUE LCL_BASE,insship.ATTR_VALUE AS SHIP_METHOD
+        from mt_instruction_doc insd
+        left join mt_instruction_doc_attr insdf on insd.INSTRUCTION_DOC_ID = insdf.INSTRUCTION_DOC_ID and
+        insdf.ATTR_NAME = 'LCL_FLAG'
+        left join mt_instruction_doc_attr insdb on insd.INSTRUCTION_DOC_ID = insdb.INSTRUCTION_DOC_ID and
+        insdb.ATTR_NAME = 'LCL_BASE'
+        left join mt_instruction_doc_attr insship on insd.INSTRUCTION_DOC_ID = insship.INSTRUCTION_DOC_ID and
+        insship.ATTR_NAME = 'SHIP_METHOD'
+        where insd.INSTRUCTION_DOC_ID = #{instructionDocId} and insd.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryRelationSite" resultType="com.ruike.wms.domain.vo.WmsGenTypeSiteVO">
+        select TYPE_GROUP,TYPE_CODE,st.SITE_ID,st.SITE_NAME from mt_gen_type gen
+        left join mt_mod_site st on gen.TYPE_CODE = st.SITE_CODE
+        where gen.TYPE_GROUP in(
+        select TYPE_GROUP from mt_gen_type gt
+        where gt.MODULE = #{module} and gt.TYPE_CODE = #{typeCode}) and gen.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryNonBaseLcl" resultType="tarzan.instruction.domain.entity.MtInstruction"
+            parameterType="com.ruike.wms.api.dto.WmsPrdDeliveryVO">
+        select ins.* from mt_instruction ins
+        where ins.SOURCE_DOC_ID = #{instructionDocId}
+        and ins.FROM_SITE_ID not in
+        <foreach collection="siteIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="queryNextLocatorPo" resultType="com.ruike.wms.api.dto.WmsPrdDeliveryLineVO"
+            parameterType="com.ruike.wms.api.dto.WmsPrdDeliveryLineVO">
+    SELECT
+        MML.MATERIAL_LOT_ID,
+        MMLA.ATTR_VALUE AS `STATUS`,
+        lc.LOCATOR_CODE,
+        lc.LOCATOR_LOCATION
+    FROM
+        mt_instruction MI
+        INNER JOIN mt_material_lot MML ON MI.MATERIAL_ID = MML.MATERIAL_ID
+        AND MML.SITE_ID = MI.FROM_SITE_ID
+        AND MML.ENABLE_FLAG = 'Y'
+        AND MML.QUALITY_STATUS = 'OK'
+        INNER JOIN mt_material_lot_attr MMLA ON MMLA.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+        AND MMLA.ATTR_NAME = 'STATUS'
+        AND MMLA.ATTR_VALUE = 'INSTOCK'
+        <if test=" materialLotIds != null">
+            AND MMLA.MATERIAL_LOT_ID NOT IN
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        LEFT JOIN mt_mod_locator lc ON MML.LOCATOR_ID = lc.LOCATOR_ID
+    WHERE
+        MI.INSTRUCTION_ID = #{instructionId}
+    ORDER BY
+        lc.LOCATOR_LOCATION
+        LIMIT 1
+    </select>
+    <select id="queryInstructionLinesPo"
+            resultType="com.ruike.wms.api.dto.WmsPrdDeliveryLineDTO">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select ins.INSTRUCTION_ID,ins.INSTRUCTION_NUM,ifnull(ia_pd.attr_value,0) PACK_DETAIL,ia_iln.attr_value INSTRUCTION_LINE_NUM,
+        ins.MATERIAL_ID,ins.INSTRUCTION_STATUS,round(ins.QUANTITY) QUANTITY,ins.SOURCE_ORDER_TYPE,
+        ins.SOURCE_ORDER_LINE_ID,mt.MATERIAL_CODE,mt.MATERIAL_NAME,mmt.MATERIAL_LOT_CODE,
+        mt.PRIMARY_UOM_CODE,ifnull(insa.ACTUAL_QTY,0) ACTUAL_QTY,(ifnull(ins.QUANTITY,0) - ifnull(insa.ACTUAL_QTY,0))
+        enableExecuteQty,
+        mmt.LOCATOR_CODE,mmt.LOCATOR_LOCATION,mmt.LOT,0 executeQty,ins.SOURCE_DOC_ID,mmt.`STATUS`,mmt.MATERIAL_LOT_ID,
+        insd.INSTRUCTION_DOC_NUM,mmt.LOCATOR_ID,mmt.PRIMARY_UOM_QTY,mmt.SITE_ID,fc.SITE_NAME
+        from mt_instruction ins
+        inner join mt_instruction_doc insd on ins.SOURCE_DOC_ID = insd.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_instruction_attr ia_pd ON ins.INSTRUCTION_ID = ia_pd.INSTRUCTION_ID and ia_pd.attr_name = 'PACK_DETAIL'
+        LEFT JOIN mt_instruction_attr ia_iln ON ins.INSTRUCTION_ID = ia_iln.INSTRUCTION_ID and ia_iln.attr_name = 'INSTRUCTION_LINE_NUM'
+        left join z_wo_so_relation wsr on ins.SOURCE_ORDER_LINE_ID = wsr.SO_LINE_NUM and ins.SOURCE_ORDER_ID =
+        wsr.SO_NUM
+        left join (
+        SELECT item.MATERIAL_ID,item.MATERIAL_CODE,tl.MATERIAL_NAME,item.PRIMARY_UOM_ID,
+        b5.UOM_CODE PRIMARY_UOM_CODE,l5.UOM_NAME PRIMARY_UOM_NAME
+        FROM mt_material item
+        INNER JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID and tl.LANG = #{locale}
+        LEFT JOIN mt_uom b5 ON b5.UOM_ID = item.PRIMARY_UOM_ID AND b5.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l5 ON l5.UOM_ID = b5.UOM_ID AND l5.LANG = #{locale}
+        WHERE item.TENANT_ID= ${tenantId}
+        ) mt on ins.MATERIAL_ID = mt.MATERIAL_ID
+        left join mt_instruction_actual insa on ins.INSTRUCTION_ID = insa.INSTRUCTION_ID
+        left join (
+        SELECT
+        MI.INSTRUCTION_ID,
+        MML.MATERIAL_LOT_ID,
+        MMLA.ATTR_VALUE AS `STATUS`,
+        lc.LOCATOR_CODE,
+        lc.LOCATOR_LOCATION,
+        MML.LOT,
+        lc.LOCATOR_ID,
+        MML.PRIMARY_UOM_QTY,
+        MML.SITE_ID,
+        MML.MATERIAL_LOT_CODE
+        FROM
+        mt_instruction MI
+        INNER JOIN mt_material_lot MML ON MI.MATERIAL_ID = MML.MATERIAL_ID
+        AND MML.SITE_ID = MI.FROM_SITE_ID
+        AND MML.ENABLE_FLAG = 'Y'
+        AND MML.QUALITY_STATUS = 'OK'
+        INNER JOIN mt_material_lot_attr MMLA ON MMLA.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+        AND MMLA.ATTR_NAME = 'STATUS'
+        AND MMLA.ATTR_VALUE = 'INSTOCK'
+        LEFT JOIN mt_mod_locator lc ON MML.LOCATOR_ID = lc.LOCATOR_ID
+        WHERE
+        MI.SOURCE_DOC_ID IN
+        <foreach collection="instructionDocIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY
+        lc.LOCATOR_LOCATION
+        LIMIT 1
+        ) mmt on ins.INSTRUCTION_ID = mmt.INSTRUCTION_ID
+        left join mt_mod_site fc on ins.FROM_SITE_ID = fc.SITE_ID
+        where ins.SOURCE_ORDER_TYPE = 'PO'
+        and ins.INSTRUCTION_STATUS != 'CANCEL'
+        <if test='lclFlag == "Y" and isBase != "Y" and siteIds != null'>
+            and ins.FROM_SITE_ID in
+            <foreach collection="siteIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        and ins.SOURCE_DOC_ID in
+        <foreach collection="instructionDocIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        order by ins.SOURCE_DOC_ID,ins.CREATION_DATE
+    </select>
+
+</mapper>

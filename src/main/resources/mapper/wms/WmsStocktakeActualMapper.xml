@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsStocktakeActualMapper">
+
+    <insert id="insertBatch">
+        insert into mt_stocktake_actual (
+        TENANT_ID
+        ,STOCKTAKE_ACTUAL_ID
+        ,STOCKTAKE_ID
+        ,SITE_ID
+        ,MATERIAL_LOT_ID
+        ,LOT_CODE
+        ,MATERIAL_ID
+        ,LOCATOR_ID
+        ,CONTAINER_ID
+        ,OWNER_TYPE
+        ,OWNER_ID
+        ,RESERVED_OBJECT_TYPE
+        ,RESERVED_OBJECT_ID
+        ,UOM_ID
+        ,CURRENT_QUANTITY
+        ,FIRSTCOUNT_MATERIAL_ID
+        ,FIRSTCOUNT_UOM_ID
+        ,FIRSTCOUNT_LOCATOR_ID
+        ,FIRSTCOUNT_CONTAINER_ID
+        ,FIRSTCOUNT_LOCATION_ROW
+        ,FIRSTCOUNT_LOCATION_COLUMN
+        ,FIRSTCOUNT_OWNER_TYPE
+        ,FIRSTCOUNT_OWNER_ID
+        ,FIRSTCOUNT_RESERVED_OBJECT_TY
+        ,FIRSTCOUNT_RESERVED_OBJECT_ID
+        ,FIRSTCOUNT_QUANTITY
+        ,FIRSTCOUNT_REMARK
+        ,RECOUNT_MATERIAL_ID
+        ,RECOUNT_UOM_ID
+        ,RECOUNT_LOCATOR_ID
+        ,RECOUNT_CONTAINER_ID
+        ,RECOUNT_LOCATION_ROW
+        ,RECOUNT_LOCATION_COLUMN
+        ,RECOUNT_OWNER_TYPE
+        ,RECOUNT_OWNER_ID
+        ,RECOUNT_RESERVED_OBJECT_TYPE
+        ,RECOUNT_RESERVED_OBJECT_ID
+        ,RECOUNT_QUANTITY
+        ,RECOUNT_REMARK
+        ,ADJUST_FLAG
+        ,LATEST_HIS_ID
+        ,CID
+        ,OBJECT_VERSION_NUMBER
+        ,CREATED_BY
+        ,CREATION_DATE
+        ,LAST_UPDATED_BY
+        ,LAST_UPDATE_DATE
+        ) values
+        <foreach collection="data" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.stocktakeActualId},
+            #{item.stocktakeId},
+            #{item.siteId},
+            #{item.materialLotId},
+            #{item.lotCode},
+            #{item.materialId},
+            #{item.locatorId},
+            #{item.containerId},
+            #{item.ownerType},
+            #{item.ownerId},
+            #{item.reservedObjectType},
+            #{item.reservedObjectId},
+            #{item.uomId},
+            #{item.currentQuantity},
+            #{item.firstcountMaterialId},
+            #{item.firstcountUomId},
+            #{item.firstcountLocatorId},
+            #{item.firstcountContainerId},
+            #{item.firstcountLocationRow},
+            #{item.firstcountLocationColumn},
+            #{item.firstcountOwnerType},
+            #{item.firstcountOwnerId},
+            #{item.firstcountReservedObjectTy},
+            #{item.firstcountReservedObjectId},
+            #{item.firstcountQuantity},
+            #{item.firstcountRemark},
+            #{item.recountMaterialId},
+            #{item.recountUomId},
+            #{item.recountLocatorId},
+            #{item.recountContainerId},
+            #{item.recountLocationRow},
+            #{item.recountLocationColumn},
+            #{item.recountOwnerType},
+            #{item.recountOwnerId},
+            #{item.recountReservedObjectType},
+            #{item.recountReservedObjectId},
+            #{item.recountQuantity},
+            #{item.recountRemark},
+            #{item.adjustFlag},
+            #{item.latestHisId},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertHisBatch">
+        insert into mt_stocktake_actual_his (
+        TENANT_ID
+        ,STOCKTAKE_ACTUAL_HIS_ID
+        ,STOCKTAKE_ACTUAL_ID
+        ,STOCKTAKE_ID
+        ,SITE_ID
+        ,MATERIAL_LOT_ID
+        ,LOT_CODE
+        ,MATERIAL_ID
+        ,LOCATOR_ID
+        ,CONTAINER_ID
+        ,OWNER_TYPE
+        ,OWNER_ID
+        ,RESERVED_OBJECT_TYPE
+        ,RESERVED_OBJECT_ID
+        ,UOM_ID
+        ,CURRENT_QUANTITY
+        ,FIRSTCOUNT_MATERIAL_ID
+        ,FIRSTCOUNT_UOM_ID
+        ,FIRSTCOUNT_LOCATOR_ID
+        ,FIRSTCOUNT_CONTAINER_ID
+        ,FIRSTCOUNT_LOCATION_ROW
+        ,FIRSTCOUNT_LOCATION_COLUMN
+        ,FIRSTCOUNT_OWNER_TYPE
+        ,FIRSTCOUNT_OWNER_ID
+        ,FIRSTCOUNT_RESERVED_OBJECT_TY
+        ,FIRSTCOUNT_RESERVED_OBJECT_ID
+        ,FIRSTCOUNT_QUANTITY
+        ,FIRSTCOUNT_REMARK
+        ,RECOUNT_MATERIAL_ID
+        ,RECOUNT_UOM_ID
+        ,RECOUNT_LOCATOR_ID
+        ,RECOUNT_CONTAINER_ID
+        ,RECOUNT_LOCATION_ROW
+        ,RECOUNT_LOCATION_COLUMN
+        ,RECOUNT_OWNER_TYPE
+        ,RECOUNT_OWNER_ID
+        ,RECOUNT_RESERVED_OBJECT_TYPE
+        ,RECOUNT_RESERVED_OBJECT_ID
+        ,RECOUNT_QUANTITY
+        ,RECOUNT_REMARK
+        ,ADJUST_FLAG
+        ,EVENT_ID
+        ,CID
+        ,OBJECT_VERSION_NUMBER
+        ,CREATED_BY
+        ,CREATION_DATE
+        ,LAST_UPDATED_BY
+        ,LAST_UPDATE_DATE
+        ) values
+        <foreach collection="data" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.stocktakeActualHisId},
+            #{item.stocktakeActualId},
+            #{item.stocktakeId},
+            #{item.siteId},
+            #{item.materialLotId},
+            #{item.lotCode},
+            #{item.materialId},
+            #{item.locatorId},
+            #{item.containerId},
+            #{item.ownerType},
+            #{item.ownerId},
+            #{item.reservedObjectType},
+            #{item.reservedObjectId},
+            #{item.uomId},
+            #{item.currentQuantity},
+            #{item.firstcountMaterialId},
+            #{item.firstcountUomId},
+            #{item.firstcountLocatorId},
+            #{item.firstcountContainerId},
+            #{item.firstcountLocationRow},
+            #{item.firstcountLocationColumn},
+            #{item.firstcountOwnerType},
+            #{item.firstcountOwnerId},
+            #{item.firstcountReservedObjectTy},
+            #{item.firstcountReservedObjectId},
+            #{item.firstcountQuantity},
+            #{item.firstcountRemark},
+            #{item.recountMaterialId},
+            #{item.recountUomId},
+            #{item.recountLocatorId},
+            #{item.recountContainerId},
+            #{item.recountLocationRow},
+            #{item.recountLocationColumn},
+            #{item.recountOwnerType},
+            #{item.recountOwnerId},
+            #{item.recountReservedObjectType},
+            #{item.recountReservedObjectId},
+            #{item.recountQuantity},
+            #{item.recountRemark},
+            #{item.adjustFlag},
+            #{item.eventId},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectListByCondition" resultType="com.ruike.wms.domain.vo.WmsStocktakeActualVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select mta.*
+        ,mta_fcb.ATTR_VALUE firstcount_by
+        ,fc_user.login_name firstcount_by_name
+        ,mta_fcd.ATTR_VALUE firstcount_date
+        ,mta_rcb.ATTR_VALUE recount_by
+        ,rc_user.login_name recount_by_name
+        ,mta_rcd.ATTR_VALUE recount_date
+        ,mml_status.attr_value material_lot_status
+        ,mml.quality_status
+        ,mu.uom_code
+        ,loc.locator_code
+        ,mc.container_code
+        ,item.material_code
+        ,item.material_name
+        ,mml.material_lot_code
+        ,mta.lot_code
+        ,case
+        when mta.recount_quantity is not null then
+        mta.recount_quantity - mta.current_quantity
+        when mta.recount_quantity is null and mta.firstcount_quantity is not null then
+        mta.firstcount_quantity - mta.current_quantity
+        end different_quantity
+        ,msd.stocktake_num
+        ,mml_ver.attr_value material_version
+        ,loc_fst.locator_code firstcount_locator_code
+        ,loc_re.locator_code recount_locator_code
+        ,mml.enable_flag material_lot_enable_flag
+        from mt_stocktake_actual mta
+        join mt_stocktake_doc msd on msd.STOCKTAKE_ID = mta.STOCKTAKE_ID
+        left join mt_stocktake_actual_attr mta_fcb on mta.STOCKTAKE_ACTUAL_ID = mta_fcb.STOCKTAKE_ACTUAL_ID
+        and mta_fcb.ATTR_NAME = 'FIRSTCOUNT_BY'
+        left join mt_stocktake_actual_attr mta_fcd on mta.STOCKTAKE_ACTUAL_ID = mta_fcd.STOCKTAKE_ACTUAL_ID
+        and mta_fcd.ATTR_NAME = 'FIRSTCOUNT_DATE'
+        left join mt_stocktake_actual_attr mta_rcb on mta.STOCKTAKE_ACTUAL_ID = mta_rcb.STOCKTAKE_ACTUAL_ID
+        and mta_rcb.ATTR_NAME = 'RECOUNT_BY'
+        left join mt_stocktake_actual_attr mta_rcd on mta.STOCKTAKE_ACTUAL_ID = mta_rcd.STOCKTAKE_ACTUAL_ID
+        and mta_rcd.ATTR_NAME = 'RECOUNT_DATE'
+        left join iam_user fc_user on CAST(mta_fcb.attr_value AS SIGNED) = fc_user.id
+        left join iam_user rc_user on CAST(mta_rcb.attr_value AS SIGNED) = rc_user.id
+        left join mt_container mc on mta.container_id = mc.container_id
+        left join mt_mod_locator loc on mta.locator_id = loc.locator_id
+        inner join mt_uom mu on mta.uom_id = mu.uom_id
+        inner join mt_material item on mta.material_id = item.material_id
+        inner join mt_material_lot mml on mta.material_lot_id = mml.material_lot_id
+        left join mt_material_lot_attr mml_status on mml.material_lot_id = mml_status.material_lot_id and
+        mml_status.attr_name = 'STATUS'
+        LEFT JOIN mt_material_lot_attr mml_ver ON mml.MATERIAL_LOT_ID = mml_ver.MATERIAL_LOT_ID and
+        mml_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_mod_locator loc_fst on loc_fst.locator_id = mta.FIRSTCOUNT_LOCATOR_ID
+        left join mt_mod_locator loc_re on loc_re.locator_id = mta.RECOUNT_LOCATOR_ID
+        where mta.stocktake_id in
+        <foreach collection="stocktakeIdList" separator="," item="stocktakeId" open="(" close=")">
+            #{stocktakeId}
+        </foreach>
+        and mta.tenant_Id = #{tenantId}
+        <if test="materialLotCode != null and materialLotCode != ''">
+            <bind name="materialLotCodeLike" value="'%'+materialLotCode+'%'"/>
+            and mml.material_lot_code like #{materialLotCodeLike}
+        </if>
+        <if test="materialLotStatus != null and materialLotStatus != ''">
+            and mml_status.attr_value = #{materialLotStatus}
+        </if>
+        <if test="materialLotEnableFlag != null and materialLotEnableFlag != ''">
+            and mml.enable_flag = #{materialLotEnableFlag}
+        </if>
+        <if test="locatorCode != null and locatorCode != ''">
+            AND FIND_IN_SET(#{locatorCode},loc.locator_code)
+        </if>
+        <if test="materialCode != null and materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+materialCode+'%'"/>
+            and item.material_code like #{materialCodeLike}
+        </if>
+        <if test="materialName != null and materialName != ''">
+            <bind name="materialNameLike" value="'%'+materialName+'%'"/>
+            and item.material_name like #{materialNameLike}
+        </if>
+        <if test="lotCode != null and lotCode != ''">
+            <bind name="lotCodeLike" value="'%'+lotCode+'%'"/>
+            and mta.lot_code like #{lotCodeLike}
+        </if>
+        <if test="accountConsistentFlag =='Y'.toString()">
+            and case
+            when mta.recount_quantity is not null then
+            mta.recount_quantity - mta.current_quantity
+            when mta.recount_quantity is null and mta.firstcount_quantity is not null then
+            mta.firstcount_quantity - mta.current_quantity
+            else -99999
+            end = 0
+        </if>
+        <if test="accountConsistentFlag =='N'.toString()">
+            and case
+            when mta.recount_quantity is not null then
+            mta.recount_quantity - mta.current_quantity
+            when mta.recount_quantity is null and mta.firstcount_quantity is not null then
+            mta.firstcount_quantity - mta.current_quantity
+            else 0
+            end != 0
+        </if>
+        <if test="firstCountEmptyFlag =='Y'.toString()">
+            and mta.firstcount_quantity is null
+        </if>
+        <if test="firstCountEmptyFlag =='N'.toString()">
+            and mta.firstcount_quantity is not null
+        </if>
+        <if test="recountEmptyFlag =='Y'.toString()">
+            and mta.recount_quantity is null
+        </if>
+        <if test="recountEmptyFlag =='N'.toString()">
+            and mta.recount_quantity is not null
+        </if>
+        <if test="locatorConsistentFlag =='Y'.toString()">
+            and case when ifnull( mta.locator_id, '' ) = '' then '@#$$^'
+            else mta.locator_id end = case when ifnull( mta.recount_locator_id, '' ) != '' then mta.recount_locator_id
+            when ifnull( mta.firstcount_locator_id, '' ) != '' then mta.firstcount_locator_id else '@###^' end
+        </if>
+        <if test="locatorConsistentFlag =='N'.toString()">
+            and case when ifnull( mta.locator_id, '' ) = '' then '@#$$^'
+            else mta.locator_id end != case when ifnull( mta.recount_locator_id, '' ) != '' then mta.recount_locator_id
+            when ifnull( mta.firstcount_locator_id, '' ) != '' then mta.firstcount_locator_id else '@###^' end
+        </if>
+        <if test="differConsistentFlag =='Y'.toString()">
+            and ifnull(mta.firstcount_quantity,-999999) = ifnull(mta.recount_quantity,-888888)
+        </if>
+        <if test="differConsistentFlag =='N'.toString()">
+            and ifnull(mta.firstcount_quantity,-999999) != ifnull(mta.recount_quantity,-888888)
+        </if>
+    </select>
+
+    <select id="selectListByIds" resultType="com.ruike.wms.domain.vo.WmsStocktakeActualVO">
+        select mta.*
+        ,mml.LOT lot_number
+        ,mu.UOM_CODE
+        ,mta.LOCATOR_ID
+        ,loc.LOCATOR_CODE
+        ,msd.AREA_LOCATOR_ID warehouse_id
+        ,warehouse.LOCATOR_CODE warehouse_code
+        ,case
+        when mta.RECOUNT_QUANTITY is not null then
+        mta.RECOUNT_QUANTITY - mta.CURRENT_QUANTITY
+        when mta.RECOUNT_QUANTITY is null and mta.FIRSTCOUNT_QUANTITY is not null then
+        mta.FIRSTCOUNT_QUANTITY - mta.CURRENT_QUANTITY
+        else 0
+        end different_quantity
+        from mt_stocktake_actual mta
+        INNER JOIN mt_stocktake_doc msd on mta.STOCKTAKE_ID = msd.STOCKTAKE_ID
+        INNER JOIN mt_uom mu ON mta.UOM_ID = mu.UOM_ID
+        INNER JOIN mt_material_lot mml ON mta.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        LEFT JOIN mt_mod_locator loc ON mta.LOCATOR_ID = loc.LOCATOR_ID
+        LEFT JOIN mt_mod_locator warehouse ON msd.AREA_LOCATOR_ID = warehouse.LOCATOR_ID
+        where mta.TENANT_ID = #{tenantId}
+        <if test="stocktakeId != null and stocktakeId != ''">
+            and mta.stocktake_id = #{stocktakeId}
+        </if>
+        and mta.stocktake_actual_id in (<foreach collection="idList" item="id" separator=",">
+        #{id}
+    </foreach>)
+    </select>
+
+    <select id="selectMaterialLotByType" resultType="com.ruike.wms.domain.vo.WmsStocktakeMaterialLotVO">
+        select mta.tenant_id
+        , mta.stocktake_actual_id
+        , mta.stocktake_id
+        , mta.material_lot_id
+        , mml.material_lot_code
+        , mta.lot_code
+        , mta.material_id
+        , item.material_code
+        , item.material_name
+        , mmla_ver.attr_value material_version
+        , case when msd.OPEN_FLAG = 'Y' then mta.current_quantity end current_quantity
+        , mta.locator_id
+        , loc.locator_code
+        , item.primary_uom_id uom_id
+        , uom.uom_code
+        <choose>
+            <when test='stocktakeTypeCode == "FIRST_COUNT"'>
+                , mta.firstcount_quantity
+                , mta.firstcount_locator_id
+                , loc_f.locator_code firstcount_locator_code
+                , mta.firstcount_container_id
+                , mc_f.container_code firstcount_container_code
+            </when>
+            <when test='stocktakeTypeCode == "RECOUNT"'>
+                , mta.recount_quantity
+                , mta.recount_locator_id
+                , loc_r.locator_code recount_locator_code
+                , mta.recount_container_id
+                , mc_r.container_code recount_container_code
+            </when>
+        </choose>
+        from mt_stocktake_actual mta
+        inner join mt_stocktake_doc msd on mta.stocktake_id = msd.stocktake_id
+        inner join mt_material item on mta.material_id = item.material_id
+        join mt_uom uom on uom.UOM_ID = item.PRIMARY_UOM_ID
+        inner join mt_material_lot mml on mta.material_lot_id = mml.material_lot_id
+        left join mt_material_lot_attr mmla_ver on mml.material_lot_id = mmla_ver.material_lot_id
+        and mmla_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_mod_locator loc on mta.locator_id = loc.locator_id
+        <choose>
+            <when test='stocktakeTypeCode == "FIRST_COUNT"'>
+                left join mt_mod_locator loc_f on mta.firstcount_locator_id = loc_f.locator_id
+                left join mt_container mc_f on mta.firstcount_container_id = mc_f.container_id
+            </when>
+            <when test='stocktakeTypeCode == "RECOUNT"'>
+                left join mt_mod_locator loc_r on mta.recount_locator_id = loc_r.locator_id
+                left join mt_container mc_r on mta.recount_container_id = mc_r.container_id
+            </when>
+        </choose>
+        where mta.tenant_id = #{tenantId}
+        and mta.stocktake_Id = #{stocktakeId}
+        order by mta.last_update_date
+    </select>
+
+    <select id="selectStocktakeDetailById" resultType="com.ruike.wms.domain.vo.WmsStocktakeMaterialDetailVO">
+        select stock.material_id
+        ,stock.material_code
+        ,stock.material_name
+        ,stock.LOT_CODE
+        ,stock.locator_id
+        ,loc.locator_code
+        ,uom.uom_id
+        ,uom.uom_code
+        ,ifnull(sum(stock.current_quantity),0) current_quantity
+        ,ifnull(sum(stock.firstcount_quantity),0) firstcount_quantity
+        ,ifnull(sum(stock.recount_quantity),0) recount_quantity
+        ,ifnull(sum(stock.firstcount_quantity),0) - ifnull(sum(stock.current_quantity),0) firstcount_different_quantity
+        ,ifnull(sum(stock.recount_quantity),0) - ifnull(sum(stock.current_quantity),0) recount_different_quantity
+        from (select msa.material_id
+        ,msa.locator_id
+        ,mm.material_code
+        ,mm.material_name
+        ,msa.lot_code
+        ,mm.primary_uom_id
+        ,msa.current_quantity
+        ,0 firstcount_quantity
+        ,0 recount_quantity
+        from mt_stocktake_actual msa
+        join mt_material mm on msa.material_id = mm.material_id
+        where msa.tenant_id = #{tenantId}
+        and msa.stocktake_id = #{stocktakeId}
+        <if test="materialCode != null and materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <choose>
+            <when test='stocktakeTypeCode == "FIRST_COUNT"'>
+                union all
+                select msa.material_id
+                ,msa.firstcount_locator_id locator_id
+                ,mm.material_code
+                ,mm.material_name
+                ,msa.lot_code
+                ,mm.primary_uom_id
+                ,0 current_quantity
+                ,msa.firstcount_quantity
+                ,0 recount_quantity
+                from mt_stocktake_actual msa
+                join mt_material mm on msa.material_id = mm.material_id
+                where msa.tenant_id = #{tenantId}
+                and msa.stocktake_id = #{stocktakeId}
+                <if test="materialCode != null and materialCode != ''">
+                    <bind name="materialCodeLike" value="'%'+materialCode+'%'"/>
+                    and mm.material_code like #{materialCodeLike}
+                </if>
+            </when>
+            <when test='stocktakeTypeCode == "RECOUNT"'>
+                union all
+                select msa.material_id
+                ,msa.recount_locator_id LOCATOR_ID
+                ,mm.material_code
+                ,mm.material_name
+                ,msa.lot_code
+                ,mm.primary_uom_id
+                ,0 current_quantity
+                ,0 firstcount_quantity
+                ,msa.recount_quantity
+                from mt_stocktake_actual msa
+                join mt_material mm on msa.material_id = mm.material_id
+                where msa.tenant_id = #{tenantId}
+                and msa.stocktake_id = #{stocktakeId}
+                <if test="materialCode != null and materialCode != ''">
+                    <bind name="materialCodeLike" value="'%'+materialCode+'%'"/>
+                    and mm.material_code like #{materialCodeLike}
+                </if>
+            </when>
+        </choose>
+        ) stock
+        join mt_uom uom on uom.uom_id = stock.primary_uom_id
+        join mt_mod_locator loc on stock.locator_id = loc.locator_id
+        group by stock.material_id
+        ,stock.material_code
+        ,stock.material_name
+        ,stock.lot_code
+        ,stock.locator_id
+        ,loc.locator_code
+        ,uom.uom_id
+        ,uom.uom_code
+    </select>
+
+</mapper>

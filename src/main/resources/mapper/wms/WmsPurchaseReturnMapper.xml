@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsPurchaseReturnMapper">
+
+    <select id="purchaseReturnHeaderQuery" resultType="com.ruike.wms.domain.vo.WmsPurchaseReturnHeadVO">
+        SELECT
+        mid.INSTRUCTION_DOC_ID,
+        mid.INSTRUCTION_DOC_TYPE,
+        mid.INSTRUCTION_DOC_NUM,
+        mid.SITE_ID,
+        mid.INSTRUCTION_DOC_STATUS,
+        mid.SUPPLIER_ID,
+        mid.CREATION_DATE,
+        mid.REMARK,
+        mid.LAST_UPDATED_BY,
+        mid.DEMAND_TIME,
+        ms.SUPPLIER_NAME,
+        ms.SUPPLIER_CODE,
+        mms.SITE_CODE,
+        mms.SITE_NAME
+        FROM
+        mt_instruction_doc mid
+        LEFT JOIN mt_mod_site mms ON mid.SITE_ID = mms.SITE_ID
+        LEFT JOIN mt_supplier ms ON ms.SUPPLIER_ID = mid.SUPPLIER_ID,
+        mt_instruction mi
+        LEFT JOIN mt_instruction_attr mia ON mi.INSTRUCTION_ID = mia.INSTRUCTION_ID AND mia.ATTR_NAME = 'PO_RETURN_FLAG'
+        WHERE
+        mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND mid.TENANT_ID = #{tenantId}
+        AND mi.TENANT_ID = #{tenantId}
+        <if test="returnVO.docTypeList != null and returnVO.docTypeList.size() > 0">
+            AND mid.INSTRUCTION_DOC_TYPE IN
+            <foreach collection="returnVO.docTypeList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        AND mia.ATTR_VALUE = 'X'
+        <if test="returnVO.materialId != null and returnVO.materialId != ''">
+            AND mi.MATERIAL_ID = #{returnVO.materialId}
+        </if>
+        <if test="returnVO.instructionDocNum != null and returnVO.instructionDocNum != ''">
+            AND mid.INSTRUCTION_DOC_NUM LIKE CONCAT("%", #{returnVO.instructionDocNum}, "%")
+        </if>
+        <if test="returnVO.instructionDocStatus != null and returnVO.instructionDocStatus != ''">
+            AND mid.INSTRUCTION_DOC_STATUS = #{returnVO.instructionDocStatus}
+        </if>
+        <if test="returnVO.siteId != null and returnVO.siteId != ''">
+            AND mid.SITE_ID = #{returnVO.siteId}
+        </if>
+        <if test="returnVO.supplierId != null and returnVO.supplierId != ''">
+            AND mid.SUPPLIER_ID = #{returnVO.supplierId}
+        </if>
+        <if test="returnVO.demandTimeFrom != null and returnVO.demandTimeFrom != ''">
+            AND mid.DEMAND_TIME >= #{returnVO.demandTimeFrom}
+        </if>
+        <if test="returnVO.demandTimeTo != null and returnVO.demandTimeTo != ''">
+            AND mid.DEMAND_TIME <![CDATA[<=]]> #{returnVO.demandTimeTo}
+        </if>
+        GROUP BY
+        mid.INSTRUCTION_DOC_ID,
+        mid.INSTRUCTION_DOC_TYPE,
+        mid.INSTRUCTION_DOC_NUM,
+        mid.SITE_ID,
+        mid.INSTRUCTION_DOC_STATUS,
+        mid.SUPPLIER_ID,
+        mid.CREATION_DATE,
+        mid.REMARK,
+        mid.LAST_UPDATED_BY,
+        mid.DEMAND_TIME,
+        ms.SUPPLIER_NAME,
+        ms.SUPPLIER_CODE,
+        mms.SITE_CODE,
+        mms.SITE_NAME
+    </select>
+
+    <select id="purchaseReturnLineQuery" resultType="com.ruike.wms.domain.vo.WmsPurchaseReturnLineVO">
+        SELECT
+	        attr2.ATTR_VALUE line_number,
+	        mm.MATERIAL_ID,
+	        mm.MATERIAL_CODE,
+	        mm.MATERIAL_NAME,
+	        mi.INSTRUCTION_ID,
+	        mi.QUANTITY,
+	        mi.INSTRUCTION_STATUS,
+	        mi.FROM_LOCATOR_ID,
+	        mi.REMARK,
+	        mi.UOM_ID,
+	        mu.UOM_CODE,
+	        mu.UOM_NAME,
+	        mml.LOCATOR_CODE,
+	        mml.LOCATOR_NAME,
+	        IFNULL(SUM(mia.ACTUAL_QTY), 0) actual_qty,
+	        CONCAT_WS('-',attr3.ATTR_VALUE,attr4.ATTR_VALUE) delivery_number
+        FROM
+	        mt_instruction mi
+	    LEFT JOIN mt_instruction_attr attr ON attr.INSTRUCTION_ID = mi.INSTRUCTION_ID
+	    AND attr.ATTR_NAME = 'PO_RETURN_FLAG'
+	    LEFT JOIN mt_instruction_attr attr2 ON attr2.INSTRUCTION_ID = mi.INSTRUCTION_ID
+	    AND attr2.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+	    LEFT JOIN mt_instruction_attr attr3 ON attr3.INSTRUCTION_ID = mi.INSTRUCTION_ID
+	    AND attr3.ATTR_NAME = 'SO_NUM'
+	    LEFT JOIN mt_instruction_attr attr4 ON attr4.INSTRUCTION_ID = mi.INSTRUCTION_ID
+	    AND attr4.ATTR_NAME = 'SO_LINE_NUM'
+	    LEFT JOIN mt_material mm ON mi.MATERIAL_ID = mm.MATERIAL_ID
+	    LEFT JOIN mt_uom mu ON mu.UOM_ID = mi.UOM_ID
+	    LEFT JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mi.TO_LOCATOR_ID
+	    LEFT JOIN mt_instruction_actual mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        WHERE
+	        mi.TENANT_ID = #{tenantId}
+	    AND mi.SOURCE_DOC_ID = #{sourceDocId}
+	    AND attr.ATTR_VALUE = 'X'
+        GROUP BY
+	    attr2.ATTR_VALUE,
+	    mm.MATERIAL_ID,
+	    mm.MATERIAL_CODE,
+	    mm.MATERIAL_NAME,
+	    mi.INSTRUCTION_ID,
+	    mi.QUANTITY,
+	    mi.INSTRUCTION_STATUS,
+	    mi.FROM_LOCATOR_ID,
+	    mi.REMARK,
+	    mi.UOM_ID,
+	    mu.UOM_CODE,
+	    mu.UOM_NAME,
+	    mml.LOCATOR_CODE,
+	    mml.LOCATOR_NAME,
+	    attr3.ATTR_VALUE,
+	    attr4.ATTR_VALUE
+    </select>
+
+    <select id="purchaseReturnDetailsQuery" resultType="com.ruike.wms.domain.vo.WmsPurchaseReturnDetailsVO">
+        SELECT
+	        iad.ACTUAL_ID,
+	        iad.MATERIAL_LOT_ID,
+	        iad.LAST_UPDATED_BY,
+	        iad.LAST_UPDATE_DATE,
+	        mml.MATERIAL_LOT_CODE,
+	        mml.MATERIAL_ID,
+	        iad.ACTUAL_QTY,
+	        mm.MATERIAL_CODE,
+	        mm.MATERIAL_NAME
+        FROM
+	        mt_instruction_actual mia
+	    JOIN mt_instruction_actual_detail iad ON iad.ACTUAL_ID = mia.ACTUAL_ID
+	    LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = iad.MATERIAL_LOT_ID
+    	LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mml.MATERIAL_ID
+        WHERE
+	        mia.TENANT_ID = #{tenantId}
+	    AND mia.INSTRUCTION_ID = #{instructionId}
+    </select>
+
+    <select id="selectPurchaseReturnPrintHead" resultType="com.ruike.wms.domain.vo.WmsPurchaseReturnHeadVO">
+        SELECT
+            mid.INSTRUCTION_DOC_ID,
+            mid.INSTRUCTION_DOC_TYPE,
+            mid.INSTRUCTION_DOC_NUM,
+            mid.SITE_ID,
+            mid.INSTRUCTION_DOC_STATUS,
+            mid.SUPPLIER_ID,
+            mid.CREATION_DATE,
+            mid.REMARK,
+            mid.LAST_UPDATED_BY,
+            mid.DEMAND_TIME,
+            ms.SUPPLIER_NAME,
+            ms.SUPPLIER_CODE,
+            mms.SITE_CODE,
+            mms.SITE_NAME
+        FROM
+            mt_instruction_doc mid
+        LEFT JOIN mt_mod_site mms ON mid.SITE_ID = mms.SITE_ID
+        LEFT JOIN mt_supplier ms ON ms.SUPPLIER_ID = mid.SUPPLIER_ID
+        WHERE mid.TENANT_ID = #{tenantId}
+        <if test="docTypeList != null and docTypeList.size() > 0">
+            AND mid.INSTRUCTION_DOC_TYPE IN
+            <foreach collection="docTypeList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        AND EXISTS (
+        SELECT 1 FROM mt_instruction mi,mt_instruction_attr mia WHERE mi.INSTRUCTION_ID = mia.INSTRUCTION_ID AND mia.ATTR_NAME = 'PO_RETURN_FLAG'
+        AND mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND mia.ATTR_VALUE = 'X'
+        )
+      AND mid.INSTRUCTION_DOC_ID = #{instructionDocId}
+    </select>
+</mapper>

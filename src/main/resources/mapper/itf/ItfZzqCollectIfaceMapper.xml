@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfZzqCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfZzqCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="ZZQ_CENTER_X" property="zzqCenterX" jdbcType="DECIMAL"/>
+        <result column="ZZQ_CENTER_Y" property="zzqCenterY" jdbcType="DECIMAL"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE1" property="zzqAttribute1" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE2" property="zzqAttribute2" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE3" property="zzqAttribute3" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE4" property="zzqAttribute4" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE5" property="zzqAttribute5" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE6" property="zzqAttribute6" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE7" property="zzqAttribute7" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE8" property="zzqAttribute8" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE9" property="zzqAttribute9" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE10" property="zzqAttribute10" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE11" property="zzqAttribute11" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE12" property="zzqAttribute12" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE13" property="zzqAttribute13" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE14" property="zzqAttribute14" jdbcType="VARCHAR"/>
+        <result column="ZZQ_ATTRIBUTE15" property="zzqAttribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_zzq_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        SN,
+        ZZQ_CENTER_X,
+        ZZQ_CENTER_Y,
+        PRIMARY_KEY,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ZZQ_ATTRIBUTE1,
+        ZZQ_ATTRIBUTE2,
+        ZZQ_ATTRIBUTE3,
+        ZZQ_ATTRIBUTE4,
+        ZZQ_ATTRIBUTE5,
+        ZZQ_ATTRIBUTE6,
+        ZZQ_ATTRIBUTE7,
+        ZZQ_ATTRIBUTE8,
+        ZZQ_ATTRIBUTE9,
+        ZZQ_ATTRIBUTE10,
+        ZZQ_ATTRIBUTE11,
+        ZZQ_ATTRIBUTE12,
+        ZZQ_ATTRIBUTE13,
+        ZZQ_ATTRIBUTE14,
+        ZZQ_ATTRIBUTE15
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.interfaceId},
+            #{item.assetEncoding},
+            #{item.sn},
+            #{item.zzqCenterX},
+            #{item.zzqCenterY},
+            #{item.primaryKey},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.zzqAttribute1},
+            #{item.zzqAttribute2},
+            #{item.zzqAttribute3},
+            #{item.zzqAttribute4},
+            #{item.zzqAttribute5},
+            #{item.zzqAttribute6},
+            #{item.zzqAttribute7},
+            #{item.zzqAttribute8},
+            #{item.zzqAttribute9},
+            #{item.zzqAttribute10},
+            #{item.zzqAttribute11},
+            #{item.zzqAttribute12},
+            #{item.zzqAttribute13},
+            #{item.zzqAttribute14},
+            #{item.zzqAttribute15}
+            )
+        </foreach>
+    </insert>
+    <update id="updateIface">
+        UPDATE itf_zzq_collect_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = -1,
+            last_update_date = CURRENT_TIMESTAMP,
+            process_date=CURRENT_TIMESTAMP,
+            process_message =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processMessage}
+            </foreach>,
+            process_status =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processStatus}
+            </foreach>
+        </set>
+        <where>
+            interface_id in
+            <foreach collection="domains" item="item"
+                     separator="," open="(" close=")">
+                #{item.interfaceId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

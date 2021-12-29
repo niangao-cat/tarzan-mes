@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterReturnStepMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterReturnStep">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_RETURN_STEP_ID" property="routerReturnStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="RETURN_TYPE" property="returnType" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_ORIGINAL_FLAG" property="completeOriginalFlag" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="ViewResultMap2" type="tarzan.method.domain.vo.MtRouterReturnStepVO" extends="BaseResultMap">
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtRouterReturnStepDTO">
+        <result column="ROUTER_RETURN_STEP_ID" property="routerReturnStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="RETURN_TYPE" property="returnType" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_ORIGINAL_FLAG" property="completeOriginalFlag" jdbcType="VARCHAR"/>
+        <result column="RETURN_STEP_NAME" property="returnStepName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRouterReturnStepByIds" resultMap="BaseResultMap">
+        select * from mt_router_return_step where TENANT_ID = ${tenantId} AND ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectReturnStepOperation" resultMap="ViewResultMap2">
+        SELECT p.*,
+        t.OPERATION_NAME
+        FROM mt_router_return_step p LEFT JOIN mt_operation t ON (p.OPERATION_ID = t.OPERATION_ID AND t.TENANT_ID =
+        ${tenantId})
+        WHERE p.TENANT_ID = ${tenantId}
+        <if test="routerStepId!=null">
+            and p.ROUTER_STEP_ID = #{routerStepId}
+        </if>
+    </select>
+
+    <select id="queryRouterReturnStepForUi" resultMap="DtoResultMap">
+        select
+        mrrs.ROUTER_RETURN_STEP_ID,
+        mrrs.ROUTER_STEP_ID,
+        mrrs.RETURN_TYPE,
+        mrrs.OPERATION_ID,
+        mo.OPERATION_NAME,
+        mrrs.COMPLETE_ORIGINAL_FLAG,
+        mrrs.STEP_NAME RETURN_STEP_NAME
+        from mt_router_return_step mrrs
+        left join mt_operation mo on mrrs.OPERATION_ID = mo.OPERATION_ID and mo.TENANT_ID = ${tenantId}
+        where mrrs.TENANT_ID = ${tenantId}
+        and mrrs.ROUTER_STEP_ID in
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        Order By mrrs.CREATION_DATE DESC
+    </select>
+</mapper>

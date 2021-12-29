@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialLotEditMapper">
+    <select id="queryMaterialLotEdit" resultType="com.ruike.wms.api.dto.WmsMaterialLotEditResponseDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MML.ENABLE_FLAG,
+        MML.SUPPLIER_ID,
+        MML.QUALITY_STATUS,
+        MML.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MML.PRIMARY_UOM_QTY,
+        MML.RESERVED_OBJECT_ID,
+        MML.LOT,
+        MML.PRIMARY_UOM_ID,
+        MU.UOM_ID,
+        MU.UOM_CODE,
+        MMS.SITE_ID,
+        MMS.SITE_CODE,
+        MMS.SITE_NAME,
+        MML.LOCATOR_ID WAREHOUSE_ID,
+        MML.LOCATOR_ID,
+        MTML.LOCATOR_CODE,
+        MS.SUPPLIER_CODE,
+        MS.SUPPLIER_NAME,
+        mmla.ATTR_VALUE LAB_CODE
+        FROM MT_MATERIAL_LOT MML
+        LEFT JOIN MT_MATERIAL MM ON MM.TENANT_ID = MML.TENANT_ID
+        AND MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN MT_UOM MU ON MU.TENANT_ID = MML.TENANT_ID AND MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN MT_MOD_SITE MMS ON MMS.TENANT_ID = MML.TENANT_ID AND MMS.SITE_ID = MML.SITE_ID
+        LEFT JOIN MT_MOD_LOCATOR MTML ON MTML.TENANT_ID = MML.TENANT_ID AND MTML.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_supplier MS ON MS.SUPPLIER_ID = MML.SUPPLIER_ID AND MS.TENANT_ID = MML.TENANT_ID
+        LEFT JOIN mt_material_lot_attr mmla ON MML.TENANT_ID = mmla.TENANT_ID AND MML.MATERIAL_LOT_ID=mmla.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'LAB_CODE'
+        WHERE MML.TENANT_ID = #{tenantId}
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND MML.MATERIAL_LOT_CODE like concat('%',concat(#{dto.materialLotCode},'%'))
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            AND MM.MATERIAL_CODE like concat('%',concat(#{dto.materialCode},'%'))
+        </if>
+        <if test="dto.containerCode != null and dto.containerCode != ''">
+            AND MML.MATERIAL_LOT_ID IN (
+            SELECT
+            MCLD.LOAD_OBJECT_ID
+            FROM MT_CONTAINER MC
+            LEFT JOIN MT_CONTAINER_LOAD_DETAIL MCLD ON MCLD.TENANT_ID = MC.TENANT_ID AND MCLD.CONTAINER_ID =
+            MC.CONTAINER_ID
+            WHERE MC.CONTAINER_CODE like concat('%',concat(#{dto.containerCode},'%'))
+            AND MC.TENANT_ID = #{tenantId}
+            AND MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+            )
+        </if>
+        <if test="dto.labCode != null and dto.labCode != ''">
+            AND mmla.ATTR_VALUE like concat('%',concat(#{dto.labCode},'%'))
+        </if>
+
+    </select>
+
+    <select id="queryUom" resultType="com.ruike.wms.api.dto.WmsMaterialLotEditUomDTO">
+        SELECT DISTINCT MU.UOM_ID,
+                        MU.UOM_CODE
+        FROM MT_UOM MU
+        WHERE MU.TENANT_ID = #{tenantId}
+    </select>
+</mapper>

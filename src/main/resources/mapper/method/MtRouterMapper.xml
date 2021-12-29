@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouter">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_TYPE" property="routerType" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STATUS" property="routerStatus" jdbcType="VARCHAR"/>
+        <result column="ORIGINAL_STATUS" property="originalStatus" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="TEMPORARY_ROUTER_FLAG" property="temporaryRouterFlag" jdbcType="VARCHAR"/>
+        <result column="RELAXED_FLOW_FLAG" property="relaxedFlowFlag" jdbcType="VARCHAR"/>
+        <result column="HAS_BEEN_RELEASED_FLAG" property="hasBeenReleasedFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_ROUTER_ID" property="copiedFromRouterId" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_ID" property="dispositionGroupId" jdbcType="VARCHAR"/>
+        <result column="AUTO_REVISION_FLAG" property="autoRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="HOLD_ID" property="holdId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseTLResultMap" type="tarzan.method.domain.vo.MtRouterVO2">
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ViewResultMap4" type="tarzan.method.domain.vo.MtRouterStepVO8">
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtRouterDTO">
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_TYPE" property="routerType" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STATUS" property="routerStatus" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_TYPE" property="bomType" jdbcType="VARCHAR"/>
+        <result column="BOM_TYPE_DESC" property="bomTypeDesc" jdbcType="VARCHAR"/>
+        <result column="BOM_REVISION" property="bomRevision" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+        <result column="RELAXED_FLOW_FLAG" property="relaxedFlowFlag" jdbcType="VARCHAR"/>
+        <result column="HAS_BEEN_RELEASED_FLAG" property="hasBeenReleasedFlag" jdbcType="VARCHAR"/>
+        <result column="AUTO_REVISION_FLAG" property="autoRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_ROUTER_ID" property="copiedFromRouterId" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_ROUTER_NAME" property="copiedFromRouterName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRouterAvailability" resultType="int">
+        select count(1)
+        from mt_router mrb
+        where mrb.TENANT_ID = ${tenantId}
+        and mrb.ROUTER_ID = #{routerId}
+        and mrb.ROUTER_STATUS in('CAN_RELEASE','FREEZE')
+        and mrb.DATE_FROM &lt;= now()
+        and (mrb.DATE_TO is null or mrb.DATE_TO &gt; now())
+    </select>
+
+    <select id="selectRouterTL" resultMap="BaseTLResultMap">
+        select t.ROUTER_ID,t.LANG,t.DESCRIPTION from mt_router_tl t where t.ROUTER_ID = #{routerId}
+    </select>
+
+    <select id="selectRouterByIds" resultMap="BaseResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select b.TENANT_ID,
+        b.ROUTER_ID,
+        b.SITE_ID,
+        b.ROUTER_NAME,
+        b.ROUTER_TYPE,
+        b.REVISION,
+        t.DESCRIPTION,
+        b.CURRENT_FLAG,
+        b.ROUTER_STATUS,
+        b.ORIGINAL_STATUS,
+        b.DATE_FROM,
+        b.DATE_TO,
+        b.BOM_ID,
+        b.TEMPORARY_ROUTER_FLAG,
+        b.RELAXED_FLOW_FLAG,
+        b.HAS_BEEN_RELEASED_FLAG,
+        b.COPIED_FROM_ROUTER_ID,
+        b.DISPOSITION_GROUP_ID,
+        b.HOLD_ID,
+        b.AUTO_REVISION_FLAG,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        from mt_router b,
+        mt_router_tl t
+        where b.ROUTER_ID = t.ROUTER_ID
+        and b.TENANT_ID = ${tenantId}
+        and t.lang = #{locale}
+        and b.ROUTER_ID IN
+        <foreach collection="routerIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectRouterStep" resultMap="ViewResultMap4">
+        SELECT mrl.ROUTER_ID,
+        mrs.ROUTER_STEP_ID
+        FROM MT_ROUTER_LINK mrl,
+        mt_router_step mrs
+        WHERE mrl.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        AND mrl.TENANT_ID = ${tenantId}
+        AND mrs.TENANT_ID = ${tenantId}
+        <if test="routerId!=null">
+            and mrs.ROUTER_ID = #{routerId}
+        </if>
+        ORDER BY mrs.SEQUENCE
+    </select>
+
+    <select id="selectMaxRevision" resultType="java.lang.String">
+        SELECT max( t.REVISION + 0 )
+        FROM mt_router t
+        WHERE t.ROUTER_NAME = #{routerName}
+        AND t.TENANT_ID = ${tenantId}
+        AND t.ROUTER_TYPE = #{routerType}
+        AND t.SITE_ID = #{siteId}
+        AND t.REVISION REGEXP '^[0-9]*$'
+    </select>
+
+    <select id="queryRouterListForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mr.ROUTER_ID,
+        mr.ROUTER_NAME,
+        mr.ROUTER_TYPE,
+        mr.REVISION,
+        mrt.DESCRIPTION,
+        mr.CURRENT_FLAG,
+        mr.ROUTER_STATUS,
+        mr.DATE_FROM,
+        mr.DATE_TO,
+        mr.BOM_ID,
+        mb.BOM_NAME,
+        mb.REVISION BOM_REVISION,
+        mb.BOM_TYPE,
+        tl.DESCRIPTION BOM_TYPE_DESC,
+        mr.RELAXED_FLOW_FLAG,
+        mr.HAS_BEEN_RELEASED_FLAG,
+        mr.COPIED_FROM_ROUTER_ID,
+        cmr.ROUTER_NAME COPIED_FROM_ROUTER_NAME,
+        mr.AUTO_REVISION_FLAG
+        from mt_router mr
+        join mt_router_tl mrt on mr.ROUTER_ID = mrt.ROUTER_ID and mrt.lang=#{locale}
+        left join mt_bom mb on mr.BOM_ID = mb.BOM_ID and mb.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_gen_type t ON mb.BOM_TYPE = t.TYPE_CODE AND t.TYPE_GROUP = 'BOM_TYPE'
+        LEFT JOIN mt_gen_type_tl tl ON t.GEN_TYPE_ID = tl.GEN_TYPE_ID  AND tl.LANG = #{locale}
+        left join mt_router cmr on mr.COPIED_FROM_ROUTER_ID = cmr.ROUTER_ID
+        where mr.TENANT_ID = ${tenantId}
+        <if test="dto.routerId!=null">
+            and mr.ROUTER_ID =#{dto.routerId}
+        </if>
+        <if test="dto.description!=null">
+            and mrt.DESCRIPTION like concat('%', concat(#{dto.description}, '%'))
+        </if>
+        <if test="dto.routerName!=null">
+            and mr.ROUTER_NAME like concat('%', concat(#{dto.routerName}, '%'))
+        </if>
+        <if test="dto.revision!=null">
+            and mr.REVISION like concat('%', concat(#{dto.revision}, '%'))
+        </if>
+        order by mr.CREATION_DATE DESC
+    </select>
+    <select id="selectCondition" resultType="tarzan.method.domain.vo.MtRouterVO12">
+        SELECT * FROM MT_ROUTER tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.routerId != null">
+            AND tb.ROUTER_ID = #{dto.routerId}
+        </if>
+        <if test="dto.routerName != null">
+            AND tb.ROUTER_NAME = #{dto.routerName}
+        </if>
+        <if test="dto.routerType != null">
+            AND tb.ROUTER_TYPE = #{dto.routerType}
+        </if>
+        <if test="dto.revision != null">
+            AND tb.REVISION = #{dto.revision}
+        </if>
+        <if test="dto.description != null">
+            AND tb.DESCRIPTION = #{dto.description}
+        </if>
+        <if test="dto.currentFlag != null">
+            AND tb.CURRENT_FLAG = #{dto.currentFlag}
+        </if>
+        <if test="dto.routerStatus != null">
+            AND tb.ROUTER_STATUS = #{dto.routerStatus}
+        </if>
+        <if test="dto.originalStatus != null">
+            AND tb.ORIGINAL_STATUS = #{dto.originalStatus}
+        </if>
+        <if test="dto.dateFrom != null">
+            AND tb.DATE_FROM &gt; DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.dateTo != null">
+            AND tb.DATE_TO &lt; DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.bomId != null">
+            AND tb.BOM_ID = #{dto.bomId}
+        </if>
+        <if test="dto.temporaryRouterFlag != null">
+            AND tb.TEMPORARY_ROUTER_FLAG = #{dto.temporaryRouterFlag}
+        </if>
+        <if test="dto.relaxedFlowFlag != null">
+            AND tb.RELAXED_FLOW_FLAG = #{dto.relaxedFlowFlag}
+        </if>
+        <if test="dto.hasBeenReleasedFlag != null">
+            AND tb.HAS_BEEN_RELEASED_FLAG = #{dto.hasBeenReleasedFlag}
+        </if>
+        <if test="dto.copiedFromRouterId != null">
+            AND tb.COPIED_FROM_ROUTER_ID = #{dto.copiedFromRouterId}
+        </if>
+        <if test="dto.dispositionGroupId != null">
+            AND tb.DISPOSITION_GROUP_ID = #{dto.dispositionGroupId}
+        </if>
+        <if test="dto.autoRevisionFlag != null">
+            AND tb.AUTO_REVISION_FLAG = #{dto.autoRevisionFlag}
+        </if>
+        <if test="dto.holdId != null">
+            AND tb.HOLD_ID = #{dto.holdId}
+        </if>
+    </select>
+    <select id="selectRouterByNames" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select b.TENANT_ID,
+        b.ROUTER_ID,
+        b.ROUTER_NAME,
+        b.ROUTER_TYPE,
+        b.REVISION,
+        t.DESCRIPTION,
+        b.CURRENT_FLAG,
+        b.ROUTER_STATUS,
+        b.ORIGINAL_STATUS,
+        b.DATE_FROM,
+        b.DATE_TO,
+        b.BOM_ID,
+        b.TEMPORARY_ROUTER_FLAG,
+        b.RELAXED_FLOW_FLAG,
+        b.HAS_BEEN_RELEASED_FLAG,
+        b.COPIED_FROM_ROUTER_ID,
+        b.DISPOSITION_GROUP_ID,
+        b.HOLD_ID,
+        b.AUTO_REVISION_FLAG,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        from mt_router b,
+        mt_router_tl t
+        where b.ROUTER_ID = t.ROUTER_ID
+        and b.TENANT_ID = ${tenantId}
+        and t.lang = #{locale}
+        and b.CURRENT_FLAG='Y'
+        and b.ROUTER_ID IN
+        <foreach collection="routerName" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

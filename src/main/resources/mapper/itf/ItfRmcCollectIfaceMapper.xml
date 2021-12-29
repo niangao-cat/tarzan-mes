@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfRmcCollectIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfRmcCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="RMC_LOT" property="rmcLot" jdbcType="VARCHAR"/>
+        <result column="RMC_GLUE_LOT" property="rmcGlueLot" jdbcType="VARCHAR"/>
+        <result column="RMC_GLUE_TYPE" property="rmcGlueType" jdbcType="VARCHAR"/>
+        <result column="RMC_GLUE_OPEN_DATE" property="rmcGlueOpenDate" jdbcType="DATE"/>
+        <result column="RMC_HOT_START_DATE" property="rmcHotStartDate" jdbcType="DATE"/>
+        <result column="RMC_HOT_END_DATE" property="rmcHotEndDate" jdbcType="DATE"/>
+        <result column="RMC_COS_POS" property="rmcCosPos" jdbcType="VARCHAR"/>
+        <result column="RMC_CURRENT" property="rmcCurrent" jdbcType="DECIMAL"/>
+        <result column="RMC_AIR_TO_POWER" property="rmcAirToPower" jdbcType="DECIMAL"/>
+        <result column="RMC_BEFORE_CURING_POWER" property="rmcBeforeCuringPower" jdbcType="DECIMAL"/>
+        <result column="RMC_AFTER_CURING_POWER" property="rmcAfterCuringPower" jdbcType="DECIMAL"/>
+        <result column="RMC_COUPLING_EFFICIENCY" property="rmcCouplingEfficiency" jdbcType="DECIMAL"/>
+        <result column="RMC_ERR" property="rmcErr" jdbcType="VARCHAR"/>
+        <result column="RMC_REMARK" property="rmcRemark" jdbcType="VARCHAR"/>
+        <result column="RMC_PRO_STATUS" property="rmcProStatus" jdbcType="VARCHAR"/>
+        <result column="RMC_COS_TYPE" property="rmcCosType" jdbcType="VARCHAR"/>
+        <result column="RMC_EXP_CODE" property="rmcExpCode" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE1" property="rmcAttribute1" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE2" property="rmcAttribute2" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE3" property="rmcAttribute3" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE4" property="rmcAttribute4" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE5" property="rmcAttribute5" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE6" property="rmcAttribute6" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE7" property="rmcAttribute7" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE8" property="rmcAttribute8" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE9" property="rmcAttribute9" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE10" property="rmcAttribute10" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE11" property="rmcAttribute11" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE12" property="rmcAttribute12" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE13" property="rmcAttribute13" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE14" property="rmcAttribute14" jdbcType="VARCHAR"/>
+        <result column="RMC_ATTRIBUTE15" property="rmcAttribute15" jdbcType="VARCHAR"/>
+
+        <result column="RMC_COS_NC_CODE" property="rmcCosNcCode" jdbcType="VARCHAR"/>
+        <result column="RMC_NC_CODE" property="rmcNcCode" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_rmc_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        SN,
+        RMC_LOT,
+        RMC_GLUE_LOT,
+        RMC_GLUE_TYPE,
+        RMC_GLUE_OPEN_DATE,
+        RMC_HOT_START_DATE,
+        RMC_HOT_END_DATE,
+        RMC_COS_POS,
+        RMC_CURRENT,
+        RMC_AIR_TO_POWER,
+        RMC_BEFORE_CURING_POWER,
+        RMC_AFTER_CURING_POWER,
+        RMC_COUPLING_EFFICIENCY,
+        RMC_ERR,
+        RMC_REMARK,
+        RMC_PRO_STATUS,
+        RMC_COS_TYPE,
+        RMC_EXP_CODE,
+        PRIMARY_KEY,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        RMC_ATTRIBUTE1,
+        RMC_ATTRIBUTE2,
+        RMC_ATTRIBUTE3,
+        RMC_ATTRIBUTE4,
+        RMC_ATTRIBUTE5,
+        RMC_ATTRIBUTE6,
+        RMC_ATTRIBUTE7,
+        RMC_ATTRIBUTE8,
+        RMC_ATTRIBUTE9,
+        RMC_ATTRIBUTE10,
+        RMC_ATTRIBUTE11,
+        RMC_ATTRIBUTE12,
+        RMC_ATTRIBUTE13,
+        RMC_ATTRIBUTE14,
+        RMC_ATTRIBUTE15,
+        RMC_COS_NC_CODE,
+        RMC_NC_CODE )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.interfaceId},
+            #{item.assetEncoding},
+            #{item.sn},
+            #{item.rmcLot},
+            #{item.rmcGlueLot},
+            #{item.rmcGlueType},
+            #{item.rmcGlueOpenDate},
+            #{item.rmcHotStartDate},
+            #{item.rmcHotEndDate},
+            #{item.rmcCosPos},
+            #{item.rmcCurrent},
+            #{item.rmcAirToPower},
+            #{item.rmcBeforeCuringPower},
+            #{item.rmcAfterCuringPower},
+            #{item.rmcCouplingEfficiency},
+            #{item.rmcErr},
+            #{item.rmcRemark},
+            #{item.rmcProStatus},
+            #{item.rmcCosType},
+            #{item.rmcExpCode},
+            #{item.primaryKey},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.rmcAttribute1},
+            #{item.rmcAttribute2},
+            #{item.rmcAttribute3},
+            #{item.rmcAttribute4},
+            #{item.rmcAttribute5},
+            #{item.rmcAttribute6},
+            #{item.rmcAttribute7},
+            #{item.rmcAttribute8},
+            #{item.rmcAttribute9},
+            #{item.rmcAttribute10},
+            #{item.rmcAttribute11},
+            #{item.rmcAttribute12},
+            #{item.rmcAttribute13},
+            #{item.rmcAttribute14},
+            #{item.rmcAttribute15},
+            #{item.rmcCosNcCode},
+            #{item.rmcNcCode}
+            )
+        </foreach>
+    </insert>
+</mapper>

@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeDataCollectHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeDataCollectHeader">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="COLLECT_HEADER_ID" property="collectHeaderId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_ID" property="shiftId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="DATA_RECORD_CODE" property="dataRecordCode" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="SITE_IN_BY" property="siteInBy" jdbcType="DECIMAL"/>
+        <result column="SITE_OUT_BY" property="siteOutBy" jdbcType="DECIMAL"/>
+        <result column="SITE_IN_DATE" property="siteInDate" jdbcType="DATE"/>
+        <result column="SITE_OUT_DATE" property="siteOutDate" jdbcType="DATE"/>
+        <result column="DATA_COLLECT_TYPE" property="dataCollectType" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="querySnMaterialType" resultType="java.lang.String">
+      SELECT
+	    sa.attr_value
+      FROM
+	    mt_material_site ms
+	  LEFT JOIN mt_material_site_attr sa ON sa.material_site_id = ms.material_site_id
+      WHERE
+        ms.TENANT_ID = #{tenantId}
+	  AND ms.SITE_ID = #{defaultSiteId}
+	  AND sa.attr_name = 'attribute14'
+	  AND ms.enable_flag = 'Y'
+	  AND ms.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="queryOperationIdByWorkcellId" resultType="com.ruike.hme.domain.vo.HmeDataCollectLineVO5">
+      SELECT
+	    dr.OPERATION_ID AS operationId,
+	    mo.OPERATION_NAME AS operationName,
+	    mo.DESCRIPTION AS description
+      FROM
+	    mt_operation_wkc_dispatch_rel dr
+      LEFT JOIN mt_mod_organization_rel mor ON mor.PARENT_ORGANIZATION_ID = dr.WORKCELL_ID
+      LEFT JOIN mt_operation mo ON mo.OPERATION_ID = dr.OPERATION_ID
+      WHERE
+        mor.TENANT_ID = #{tenantId}
+      AND mor.TOP_SITE_ID = #{defaultSiteId}
+      AND mor.PARENT_ORGANIZATION_TYPE = "WORKCELL"
+      AND mor.organization_type = "WORKCELL"
+      AND mor.ORGANIZATION_ID = #{workcellId}
+    </select>
+
+    <select id="queryDataCollectLineList" resultType="com.ruike.hme.domain.vo.HmeDataCollectLineVO2">
+      SELECT
+	    cl.collect_line_id AS collectLineId,
+        cl.reference_point AS referencePoint,
+	    cl. minimum_value AS minimumValue,
+	    cl.standard,
+	    cl.maximal_value AS maximalValue,
+	    cl.result,
+	    cl.material_id AS materialId,
+
+        mm.material_code AS materialCode,
+	    mt.TAG_DESCRIPTION AS tagDescription,
+	    mm.MATERIAL_NAME AS materialName
+      FROM
+	    hme_data_collect_line cl
+	  LEFT JOIN mt_tag mt ON mt.TAG_ID = cl.tag_id
+	  LEFT JOIN mt_material mm ON mm.MATERIAL_ID = cl.material_id
+	  WHERE cl.tenant_id = #{tenantId}
+	  AND cl.collect_header_id = #{collectHeaderId}
+    </select>
+
+    <select id="queryMaterialLotInfoByCode" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+      SELECT
+	    material_lot_code AS materialLotCode,
+	    primary_uom_qty AS primaryUomQty,
+	    material_lot_id AS materialLotId,
+	    material_id AS materialId
+      FROM
+	    mt_material_lot
+      WHERE
+        tenant_id = #{tenantId}
+      AND material_lot_code = #{materialLotCode}
+    </select>
+
+    <select id="queryDataCollectLineInfoList" resultType="com.ruike.hme.domain.entity.HmeDataCollectLine">
+      SELECT
+	    tg.tag_group_id AS tagGroupId,
+	    mt.TAG_ID AS tagId,
+        ga.MINIMUM_VALUE AS minimumValue,
+        ga.MAXIMAL_VALUE AS maximalValue,
+        ga.TRUE_VALUE AS trueValue,
+        ga.FALSE_VALUE AS falseValue,
+        ta.ATTR_VALUE AS standard,
+        tg.BUSINESS_TYPE AS groupPurpose
+      FROM
+	    mt_tag_group_assign ga
+      LEFT JOIN mt_tag_group tg ON tg.TAG_GROUP_ID = ga.TAG_GROUP_ID
+      LEFT JOIN mt_tag_group_object tgo ON tgo.TAG_GROUP_ID = tg.TAG_GROUP_ID
+      LEFT JOIN mt_tag mt ON mt.TAG_ID = ga.TAG_ID
+      LEFT JOIN  (SELECT * from mt_tag_attr WHERE ATTR_NAME = "STANDARD") ta ON ta.TAG_ID = mt.TAG_ID
+      WHERE ga.TENANT_ID = #{tenantId}
+      AND tgo.OPERATION_ID = #{operationId}
+      <if test="materialId != null and materialId != ''">
+          AND (tgo.material_id = #{materialId} OR tgo.material_id = "" OR tgo.material_id is NULL)
+      </if>
+      AND tg.`STATUS` = "RELEASE"
+      AND mt.ENABLE_FLAG = "Y"
+      AND tg.BUSINESS_TYPE = "DATA"
+    </select>
+
+    <select id="queryLineWorkcellIdByWorkCellId" resultType="java.lang.String">
+        SELECT
+          mor3.ORGANIZATION_ID
+        FROM
+          mt_mod_organization_rel mor1
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = "WORKCELL"
+        LEFT JOIN mt_mod_organization_rel mor3 ON mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.ORGANIZATION_TYPE = "WORKCELL"
+        AND mor3.PARENT_ORGANIZATION_TYPE = "PROD_LINE"
+		WHERE
+		mor1.TENANT_ID = #{tenantId}
+		AND mor1.ORGANIZATION_ID = #{workcellId}
+		AND mor2.ORGANIZATION_ID is not NULL
+        AND mor3.ORGANIZATION_ID is not NULL
+    </select>
+
+    <select id="workcellCodeScan" resultType="com.ruike.hme.domain.vo.HmeDataCollectLineVO4">
+        SELECT
+	      WORKCELL_ID AS workcellId,
+	      WORKCELL_CODE AS workcellCode,
+	      WORKCELL_NAME AS workcellName
+        FROM
+	      mt_mod_workcell
+        WHERE
+	      TENANT_ID = #{tenantId}
+ 	    AND WORKCELL_TYPE = "STATION"
+	    AND ENABLE_FLAG = "Y"
+	    AND WORKCELL_CODE = #{workcellCode}
+    </select>
+
+    <select id="queryDataCollectLineInfoListNew1" resultType="com.ruike.hme.domain.entity.HmeDataCollectLine">
+         SELECT
+            tg.tag_group_id AS tagGroupId,
+            mt.TAG_ID AS tagId,
+            tga.MINIMUM_VALUE AS minimumValue,
+            tga.MAXIMAL_VALUE AS maximalValue,
+            tga.TRUE_VALUE AS trueValue,
+            tga.FALSE_VALUE AS falseValue,
+            ta.ATTR_VALUE AS standard,
+            tg.BUSINESS_TYPE AS groupPurpose
+        FROM
+            mt_tag mt
+        LEFT JOIN (
+            SELECT
+                mta.TAG_ID,
+                mta.ATTR_VALUE
+            FROM
+                mt_tag_attr mta
+            WHERE
+                mta.ATTR_NAME = 'STANDARD'
+        ) ta ON ta.TAG_ID = mt.TAG_ID,
+         mt_tag_group tg,
+         mt_tag_group_assign tga,
+         mt_tag_group_object tgo
+        WHERE
+            tgo.TAG_GROUP_ID = tg.TAG_GROUP_ID
+        AND tg.`STATUS` = 'RELEASE'
+        AND tg.TAG_GROUP_ID = tga.TAG_GROUP_ID
+        AND mt.TAG_ID = tga.TAG_ID
+        AND tg.BUSINESS_TYPE = 'DATA'
+        AND (
+            tgo.PRODUCTION_VERSION IS NULL
+            OR tgo.PRODUCTION_VERSION = ''
+        )
+        AND mt.ENABLE_FLAG = 'Y'
+        AND tgo.MATERIAL_ID = #{materialId}
+        AND tgo.OPERATION_ID = #{operationId}
+        AND tgo.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryDataCollectLineInfoListNew2" resultType="com.ruike.hme.domain.entity.HmeDataCollectLine">
+        SELECT
+            tg.tag_group_id AS tagGroupId,
+            mt.TAG_ID AS tagId,
+            tga.MINIMUM_VALUE AS minimumValue,
+            tga.MAXIMAL_VALUE AS maximalValue,
+            tga.TRUE_VALUE AS trueValue,
+            tga.FALSE_VALUE AS falseValue,
+            ta.ATTR_VALUE AS standard,
+            tg.BUSINESS_TYPE AS groupPurpose
+        FROM
+            mt_tag mt
+        LEFT JOIN (
+            SELECT
+                mta.TAG_ID,
+                mta.ATTR_VALUE
+            FROM
+                mt_tag_attr mta
+            WHERE
+                mta.ATTR_NAME = 'STANDARD'
+        ) ta ON ta.TAG_ID = mt.TAG_ID,
+         mt_tag_group tg,
+         mt_tag_group_assign tga,
+         mt_tag_group_object tgo,
+         mt_material_site mms,
+         mt_material_basic mmb
+        WHERE
+            tgo.TAG_GROUP_ID = tg.TAG_GROUP_ID
+        AND tg.`STATUS` = 'RELEASE'
+        AND tg.TAG_GROUP_ID = tga.TAG_GROUP_ID
+        AND mt.TAG_ID = tga.TAG_ID
+        AND tg.BUSINESS_TYPE = 'DATA'
+        AND mt.ENABLE_FLAG = 'Y'
+        and (tgo.MATERIAL_ID is null or length(tgo.MATERIAL_ID) = 0)
+        AND tgo.OPERATION_ID = #{operationId}
+        and mmb.MATERIAL_SITE_ID=mms.MATERIAL_SITE_ID
+        and mms.site_id=#{siteId}
+        and mms.material_id=#{materialId}
+        and tgo.ITEM_TYPE = mmb.ITEM_GROUP
+        AND tgo.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryDataCollectLineInfoListNew3" resultType="com.ruike.hme.domain.entity.HmeDataCollectLine">
+         SELECT
+            tg.tag_group_id AS tagGroupId,
+            mt.TAG_ID AS tagId,
+            tga.MINIMUM_VALUE AS minimumValue,
+            tga.MAXIMAL_VALUE AS maximalValue,
+            tga.TRUE_VALUE AS trueValue,
+            tga.FALSE_VALUE AS falseValue,
+            ta.ATTR_VALUE AS standard,
+            tg.BUSINESS_TYPE AS groupPurpose
+        FROM
+            mt_tag mt
+        LEFT JOIN (
+            SELECT
+                mta.TAG_ID,
+                mta.ATTR_VALUE
+            FROM
+                mt_tag_attr mta
+            WHERE
+                mta.ATTR_NAME = 'STANDARD'
+        ) ta ON ta.TAG_ID = mt.TAG_ID,
+         mt_tag_group tg,
+         mt_tag_group_assign tga,
+         mt_tag_group_object tgo
+        WHERE
+            tgo.TAG_GROUP_ID = tg.TAG_GROUP_ID
+        AND tg.`STATUS` = 'RELEASE'
+        AND tg.TAG_GROUP_ID = tga.TAG_GROUP_ID
+        AND mt.TAG_ID = tga.TAG_ID
+        AND tg.BUSINESS_TYPE = 'DATA'
+        AND mt.ENABLE_FLAG = 'Y'
+        and (tgo.MATERIAL_ID is null or length(tgo.MATERIAL_ID) = 0)
+        AND tgo.OPERATION_ID = #{operationId}
+        and (tgo.ITEM_TYPE IS NULL or length(tgo.ITEM_TYPE) = 0)
+        AND tgo.TENANT_ID = #{tenantId}
+    </select>
+</mapper>

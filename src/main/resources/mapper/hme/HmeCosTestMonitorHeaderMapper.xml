@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosTestMonitorHeaderMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosTestMonitorHeader">
+                    <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+                    <result column="cos_monitor_header_id" property="cosMonitorHeaderId" jdbcType="VARCHAR"/>
+                    <result column="monitor_doc_num" property="monitorDocNum" jdbcType="VARCHAR"/>
+                    <result column="doc_status" property="docStatus" jdbcType="VARCHAR"/>
+                    <result column="check_status" property="checkStatus" jdbcType="VARCHAR"/>
+                    <result column="cos_type" property="cosType" jdbcType="VARCHAR"/>
+                    <result column="wafer" property="wafer" jdbcType="VARCHAR"/>
+                    <result column="test_pass_rate" property="testPassRate" jdbcType="DECIMAL"/>
+                    <result column="pass_date" property="passDate" jdbcType="DATE"/>
+                    <result column="pass_by" property="passBy" jdbcType="DECIMAL"/>
+                    <result column="test_qty" property="testQty" jdbcType="DECIMAL"/>
+                    <result column="cid" property="cid" jdbcType="DECIMAL"/>
+                    <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+                    <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+                    <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+                    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+                    <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+                    <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+            </resultMap>
+
+    <select id="queryCosTestMonitorHeader" resultType="com.ruike.hme.domain.vo.HmeCosTestMonitorHeaderVO">
+        SELECT
+                hctmh.cos_monitor_header_id,
+                hctmh.monitor_doc_num,
+                hctmh.doc_status,
+                hctmh.check_status,
+                hctmh.cos_type,
+                hctmh.wafer,
+                hctmh.test_pass_rate,
+                hctmh.pass_date,
+                hctmh.pass_by,
+                hctmh.test_qty,
+                hctmh.creation_date
+        FROM
+                hme_cos_test_monitor_header hctmh
+        WHERE
+                hctmh.tenant_id =#{tenantId}
+        <if test="dto.monitorDocNumList !=null and dto.monitorDocNumList.size() > 0 ">
+                and hctmh.monitor_doc_num in
+            <foreach collection="dto.monitorDocNumList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.docStatus !=null and dto.docStatus !=''">
+                and hctmh.doc_status LIKE CONCAT('%', #{dto.docStatus}, '%')
+        </if>
+        <if test="dto.cosType !=null and dto.cosType !=''">
+                and hctmh.cos_type=#{dto.cosType}
+        </if>
+        <if test="dto.waferList !=null and dto.waferList.size() > 0">
+                and hctmh.wafer in
+            <foreach collection="dto.waferList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.creationDateFrom !=null">
+                and hctmh.creation_date <![CDATA[>=]]> #{dto.creationDateFrom}
+        </if>
+        <if test="dto.creationDateTo !=null">
+                and hctmh.creation_date <![CDATA[<=]]> #{dto.creationDateTo}
+        </if>
+        ORDER BY hctmh.LAST_UPDATE_DATE DESC
+    </select>
+
+    <select id="queryAttrByWafer" resultType="com.ruike.hme.domain.vo.HmeCosTestMonitorHeaderVO">
+        SELECT
+                mmla.MATERIAL_LOT_ID as materialLotId,
+                mmla.CREATION_DATE
+        FROM
+                mt_material_lot_attr mmla
+        WHERE
+                mmla.ATTR_NAME = 'WAFER_NUM'
+                AND mmla.ATTR_VALUE =#{wafer}
+                AND mmla.TENANT_ID =#{tenantId}
+    </select>
+
+    <select id="queryAttrValue" resultType="java.lang.String">
+        SELECT
+                mmla.ATTR_VALUE
+        FROM
+                mt_material_lot_attr mmla
+        WHERE
+                mmla.ATTR_NAME = 'WORK_ORDER_ID'
+                AND mmla.MATERIAL_LOT_ID =#{materialLotId}
+                AND mmla.TENANT_ID =#{tenantId}
+    </select>
+
+    <select id="queryCodeAndName" resultType="com.ruike.hme.domain.vo.HmeCosTestMonitorHeaderVO">
+        SELECT
+                mm.MATERIAL_CODE,
+                mm.MATERIAL_NAME
+        FROM
+                mt_work_order mwo,
+                mt_bom_component mbc,
+                mt_material_site mms,
+                mt_material_site_attr mmsa,
+                mt_material mm
+
+        WHERE
+                mwo.WORK_ORDER_ID =#{workOrderId}
+                AND mwo.TENANT_ID =#{tenantId}
+                AND mbc.BOM_ID = mwo.BOM_ID
+                AND mbc.TENANT_ID = mwo.TENANT_ID
+                AND mbc.MATERIAL_ID = mms.MATERIAL_ID
+                AND mms.SITE_ID=mwo.SITE_ID
+                AND mbc.TENANT_ID = mms.TENANT_ID
+                AND mms.MATERIAL_SITE_ID=mmsa.MATERIAL_SITE_ID
+                AND mms.TENANT_ID=mmsa.TENANT_ID
+                AND mmsa.ATTR_NAME='attribute5'
+                AND mmsa.ATTR_VALUE is not null
+                AND mmsa.ATTR_VALUE !=''
+	            AND mbc.MATERIAL_ID=mm.MATERIAL_ID
+	            AND mbc.TENANT_ID=mm.TENANT_ID
+
+    </select>
+</mapper>

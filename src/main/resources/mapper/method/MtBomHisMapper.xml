@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtBomHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtBomHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="BOM_HIS_ID" property="bomHisId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="BOM_TYPE" property="bomType" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="BOM_STATUS" property="bomStatus" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_BOM_ID" property="copiedFromBomId" jdbcType="VARCHAR"/>
+        <result column="RELEASED_FLAG" property="releasedFlag" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_QTY" property="primaryQty" jdbcType="DECIMAL"/>
+        <result column="AUTO_REVISION_FLAG" property="autoRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_AS_MATERIAL_FLAG" property="assembleAsMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByEventIds" resultMap="BaseResultMap">
+        select * from mt_bom_his where TENANT_ID = ${tenantId} AND EVENT_ID in
+        <foreach collection="eventIds" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByBomId" resultMap="BaseResultMap">
+        select * from mt_bom_his where TENANT_ID = ${tenantId} AND BOM_ID = #{bomId} ORDER BY EVENT_ID + 0 DESC
+    </select>
+
+    <select id="selectRecent" resultType="tarzan.method.domain.vo.MtBomHisVO5">
+        SELECT
+            bh.BOM_HIS_ID,
+            bh.EVENT_ID
+        FROM
+            mt_bom_his bh
+        WHERE
+            bh.BOM_ID= #{bomId}
+            and bh.TENANT_ID = #{tenantId}
+        ORDER BY
+            CAST( bh.BOM_HIS_ID AS DECIMAL ( 36 ) ) DESC
+            LIMIT 1
+    </select>
+</mapper>

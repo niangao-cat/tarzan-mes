@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtSapPoIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtSapPoIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="PO_NUMBER" property="poNumber" jdbcType="VARCHAR"/>
+        <result column="CONTRACT_NUM" property="contractNum" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_CODE" property="supplierCode" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_CODE" property="supplierSiteCode" jdbcType="VARCHAR"/>
+        <result column="BUYER_CODE" property="buyerCode" jdbcType="VARCHAR"/>
+        <result column="PO_CATEGORY" property="poCategory" jdbcType="VARCHAR"/>
+        <result column="PO_ORDER_TYPE" property="poOrderType" jdbcType="VARCHAR"/>
+        <result column="APPROVED_FLAG" property="approvedFlag" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="CURRENCY_CODE" property="currencyCode" jdbcType="VARCHAR"/>
+        <result column="PO_ENABLE_FLAG" property="poEnableFlag" jdbcType="VARCHAR"/>
+        <result column="TRANSFER_PLANT_CODE" property="transferPlantCode" jdbcType="VARCHAR"/>
+        <result column="LINE_NUM" property="lineNum" jdbcType="DECIMAL"/>
+        <result column="LINE_TYPE" property="lineType" jdbcType="VARCHAR"/>
+        <result column="SHIPMENT_NUM" property="shipmentNum" jdbcType="DECIMAL"/>
+        <result column="ITEM_CODE" property="itemCode" jdbcType="DECIMAL"/>
+        <result column="UOM" property="uom" jdbcType="VARCHAR"/>
+        <result column="UNIT_PRICE" property="unitPrice" jdbcType="DECIMAL"/>
+        <result column="LINE_DESCRIPTION" property="lineDescription" jdbcType="VARCHAR"/>
+        <result column="CONTRACT_LINE_NUM" property="contractLineNum" jdbcType="VARCHAR"/>
+        <result column="QUANTITY_ORDERED" property="quantityOrdered" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_DELIVERED" property="quantityDelivered" jdbcType="DECIMAL"/>
+        <result column="NEED_DATE" property="needDate" jdbcType="TIMESTAMP"/>
+        <result column="RETURN_FLAG" property="returnFlag" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_FLAG" property="completeFlag" jdbcType="VARCHAR"/>
+        <result column="LINE_ENABLE_FLAG" property="lineEnableFlag" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE1" property="poAttribute1" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE2" property="poAttribute2" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE3" property="poAttribute3" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE4" property="poAttribute4" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE5" property="poAttribute5" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE6" property="poAttribute6" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE7" property="poAttribute7" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE8" property="poAttribute8" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE9" property="poAttribute9" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE10" property="poAttribute10" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE11" property="poAttribute11" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE12" property="poAttribute12" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE13" property="poAttribute13" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE14" property="poAttribute14" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE15" property="poAttribute15" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE1" property="lineAttribute1" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE2" property="lineAttribute2" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE3" property="lineAttribute3" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE4" property="lineAttribute4" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE5" property="lineAttribute5" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE6" property="lineAttribute6" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE7" property="lineAttribute7" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE8" property="lineAttribute8" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE9" property="lineAttribute9" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE10" property="lineAttribute10" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE11" property="lineAttribute11" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE12" property="lineAttribute12" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE13" property="lineAttribute13" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE14" property="lineAttribute14" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE15" property="lineAttribute15" jdbcType="VARCHAR"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="getUnprocessedList" resultMap="BaseResultMap" fetchSize="5000">
+        select t.* from mt_sap_po_iface t where t.TENANT_ID = ${tenantId} and t.STATUS in ('N', 'E')
+    </select>
+</mapper>

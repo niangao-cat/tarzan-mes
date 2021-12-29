@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfSpecCollectIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfSpecCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_CATEGORY" property="equipmentCategory" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="WORK_TYPE" property="workType" jdbcType="VARCHAR"/>
+        <result column="OPTICAL_MODULE" property="opticalModule" jdbcType="VARCHAR"/>
+        <result column="OPTICAL_NONLINEAR" property="opticalNonlinear" jdbcType="DECIMAL"/>
+        <result column="WAVEFORM1080" property="waveform1080" jdbcType="DECIMAL"/>
+        <result column="WAVEFORM1135" property="waveform1135" jdbcType="DECIMAL"/>
+        <result column="PULL_ON_THRO13_WL" property="pullOnThro13Wl" jdbcType="DECIMAL"/>
+        <result column="PULL_OFF_THRO13_WL" property="pullOffThro13Wl" jdbcType="DECIMAL"/>
+        <result column="ANNEAL_THRO13_BD" property="annealThro13Bd" jdbcType="DECIMAL"/>
+        <result column="ANNEAL_THRO_DP" property="annealThroDp" jdbcType="DECIMAL"/>
+        <result column="ANNEAL_TIMES" property="annealTimes" jdbcType="DECIMAL"/>
+        <result column="ANNEALED_THRO13_BD" property="annealedThro13Bd" jdbcType="DECIMAL"/>
+        <result column="ANNEALED_THRO_DP" property="annealedThroDp" jdbcType="DECIMAL"/>
+        <result column="ANNEALED_RE3_BD" property="annealedRe3Bd" jdbcType="DECIMAL"/>
+        <result column="ANNEALED_RE_DP" property="annealedReDp" jdbcType="DECIMAL"/>
+        <result column="RECORD_TIME" property="recordTime" jdbcType="DATE"/>
+        <result column="HYDROGEN_THRO13_WL" property="hydrogenThro13Wl" jdbcType="DECIMAL"/>
+        <result column="HYDROGEN_THRO13_BD" property="hydrogenThro13Bd" jdbcType="DECIMAL"/>
+        <result column="HYDROGEN_THRO_DP" property="hydrogenThroDp" jdbcType="DECIMAL"/>
+        <result column="HYDROGEN_THRO3_WL" property="hydrogenThro3Wl" jdbcType="DECIMAL"/>
+        <result column="HYDROGEN_RE3_BD" property="hydrogenRe3Bd" jdbcType="DECIMAL"/>
+        <result column="HYDROGEN_RE_DP" property="hydrogenReDp" jdbcType="DECIMAL"/>
+        <result column="TEST_TIME" property="testTime" jdbcType="DATE"/>
+        <result column="PULL_ON_RE3_WL" property="pullOnRe3Wl" jdbcType="DECIMAL"/>
+        <result column="PULL_OFF_RE3_WL" property="pullOffRe3Wl" jdbcType="DECIMAL"/>
+        <result column="ANNEAL_RE3_BD" property="annealRe3Bd" jdbcType="DECIMAL"/>
+        <result column="ANNEAL_RE_DP" property="annealReDp" jdbcType="DECIMAL"/>
+        <result column="ANNEALED_RE3_WL" property="annealedRe3Wl" jdbcType="DECIMAL"/>
+        <result column="HYDROGEN_RE3_WL" property="hydrogenRe3Wl" jdbcType="DECIMAL"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_spec_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        EQUIPMENT_CATEGORY,
+        SN,
+        WORK_TYPE,
+        OPTICAL_MODULE,
+        OPTICAL_NONLINEAR,
+        WAVEFORM1080,
+        WAVEFORM1135,
+        PULL_ON_THRO13_WL,
+        PULL_OFF_THRO13_WL,
+        ANNEAL_THRO13_BD,
+        ANNEAL_THRO_DP,
+        ANNEAL_TIMES,
+        ANNEALED_THRO13_BD,
+        ANNEALED_THRO_DP,
+        ANNEALED_RE3_BD,
+        ANNEALED_RE_DP,
+        RECORD_TIME,
+        HYDROGEN_THRO13_WL,
+        HYDROGEN_THRO13_BD,
+        HYDROGEN_THRO_DP,
+        HYDROGEN_THRO3_WL,
+       HYDROGEN_RE3_BD,
+       HYDROGEN_RE_DP,
+        TEST_TIME,
+        PULL_ON_RE3_WL,
+        PULL_OFF_RE3_WL,
+        ANNEAL_RE3_BD,
+        ANNEAL_RE_DP,
+        ANNEALED_RE3_WL,
+        HYDROGEN_RE3_WL,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.interfaceId},
+            #{item.assetEncoding},
+            #{item.equipmentCategory},
+            #{item.sn},
+            #{item.workType},
+            #{item.opticalModule},
+            #{item.opticalNonlinear},
+            #{item.waveform1080},
+            #{item.waveform1135},
+            #{item.pullOnThro13Wl},
+            #{item.pullOffThro13Wl},
+            #{item.annealThro13Bd},
+            #{item.annealThroDp},
+            #{item.annealTimes},
+            #{item.annealedThro13Bd},
+            #{item.annealedThroDp},
+            #{item.annealedRe3Bd},
+            #{item.annealedReDp},
+            #{item.recordTime},
+            #{item.hydrogenThro13Wl},
+            #{item.hydrogenThro13Bd},
+            #{item.hydrogenThroDp},
+            #{item.hydrogenThro3Wl},
+            #{item.hydrogenRe3Bd},
+            #{item.hydrogenReDp},
+            #{item.testTime},
+            #{item.pullOnRe3Wl},
+            #{item.pullOffRe3Wl},
+            #{item.annealRe3Bd},
+            #{item.annealReDp},
+            #{item.annealedRe3Wl},
+            #{item.hydrogenRe3Wl},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateIface">
+        UPDATE itf_spec_collect_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = -1,
+            last_update_date = CURRENT_TIMESTAMP,
+            process_date=CURRENT_TIMESTAMP,
+            process_message =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processMessage}
+            </foreach>,
+            process_status =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processStatus}
+            </foreach>
+        </set>
+        <where>
+            interface_id in
+            <foreach collection="domains" item="item"
+                     separator="," open="(" close=")">
+                #{item.interfaceId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

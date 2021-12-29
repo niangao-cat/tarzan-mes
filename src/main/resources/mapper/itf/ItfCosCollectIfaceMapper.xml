@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfCosCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfCosCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="COS_LOCATION" property="cosLocation" jdbcType="VARCHAR"/>
+        <result column="COS_MODEL" property="cosModel" jdbcType="VARCHAR"/>
+        <result column="COS_THRESCHOLD_CURRENT" property="cosThrescholdCurrent" jdbcType="DECIMAL"/>
+        <result column="COS_THRESCHOLD_VOLTAGE" property="cosThrescholdVoltage" jdbcType="DECIMAL"/>
+        <result column="COS_CURRENT" property="cosCurrent" jdbcType="DECIMAL"/>
+        <result column="COS_VOLTAGE" property="cosVoltage" jdbcType="DECIMAL"/>
+        <result column="COS_POWER" property="cosPower" jdbcType="DECIMAL"/>
+        <result column="COS_CENTER_WAVELENGTH" property="cosCenterWavelength" jdbcType="DECIMAL"/>
+        <result column="COS_SE" property="cosSe" jdbcType="DECIMAL"/>
+        <result column="COS_LINEWIDTH" property="cosLinewidth" jdbcType="DECIMAL"/>
+        <result column="COS_IPCE" property="cosIpce" jdbcType="DECIMAL"/>
+        <result column="COS_WAVELENGTH_DIFFER" property="cosWavelengthDiffer" jdbcType="DECIMAL"/>
+        <result column="COS_POWER_LEVEL" property="cosPowerLevel" jdbcType="VARCHAR"/>
+        <result column="COS_WAVELENGTH_LEVEL" property="cosWavelengthLevel" jdbcType="VARCHAR"/>
+        <result column="COS_POLARIZATION" property="cosPolarization" jdbcType="DECIMAL"/>
+        <result column="COS_FWHM_X" property="cosFwhmX" jdbcType="DECIMAL"/>
+        <result column="COS_FWHM_Y" property="cosFwhmY" jdbcType="DECIMAL"/>
+        <result column="COS_86X" property="cos86x" jdbcType="DECIMAL"/>
+        <result column="COS_86Y" property="cos86y" jdbcType="DECIMAL"/>
+        <result column="COS_95X" property="cos95x" jdbcType="DECIMAL"/>
+        <result column="COS_95Y" property="cos95y" jdbcType="DECIMAL"/>
+        <result column="COS_NC_CODE" property="cosNcCode" jdbcType="VARCHAR"/>
+        <result column="COS_VOLTAGE_LEVEL" property="cosVoltageLevel" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE1" property="cosAttribute1" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE2" property="cosAttribute2" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE3" property="cosAttribute3" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE4" property="cosAttribute4" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE5" property="cosAttribute5" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE6" property="cosAttribute6" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE7" property="cosAttribute7" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE8" property="cosAttribute8" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE9" property="cosAttribute9" jdbcType="VARCHAR"/>
+        <result column="COS_ATTRIBUTE10" property="cosAttribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertFunction">
+        INSERT INTO hme_cos_function
+        (
+        tenant_id,
+        cos_Function_Id,
+        load_Sequence,
+        site_Id,
+        `current`,
+        a01,
+        a02,
+        a03,
+        a04,
+        a05,
+        a06,
+        a07,
+        a08,
+        a09,
+        a010,
+        a011,
+        a012,
+        a013,
+        a014,
+        a15,
+        a16,
+        a17,
+        a18,
+        a19,
+        a20,
+        a21,
+        a22,
+        a23,
+        a24,
+        a25,
+        a26,
+        a27,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute_category,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.cosFunctionId},
+            #{item.loadSequence},
+            #{item.siteId},
+            #{item.current},
+            #{item.a01},
+            #{item.a02},
+            #{item.a03},
+            #{item.a04},
+            #{item.a05},
+            #{item.a06},
+            #{item.a07},
+            #{item.a08},
+            #{item.a09},
+            #{item.a010},
+            #{item.a011},
+            #{item.a012},
+            #{item.a013},
+            #{item.a014},
+            #{item.a15},
+            #{item.a16},
+            #{item.a17},
+            #{item.a18},
+            #{item.a19},
+            #{item.a20},
+            #{item.a21},
+            #{item.a22},
+            #{item.a23},
+            #{item.a24},
+            #{item.a25},
+            #{item.a26},
+            #{item.a27},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertIface">
+        INSERT INTO itf_cos_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        SN,
+        COS_LOCATION,
+        COS_MODEL,
+        COS_THRESCHOLD_CURRENT,
+        COS_THRESCHOLD_VOLTAGE,
+        COS_CURRENT,
+        COS_VOLTAGE,
+        COS_POWER,
+        COS_CENTER_WAVELENGTH,
+        COS_SE,
+        COS_LINEWIDTH,
+        COS_IPCE,
+        COS_WAVELENGTH_DIFFER,
+        COS_POWER_LEVEL,
+        COS_WAVELENGTH_LEVEL,
+        COS_POLARIZATION,
+        COS_FWHM_X,
+        COS_FWHM_Y,
+        COS86X,
+        COS86Y,
+        COS95X,
+        COS95Y,
+        COS_LENS_POWER,
+        COS_PBS_POWER,
+        COS_NC_CODE,
+        COS_OPERATOR,
+        COS_REMARK,
+        COS_VOLTAGE_LEVEL,
+        PRIMARY_KEY,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        COS_ATTRIBUTE1,
+        COS_ATTRIBUTE2,
+        COS_ATTRIBUTE3,
+        COS_ATTRIBUTE4,
+        COS_ATTRIBUTE5,
+        COS_ATTRIBUTE6,
+        COS_ATTRIBUTE7,
+        COS_ATTRIBUTE8,
+        COS_ATTRIBUTE9,
+        COS_ATTRIBUTE10
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.interfaceId},
+            #{item.assetEncoding},
+            #{item.sn},
+            #{item.cosLocation},
+            #{item.cosModel},
+            #{item.cosThrescholdCurrent},
+            #{item.cosThrescholdVoltage},
+            #{item.cosCurrent},
+            #{item.cosVoltage},
+            #{item.cosPower},
+            #{item.cosCenterWavelength},
+            #{item.cosSe},
+            #{item.cosLinewidth},
+            #{item.cosIpce},
+            #{item.cosWavelengthDiffer},
+            #{item.cosPowerLevel},
+            #{item.cosWavelengthLevel},
+            #{item.cosPolarization},
+            #{item.cosFwhmX},
+            #{item.cosFwhmY},
+            #{item.cos86x},
+            #{item.cos86y},
+            #{item.cos95x},
+            #{item.cos95y},
+            #{item.cosLensPower},
+            #{item.cosPbsPower},
+            #{item.cosNcCode},
+            #{item.cosOperator},
+            #{item.cosRemark},
+            #{item.cosVoltageLevel},
+            #{item.primaryKey},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.cosAttribute1},
+            #{item.cosAttribute2},
+            #{item.cosAttribute3},
+            #{item.cosAttribute4},
+            #{item.cosAttribute5},
+            #{item.cosAttribute6},
+            #{item.cosAttribute7},
+            #{item.cosAttribute8},
+            #{item.cosAttribute9},
+            #{item.cosAttribute10}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

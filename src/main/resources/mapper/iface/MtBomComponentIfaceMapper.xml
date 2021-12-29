@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtBomComponentIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtBomComponentIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="BOM_CODE" property="bomCode" jdbcType="VARCHAR"/>
+        <result column="BOM_DESCRIPTION" property="bomDescription" jdbcType="VARCHAR"/>
+        <result column="BOM_START_DATE" property="bomStartDate" jdbcType="TIMESTAMP"/>
+        <result column="BOM_END_DATE" property="bomEndDate" jdbcType="TIMESTAMP"/>
+        <result column="BOM_STATUS" property="bomStatus" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="BOM_OBJECT_TYPE" property="bomObjectType" jdbcType="VARCHAR"/>
+        <result column="BOM_OBJECT_CODE" property="bomObjectCode" jdbcType="VARCHAR"/>
+        <result column="STANDARD_QTY" property="standardQty" jdbcType="DECIMAL"/>
+        <result column="BOM_ALTERNATE" property="bomAlternate" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_LINE_NUM" property="componentLineNum" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_ITEM_CODE" property="componentItemCode" jdbcType="VARCHAR"/>
+        <result column="OPERATION_SEQUENCE" property="operationSequence" jdbcType="VARCHAR"/>
+        <result column="BOM_USAGE" property="bomUsage" jdbcType="DECIMAL"/>
+        <result column="COMPONENT_SHRINKAGE" property="componentShrinkage" jdbcType="DECIMAL"/>
+        <result column="WIP_SUPPLY_TYPE" property="wipSupplyType" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_ITEM_CODE" property="substituteItemCode" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_ITEM_USAGE" property="substituteItemUsage" jdbcType="DECIMAL"/>
+        <result column="SUBSTITUTE_GROUP" property="substituteGroup" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_START_DATE" property="componentStartDate" jdbcType="TIMESTAMP"/>
+        <result column="COMPONENT_END_DATE" property="componentEndDate" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATION_DATE" property="erpCreationDate" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATED_BY" property="erpCreatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATED_BY" property="erpLastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATE_DATE" property="erpLastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="UPDATE_METHOD" property="updateMethod" jdbcType="VARCHAR"/>
+        <result column="ISSUE_LOCATOR_CODE" property="issueLocatorCode" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="HEAD_ATTRIBUTE1" property="headAttribute1" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE2" property="headAttribute2" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE3" property="headAttribute3" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE4" property="headAttribute4" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE5" property="headAttribute5" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE6" property="headAttribute6" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE7" property="headAttribute7" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE8" property="headAttribute8" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE9" property="headAttribute9" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE10" property="headAttribute10" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE11" property="headAttribute11" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE12" property="headAttribute12" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE13" property="headAttribute13" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE14" property="headAttribute14" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE15" property="headAttribute15" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE1" property="lineAttribute1" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE2" property="lineAttribute2" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE3" property="lineAttribute3" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE4" property="lineAttribute4" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE5" property="lineAttribute5" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE6" property="lineAttribute6" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE7" property="lineAttribute7" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE8" property="lineAttribute8" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE9" property="lineAttribute9" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE10" property="lineAttribute10" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE11" property="lineAttribute11" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE12" property="lineAttribute12" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE13" property="lineAttribute13" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE14" property="lineAttribute14" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE15" property="lineAttribute15" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE16" property="lineAttribute16" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE17" property="lineAttribute17" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE18" property="lineAttribute18" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE19" property="lineAttribute19" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE20" property="lineAttribute20" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE21" property="lineAttribute21" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE22" property="lineAttribute22" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE23" property="lineAttribute23" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE24" property="lineAttribute24" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE25" property="lineAttribute25" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE26" property="lineAttribute26" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE27" property="lineAttribute27" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE28" property="lineAttribute28" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE29" property="lineAttribute29" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE30" property="lineAttribute30" jdbcType="VARCHAR"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="myGetUnprocessedList" resultMap="BaseResultMap">
+        select t.* from mt_bom_component_iface t where t.STATUS in ('N') AND t.TENANT_ID = ${tenantId} AND t.BATCH_ID = #{batchId}
+    </select>
+
+    <select id="getUnprocessedList" resultMap="BaseResultMap">
+        select t.* from mt_bom_component_iface t where t.STATUS in ('N', 'E') AND t.TENANT_ID = ${tenantId}
+    </select>
+
+    <select id="bomLimitBomCodeAndRevisionAndBomTypeQuery" resultType="tarzan.method.domain.entity.MtBom">
+    SELECT
+		t1.BOM_ID,
+        t1.BOM_NAME,
+        t1.REVISION,
+        t1.BOM_TYPE,
+        t1.BOM_STATUS,
+        t1.PRIMARY_QTY,
+        t1.COPIED_FROM_BOM_ID,
+        t1.RELEASED_FLAG,
+        t1.CURRENT_FLAG,
+        t1.DATE_FROM,
+        t1.DATE_TO,
+        t1.AUTO_REVISION_FLAG,
+        t1.ASSEMBLE_AS_MATERIAL_FLAG,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+    FROM
+	    mt_bom t1
+    WHERE t1.TENANT_ID = #{tenantId}
+    AND (t1.BOM_NAME, t1.REVISION, t1.BOM_TYPE) IN
+        <foreach collection="dtoList" item="item" index="index" open="(" close=")" separator=",">
+            (#{item.bomCode}, #{item.bomAlternate}, #{item.bomObjectType})
+        </foreach>
+    </select>
+
+    <select id="selectBatchId" resultType="java.lang.Long">
+        SELECT
+            mbci.BATCH_ID
+        FROM
+            mt_bom_component_iface mbci
+        WHERE
+            mbci.TENANT_ID = ${tenantId}
+          AND mbci.STATUS = 'N'
+        GROUP BY
+            mbci.BATCH_ID
+        ORDER BY
+            mbci.BATCH_ID ASC
+    </select>
+</mapper>

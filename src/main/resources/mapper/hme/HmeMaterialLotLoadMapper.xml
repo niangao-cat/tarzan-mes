@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeMaterialLotLoadMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_LOAD_ID" property="materialLotLoadId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="VARCHAR"/>
+        <result column="LOAD_ROW" property="loadRow" jdbcType="DECIMAL"/>
+        <result column="LOAD_COLUMN" property="loadColumn" jdbcType="DECIMAL"/>
+        <result column="COS_NUM" property="cosNum" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="HOT_SINK_CODE" property="hotSinkCode" jdbcType="VARCHAR"/>
+        <result column="SOURCE_MATERIAL_LOT_ID" property="sourceMaterialLotId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_LOAD_ROW" property="sourceLoadRow" jdbcType="DECIMAL"/>
+        <result column="SOURCE_LOAD_COLUMN" property="sourceLoadColumn" jdbcType="DECIMAL"/>
+        <result column="TEST_DATE" property="testDate" jdbcType="DATE"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE16" property="attribute16" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE17" property="attribute17" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE18" property="attribute18" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE19" property="attribute19" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE20" property="attribute20" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="LoadDetailResultMap" type="com.ruike.hme.domain.vo.HmeMaterialLotLoadVO2">
+        <result column="MATERIAL_LOT_LOAD_ID" property="materialLotLoadId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="DECIMAL"/>
+        <result column="LOAD_ROW" property="loadRow" jdbcType="DECIMAL"/>
+        <result column="LOAD_COLUMN" property="loadColumn" jdbcType="DECIMAL"/>
+        <result column="COS_NUM" property="cosNum" jdbcType="DECIMAL"/>
+        <result column="HOT_SINK_CODE" property="hotSinkCode" jdbcType="VARCHAR"/>
+        <result column="LAB_CODE" property="labCode" jdbcType="VARCHAR"/>
+        <result column="LAB_REMARK" property="labRemark" jdbcType="VARCHAR"/>
+        <collection property="docList" resultMap="NcLoadDetailResultMap"/>
+    </resultMap>
+    <resultMap id="NcLoadDetailResultMap" type="com.ruike.hme.domain.vo.HmeMaterialLotNcLoadVO">
+        <result column="NC_LOAD_ID" property="ncLoadId" jdbcType="VARCHAR"/>
+        <result column="load_num" property="loadNum" jdbcType="VARCHAR"/>
+        <collection property="ncRecordList" resultMap="NcRecordDetailResultMap"/>
+    </resultMap>
+    <resultMap id="NcRecordDetailResultMap" type="com.ruike.hme.domain.vo.HmeMaterialLotNcRecordVO">
+        <result column="nc_record_id" property="ncRecordId" jdbcType="VARCHAR"/>
+        <result column="nc_code" property="ncCode" jdbcType="VARCHAR"/>
+        <result column="nc_desc" property="ncDesc" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryLoadDatasByMaterialLotId" resultType="com.ruike.hme.domain.vo.HmeMaterialLotLoadVO">
+        select hmll.material_lot_load_id,
+               hmll.material_lot_id,
+               hmll.load_sequence,
+               hmll.load_row,
+               hmll.load_column,
+               hmll.cos_num,
+               (select 'Y'
+                  from hme_material_lot_nc_load hmlnl
+                 where hmlnl.load_sequence = hmll.load_sequence
+                 limit 1) nc_flag
+          from hme_material_lot_load hmll
+         where hmll.material_lot_id = #{materialLotId}
+           and hmll.tenant_id = #{tenantId}
+         order by hmll.load_row, hmll.load_column
+    </select>
+
+    <select id="queryLoadDetailByMaterialLotId" resultMap="LoadDetailResultMap">
+        select mll.material_lot_load_id,
+               mll.material_lot_id,
+               mll.load_sequence,
+               mll.load_row,
+               mll.load_column,
+               mll.cos_num,
+               mll.hot_sink_code,
+               mlnl.nc_load_id,
+               mlnl.load_num,
+               mlnr.nc_record_id,
+               mlnr.nc_code,
+               nc.description nc_desc,
+               mll.ATTRIBUTE19 as lab_code,
+               mll.ATTRIBUTE20 as lab_remark
+          from hme_material_lot_load mll
+          left join hme_material_lot_nc_load mlnl
+            on mlnl.load_sequence = mll.load_sequence
+          left join hme_material_lot_nc_record mlnr
+            on mlnl.nc_load_id = mlnr.nc_load_id
+          left join mt_nc_code nc
+            on nc.nc_code = mlnr.nc_code
+           and nc.tenant_id = mll.tenant_id
+         where mll.material_lot_id = #{materialLotId}
+           and mll.tenant_id = #{tenantId}
+         order by mll.load_row, mll.load_column, mlnl.load_num
+    </select>
+
+    <select id="checkHasNcLoadFlag" resultType="int">
+         select 1
+           from hme_material_lot_load hmll,
+                hme_material_lot_nc_load hmlnl
+          where hmlnl.load_sequence = hmll.load_sequence
+            and hmll.material_lot_id = #{materialLotId}
+            and hmll.tenant_id = #{tenantId}
+          limit 1
+    </select>
+
+    <insert id="batchInsert" parameterType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        INSERT INTO hme_material_lot_load
+        (
+        tenant_id,
+        material_lot_load_id,
+        material_lot_id,
+        load_sequence,
+        load_row,
+        load_column,
+        cos_num,
+        hot_sink_code,
+        source_material_lot_id,
+        source_load_row,
+        source_load_column,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute_category,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10,
+        attribute11,
+        attribute12,
+        attribute13,
+        attribute14,
+        attribute15,
+        test_date,
+        attribute16,
+        attribute17,
+        attribute18,
+        attribute19,
+        attribute20
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.materialLotLoadId},
+            #{item.materialLotId},
+            #{item.loadSequence},
+            #{item.loadRow},
+            #{item.loadColumn},
+            #{item.cosNum},
+            #{item.hotSinkCode},
+            #{item.sourceMaterialLotId},
+            #{item.sourceLoadRow},
+            #{item.sourceLoadColumn},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15},
+            #{item.testDate},
+            #{item.attribute16},
+            #{item.attribute17},
+            #{item.attribute18},
+            #{item.attribute19},
+            #{item.attribute20}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryLoadHotSinkByMaterialLotId" resultType="com.ruike.hme.domain.vo.HmeMaterialLotLoadVO3">
+        select mll.material_lot_load_id,
+               mll.load_row,
+               mll.load_column,
+               mll.hot_sink_code
+          from hme_material_lot_load mll
+         where mll.material_lot_id = #{materialLotId}
+           and mll.tenant_id = #{tenantId}
+         order by mll.load_row,
+                  mll.load_column
+    </select>
+
+    <delete id="deleteLoadByMaterialLotId">
+        delete from hme_material_lot_load
+         where tenant_id = #{tenantId}
+           and material_lot_id = #{materialLotId}
+    </delete>
+
+    <select id="getLoadByMaterialLotId" resultType="java.lang.String">
+         select material_lot_load_id
+         from hme_material_lot_load
+         where tenant_id = #{tenantId}
+         and material_lot_id = #{materialLotId}
+    </select>
+
+    <delete id="deleteLoadByPrimarykey">
+        delete from hme_material_lot_load WHERE material_lot_load_id IN
+        <foreach collection="loadIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="batchLoadUntie">
+        UPDATE hme_material_lot_load
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            material_lot_id =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.materialLotId}
+            </foreach>,
+            source_material_lot_id =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.sourceMaterialLotId}
+            </foreach>,
+            status =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.status}
+            </foreach>
+        </set>
+        <where>
+            material_lot_load_id in
+            <foreach collection="materialLotLoadList" item="item"
+                     separator="," open="(" close=")">
+                #{item.materialLotLoadId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="queryMaterialLotLoadByVirtualId" resultType="com.ruike.hme.domain.vo.HmeEoJobSnSingleVO7">
+        SELECT
+        hvn.VIRTUAL_ID,
+        hmll.material_lot_load_id
+    FROM
+        hme_virtual_num hvn,
+        hme_selection_details hsd,
+        hme_material_lot_load hmll
+    WHERE
+        hmll.tenant_id = hsd.tenant_id
+        AND hmll.load_sequence = hsd.load_sequence
+        AND hsd.tenant_id = hvn.TENANT_ID
+        AND hsd.virtual_num = hvn.VIRTUAL_NUM
+        AND hvn.VIRTUAL_ID IN
+        <foreach collection="virtualIdList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryMaterialLotLoadByEoId" resultType="com.ruike.hme.domain.vo.HmeEoJobSnSingleVO7">
+        SELECT
+        hvn.VIRTUAL_ID,
+        hmll.material_lot_load_id
+        FROM
+        hme_virtual_num hvn,
+        hme_selection_details hsd,
+        hme_material_lot_load hmll
+        WHERE
+        hmll.tenant_id = hsd.tenant_id
+        AND hmll.load_sequence = hsd.load_sequence
+        AND hsd.tenant_id = hvn.TENANT_ID
+        AND hsd.virtual_num = hvn.VIRTUAL_NUM
+        AND hvn.EO_ID = #{eoId}
+    </select>
+
+    <select id="queryMaterialLotNcLoadByVirtualId" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        SELECT
+            hmll.load_sequence,
+            hmll.hot_sink_code,
+            hmll.material_lot_load_id,
+            hmll.load_row,
+            hmll.load_column
+        FROM
+            hme_virtual_num hvn,
+            hme_selection_details hsd,
+            hme_material_lot_load hmll,
+            hme_material_lot_nc_load nc
+        WHERE
+            hmll.tenant_id = hsd.tenant_id
+        AND hmll.load_sequence = hsd.load_sequence
+        AND hsd.tenant_id = hvn.TENANT_ID
+        AND hsd.virtual_num = hvn.VIRTUAL_NUM
+        AND nc.tenant_id = hmll.tenant_id
+        AND nc.load_sequence = hmll.load_sequence
+        AND hvn.VIRTUAL_ID IN
+        <foreach collection="virtualIdList" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryPreSelectionMaterialList" resultType="com.ruike.hme.domain.vo.HmePreSelectionMaterialVO">
+        SELECT
+        	sd.new_material_lot_id MATERIAL_LOT_ID,
+        	ps.ATTRIBUTE3 MATERIAL_ID
+        FROM
+        	hme_selection_details sd,
+        	hme_pre_selection ps
+        WHERE sd.tenant_id = #{tenantId}
+        AND sd.new_material_lot_id in
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ps.pre_selection_id = sd.pre_selection_id
+        GROUP BY
+        	sd.new_material_lot_id,
+        	ps.ATTRIBUTE3
+    </select>
+</mapper>

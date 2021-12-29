@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtEventObjectTypeMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtEventObjectType">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_TYPE_ID" property="objectTypeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_CODE" property="objectTypeCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="TABLE_NAME" property="tableName" jdbcType="VARCHAR"/>
+        <result column="WHERE_CLAUSE" property="whereClause" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="propertyLimitObjectTypeQuery" resultType="java.lang.String">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t.OBJECT_TYPE_ID
+        FROM
+        mt_event_object_type t
+        INNER JOIN mt_event_object_type_tl tl ON tl.OBJECT_TYPE_ID = t.OBJECT_TYPE_ID
+        AND tl.LANG = #{locale}
+        WHERE 1=1
+        AND t.TENANT_ID = ${tenantId}
+        <if test="dto.objectTypeCode != null">
+            AND t.OBJECT_TYPE_CODE = #{dto.objectTypeCode}
+        </if>
+        <if test="dto.description != null">
+            AND tl.DESCRIPTION LIKE concat('%', concat(#{dto.description}, '%'))
+        </if>
+        <if test="dto.enableFlag != null">
+            AND t.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.tableName != null">
+            AND t.TABLE_NAME LIKE concat('%', concat(#{dto.tableName}, '%'))
+        </if>
+        <if test="dto.whereClause != null">
+            AND t.WHERE_CLAUSE LIKE concat('%', concat(#{dto.whereClause}, '%'))
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        mt_event_object_type
+        WHERE
+        1=1
+        AND TENANT_ID = ${tenantId}
+        AND OBJECT_TYPE_ID IN
+        <foreach collection="objectTypeIds" index="i" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <resultMap id="EventTypeColumnResultMap" type="tarzan.general.domain.vo.MtEventObjectTypeColumnVO">
+        <result column="OBJECT_TYPE_CODE" property="objectTypeCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="TABLE_NAME" property="tableName" jdbcType="VARCHAR"/>
+        <result column="WHERE_CLAUSE" property="whereClause" jdbcType="VARCHAR"/>
+        <collection property="eventObjectColumnList" ofType="tarzan.general.domain.vo.MtEventObjectColumnVO">
+            <result column="COLUMN_FIELD" property="columnField" jdbcType="VARCHAR"/>
+            <result column="COLUMN_TITLE" property="columnTitle" jdbcType="VARCHAR"/>
+            <result column="COLUMN_TYPE" property="columnType" jdbcType="VARCHAR"/>
+            <result column="DISPLAY_FLAG" property="displayFlag" jdbcType="VARCHAR"/>
+            <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+            <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+            <result column="EVENT_FLAG" property="eventFlag" jdbcType="VARCHAR"/>
+        </collection>
+    </resultMap>
+
+    <select id="queryEventObjectColumnById" resultMap="EventTypeColumnResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select meot.OBJECT_TYPE_CODE,
+        meott.DESCRIPTION,
+        meot.TABLE_NAME,
+        meot.WHERE_CLAUSE,
+        meoc.COLUMN_FIELD,
+        meoct.COLUMN_TITLE,
+        meoc.COLUMN_TYPE,
+        meoc.DISPLAY_FLAG,
+        meoc.ENABLE_FLAG,
+        meoc.LINE_NUMBER,
+        meoc.EVENT_FLAG
+        from mt_event_object_type meot
+        join mt_event_object_type_tl meott on meot.OBJECT_TYPE_ID = meott.OBJECT_TYPE_ID and meott.LANG = #{locale}
+        join mt_event_object_column meoc on meot.OBJECT_TYPE_ID= meoc.OBJECT_TYPE_ID
+        join mt_event_object_column_tl meoct on meoc.OBJECT_COLUMN_ID = meoct.OBJECT_COLUMN_ID and meoct.LANG = #{locale}
+        where meot.OBJECT_TYPE_ID = #{objectTypeId}
+        order by meoc.LINE_NUMBER asc
+    </select>
+</mapper>

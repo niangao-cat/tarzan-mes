@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtMaterialCategorySetMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtMaterialCategorySet">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_CATEGORY_SET_ID" property="materialCategorySetId" jdbcType="VARCHAR"/>
+        <result column="CATEGORY_SET_CODE" property="categorySetCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_SCHEDULE_FLAG" property="defaultScheduleFlag" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_PURCHASE_FLAG" property="defaultPurchaseFlag" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_MANUFACTURING_FLAG" property="defaultManufacturingFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t1.MATERIAL_CATEGORY_SET_ID,
+        t1.CATEGORY_SET_CODE,
+        t2.DESCRIPTION,
+        t1.DEFAULT_SCHEDULE_FLAG,
+        t1.DEFAULT_PURCHASE_FLAG,
+        t1.DEFAULT_MANUFACTURING_FLAG,
+        t1.ENABLE_FLAG,
+        t1.CID
+        FROM
+        mt_material_category_set t1,
+        mt_material_category_set_tl t2
+        WHERE
+        1 = 1
+        AND t1.MATERIAL_CATEGORY_SET_ID = t2.MATERIAL_CATEGORY_SET_ID
+        AND t2.LANG = #{locale}
+        AND t1.TENANT_ID = ${tenantId}
+        AND t1.MATERIAL_CATEGORY_SET_ID IN
+        <foreach collection="materialCategorySetIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t1.MATERIAL_CATEGORY_SET_ID,
+        t1.CATEGORY_SET_CODE,
+        t2.DESCRIPTION,
+        t1.DEFAULT_SCHEDULE_FLAG,
+        t1.DEFAULT_PURCHASE_FLAG,
+        t1.DEFAULT_MANUFACTURING_FLAG,
+        t1.ENABLE_FLAG,
+        t1.CID
+        FROM
+        mt_material_category_set t1,
+        mt_material_category_set_tl t2
+        WHERE
+        1 = 1
+        AND t1.MATERIAL_CATEGORY_SET_ID = t2.MATERIAL_CATEGORY_SET_ID
+        AND t2.LANG = #{locale}
+        AND t1.TENANT_ID = ${tenantId}
+        <if test="dto.categorySetCode!=null and dto.categorySetCode != ''">
+            and t1.CATEGORY_SET_CODE like concat('%',concat(#{dto.categorySetCode},'%'))
+        </if>
+        <if test="dto.description!=null and dto.description != ''">
+            and t2.DESCRIPTION like concat('%',concat(#{dto.description},'%'))
+        </if>
+    </select>
+
+    <select id="queryMaterialCategorySetByCode" resultMap="BaseResultMap" fetchSize="5000">
+        select * from mt_material_category_set
+        where
+        TENANT_ID = ${tenantId}
+        and ${categorySetCodeList}
+    </select>
+    <select id="selectCondition" resultType="tarzan.material.domain.vo.MtMaterialCategorySiteVO6">
+        SELECT * FROM MT_MATERIAL_CATEGORY_SET tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.materialCategorySetId != null">
+            AND tb.MATERIAL_CATEGORY_SET_ID = #{dto.materialCategorySetId}
+        </if>
+        <if test="dto.categorySetCode != null">
+            AND tb.CATEGORY_SET_CODE = #{dto.categorySetCode}
+        </if>
+        <if test="dto.description != null">
+            AND tb.DESCRIPTION like CONCAT('%',#{dto.description},'%')
+        </if>
+        <if test="dto.defaultScheduleFlag != null">
+            AND tb.DEFAULT_SCHEDULE_FLAG = #{dto.defaultScheduleFlag}
+        </if>
+        <if test="dto.defaultPurchaseFlag != null">
+            AND tb.DEFAULT_PURCHASE_FLAG = #{dto.defaultPurchaseFlag}
+        </if>
+        <if test="dto.defaultManufacturingFlag != null">
+            AND tb.DEFAULT_MANUFACTURING_FLAG = #{dto.defaultManufacturingFlag}
+        </if>
+        <if test="dto.enableFlag != null">
+            AND tb.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        order by tb.MATERIAL_CATEGORY_SET_ID ASC
+    </select>
+</mapper>

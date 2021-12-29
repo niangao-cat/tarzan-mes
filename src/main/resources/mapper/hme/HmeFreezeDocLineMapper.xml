@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeFreezeDocLineMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeFreezeDocLine">
+        <result column="freeze_doc_line_id" property="freezeDocLineId" jdbcType="VARCHAR"/>
+        <result column="freeze_doc_id" property="freezeDocId" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="freeze_flag" property="freezeFlag" jdbcType="VARCHAR"/>
+        <result column="frozen_by" property="frozenBy" jdbcType="DECIMAL"/>
+        <result column="unfrozen_by" property="unfrozenBy" jdbcType="DECIMAL"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <insert id="batchInsert">
+        insert into hme_freeze_doc_line( freeze_doc_line_id
+        , freeze_doc_id
+        , material_lot_id
+        , freeze_flag
+        , frozen_by
+        , unfrozen_by
+        , tenant_id
+        , cid
+        , object_version_number
+        , creation_date
+        , created_by
+        , last_updated_by
+        , last_update_date
+        , attribute_category
+        , attribute1
+        , attribute2
+        , attribute3
+        , attribute4
+        , attribute5
+        , attribute6
+        , attribute7
+        , attribute8
+        , attribute9
+        , attribute10
+        , attribute11
+        , attribute12
+        , attribute13
+        , attribute14
+        , attribute15)
+        values
+        <foreach collection="list" index="index" item="item" separator=",">
+            (#{item.freezeDocLineId},
+            #{item.freezeDocId},
+            #{item.materialLotId},
+            #{item.freezeFlag},
+            #{item.frozenBy},
+            #{item.unfrozenBy},
+            #{item.tenantId},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15})
+        </foreach>
+    </insert>
+
+    <update id="batchUpdate">
+        <bind name="userId" value="@io.choerodon.core.oauth.DetailsHelper@getUserDetails().getUserId()"/>
+        UPDATE hme_freeze_doc_line
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            freeze_flag =
+            <foreach collection="list" item="item" index="index"
+                     separator=" " open="case freeze_doc_line_id" close="end">
+                when #{item.freezeDocLineId} then #{item.freezeFlag}
+            </foreach>,
+            unfrozen_by =
+            <foreach collection="list" item="item" index="index"
+                     separator=" " open="case freeze_doc_line_id" close="end">
+                when #{item.freezeDocLineId} then #{item.unfrozenBy}
+            </foreach>
+        </set>
+        <where>
+            freeze_doc_line_id in
+            <foreach collection="list" item="item"
+                     separator="," open="(" close=")">
+                #{item.freezeDocLineId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="selectRepresentationList" resultType="com.ruike.hme.domain.vo.HmeFreezeDocLineVO">
+        select hfdl.freeze_doc_line_id
+        , hfdl.freeze_doc_id
+        , hfdl.material_lot_id
+        , mml.material_lot_code
+        , ifnull(hfdl.freeze_flag, 'N') as freeze_flag
+        , case when mml.freeze_flag is null or mml.freeze_flag = '' then 'N' else mml.freeze_flag end sn_freeze_flag
+        , mml.primary_uom_qty
+        , hfdl.ATTRIBUTE1 freeze_date
+        , mml.material_id
+        , mm.material_code
+        , mm.material_name
+        , mmla_ver.attr_value material_version
+        , mmla_ver.attr_value production_version
+        , mml.locator_id
+        , loc.locator_code
+        , wh.locator_id warehouse_id
+        , wh.locator_code warehouse_code
+        , mml.supplier_id
+        , sup.supplier_code
+        , sup.supplier_name
+        , mml.lot inventory_lot
+        , mmla_sl.attr_value supplier_lot
+        , group_concat(lc.lab_code separator '/') test_code
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        , case when hfdl.freeze_flag = 'N' then hfdl.last_update_date end unfreeze_date
+        , mmla_ct.attr_value cos_type
+        from hme_freeze_doc_line hfdl
+        , mt_material_lot mml
+        left join mt_material_lot_attr mmla_ver on mmla_ver.material_lot_id = mml.material_lot_id
+        and mmla_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_material_lot_attr mmla_sl on mmla_sl.material_lot_id = mml.material_lot_id
+        and mmla_sl.attr_name = 'SUPPLIER_LOT'
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = mml.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        left join mt_material_lot_attr mmla_ct on mmla_ct.material_lot_id = mml.material_lot_id
+        and mmla_ct.attr_name = 'COS_TYPE'
+        left join mt_supplier sup on sup.supplier_id = mml.supplier_id
+        left join hme_material_lot_lab_code lc on lc.material_lot_id = mml.material_lot_id
+        , mt_material mm
+        , mt_mod_locator loc
+        , mt_mod_locator wh
+        where hfdl.material_lot_id = mml.material_lot_id
+        and mml.material_id = mm.material_id
+        and mml.locator_id = loc.locator_id
+        and loc.parent_locator_id = wh.locator_id
+        and hfdl.tenant_id = #{tenantId}
+        and hfdl.freeze_doc_id = #{dto.freezeDocId}
+        <if test="dto.materialLotCodes != null and dto.materialLotCodes.size() > 0 ">
+            and mml.material_lot_code in
+            <foreach collection="dto.materialLotCodes" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        group by hfdl.freeze_doc_line_id
+        , mml.material_lot_id
+        , mmla_ver.attr_value
+        , mmla_sl.attr_value
+        , mmla_mf.attr_value
+        , mmla_ct.attr_value
+    </select>
+
+    <select id="selectJobInfoList" resultType="com.ruike.hme.domain.vo.HmeFreezeDocJobVO">
+        select ejs.job_id
+        ,ejs.work_order_id
+        ,wo.work_order_num
+        ,eje.equipment_id
+        ,he.asset_encoding equipment_code
+        ,pl.prod_line_id
+        ,pl.prod_line_code
+        ,ejs.workcell_id station_id
+        ,wkc_st.workcell_code station_code
+        ,mor1.organization_id process_id
+        ,wkc_prc.workcell_code process_code
+        ,wkc_line.workcell_id
+        ,wkc_line.workcell_code
+        ,ejs.created_by operated_by
+        ,usr.real_name operated_by_name
+        ,ejs.creation_date production_date
+        from hme_eo_job_sn ejs
+        left join mt_work_order wo on wo.work_order_id = ejs.work_order_id
+        left join hme_eo_job_equipment eje on eje.job_id = ejs.job_id
+        left join hme_equipment he on he.equipment_id = eje.equipment_id
+        left join mt_mod_production_line pl on pl.prod_line_id = wo.production_line_id
+        left join mt_mod_workcell wkc_st on wkc_st.workcell_id = ejs.workcell_id
+        left join mt_mod_organization_rel mor on mor.organization_id = wkc_st.workcell_id and mor.organization_type =
+        'WORKCELL'
+        left join mt_mod_organization_rel mor1 on mor1.organization_id = mor.parent_organization_id and
+        mor.organization_type =
+        'WORKCELL'
+        left join mt_mod_workcell wkc_prc on mor1.organization_id = wkc_prc.workcell_id and
+        mor.parent_organization_type = 'WORKCELL'
+        left join mt_mod_workcell wkc_line on mor1.parent_organization_id = wkc_line.workcell_id and
+        mor1.parent_organization_type = 'WORKCELL'
+        ,iam_user usr
+        where ejs.created_by = usr.id
+        and ejs.tenant_id = #{tenantId}
+        and ejs.job_id in
+        <foreach collection="jobIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectJobInfoList2" resultType="com.ruike.hme.domain.vo.HmeFreezeDocJobVO">
+        select ejs.job_id
+        ,ejs.work_order_id
+        ,wo.work_order_num
+        ,eje.equipment_id
+        ,he.asset_encoding equipment_code
+        ,pl.prod_line_id
+        ,pl.prod_line_code
+        ,ejs.workcell_id station_id
+        ,wkc_st.workcell_code station_code
+        ,mor1.organization_id process_id
+        ,wkc_prc.workcell_code process_code
+        ,wkc_line.workcell_id
+        ,wkc_line.workcell_code
+        ,ejs.created_by operated_by
+        ,usr.real_name operated_by_name
+        ,ejs.creation_date production_date
+        from hme_eo_job_sn ejs
+        left join mt_work_order wo on wo.work_order_id = ejs.work_order_id
+        left join hme_eo_job_equipment eje on eje.job_id = ejs.job_id
+        left join hme_equipment he on he.equipment_id = eje.equipment_id
+        left join mt_mod_production_line pl on pl.prod_line_id = wo.production_line_id
+        left join mt_mod_workcell wkc_st on wkc_st.workcell_id = ejs.workcell_id
+        left join mt_mod_organization_rel mor on mor.organization_id = wkc_st.workcell_id and mor.organization_type =
+        'WORKCELL'
+        left join mt_mod_organization_rel mor1 on mor1.organization_id = mor.parent_organization_id and
+        mor.organization_type =
+        'WORKCELL'
+        left join mt_mod_workcell wkc_prc on mor1.organization_id = wkc_prc.workcell_id and
+        mor.parent_organization_type = 'WORKCELL'
+        left join mt_mod_workcell wkc_line on mor1.parent_organization_id = wkc_line.workcell_id and
+        mor1.parent_organization_type = 'WORKCELL'
+        ,iam_user usr
+        where ejs.created_by = usr.id
+        and ejs.tenant_id = #{tenantId}
+        and ejs.job_id in
+        <foreach collection="jobIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectSnUnfreezeList" resultType="com.ruike.hme.domain.vo.HmeFreezeDocLineSnUnfreezeVO">
+        select ufs.material_lot_id
+        ,case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from (select fdl.material_lot_id
+        ,count(1) freeze_count
+        from hme_freeze_doc_line fdl
+        where fdl.freeze_flag = 'Y'
+        and fdl.tenant_id = #{tenantId}
+        and fdl.material_lot_id in
+        <foreach collection="materialLotIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        group by fdl.material_lot_id) ufs
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = ufs.material_lot_id and
+        mmla_mf.attr_name = 'MF_FLAG'
+        where ufs.freeze_count = 1
+    </select>
+
+    <select id="selectCostLoadList" resultType="com.ruike.hme.api.dto.HmeFreezeCosLoadRepresentationDTO">
+        select mll.material_lot_load_id
+             , mll.material_lot_id
+             , mml.material_lot_code
+             , mm.material_id
+             , mm.material_code
+             , mll.load_column
+             , mll.load_row
+             , mll.attribute2                  wafer
+             , mll.attribute13                 ausn_ratio
+             , mll.hot_sink_code
+             , hsd.virtual_num
+             , hps.attribute1                  cos_rule_code
+             , mll.cos_num
+             , case
+                   when mll.attribute14 = '' or mll.attribute14 is null then 'N'
+                   else mll.attribute14 end as freeze_flag
+        from hme_material_lot_load mll
+                 left join hme_selection_details hsd on mll.load_sequence = hsd.load_sequence
+                 left join hme_pre_selection hps on hsd.pre_selection_id = hps.pre_selection_id
+           , mt_material_lot mml
+           , mt_material mm
+        where mll.material_lot_id = mml.MATERIAL_LOT_ID
+          and mml.MATERIAL_id = mm.MATERIAL_ID
+          and mll.tenant_id = #{tenantId}
+          and mll.material_lot_id = #{materialLotId}
+    </select>
+
+</mapper>

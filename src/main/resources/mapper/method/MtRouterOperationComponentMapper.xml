@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterOperationComponentMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterOperationComponent">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_OPERATION_COMPONENT_ID" property="routerOperationComponentId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OPERATION_ID" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtRouterOperationComponentDTO">
+        <result column="ROUTER_OPERATION_COMPONENT_ID" property="routerOperationComponentId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OPERATION_ID" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_MATERIAL_CODE" property="bomComponentMaterialCode" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_MATERIAL_DESC" property="bomComponentMaterialDesc" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+    <resultMap id="ResultMap" type="tarzan.method.domain.vo.MtRouterOpComponentVO4" extends="BaseResultMap">
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRouterOperationComponent" resultMap="BaseResultMap">
+        select mroc.*
+        from mt_router_operation mrob,
+        mt_router_operation_component mroc
+        where mrob.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+        and mrob.ROUTER_STEP_ID = #{routerStepId}
+        and mrob.TENANT_ID = ${tenantId}
+        and mroc.TENANT_ID = ${tenantId}
+    </select>
+
+    <select id="selectRouterOperationComponent2" resultMap="BaseResultMap">
+        select mroc.*
+        from mt_router_operation mrob,
+        mt_router_operation_component mroc
+        where mrob.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+        and mrob.TENANT_ID = ${tenantId}
+        and mroc.TENANT_ID = ${tenantId}
+        <if test="condition.routerStepId!=null">
+            and mrob.ROUTER_STEP_ID = #{condition.routerStepId}
+        </if>
+        <if test='condition.bomComponentId!=null and condition.bomComponentId!=""'>
+            and mroc.BOM_COMPONENT_ID = #{condition.bomComponentId}
+        </if>
+    </select>
+
+    <select id="selectByRouterId" resultMap="BaseResultMap">
+        SELECT roc.*
+        FROM mt_router_operation_component roc,
+        mt_router_operation ro,
+        mt_router_step rs
+        WHERE roc.ROUTER_OPERATION_ID = ro.ROUTER_OPERATION_ID
+        AND ro.ROUTER_STEP_ID = rs.ROUTER_STEP_ID
+        AND rs.ROUTER_ID = #{routerId}
+        AND roc.TENANT_ID = ${tenantId}
+        AND ro.TENANT_ID = ${tenantId}
+        AND rs.TENANT_ID = ${tenantId}
+    </select>
+
+    <select id="selectByOperationIds" resultMap="BaseResultMap">
+        select * from mt_router_operation_component where TENANT_ID = ${tenantId} AND ROUTER_OPERATION_ID IN
+        <foreach collection="operationIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryRouterOperationComponentForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mroc.ROUTER_OPERATION_COMPONENT_ID,
+        mroc.ROUTER_OPERATION_ID,
+        mroc.BOM_COMPONENT_ID,
+        mb.QTY,
+        mm.MATERIAL_CODE BOM_COMPONENT_MATERIAL_CODE,
+        mmt.MATERIAL_NAME BOM_COMPONENT_MATERIAL_DESC,
+        mroc.SEQUENCE,
+        mroc.ENABLE_FLAG,
+        mbca7.ATTR_VALUE BOM_VERSION
+        from mt_router_operation_component mroc
+        INNER JOIN mt_bom_component mb ON mroc.BOM_COMPONENT_ID = mb.BOM_COMPONENT_ID
+        LEFT JOIN mt_bom_component_attr mbca7 ON mbca7.BOM_COMPONENT_ID = mb.BOM_COMPONENT_ID AND mbca7.attr_name =
+        'lineAttribute7'
+        INNER JOIN mt_material mm ON mm.MATERIAL_ID = mb.MATERIAL_ID
+        INNER JOIN mt_material_tl mmt on mm.MATERIAL_ID = mmt.MATERIAL_ID and mmt.LANG = #{locale}
+        where mroc.TENANT_ID = ${tenantId}
+        and mroc.ROUTER_OPERATION_ID in
+        <foreach collection="operationIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        order by mroc.CREATION_DATE DESC,mroc.SEQUENCE ASC
+    </select>
+
+    <select id="selectByRouterIds" resultMap="ResultMap">
+        SELECT
+        rs.ROUTER_ID,
+        roc.*
+        FROM mt_router_operation_component roc
+        INNER JOIN mt_router_operation ro ON roc.ROUTER_OPERATION_ID = ro.ROUTER_OPERATION_ID AND ro.TENANT_ID =
+        ${tenantId}
+        INNER JOIN mt_router_step rs ON ro.ROUTER_STEP_ID = rs.ROUTER_STEP_ID AND rs.TENANT_ID = ${tenantId}
+        WHERE
+        roc.TENANT_ID = ${tenantId}
+        AND rs.ROUTER_ID IN
+        <foreach collection="routerIds" open="(" separator="," item="routerId" index="in" close=")">
+            #{routerId}
+        </foreach>
+    </select>
+
+    <select id="selectRouterOperationComponents" resultType="tarzan.method.domain.vo.MtRouterOpComponentVO5">
+        select
+        mroc.ROUTER_OPERATION_COMPONENT_ID,
+        mroc.ROUTER_OPERATION_ID,
+        mroc.BOM_COMPONENT_ID,
+        mroc.SEQUENCE,
+        mroc.ENABLE_FLAG,
+        mrob.ROUTER_STEP_ID
+        from mt_router_operation mrob,
+        mt_router_operation_component mroc
+        where mrob.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+        and mrob.TENANT_ID = ${tenantId}
+        and mroc.TENANT_ID = ${tenantId}
+        <if test="routerStepIds!=null and routerStepIds.size()>0">
+            and mrob.ROUTER_STEP_ID IN
+            <foreach collection="routerStepIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="routerStepIds==null or routerStepIds.size()==0">
+            and 1=2
+        </if>
+        <if test='bomComponentId!=null and bomComponentId!=""'>
+            and mroc.BOM_COMPONENT_ID = #{bomComponentId}
+        </if>
+    </select>
+</mapper>

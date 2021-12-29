@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosFunctionMaterialMapper">
+
+    <select id="selectTags" resultType="com.ruike.hme.domain.vo.HmeCosFunctionMaterialVO">
+        SELECT
+            mtgo.OPERATION_ID,
+            moat.ATTR_VALUE AS alias,
+            mtgo.MATERIAL_ID,
+            mt.TAG_CODE
+        FROM
+            mt_operation_attr moa
+            LEFT JOIN mt_operation_attr moat ON moat.OPERATION_ID = moa.OPERATION_ID
+            AND moat.ATTR_NAME = 'ALIAS'
+            AND moat.TENANT_ID = moa.TENANT_ID,
+            mt_tag_group_object mtgo,
+            mt_tag_group_assign mtga,
+            mt_tag mt
+        WHERE
+            mt.TAG_ID = mtga.TAG_ID
+          AND mtga.TENANT_ID = mtgo.TENANT_ID
+          AND mtga.TAG_GROUP_ID = mtgo.TAG_GROUP_ID
+          AND mtgo.OPERATION_ID = moa.OPERATION_ID
+          AND mtgo.TENANT_ID = moa.TENANT_ID
+          AND moa.ATTR_NAME = 'FIRST'
+          AND moa.ATTR_VALUE = 'Y'
+          AND moa.TENANT_ID = #{tenantId}
+        GROUP BY
+            mtgo.OPERATION_ID,
+            moat.ATTR_VALUE,
+            mtgo.MATERIAL_ID,
+            mt.TAG_CODE
+    </select>
+
+    <select id="selectSelection" resultType="com.ruike.hme.domain.vo.HmeCosFunctionMaterialVO2">
+        SELECT
+            hps.ATTRIBUTE3 AS material_id,
+            hsd.load_sequence
+        FROM
+            hme_pre_selection hps,
+            hme_selection_details hsd
+        WHERE
+            hsd.tenant_id = hps.tenant_id
+          AND hsd.pre_selection_id = hps.pre_selection_id
+          AND hsd.last_update_date &gt;= STR_TO_DATE(#{hmeCosFunctionMaterialTime.startTime},'%Y-%m-%d %H:%i:%S')
+          AND hsd.last_update_date &lt;= STR_TO_DATE(#{hmeCosFunctionMaterialTime.endTime},'%Y-%m-%d %H:%i:%S')
+          AND hps.tenant_id = #{tenantId}
+          AND hps.ATTRIBUTE3 IN
+        <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectCosFunction" resultType="com.ruike.hme.domain.entity.HmeCosFunctionMaterial">
+        SELECT
+        hcf.site_id,
+        hcf.load_sequence,
+        hcf.current,
+        hcf.A01,
+        hcf.A02,
+        hcf.A03,
+        hcf.A04,
+        hcf.A05,
+        hcf.A06,
+        hcf.A07,
+        hcf.A08,
+        hcf.A09,
+        hcf.A010,
+        hcf.A011,
+        hcf.A012,
+        hcf.A013,
+        hcf.A014,
+        hcf.A15,
+        hcf.A16,
+        hcf.A17,
+        hcf.A18,
+        hcf.A19,
+        hcf.A20,
+        hcf.A21,
+        hcf.A22,
+        hcf.A23,
+        hcf.A24,
+        hcf.A25,
+        hcf.A26,
+        hcf.A27
+        FROM
+        hme_cos_function hcf
+        WHERE
+        hcf.TENANT_ID = #{tenantId}
+        AND ( hcf.current, hcf.load_sequence ) IN
+        <foreach collection="cofFunctionQueryParasList" index="index" item="item" open="(" separator="," close=")">
+            (#{item.current},#{item.loadSequence})
+        </foreach>
+        AND hcf.site_id = #{siteId}
+    </select>
+
+    <delete id="batchDeleteByPrimary" parameterType="java.lang.String">
+        DELETE FROM hme_cos_function_material WHERE COS_FUNCTION_MATERIAL_ID IN
+        <foreach collection="cosFunctionMaterialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="myBatchInsert">
+        INSERT INTO hme_cos_function_material
+        (
+        TENANT_ID,
+        COS_FUNCTION_MATERIAL_ID,
+        LOAD_SEQUENCE,
+        SITE_ID,
+        CURRENT,
+        A01,
+        A02,
+        A03,
+        A04,
+        A05,
+        A06,
+        A07,
+        A08,
+        A09,
+        A010,
+        A011,
+        A012,
+        A013,
+        A014,
+        A15,
+        A16,
+        A17,
+        A18,
+        A19,
+        A20,
+        A21,
+        A22,
+        A23,
+        A24,
+        A25,
+        A26,
+        A27,
+        CID,
+        OBJECT_VERSION_NUMBER,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15)
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.cosFunctionMaterialId},
+            #{item.loadSequence},
+            #{item.siteId},
+            #{item.current},
+            #{item.a01},
+            #{item.a02},
+            #{item.a03},
+            #{item.a04},
+            #{item.a05},
+            #{item.a06},
+            #{item.a07},
+            #{item.a08},
+            #{item.a09},
+            #{item.a010},
+            #{item.a011},
+            #{item.a012},
+            #{item.a013},
+            #{item.a014},
+            #{item.a15},
+            #{item.a16},
+            #{item.a17},
+            #{item.a18},
+            #{item.a19},
+            #{item.a20},
+            #{item.a21},
+            #{item.a22},
+            #{item.a23},
+            #{item.a24},
+            #{item.a25},
+            #{item.a26},
+            #{item.a27},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

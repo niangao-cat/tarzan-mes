@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEmployeeOutputSummaryTimeMapper">
+    <select id="selectMaxJobTime" resultType="java.util.Date">
+        SELECT
+            max( heost.job_time )
+        FROM
+            hme_employee_output_summary_time heost
+        WHERE
+            heost.tenant_id = #{tenantId}
+    </select>
+
+    <insert id="batchInsert" parameterType="com.ruike.hme.domain.entity.HmeEmployeeOutputSummaryTime">
+        INSERT INTO hme_employee_output_summary_time
+        (
+        tenant_id,
+        output_summary_time_id,
+        job_time,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.outputSummaryTimeId},
+            #{item.jobTime},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5}
+            )
+        </foreach>
+    </insert>
+</mapper>

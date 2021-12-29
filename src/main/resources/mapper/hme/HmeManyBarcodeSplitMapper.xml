@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeManyBarcodeSplitMapper">
+
+    <select id="queryExtendAttrList" resultType="java.lang.Integer">
+        SELECT
+	        COUNT(1)
+        FROM
+            mt_material_lot_attr attr
+        WHERE attr.TENANT_ID = #{tenantId}
+        AND attr.ATTR_NAME = #{attrName}
+        AND attr.ATTR_VALUE = #{attrValue}
+    </select>
+
+    <select id="queryOutBarcode" resultType="java.lang.String">
+        SELECT
+            mml.MATERIAL_LOT_CODE
+        FROM
+            mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'OUTER_BOX'
+        LEFT JOIN mt_material_lot_attr attr2 ON attr2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr2.ATTR_NAME = 'STATUS'
+        WHERE mml.TENANT_ID = #{tenantId}
+        AND attr1.ATTR_VALUE = #{barcode}
+        AND attr2.ATTR_VALUE = 'NEW'
+        AND mml.ENABLE_FLAG = 'N'
+    </select>
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfInternalOrderIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfInternalOrderIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="INTERNAL_ORDER_ID" property="internalOrderId" jdbcType="VARCHAR"/>
+        <result column="INTERNAL_ORDER" property="internalOrder" jdbcType="VARCHAR"/>
+        <result column="INTERNAL_ORDER_TYPE" property="internalOrderType" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="INTERNAL_ORDER_STATUS" property="internalOrderStatus" jdbcType="VARCHAR"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="VARCHAR"/>
+        <result column="BATCH_DATE" property="batchDate" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="MOVE_TYPE" property="moveType" jdbcType="VARCHAR"/>
+        <result column="MOVE_REASON" property="moveReason" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM_TO" property="dateFromTo" jdbcType="DATE"/>
+        <result column="DATE_END_TO" property="dateEndTo" jdbcType="DATE"/>
+        <result column="SOURCE_IDENTIFICATION_ID" property="sourceIdentificationId" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+</mapper>

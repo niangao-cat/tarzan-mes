@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.TagCheckRuleHeaderMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.TagCheckRuleHeader">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="header_id" property="headerId" jdbcType="VARCHAR"/>
+        <result column="business_id" property="businessId" jdbcType="VARCHAR"/>
+        <result column="item_group_id" property="itemGroupId" jdbcType="VARCHAR"/>
+        <result column="rule_code" property="ruleCode" jdbcType="VARCHAR"/>
+        <result column="rule_description" property="ruleDescription" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="query" resultMap="BaseResultMap">
+        SELECT
+        htcrh.tenant_id,
+        htcrh.header_id,
+        htcrh.business_id,
+        htcrh.cid,
+        mma.area_name,
+        wig.item_group_code,
+        wig.item_group_description,
+        htcrh.rule_code,
+        htcrh.rule_description,
+        htcrh.type,
+        htcrh.item_group_id,
+        htcrh.workcell_id,
+        mmw.workcell_name,
+        htcrh.enable_flag,
+        htcrh.last_update_date
+        FROM
+        hme_tag_check_rule_header htcrh
+        LEFT JOIN mt_mod_area mma ON business_id = mma.area_id
+        LEFT JOIN wms_item_group wig ON htcrh.item_group_id = wig.item_group_id
+        LEFT JOIN mt_mod_workcell mmw ON htcrh.workcell_id = mmw.workcell_id
+        where 1=1
+        and htcrh.tenant_id=#{tenantId}
+
+        <if test="dto.businessId !=null and dto.businessId != ''">
+            and htcrh.business_id=#{dto.businessId}
+        </if>
+        <if test="dto.itemGroupId !=null and dto.itemGroupId != ''">
+            and htcrh.item_group_id=#{dto.itemGroupId}
+        </if>
+        <if test="dto.enableFlag !=null and dto.enableFlag != ''">
+            and htcrh.enable_flag=#{dto.enableFlag}
+        </if>
+        <if test="dto.workcellId !=null and dto.workcellId != ''">
+            and htcrh.workcell_id=#{dto.workcellId}
+        </if>
+        <if test="dto.ruleCode !=null and dto.ruleCode != ''">
+            <bind name="ruleCodeLike" value="'%'+dto.ruleCode+'%'"/>
+            and htcrh.rule_code like #{ruleCodeLike}
+        </if>
+        ORDER BY
+        mma.area_name,
+        htcrh.last_update_date DESC
+    </select>
+
+    <select id="queryById" resultType="com.ruike.hme.domain.entity.TagCheckRuleLine">
+        SELECT htcrl.tenant_id,
+               htcrl.header_id,
+               htcrl.line_id,
+               htcrl.source_workcell_id,
+               mmw.workcell_name,
+               htcrl.tag_id,
+               htcrl.cid,
+               mt.tag_code,
+               htcrl.enable_flag,
+               htcrl.last_update_date,
+               mt.tag_description
+        FROM hme_tag_check_rule_line htcrl
+                     LEFT JOIN mt_mod_workcell mmw ON htcrl.source_workcell_id = mmw.workcell_id
+                     LEFT JOIN mt_tag mt ON htcrl.tag_id = mt.tag_id
+        where htcrl.header_id = #{headerId}
+          and htcrl.tenant_id = #{tenantId}
+    </select>
+
+    <insert id="myBatchInsert">
+        insert into hme_tag_check_rule_header
+        (
+        tenant_id,
+        header_id,
+        business_id,
+        item_group_id,
+        rule_code,
+        rule_description,
+        `type`,
+        workcell_id,
+        enable_flag,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute_category,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15
+        )VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.headerId},
+            #{item.businessId},
+            #{item.itemGroupId},
+            #{item.ruleCode},
+            #{item.ruleDescription},
+            #{item.type},
+            #{item.workcellId},
+            #{item.enableFlag},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryCheckRuleHeader" resultMap="BaseResultMap">
+        SELECT
+                htcrh.header_id
+        FROM
+                hme_tag_check_rule_header htcrh
+        WHERE
+                htcrh.tenant_id =#{tenantId}
+                AND htcrh.type=#{dto.type}
+                AND htcrh.business_id=#{dto.businessId}
+        <choose>
+            <when test="dto.workcellId !=null">
+                AND htcrh.workcell_id=#{dto.workcellId}
+            </when>
+            <otherwise>
+                AND (htcrh.workcell_id is null OR htcrh.workcell_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.itemGroupId !=null">
+                AND htcrh.item_group_id=#{dto.itemGroupId}
+            </when>
+            <otherwise>
+                AND (htcrh.item_group_id is null or htcrh.item_group_id ='')
+            </otherwise>
+        </choose>
+    </select>
+
+    <update id="myBatchUpdate">
+        UPDATE hme_tag_check_rule_header
+        <set>
+            LAST_UPDATE_DATE =CURRENT_TIMESTAMP,
+            LAST_UPDATED_BY =#{dto.lastUpdatedBy} ,
+            OBJECT_VERSION_NUMBER = OBJECT_VERSION_NUMBER + 1,
+            tenant_id =#{tenantId},
+            business_id =#{dto.businessId},
+            item_group_id =#{dto.itemGroupId},
+            rule_code =#{dto.ruleCode},
+            rule_description =#{dto.ruleDescription},
+            workcell_id=#{dto.workcellId},
+            `type`=#{dto.type},
+            enable_flag =#{dto.enableFlag},
+            cid =#{dto.cid}
+        </set>
+        WHERE
+            header_id =#{dto.headerId}
+
+    </update>
+
+</mapper>

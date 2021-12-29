@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeOpenEndShiftMapper">
+
+    <select id="getUnitByLineWorkcellId" resultType="java.lang.String">
+        select our.unit_id
+        from hme_organization_unit_rel our
+        where our.organization_id = #{organizationId}
+        and our.organization_type = 'WORKCELL'
+    </select>
+
+    <select id="actualAttendanceQuery" resultType="java.lang.Long">
+        select count(DISTINCT(hsior.EMPLOYEE_ID))
+        from hme_sign_in_out_record hsior
+        where hsior.TENANT_ID = #{tenantId}
+        and SUBSTR(hsior.DATE FROM 1 FOR 10) = #{shiftDate}
+        and hsior.SHIFT_CODE = #{shiftCode}
+        and hsior.UNIT_ID = #{unitId}
+    </select>
+
+    <select id="shiftDataQuery" resultType="com.ruike.hme.domain.vo.HmeShiftVO4">
+        select hejs.workcell_id, mmw.WORKCELL_NAME, hejs.site_out_by AS EMPLOYEE_ID
+        from hme_eo_job_sn hejs
+        left join mt_mod_workcell mmw
+        on mmw.workcell_id = hejs.workcell_id
+        and mmw.tenant_id = #{tenantId}
+        where hejs.tenant_id = #{tenantId}
+        and hejs.workcell_id in
+        <foreach collection="workcellIdList" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+        and hejs.shift_id = #{wkcShiftId}
+        and hejs.site_out_date >= DATE_FORMAT(#{siteOutDateFrom},'%Y-%m-%d %H:%i:%S')
+        and hejs.site_out_date &lt;= DATE_FORMAT(#{siteOutDateTo},'%Y-%m-%d %H:%i:%S')
+        and hejs.rework_flag != 'Y'
+    </select>
+
+    <select id="mountLaidDateQuery" resultType="java.util.Date">
+        select hsior.OPERATION_DATE
+        from hme_sign_in_out_record hsior
+        where hsior.TENANT_ID = #{tenantId}
+        and hsior.USER_ID = #{userId}
+        and hsior.UNIT_ID = #{unitId}
+        and hsior.WORKCELL_ID = #{workcellId}
+        and hsior.SHIFT_CODE = #{shiftCode}
+        and SUBSTR(hsior.DATE FROM 1 FOR 10) = #{date}
+        and hsior.OPERATION = #{operation}
+    </select>
+
+    <select id="getMaterialLotId" resultType="java.lang.String">
+        select hejs.material_lot_id
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.site_out_date >= DATE_FORMAT(#{siteOutDateFrom},'%Y-%m-%d %H:%i:%S')
+        and hejs.site_out_date &lt;= DATE_FORMAT(#{siteOutDateTo},'%Y-%m-%d %H:%i:%S')
+        and hejs.workcell_id = #{workcellId}
+        and hejs.rework_flag != 'Y'
+        <if test="siteOutBy != null and siteOutBy != ''">
+            and hejs.site_out_by = #{siteOutBy}
+        </if>
+    </select>
+
+    <select id="getMaterialLotId2" resultType="java.lang.String">
+        select mnr.MATERIAL_LOT_ID
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+        and mnr.DATE_TIME >= DATE_FORMAT(#{dateTimeFrom},'%Y-%m-%d %H:%i:%S')
+        and mnr.DATE_TIME &lt;= DATE_FORMAT(#{dateTimeTo},'%Y-%m-%d %H:%i:%S')
+        and mnr.USER_ID = #{userId}
+        and (mnr.PARENT_NC_RECORD_ID is null or mnr.PARENT_NC_RECORD_ID = '')
+    </select>
+
+    <select id="getMaterialLotId3" resultType="java.lang.String">
+        select hejs.material_lot_id
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.workcell_id = #{workcellId}
+        and hejs.site_out_date >= DATE_FORMAT(#{siteOutDateFrom},'%Y-%m-%d %H:%i:%S')
+        and hejs.site_out_date &lt;= DATE_FORMAT(#{siteOutDateTo},'%Y-%m-%d %H:%i:%S')
+        and hejs.rework_flag = 'Y'
+        and hejs.site_out_by = #{siteOutBy}
+    </select>
+
+    <select id="eoJobSnDataQuery" resultType="com.ruike.hme.domain.vo.HmeShiftVO5">
+        select hejs.sn_material_id AS material_id, mm.MATERIAL_NAME, hejs.work_order_id, mwo.WORK_ORDER_NUM AS work_order_number
+        from hme_eo_job_sn hejs
+        left join mt_material mm
+        on mm.MATERIAL_ID = hejs.sn_material_id
+        and mm.TENANT_ID = #{tenantId}
+        left join mt_work_order mwo
+        on mwo.WORK_ORDER_ID = hejs.work_order_id
+        and mwo.TENANT_ID = #{tenantId}
+        where hejs.tenant_id = #{tenantId}
+        and hejs.site_out_date >= DATE_FORMAT(#{siteInDateFrom},'%Y-%m-%d %H:%i:%S')
+        and hejs.site_out_date &lt;= DATE_FORMAT(#{siteInDateTo},'%Y-%m-%d %H:%i:%S')
+        and hejs.workcell_id in
+        <foreach collection="workcellIdList" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+        group by hejs.sn_material_id, mm.MATERIAL_NAME, hejs.work_order_id, mwo.WORK_ORDER_NUM
+    </select>
+
+    <select id="getMaterialLotId4" resultType="java.lang.String">
+        select hejs.material_lot_id
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.sn_material_id = #{materialId}
+        and hejs.work_order_id = #{workOrderId}
+        and hejs.workcell_id in
+        <foreach collection="workcellIds" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+        and hejs.site_in_date >= DATE_FORMAT(#{siteInDateFrom},'%Y-%m-%d %H:%i:%S')
+        and hejs.site_in_date &lt;= DATE_FORMAT(#{siteInDateTo},'%Y-%m-%d %H:%i:%S')
+    </select>
+
+    <select id="getMaterialLotId5" resultType="java.lang.String">
+        select mnr.MATERIAL_LOT_ID
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.ROOT_CAUSE_WORKCELL_ID in
+        <foreach collection="workcellIds" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+        and mnr.DATE_TIME >= DATE_FORMAT(#{dateTimeFrom},'%Y-%m-%d %H:%i:%S')
+        and mnr.DATE_TIME &lt;= DATE_FORMAT(#{dateTimeTo},'%Y-%m-%d %H:%i:%S')
+        and mnr.EO_ID in
+        <foreach collection="eoIds" open="(" close=")" separator="," item="eoId" index="index">
+            #{eoId}
+        </foreach>
+    </select>
+
+    <select id="getMaterialLotId6" resultType="java.lang.String">
+        select hejs.material_lot_id
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.rework_flag != 'Y'
+        and hejs.workcell_id in
+        <foreach collection="workcellIds" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+        and hejs.site_in_date >= DATE_FORMAT(#{siteInDateFrom},'%Y-%m-%d %H:%i:%S')
+        and hejs.site_in_date &lt;= DATE_FORMAT(#{siteInDateTo},'%Y-%m-%d %H:%i:%S')
+    </select>
+
+    <select id="getExceptionIdList" resultType="java.lang.String">
+        select he.exception_id
+        from hme_exc_wkc_record hewr
+        left join hme_exception he
+        on he.exception_id = hewr.exception_id
+        and he.tenant_id = #{tenantId}
+        and he.exception_type = 'MAN'
+        where hewr.tenant_id = #{tenantId}
+        and he.exception_id is not null
+        and SUBSTR(hewr.creation_date FROM 1 FOR 10) = #{date}
+        and hewr.workcell_id in
+        <foreach collection="workcellIds" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+    </select>
+
+    <select id="getExceptionIdList2" resultType="java.lang.String">
+        select he.exception_id
+        from hme_exc_wkc_record hewr
+        left join hme_exception he
+        on he.tenant_id = #{tenantId}
+        and he.exception_id = hewr.exception_id
+        and exception_type = 'METHOD'
+        where hewr.tenant_id = #{tenantId}
+        and hewr.creation_date >= DATE_FORMAT(#{dateFrom},'%Y-%m-%d %H:%i:%S')
+        and hewr.creation_date &lt;= DATE_FORMAT(#{dateTo},'%Y-%m-%d %H:%i:%S')
+        and hewr.workcell_id in
+        <foreach collection="workcellIds" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+        and he.exception_id is not null
+    </select>
+
+    <select id="equipmenteExceptionQuery" resultType="com.ruike.hme.domain.vo.HmeShiftVO10">
+        select hewr.equipment_id, he.exception_id
+        from hme_exc_wkc_record hewr
+        left join hme_exception he
+        on he.tenant_id = #{tenantId}
+        and hewr.exception_id = he.exception_id
+        where hewr.tenant_id = #{tenantId}
+        and hewr.creation_date >= DATE_FORMAT(#{dateFrom},'%Y-%m-%d %H:%i:%S')
+        and hewr.creation_date &lt;= DATE_FORMAT(#{dateTo},'%Y-%m-%d %H:%i:%S')
+        and hewr.equipment_id is not null
+        and hewr.workcell_id in
+        <foreach collection="workcellIds" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+        and he.exception_type = 'EQUIPMENT'
+    </select>
+
+    <select id="otherExceptionQuery" resultType="com.ruike.hme.domain.vo.HmeShiftVO11">
+        select hewr.exception_id, he.exception_name, he.exception_type, hewr.creation_date, hewr.respond_time, hewr.close_time
+        from hme_exc_wkc_record hewr
+        left join hme_exception he
+        on he.tenant_id = #{tenantId}
+        and hewr.exception_id = he.exception_id
+        where hewr.tenant_id = #{tenantId}
+        and hewr.exception_status != 'CLOSE'
+        and hewr.workcell_id in
+        <foreach collection="workcellIds" open="(" close=")" separator="," item="workcellId" index="index">
+            #{workcellId}
+        </foreach>
+        and hewr.creation_date >= DATE_FORMAT(#{dateFrom},'%Y-%m-%d %H:%i:%S')
+        and hewr.creation_date &lt;= DATE_FORMAT(#{dateTo},'%Y-%m-%d %H:%i:%S')
+    </select>
+
+    <select id="getShiftComplete" resultType="java.math.BigDecimal">
+        SELECT
+         IFNULL(SUM(t.qty), 0) as qty
+        FROM
+         hme_wkc_complete_output_record t
+        WHERE t.tenant_id = #{tenantId}
+         AND t.WORK_ORDER_ID = #{workOrderId}
+         AND t.wkc_shift_id = #{wkcShiftId}
+         AND t.workcell_id = #{workcellId}
+    </select>
+
+    <select id="getShiftProduction" resultType="java.lang.String">
+        SELECT
+         SUM(dr.DISPATCH_QTY) as qty
+        FROM
+         hme_wo_dispatch_recode dr
+        WHERE dr.TENANT_ID = #{tenantId}
+         AND dr.WORK_ORDER_ID = #{workOrderId}
+         AND dr.WORKCELL_ID = #{workcellId}
+         AND dr.CALENDAR_SHIFT_ID = #{calendarShiftId}
+    </select>
+</mapper>

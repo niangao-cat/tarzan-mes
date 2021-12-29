@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeNcCodeRouterRelMapper">
+    <select id="ncCodeRouterRelQuery" resultType="com.ruike.hme.domain.vo.HmeNcCodeRouterRelVO">
+        SELECT
+        hncrr.NC_CODE_ROUTER_REL_ID,
+        hncrr.NC_GROUP_ID,
+        mng.NC_GROUP_CODE,
+        mng.DESCRIPTION AS NC_GROUP_DESCRIPTION,
+        hncrr.NC_CODE_ID,
+        mnc.NC_CODE,
+        mnc.DESCRIPTION AS NC_CODE_DESCRIPTION,
+        hncrr.PROD_LINE_ID,
+        mmpl.PROD_LINE_CODE,
+        mmpl.PROD_LINE_NAME AS PROD_LINE_DESCRIPTION,
+        hncrr.DEVICE_TYPE,
+        hncrr.CHIP_TYPE,
+        hncrr.ROUTER_ID,
+        mr.ROUTER_NAME,
+        hncrr.ENABLE_FLAG,
+        hncrr.ATTRIBUTE1 OPERATION_ID,
+        mo.OPERATION_NAME,
+        mo.DESCRIPTION OPERATION_DESCRIPTION,
+        mr.DESCRIPTION ROUTER_DESC,
+        mr.REVISION ROUTER_VERSION
+        FROM
+        hme_nc_code_router_rel hncrr
+        LEFT JOIN mt_operation mo ON mo.OPERATION_ID = hncrr.ATTRIBUTE1,
+        mt_nc_group mng,
+        mt_nc_code mnc,
+        mt_mod_production_line mmpl,
+        mt_router mr
+        WHERE
+        mr.ROUTER_ID = hncrr.ROUTER_ID
+        AND mmpl.PROD_LINE_ID = hncrr.PROD_LINE_ID
+        AND mnc.NC_CODE_ID = hncrr.NC_CODE_ID
+        AND mng.NC_GROUP_ID = hncrr.NC_GROUP_ID
+        AND hncrr.TENANT_ID = #{tenantId}
+        <if test="dto.ncGroupId !=null and dto.ncGroupId !=''">
+            AND hncrr.NC_GROUP_ID = #{dto.ncGroupId}
+        </if>
+        <if test="dto.ncCodeId !=null and dto.ncCodeId !=''">
+            AND hncrr.NC_CODE_ID = #{dto.ncCodeId}
+        </if>
+        <if test="dto.prodLineId !=null and dto.prodLineId !=''">
+            AND hncrr.PROD_LINE_ID = #{dto.prodLineId}
+        </if>
+        <if test="dto.routerId !=null and dto.routerId !=''">
+            AND hncrr.ROUTER_ID = #{dto.routerId}
+        </if>
+        <if test="dto.deviceType !=null and dto.deviceType !=''">
+            <bind name="deviceTypeLike" value="'%'+dto.deviceType+'%'"/>
+            AND hncrr.DEVICE_TYPE LIKE #{deviceTypeLike}
+        </if>
+        <if test="dto.chipType !=null and dto.chipType !=''">
+            <bind name="chipTypeLike" value="'%'+dto.chipType+'%'"/>
+            AND hncrr.CHIP_TYPE LIKE #{chipTypeLike}
+        </if>
+        <if test="dto.enableFlag !=null and dto.enableFlag !=''">
+            AND hncrr.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.operationIdList != null and dto.operationIdList.size() > 0">
+            AND hncrr.ATTRIBUTE1 IN
+            <foreach collection="dto.operationIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY
+        hncrr.creation_date,
+        hncrr.NC_GROUP_ID,
+        hncrr.NC_CODE_ID,
+        hncrr.PROD_LINE_ID DESC
+    </select>
+</mapper>

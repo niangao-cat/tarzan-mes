@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobSnCommonMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+	<select id="queryInterceptNumList" resultType="com.ruike.hme.domain.vo.HmeEoJobSnCommonVO">
+		SELECT
+			hit.intercept_id,
+			hit.intercept_num,
+			hit.dimension,
+			hit.remark
+		FROM
+			hme_intercept_information hit
+		WHERE
+			hit.tenant_id = #{tenantId}
+		AND hit.`status` IN ( 'INTERCEPT', 'PART_INTERCEPT' )
+		AND NOT EXISTS (
+			SELECT
+				1
+			FROM
+				hme_intercept_release hir
+			WHERE
+				hir.TENANT_ID = #{tenantId}
+				AND hir.intercept_id = hit.intercept_id
+				AND hir.material_lot_id IN
+				<foreach collection="materialLotIdList" item="materialLotId" index="index" open="(" close=")" separator=",">
+					#{materialLotId}
+				</foreach>
+			)
+		AND hit.intercept_id IN (
+			SELECT
+				hiw.intercept_id
+			FROM
+				hme_intercept_workcell hiw
+			WHERE hiw.TENANT_ID = #{tenantId}
+			AND hiw.workcell_id = #{processId}
+			AND hiw.`status` = 'INTERCEPT'
+		)
+	</select>
+
+	<select id="queryInterceptNumByLabCode" resultType="java.lang.String">
+		SELECT
+			mio.intercept_id
+		FROM
+			hme_intercept_object mio
+		WHERE
+			mio.tenant_id = #{tenantId}
+		AND mio.intercept_id IN
+		<foreach collection="interceptIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND mio.intercept_object IN (
+			SELECT
+				llc.lab_code
+			FROM
+				hme_material_lot_lab_code llc
+			WHERE
+				llc.tenant_id = #{tenantId}
+			AND llc.material_lot_id IN
+			<foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+			AND llc.enable_flag = 'Y'
+		)
+		AND mio.`status` = 'INTERCEPT'
+	</select>
+
+	<select id="queryInterceptNumBySn" resultType="java.lang.String">
+		SELECT
+			mio.intercept_id
+		FROM
+			hme_intercept_object mio
+		WHERE
+			mio.tenant_id = #{tenantId}
+		AND mio.intercept_id IN
+		<foreach collection="interceptIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND mio.intercept_object IN
+		<foreach collection="materialLotCodeList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND mio.`status` = 'INTERCEPT'
+	</select>
+
+	<select id="queryInterceptNumByWo" resultType="java.lang.String">
+		SELECT
+			mio.intercept_id
+		FROM
+			hme_intercept_object mio
+		WHERE
+			mio.tenant_id = #{tenantId}
+		AND mio.intercept_id IN
+		<foreach collection="interceptIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND mio.intercept_object IN (
+			SELECT
+				wo.WORK_ORDER_NUM
+			FROM
+			mt_eo me,
+			mt_work_order wo
+			WHERE
+			me.tenant_id = #{tenantId}
+			AND me.IDENTIFICATION IN
+			<foreach collection="materialLotCodeList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+			AND wo.WORK_ORDER_ID = 	me.work_order_id
+		)
+		AND mio.`status` = 'INTERCEPT'
+	</select>
+
+	<select id="queryInterceptNumByLot" resultType="java.lang.String">
+		SELECT
+			mio.intercept_id
+		FROM
+			hme_intercept_object mio
+		WHERE
+			mio.tenant_id = #{tenantId}
+		AND mio.intercept_id IN
+		<foreach collection="interceptIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND (mio.intercept_object, mio.material_id) IN
+		<foreach collection="feedMaterialLotList" item="item" index="index" open="(" close=")" separator=",">
+			(#{item.lot}, #{item.materialId})
+		</foreach>
+		AND mio.`status` = 'INTERCEPT'
+	</select>
+
+	<select id="queryInterceptNumBySupplierLot" resultType="java.lang.String">
+		SELECT
+			mio.intercept_id
+		FROM
+			hme_intercept_object mio
+		WHERE
+			mio.tenant_id = #{tenantId}
+		AND mio.intercept_id IN
+		<foreach collection="interceptIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND mio.intercept_object IN
+		<foreach collection="supplierLotList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND mio.`status` = 'INTERCEPT'
+	</select>
+
+	<select id="querySnFeedMaterialLotCodeList" resultType="com.ruike.hme.domain.vo.HmeEoJobSnCommonVO2">
+		SELECT
+			ejm.MATERIAL_LOT_ID,
+			mml.MATERIAL_LOT_CODE,
+			mml.LOT,
+			mml.MATERIAL_ID,
+			attr.ATTR_VALUE SUPPLIER_LOT
+		FROM
+			hme_eo_job_material ejm,
+			mt_material_lot mml
+			LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'SUPPLIER_LOT'
+		WHERE ejm.tenant_id = #{tenantId}
+		AND ejm.eo_id IN
+		<foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND ejm.is_issued = 1
+		AND mml.MATERIAL_LOT_ID = ejm.material_lot_id
+	</select>
+
+	<select id="queryJobIdListByEoIdList" resultType="java.lang.String">
+		SELECT
+			ejs.job_id
+		FROM
+			hme_eo_job_sn ejs
+		WHERE ejs.tenant_id = #{tenantId}
+		AND ejs.eo_id IN
+		<foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="queryLotAndTimeFeedMaterialLotCodeList" resultType="com.ruike.hme.domain.vo.HmeEoJobSnCommonVO2">
+		SELECT
+			slm.material_lot_id,
+			mml.MATERIAL_LOT_CODE,
+			mml.LOT,
+			mml.MATERIAL_ID,
+			attr.ATTR_VALUE SUPPLIER_LOT
+		FROM
+			hme_eo_job_sn_lot_material slm,
+			mt_material_lot mml
+			LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'SUPPLIER_LOT'
+		WHERE slm.tenant_id = #{tenantId}
+		AND slm.job_id IN
+		<foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND slm.is_released = 1
+		AND slm.release_qty > 0
+		AND mml.MATERIAL_LOT_ID = slm.material_lot_id
+	</select>
+
+	<select id="queryProcessValidateFlag" resultType="java.lang.String">
+		SELECT
+			mwa.ATTR_VALUE
+		FROM
+			mt_mod_organization_rel mor,
+			mt_mod_workcell mmw,
+			mt_mod_workcell_attr mwa
+		WHERE mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor.ORGANIZATION_ID = #{workcellId}
+		AND mor.TENANT_ID = #{tenantId}
+		AND mmw.WORKCELL_ID = mor.PARENT_ORGANIZATION_ID
+		AND mmw.WORKCELL_TYPE = 'PROCESS'
+		AND mwa.WORKCELL_ID = mmw.WORKCELL_ID
+		AND mwa.ATTR_NAME = 'REWORK_TAG_FLAG'
+	</select>
+
+	<select id="isBindMoreWorkingEo" resultType="java.lang.String">
+ 		select
+			eo.EO_ID
+        from
+        mt_material_lot mml
+        left join mt_eo_attr ea on ea.tenant_id = mml.tenant_id and ea.attr_name = 'REWORK_MATERIAL_LOT' and ea.attr_value = mml.material_lot_code
+        left join mt_eo eo on ea.eo_id = eo.eo_id
+        where
+         mml.tenant_id = #{tenantId}
+        and mml.material_lot_code =  #{materialLotCode}
+        and mml.enable_flag = 'Y'
+        and eo.`STATUS` = 'WORKING'
+	</select>
+</mapper>

@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfQualityAnalyzeLineIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfQualityAnalyzeLineIface">
+        <result column="line_interface_id" property="lineInterfaceId" jdbcType="VARCHAR"/>
+        <result column="interface_id" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="VARCHAR"/>
+        <result column="material_lot_code" property="materialLotCode" jdbcType="VARCHAR"/>
+        <result column="quantity" property="quantity" jdbcType="DECIMAL"/>
+        <result column="material_code" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="test1" property="test1" jdbcType="VARCHAR"/>
+        <result column="test2" property="test2" jdbcType="VARCHAR"/>
+        <result column="test3" property="test3" jdbcType="VARCHAR"/>
+        <result column="test4" property="test4" jdbcType="VARCHAR"/>
+        <result column="test5" property="test5" jdbcType="VARCHAR"/>
+        <result column="test6" property="test6" jdbcType="VARCHAR"/>
+        <result column="test7" property="test7" jdbcType="VARCHAR"/>
+        <result column="test8" property="test8" jdbcType="VARCHAR"/>
+        <result column="test9" property="test9" jdbcType="VARCHAR"/>
+        <result column="test10" property="test10" jdbcType="VARCHAR"/>
+        <result column="test11" property="test11" jdbcType="VARCHAR"/>
+        <result column="test12" property="test12" jdbcType="VARCHAR"/>
+        <result column="test13" property="test13" jdbcType="VARCHAR"/>
+        <result column="test14" property="test14" jdbcType="VARCHAR"/>
+        <result column="test15" property="test15" jdbcType="VARCHAR"/>
+        <result column="test16" property="test16" jdbcType="VARCHAR"/>
+        <result column="test17" property="test17" jdbcType="VARCHAR"/>
+        <result column="test18" property="test18" jdbcType="VARCHAR"/>
+        <result column="test19" property="test19" jdbcType="VARCHAR"/>
+        <result column="test20" property="test20" jdbcType="VARCHAR"/>
+        <result column="test21" property="test21" jdbcType="VARCHAR"/>
+        <result column="test22" property="test22" jdbcType="VARCHAR"/>
+        <result column="test23" property="test23" jdbcType="VARCHAR"/>
+        <result column="test24" property="test24" jdbcType="VARCHAR"/>
+        <result column="test25" property="test25" jdbcType="VARCHAR"/>
+        <result column="test26" property="test26" jdbcType="VARCHAR"/>
+        <result column="test27" property="test27" jdbcType="VARCHAR"/>
+        <result column="test28" property="test28" jdbcType="VARCHAR"/>
+        <result column="test29" property="test29" jdbcType="VARCHAR"/>
+        <result column="test30" property="test30" jdbcType="VARCHAR"/>
+        <result column="test31" property="test31" jdbcType="VARCHAR"/>
+        <result column="test32" property="test32" jdbcType="VARCHAR"/>
+        <result column="test33" property="test33" jdbcType="VARCHAR"/>
+        <result column="test34" property="test34" jdbcType="VARCHAR"/>
+        <result column="test35" property="test35" jdbcType="VARCHAR"/>
+        <result column="test36" property="test36" jdbcType="VARCHAR"/>
+        <result column="test37" property="test37" jdbcType="VARCHAR"/>
+        <result column="test38" property="test38" jdbcType="VARCHAR"/>
+        <result column="test39" property="test39" jdbcType="VARCHAR"/>
+        <result column="test40" property="test40" jdbcType="VARCHAR"/>
+        <result column="test41" property="test41" jdbcType="VARCHAR"/>
+        <result column="test42" property="test42" jdbcType="VARCHAR"/>
+        <result column="test43" property="test43" jdbcType="VARCHAR"/>
+        <result column="test44" property="test44" jdbcType="VARCHAR"/>
+        <result column="test45" property="test45" jdbcType="VARCHAR"/>
+        <result column="test46" property="test46" jdbcType="VARCHAR"/>
+        <result column="test47" property="test47" jdbcType="VARCHAR"/>
+        <result column="test48" property="test48" jdbcType="VARCHAR"/>
+        <result column="test49" property="test49" jdbcType="VARCHAR"/>
+        <result column="test50" property="test50" jdbcType="VARCHAR"/>
+        <result column="test51" property="test51" jdbcType="VARCHAR"/>
+        <result column="test52" property="test52" jdbcType="VARCHAR"/>
+        <result column="test53" property="test53" jdbcType="VARCHAR"/>
+        <result column="test54" property="test54" jdbcType="VARCHAR"/>
+        <result column="test55" property="test55" jdbcType="VARCHAR"/>
+        <result column="test56" property="test56" jdbcType="VARCHAR"/>
+        <result column="test57" property="test57" jdbcType="VARCHAR"/>
+        <result column="test58" property="test58" jdbcType="VARCHAR"/>
+        <result column="test59" property="test59" jdbcType="VARCHAR"/>
+        <result column="test60" property="test60" jdbcType="VARCHAR"/>
+        <result column="test61" property="test61" jdbcType="VARCHAR"/>
+        <result column="test62" property="test62" jdbcType="VARCHAR"/>
+        <result column="test63" property="test63" jdbcType="VARCHAR"/>
+        <result column="test64" property="test64" jdbcType="VARCHAR"/>
+        <result column="test65" property="test65" jdbcType="VARCHAR"/>
+        <result column="test66" property="test66" jdbcType="VARCHAR"/>
+        <result column="test67" property="test67" jdbcType="VARCHAR"/>
+        <result column="test68" property="test68" jdbcType="VARCHAR"/>
+        <result column="test69" property="test69" jdbcType="VARCHAR"/>
+        <result column="test70" property="test70" jdbcType="VARCHAR"/>
+        <result column="test71" property="test71" jdbcType="VARCHAR"/>
+        <result column="test72" property="test72" jdbcType="VARCHAR"/>
+        <result column="test73" property="test73" jdbcType="VARCHAR"/>
+        <result column="test74" property="test74" jdbcType="VARCHAR"/>
+        <result column="test75" property="test75" jdbcType="VARCHAR"/>
+        <result column="test76" property="test76" jdbcType="VARCHAR"/>
+        <result column="test77" property="test77" jdbcType="VARCHAR"/>
+        <result column="test78" property="test78" jdbcType="VARCHAR"/>
+        <result column="test79" property="test79" jdbcType="VARCHAR"/>
+        <result column="test80" property="test80" jdbcType="VARCHAR"/>
+        <result column="test81" property="test81" jdbcType="VARCHAR"/>
+        <result column="test82" property="test82" jdbcType="VARCHAR"/>
+        <result column="test83" property="test83" jdbcType="VARCHAR"/>
+        <result column="test84" property="test84" jdbcType="VARCHAR"/>
+        <result column="test85" property="test85" jdbcType="VARCHAR"/>
+        <result column="test86" property="test86" jdbcType="VARCHAR"/>
+        <result column="test87" property="test87" jdbcType="VARCHAR"/>
+        <result column="test88" property="test88" jdbcType="VARCHAR"/>
+        <result column="test89" property="test89" jdbcType="VARCHAR"/>
+        <result column="test90" property="test90" jdbcType="VARCHAR"/>
+        <result column="test91" property="test91" jdbcType="VARCHAR"/>
+        <result column="test92" property="test92" jdbcType="VARCHAR"/>
+        <result column="test93" property="test93" jdbcType="VARCHAR"/>
+        <result column="test94" property="test94" jdbcType="VARCHAR"/>
+        <result column="test95" property="test95" jdbcType="VARCHAR"/>
+        <result column="test96" property="test96" jdbcType="VARCHAR"/>
+        <result column="test97" property="test97" jdbcType="VARCHAR"/>
+        <result column="test98" property="test98" jdbcType="VARCHAR"/>
+        <result column="test99" property="test99" jdbcType="VARCHAR"/>
+        <result column="test100" property="test100" jdbcType="VARCHAR"/>
+        <result column="process_date" property="processDate" jdbcType="DATE"/>
+        <result column="process_message" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="process_status" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE16" property="attribute16" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE17" property="attribute17" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE18" property="attribute18" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE19" property="attribute19" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE20" property="attribute20" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE21" property="attribute21" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE22" property="attribute22" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE23" property="attribute23" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE24" property="attribute24" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE25" property="attribute25" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE26" property="attribute26" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE27" property="attribute27" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE28" property="attribute28" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE29" property="attribute29" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE30" property="attribute30" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE31" property="attribute31" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE32" property="attribute32" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE33" property="attribute33" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE34" property="attribute34" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE35" property="attribute35" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE36" property="attribute36" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE37" property="attribute37" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE38" property="attribute38" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE39" property="attribute39" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE40" property="attribute40" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE41" property="attribute41" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE42" property="attribute42" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE43" property="attribute43" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE44" property="attribute44" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE45" property="attribute45" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE46" property="attribute46" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE47" property="attribute47" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE48" property="attribute48" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE49" property="attribute49" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE50" property="attribute50" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <insert id="batchInsertAnalyzeLineIface">
+        INSERT INTO itf_quality_analyze_line_iface
+        (
+        line_interface_id,
+        interface_id,
+        type,
+        material_lot_code,
+        quantity,
+        material_code,
+        test1,
+        test2,
+        test3,
+        test4,
+        test5,
+        test6,
+        test7,
+        test8,
+        test9,
+        test10,
+        test11,
+        test12,
+        test13,
+        test14,
+        test15,
+        test16,
+        test17,
+        test18,
+        test19,
+        test20,
+        test21,
+        test22,
+        test23,
+        test24,
+        test25,
+        test26,
+        test27,
+        test28,
+        test29,
+        test30,
+        test31,
+        test32,
+        test33,
+        test34,
+        test35,
+        test36,
+        test37,
+        test38,
+        test39,
+        test40,
+        test41,
+        test42,
+        test43,
+        test44,
+        test45,
+        test46,
+        test47,
+        test48,
+        test49,
+        test50,
+        test51,
+        test52,
+        test53,
+        test54,
+        test55,
+        test56,
+        test57,
+        test58,
+        test59,
+        test60,
+        test61,
+        test62,
+        test63,
+        test64,
+        test65,
+        test66,
+        test67,
+        test68,
+        test69,
+        test70,
+        test71,
+        test72,
+        test73,
+        test74,
+        test75,
+        test76,
+        test77,
+        test78,
+        test79,
+        test80,
+        test81,
+        test82,
+        test83,
+        test84,
+        test85,
+        test86,
+        test87,
+        test88,
+        test89,
+        test90,
+        test91,
+        test92,
+        test93,
+        test94,
+        test95,
+        test96,
+        test97,
+        test98,
+        test99,
+        test100,
+        process_date,
+        process_message,
+        process_status,
+        cid,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15,
+        ATTRIBUTE16,
+        ATTRIBUTE17,
+        ATTRIBUTE18,
+        ATTRIBUTE19,
+        ATTRIBUTE20,
+        ATTRIBUTE21,
+        ATTRIBUTE22,
+        ATTRIBUTE23,
+        ATTRIBUTE24,
+        ATTRIBUTE25,
+        ATTRIBUTE26,
+        ATTRIBUTE27,
+        ATTRIBUTE28,
+        ATTRIBUTE29,
+        ATTRIBUTE30,
+        ATTRIBUTE31,
+        ATTRIBUTE32,
+        ATTRIBUTE33,
+        ATTRIBUTE34,
+        ATTRIBUTE35,
+        ATTRIBUTE36,
+        ATTRIBUTE37,
+        ATTRIBUTE38,
+        ATTRIBUTE39,
+        ATTRIBUTE40,
+        ATTRIBUTE41,
+        ATTRIBUTE42,
+        ATTRIBUTE43,
+        ATTRIBUTE44,
+        ATTRIBUTE45,
+        ATTRIBUTE46,
+        ATTRIBUTE47,
+        ATTRIBUTE48,
+        ATTRIBUTE49,
+        ATTRIBUTE50)
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.lineInterfaceId},
+            #{item.interfaceId},
+            #{item.type},
+            #{item.materialLotCode},
+            #{item.quantity},
+            #{item.materialCode},
+            #{item.test1},
+            #{item.test2},
+            #{item.test3},
+            #{item.test4},
+            #{item.test5},
+            #{item.test6},
+            #{item.test7},
+            #{item.test8},
+            #{item.test9},
+            #{item.test10},
+            #{item.test11},
+            #{item.test12},
+            #{item.test13},
+            #{item.test14},
+            #{item.test15},
+            #{item.test16},
+            #{item.test17},
+            #{item.test18},
+            #{item.test19},
+            #{item.test20},
+            #{item.test21},
+            #{item.test22},
+            #{item.test23},
+            #{item.test24},
+            #{item.test25},
+            #{item.test26},
+            #{item.test27},
+            #{item.test28},
+            #{item.test29},
+            #{item.test30},
+            #{item.test31},
+            #{item.test32},
+            #{item.test33},
+            #{item.test34},
+            #{item.test35},
+            #{item.test36},
+            #{item.test37},
+            #{item.test38},
+            #{item.test39},
+            #{item.test40},
+            #{item.test41},
+            #{item.test42},
+            #{item.test43},
+            #{item.test44},
+            #{item.test45},
+            #{item.test46},
+            #{item.test47},
+            #{item.test48},
+            #{item.test49},
+            #{item.test50},
+            #{item.test51},
+            #{item.test52},
+            #{item.test53},
+            #{item.test54},
+            #{item.test55},
+            #{item.test56},
+            #{item.test57},
+            #{item.test58},
+            #{item.test59},
+            #{item.test60},
+            #{item.test61},
+            #{item.test62},
+            #{item.test63},
+            #{item.test64},
+            #{item.test65},
+            #{item.test66},
+            #{item.test67},
+            #{item.test68},
+            #{item.test69},
+            #{item.test70},
+            #{item.test71},
+            #{item.test72},
+            #{item.test73},
+            #{item.test74},
+            #{item.test75},
+            #{item.test76},
+            #{item.test77},
+            #{item.test78},
+            #{item.test79},
+            #{item.test80},
+            #{item.test81},
+            #{item.test82},
+            #{item.test83},
+            #{item.test84},
+            #{item.test85},
+            #{item.test86},
+            #{item.test87},
+            #{item.test88},
+            #{item.test89},
+            #{item.test90},
+            #{item.test91},
+            #{item.test92},
+            #{item.test93},
+            #{item.test94},
+            #{item.test95},
+            #{item.test96},
+            #{item.test97},
+            #{item.test98},
+            #{item.test99},
+            #{item.test100},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.cid},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15},
+            #{item.attribute16},
+            #{item.attribute17},
+            #{item.attribute18},
+            #{item.attribute19},
+            #{item.attribute20},
+            #{item.attribute21},
+            #{item.attribute22},
+            #{item.attribute23},
+            #{item.attribute24},
+            #{item.attribute25},
+            #{item.attribute26},
+            #{item.attribute27},
+            #{item.attribute28},
+            #{item.attribute29},
+            #{item.attribute30},
+            #{item.attribute31},
+            #{item.attribute32},
+            #{item.attribute33},
+            #{item.attribute34},
+            #{item.attribute35},
+            #{item.attribute36},
+            #{item.attribute37},
+            #{item.attribute38},
+            #{item.attribute39},
+            #{item.attribute40},
+            #{item.attribute41},
+            #{item.attribute42},
+            #{item.attribute43},
+            #{item.attribute44},
+            #{item.attribute45},
+            #{item.attribute46},
+            #{item.attribute47},
+            #{item.attribute48},
+            #{item.attribute49},
+            #{item.attribute50}
+            )
+        </foreach>
+    </insert>
+</mapper>

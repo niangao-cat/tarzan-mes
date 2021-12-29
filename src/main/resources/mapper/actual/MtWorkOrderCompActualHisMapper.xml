@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtWorkOrderCompActualHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtWorkOrderCompActualHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_COMP_ACTUAL_HIS_ID" property="workOrderCompActualHisId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_COMPONENT_ACTUAL_ID" property="workOrderComponentActualId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="COMPONENT_TYPE" property="componentType" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_EXCESS_FLAG" property="assembleExcessFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_ROUTER_TYPE" property="assembleRouterType" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_FIRST_TIME" property="actualFirstTime" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_LAST_TIME" property="actualLastTime" jdbcType="TIMESTAMP"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="TRX_ASSEMBLE_QTY" property="trxAssembleQty" jdbcType="DECIMAL"/>
+        <result column="TRX_SCRAPPED_QTY" property="trxScrappedQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseCALResultMap" type="tarzan.actual.domain.vo.MtWoComponentActualVO7">
+        <result column="WORK_ORDER_COMPONENT_ACTUAL_ID" property="workOrderComponentActualId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TYPE_CODE" property="eventTypeCode" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="VARCHAR"/>
+        <result column="TRX_ASSEMBLE_QTY" property="trxAssembleQty" jdbcType="DECIMAL"/>
+        <result column="TRX_SCRAPPED_QTY" property="trxScrappedQty" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="COMPONENT_TYPE" property="componentType" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_EXCESS_FLAG" property="assembleExcessFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_ROUTER_TYPE" property="assembleRouterType" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_FIRST_TIME" property="actualFirstTime" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_LAST_TIME" property="actualLastTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByActualId" resultMap="BaseCALResultMap">
+        SELECT
+        a.WORK_ORDER_COMPONENT_ACTUAL_ID,
+        a.EVENT_ID,
+        e.EVENT_TIME,
+        e.EVENT_BY,
+        a.TRX_ASSEMBLE_QTY,
+        a.TRX_SCRAPPED_QTY,
+        a.WORK_ORDER_ID,
+        a.MATERIAL_ID,
+        a.OPERATION_ID,
+        a.ASSEMBLE_QTY,
+        a.SCRAPPED_QTY,
+        a.COMPONENT_TYPE,
+        a.BOM_COMPONENT_ID,
+        a.BOM_ID,
+        a.ROUTER_STEP_ID,
+        a.ASSEMBLE_EXCESS_FLAG,
+        a.ASSEMBLE_ROUTER_TYPE,
+        a.SUBSTITUTE_FLAG,
+        a.ACTUAL_FIRST_TIME,
+        a.ACTUAL_LAST_TIME
+    FROM
+        mt_work_order_comp_actual_his a join mt_event e on a.EVENT_ID = e.EVENT_ID
+    WHERE
+        a.TENANT_ID = ${tenantId}
+        and e.TENANT_ID = ${tenantId}
+        AND a.WORK_ORDER_COMPONENT_ACTUAL_ID=#{workOrderComponentActualId}
+        order by a.EVENT_ID+0
+    </select>
+
+    <select id="selectByEventIds" resultMap="BaseResultMap">
+        SELECT
+        a.*
+        FROM
+        mt_work_order_comp_actual_his a
+        WHERE
+        a.TENANT_ID = ${tenantId}
+        AND a.EVENT_ID IN
+        <foreach collection="eventIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByEventId" resultMap="BaseResultMap">
+        SELECT
+          a.*
+        FROM
+          mt_work_order_comp_actual_his a
+        WHERE
+          a.TENANT_ID = ${tenantId}
+          AND a.EVENT_ID=#{eventId}
+    </select>
+</mapper>

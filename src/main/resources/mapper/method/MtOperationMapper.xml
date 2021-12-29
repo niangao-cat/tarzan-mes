@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtOperationMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtOperation">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="OPERATION_STATUS" property="operationStatus" jdbcType="VARCHAR"/>
+        <result column="OPERATION_TYPE" property="operationType" jdbcType="VARCHAR"/>
+        <result column="SPECIAL_ROUTER_ID" property="specialRouterId" jdbcType="VARCHAR"/>
+        <result column="TOOL_TYPE" property="toolType" jdbcType="VARCHAR"/>
+        <result column="TOOL_ID" property="toolId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_TYPE" property="workcellType" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_NC_ID" property="defaultNcId" jdbcType="VARCHAR"/>
+        <result column="STANDARD_MAX_LOOP" property="standardMaxLoop" jdbcType="DECIMAL"/>
+        <result column="STANDARD_SPECIAL_INTRODUCTION" property="standardSpecialIntroduction" jdbcType="VARCHAR"/>
+        <result column="STANDARD_REQD_TIME_IN_PROCESS" property="standardReqdTimeInProcess" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtOperationDTO4">
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="OPERATION_STATUS" property="operationStatus" jdbcType="VARCHAR"/>
+        <result column="OPERATION_TYPE" property="operationType" jdbcType="VARCHAR"/>
+        <result column="SPECIAL_ROUTER_ID" property="specialRouterId" jdbcType="VARCHAR"/>
+        <result column="SPECIAL_ROUTER_NAME" property="specialRouterName" jdbcType="VARCHAR"/>
+        <result column="TOOL_TYPE" property="toolType" jdbcType="VARCHAR"/>
+        <result column="TOOL_ID" property="toolId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_TYPE" property="workcellType" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CODE" property="workcellCode" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_NAME" property="workcellName" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_NC_ID" property="defaultNcId" jdbcType="VARCHAR"/>
+        <result column="STANDARD_MAX_LOOP" property="standardMaxLoop" jdbcType="DECIMAL"/>
+        <result column="STANDARD_SPECIAL_INTRODUCTION" property="standardSpecialIntroduction" jdbcType="VARCHAR"/>
+        <result column="STANDARD_REQD_TIME_IN_PROCESS" property="standardReqdTimeInProcess" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="selectOperAvailability" resultType="int">
+        SELECT
+        count(1)
+        FROM
+        mt_operation mob
+        WHERE
+        mob.OPERATION_ID = #{operationId}
+        AND mob.TENANT_ID = ${tenantId}
+        AND mob.OPERATION_STATUS IN ('CAN_RELEASE', 'FREEZE')
+        AND mob.DATE_FROM &lt;= now()
+        AND (mob.DATE_TO is null or mob.DATE_TO &gt; now())
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        b.OPERATION_ID,
+        b.SITE_ID,
+        b.OPERATION_NAME,
+        b.REVISION,
+        b.CURRENT_FLAG,
+        b.DATE_FROM,
+        b.DATE_TO,
+        t.DESCRIPTION,
+        b.OPERATION_STATUS,
+        b.OPERATION_TYPE,
+        b.SPECIAL_ROUTER_ID,
+        b.TOOL_TYPE,
+        b.TOOL_ID,
+        b.WORKCELL_TYPE,
+        b.WORKCELL_ID,
+        b.DEFAULT_NC_ID,
+        b.STANDARD_MAX_LOOP,
+        b.STANDARD_SPECIAL_INTRODUCTION,
+        b.STANDARD_REQD_TIME_IN_PROCESS,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        FROM
+        mt_operation b,
+        mt_operation_tl t
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        AND b.OPERATION_ID = t.OPERATION_ID
+        AND t.LANG = #{locale}
+        AND b.OPERATION_ID IN
+        <foreach collection="operationIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="queryOperationForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        <bind name="temp" value="@io.choerodon.mybatis.helper.AuditHelper@audit()"/>
+        select
+        mo.OPERATION_ID,
+        mo.SITE_ID,
+        mo.OPERATION_NAME,
+        mo.REVISION,
+        mo.CURRENT_FLAG,
+        mo.DATE_FROM,
+        mo.DATE_TO,
+        mo.DESCRIPTION,
+        mo.OPERATION_STATUS,
+        mo.OPERATION_TYPE,
+        mo.SPECIAL_ROUTER_ID,
+        mt.ROUTER_NAME SPECIAL_ROUTER_NAME,
+        mo.TOOL_TYPE,
+        mo.TOOL_ID,
+        mo.WORKCELL_TYPE,
+        mo.WORKCELL_ID,
+        mmw.WORKCELL_CODE,
+        mmwt.DESCRIPTION,
+        mo.DEFAULT_NC_ID,
+        mo.STANDARD_MAX_LOOP,
+        mo.STANDARD_SPECIAL_INTRODUCTION,
+        mo.STANDARD_REQD_TIME_IN_PROCESS,
+        mo.COMPLETE_INCONFORMITY_FLAG,
+        mo.CREATION_DATE
+        from mt_operation mo
+        left join mt_router mt on mo.SPECIAL_ROUTER_ID = mt.ROUTER_ID and mt.TENANT_ID = ${tenantId}
+        left join mt_mod_workcell mmw on mo.WORKCELL_ID = mmw.WORKCELL_ID and mmw.TENANT_ID = ${tenantId}
+        left join mt_mod_workcell_tl mmwt on mmw.WORKCELL_ID = mmwt.WORKCELL_ID and mmwt.LANG = #{locale}
+        where
+        mo.TENANT_ID = ${tenantId}
+        <if test="dto.siteId!=null">
+            and mo.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.siteId==null or dto.siteId==''">
+            and mo.SITE_ID in (select muo.ORGANIZATION_ID
+            from mt_user_organization muo
+            where muo.USER_ID = #{temp.user} and muo.ORGANIZATION_TYPE = 'SITE')
+        </if>
+        <if test="dto.operationId!=null">
+            and mo.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.operationType">
+            and mo.OPERATION_TYPE = #{dto.operationType}
+        </if>
+        <if test="dto.operationName!=null">
+            and mo.OPERATION_NAME like CONCAT('%',#{dto.operationName},'%')
+        </if>
+        <if test="dto.operationDesc!=null">
+            and mo.DESCRIPTION like CONCAT('%',#{dto.operationDesc},'%')
+        </if>
+        <if test="dto.revision!=null">
+            and mo.REVISION like CONCAT('%',#{dto.revision},'%')
+        </if>
+    </select>
+    <select id="selectCondition" resultType="tarzan.method.domain.vo.MtOperationVO1">
+        SELECT tb.*,
+        mr.ROUTER_NAME as specialRouterCode,
+        nc.NC_CODE as defaultNcCode
+        FROM MT_OPERATION tb
+        left join mt_router mr
+        on tb.SPECIAL_ROUTER_ID=mr.ROUTER_ID
+        and mr.TENANT_ID=${tenantId}
+        left join mt_nc_code nc
+        on tb.DEFAULT_NC_ID=nc.NC_CODE_ID
+        and nc.TENANT_ID=${tenantId}
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.operationId != null">
+            AND tb.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.siteId != null">
+            AND tb.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.operationName != null">
+            AND tb.OPERATION_NAME = #{dto.operationName}
+        </if>
+        <if test="dto.revision != null">
+            AND tb.REVISION = #{dto.revision}
+        </if>
+        <if test="dto.currentFlag != null">
+            AND tb.CURRENT_FLAG = #{dto.currentFlag}
+        </if>
+        <if test="dto.dateFrom != null">
+            AND tb.DATE_FROM &gt; DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.dateTo != null">
+            AND tb.DATE_TO &lt; DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.description != null">
+            AND tb.DESCRIPTION like concat('%', concat(#{dto.description}, '%'))
+        </if>
+        <if test="dto.operationStatus != null">
+            AND tb.OPERATION_STATUS = #{dto.operationStatus}
+        </if>
+        <if test="dto.operationType != null">
+            AND tb.OPERATION_TYPE = #{dto.operationType}
+        </if>
+        <if test="dto.specialRouterId != null">
+            AND tb.SPECIAL_ROUTER_ID = #{dto.specialRouterId}
+        </if>
+        <if test="dto.workcellType != null">
+            AND tb.WORKCELL_TYPE = #{dto.workcellType}
+        </if>
+        <if test="dto.workcellId != null">
+            AND tb.WORKCELL_ID = #{dto.workcellId}
+        </if>
+        <if test="dto.defaultNcId != null">
+            AND tb.DEFAULT_NC_ID = #{dto.defaultNcId}
+        </if>
+        <if test="dto.maxLoop != null">
+            AND tb.STANDARD_MAX_LOOP = #{dto.maxLoop}
+        </if>
+        <if test="dto.specialInstruction != null">
+            AND tb.STANDARD_SPECIAL_INTRODUCTION = #{dto.specialInstruction}
+        </if>
+        <if test="dto.requiredTimeInProcess != null">
+            AND tb.STANDARD_REQD_TIME_IN_PROCESS = #{dto.requiredTimeInProcess}
+        </if>
+    </select>
+    <select id="selectByNameCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.OPERATION_ID,
+        b.SITE_ID,
+        b.OPERATION_NAME,
+        b.REVISION,
+        b.CURRENT_FLAG,
+        b.DATE_FROM,
+        b.DATE_TO,
+        t.DESCRIPTION,
+        b.OPERATION_STATUS,
+        b.OPERATION_TYPE,
+        b.SPECIAL_ROUTER_ID,
+        b.TOOL_TYPE,
+        b.TOOL_ID,
+        b.WORKCELL_TYPE,
+        b.WORKCELL_ID,
+        b.DEFAULT_NC_ID,
+        b.STANDARD_MAX_LOOP,
+        b.STANDARD_SPECIAL_INTRODUCTION,
+        b.STANDARD_REQD_TIME_IN_PROCESS,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        FROM
+        mt_operation b,
+        mt_operation_tl t
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        AND b.OPERATION_ID = t.OPERATION_ID
+        AND t.LANG = #{locale}
+        AND b.SITE_ID=#{siteId}
+        AND b.CURRENT_FLAG='Y'
+        AND b.OPERATION_NAME IN
+        <foreach collection="operationNames" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="propertyLimitOperationQuery" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT tb.TENANT_ID,
+        tb.OPERATION_ID,
+        tb.SITE_ID,
+        tb.OPERATION_NAME,
+        tb.REVISION,
+        tb.CURRENT_FLAG,
+        tb.DATE_FROM,
+        tb.DATE_TO,
+        tl.DESCRIPTION,
+        tb.OPERATION_STATUS,
+        tb.OPERATION_TYPE,
+        tb.SPECIAL_ROUTER_ID,
+        tb.TOOL_TYPE,
+        tb.TOOL_ID,
+        tb.WORKCELL_TYPE,
+        tb.WORKCELL_ID,
+        tb.DEFAULT_NC_ID,
+        tb.STANDARD_MAX_LOOP,
+        tb.STANDARD_SPECIAL_INTRODUCTION,
+        tb.STANDARD_REQD_TIME_IN_PROCESS
+        FROM MT_OPERATION tb,mt_operation_tl tl
+        WHERE tb.TENANT_ID = ${tenantId}
+        and tb.OPERATION_ID=tl.OPERATION_ID
+        and tl.LANG=#{locale}
+        <if test="vo.siteId != null">
+            AND tb.SITE_ID = #{vo.siteId}
+        </if>
+        <if test="vo.operationName != null">
+            AND tb.OPERATION_NAME = #{vo.operationName}
+        </if>
+        <if test="vo.revision != null">
+            AND tb.REVISION = #{vo.revision}
+        </if>
+        <if test="vo.currentFlag != null">
+            AND tb.CURRENT_FLAG = #{vo.currentFlag}
+        </if>
+        <if test="vo.dateFrom != null">
+            AND tb.DATE_FROM &gt;= DATE_FORMAT(#{vo.dateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.dateTo != null">
+            AND tb.DATE_TO &lt;= DATE_FORMAT(#{vo.dateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.description != null">
+            AND tl.DESCRIPTION = #{vo.description}
+        </if>
+        <if test="vo.operationStatus != null">
+            AND tb.OPERATION_STATUS = #{vo.operationStatus}
+        </if>
+        <if test="vo.operationType != null">
+            AND tb.OPERATION_TYPE = #{vo.operationType}
+        </if>
+        <if test="vo.specialRouterId != null">
+            AND tb.SPECIAL_ROUTER_ID = #{vo.specialRouterId}
+        </if>
+        <if test="vo.toolType != null">
+            AND tb.TOOL_TYPE = #{vo.toolType}
+        </if>
+        <if test="vo.toolId != null">
+            AND tb.TOOL_ID = #{vo.toolId}
+        </if>
+        <if test="vo.workcellType != null">
+            AND tb.WORKCELL_TYPE = #{vo.workcellType}
+        </if>
+        <if test="vo.workcellId != null">
+            AND tb.WORKCELL_ID = #{vo.workcellId}
+        </if>
+        <if test="vo.defaultNcId != null">
+            AND tb.DEFAULT_NC_ID = #{vo.defaultNcId}
+        </if>
+        <if test="vo.standardSpecialIntroduction != null">
+            AND tb.STANDARD_SPECIAL_INTRODUCTION like concat('%', concat(#{vo.standardSpecialIntroduction}, '%'))
+        </if>
+    </select>
+
+    <select id="propertyLimitOperationBatchQuery" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT tb.TENANT_ID,
+        tb.OPERATION_ID,
+        tb.SITE_ID,
+        tb.OPERATION_NAME,
+        tb.REVISION,
+        tb.CURRENT_FLAG,
+        tb.DATE_FROM,
+        tb.DATE_TO,
+        tl.DESCRIPTION,
+        tb.OPERATION_STATUS,
+        tb.OPERATION_TYPE,
+        tb.SPECIAL_ROUTER_ID,
+        tb.TOOL_TYPE,
+        tb.TOOL_ID,
+        tb.WORKCELL_TYPE,
+        tb.WORKCELL_ID,
+        tb.DEFAULT_NC_ID,
+        tb.STANDARD_MAX_LOOP,
+        tb.STANDARD_SPECIAL_INTRODUCTION,
+        tb.STANDARD_REQD_TIME_IN_PROCESS
+        FROM MT_OPERATION tb,mt_operation_tl tl
+        WHERE tb.TENANT_ID = ${tenantId}
+        and tb.OPERATION_ID=tl.OPERATION_ID
+        and tl.LANG=#{locale}
+        <if test="vo.siteIdList != null">
+            AND tb.SITE_ID IN
+            <foreach collection="vo.siteIdList" index="index" item="siteId" open="(" close=")" separator=",">
+                #{siteId}
+            </foreach>
+        </if>
+        <if test="vo.operationNameList != null">
+            AND tb.OPERATION_NAME IN
+            <foreach collection="vo.operationNameList" index="index" item="operationName" open="(" close=")"
+                     separator=",">
+                #{operationName}
+            </foreach>
+        </if>
+        <if test="vo.revisionList != null">
+            AND tb.REVISION IN
+            <foreach collection="vo.revisionList" index="index" item="revision" open="(" close=")" separator=",">
+                #{revision}
+            </foreach>
+        </if>
+        <if test="vo.currentFlag != null">
+            AND tb.CURRENT_FLAG = #{vo.currentFlag}
+        </if>
+        <if test="vo.dateFrom != null">
+            AND tb.DATE_FROM &gt;= DATE_FORMAT(#{vo.dateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.dateTo != null">
+            AND tb.DATE_TO &lt;= DATE_FORMAT(#{vo.dateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.descriptionList != null">
+            AND tl.DESCRIPTION IN
+            <foreach collection="vo.descriptionList" index="index" item="description" open="(" close=")"
+                     separator=",">
+                #{description}
+            </foreach>
+        </if>
+        <if test="vo.operationStatusList != null">
+            AND tb.OPERATION_STATUS IN
+            <foreach collection="vo.operationStatusList" index="index" item="operationStatus" open="(" close=")"
+                     separator=",">
+                #{operationStatus}
+            </foreach>
+        </if>
+        <if test="vo.operationTypeList != null">
+            AND tb.OPERATION_TYPE IN
+            <foreach collection="vo.operationTypeList" index="index" item="operationType" open="(" close=")"
+                     separator=",">
+                #{operationType}
+            </foreach>
+        </if>
+        <if test="vo.specialRouterIdList != null">
+            AND tb.SPECIAL_ROUTER_ID IN
+            <foreach collection="vo.specialRouterIdList" index="index" item="specialRouterId" open="(" close=")"
+                     separator=",">
+                #{specialRouterId}
+            </foreach>
+        </if>
+        <if test="vo.toolTypeList != null">
+            AND tb.TOOL_TYPE IN
+            <foreach collection="vo.toolTypeList" index="index" item="toolType" open="(" close=")" separator=",">
+                #{toolType}
+            </foreach>
+        </if>
+        <if test="vo.toolIdList != null">
+            AND tb.TOOL_ID IN
+            <foreach collection="vo.toolIdList" index="index" item="toolId" open="(" close=")" separator=",">
+                #{toolId}
+            </foreach>
+        </if>
+        <if test="vo.workcellTypeList != null">
+            AND tb.WORKCELL_TYPE IN
+            <foreach collection="vo.workcellTypeList" index="index" item="workcellType" open="(" close=")"
+                     separator=",">
+                #{workcellType}
+            </foreach>
+        </if>
+        <if test="vo.workcellIdList != null">
+            AND tb.WORKCELL_ID IN
+            <foreach collection="vo.workcellIdList" index="index" item="workcellId" open="(" close=")" separator=",">
+                #{workcellId}
+            </foreach>
+        </if>
+        <if test="vo.defaultNcIdList != null">
+            AND tb.DEFAULT_NC_ID IN
+            <foreach collection="vo.defaultNcIdList" index="index" item="defaultNcId" open="(" close=")" separator=",">
+                #{defaultNcId}
+            </foreach>
+        </if>
+        <if test="vo.standardSpecialIntroduction != null">
+            AND tb.STANDARD_SPECIAL_INTRODUCTION like concat('%', concat(#{vo.standardSpecialIntroduction}, '%'))
+        </if>
+    </select>
+    <select id="selectByOperationName" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.OPERATION_ID,
+        b.SITE_ID,
+        b.OPERATION_NAME,
+        b.REVISION,
+        b.CURRENT_FLAG,
+        b.DATE_FROM,
+        b.DATE_TO,
+        t.DESCRIPTION,
+        b.OPERATION_STATUS,
+        b.OPERATION_TYPE,
+        b.SPECIAL_ROUTER_ID,
+        b.TOOL_TYPE,
+        b.TOOL_ID,
+        b.WORKCELL_TYPE,
+        b.WORKCELL_ID,
+        b.DEFAULT_NC_ID,
+        b.STANDARD_MAX_LOOP,
+        b.STANDARD_SPECIAL_INTRODUCTION,
+        b.STANDARD_REQD_TIME_IN_PROCESS,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        FROM
+        mt_operation b,
+        mt_operation_tl t
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        AND b.OPERATION_ID = t.OPERATION_ID
+        AND t.LANG = #{locale}
+        AND ${operationNames}
+    </select>
+</mapper>

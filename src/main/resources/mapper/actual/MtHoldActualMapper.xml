@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtHoldActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtHoldActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="HOLD_ID" property="holdId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="HOLD_REASON_CODE" property="holdReasonCode" jdbcType="VARCHAR"/>
+        <result column="COMMENTS" property="comments" jdbcType="VARCHAR"/>
+        <result column="EXPIRED_RELEASE_TIME" property="expiredReleaseTime" jdbcType="TIMESTAMP"/>
+        <result column="HOLD_TYPE" property="holdType" jdbcType="VARCHAR"/>
+        <result column="HOLD_BY" property="holdBy" jdbcType="DECIMAL"/>
+        <result column="HOLD_TIME" property="holdTime" jdbcType="TIMESTAMP"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

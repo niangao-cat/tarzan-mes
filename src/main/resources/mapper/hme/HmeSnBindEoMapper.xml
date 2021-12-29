@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeSnBindEoMapper">
+
+
+	<!--工厂简码-->
+    <select id="modSiteAttrValueGet" resultType="com.ruike.hme.domain.vo.HmeSnBindEoVO2">
+        SELECT
+	      sa.ATTR_VALUE AS site_code,
+	      s.SITE_ID
+        FROM
+	      mt_mod_site s
+	    LEFT JOIN mt_mod_site_attr sa ON s.SITE_ID = sa.SITE_ID
+        WHERE
+          s.TENANT_ID = #{tenantId}
+		AND s.SITE_ID  in
+		<foreach collection="siteIdList" separator="," open="(" close=")" item="item" index="index">
+			#{item}
+		</foreach>
+	      AND s.ENABLE_FLAG = "Y"
+	      AND sa.ATTR_NAME = "SHORT_NAME"
+    </select>
+
+	<!--产品简码-->
+    <select id="productionLineAttrValueGet" resultType="com.ruike.hme.domain.vo.HmeSnBindEoVO2">
+        SELECT
+	      la.ATTR_VALUE AS pro_line_code,
+	      pl.PROD_LINE_ID AS pro_line_id
+        FROM
+	      mt_mod_production_line pl
+	    LEFT JOIN mt_work_order wo ON pl.PROD_LINE_ID = wo.PRODUCTION_LINE_ID
+	    LEFT JOIN mt_mod_production_line_attr la ON la.PROD_LINE_ID = pl.PROD_LINE_ID
+        WHERE
+        	pl.TENANT_ID = #{tenantId}
+	    AND  pl.ENABLE_FLAG = "Y"
+	    AND la.ATTR_NAME = "SHORT_NAME"
+		AND pl.PROD_LINE_ID  in
+		<foreach collection="productionLineIdList" separator="," open="(" close=")" item="item" index="index">
+			#{item}
+		</foreach>
+	    AND wo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+
+	<!--产品类型-->
+    <select id="proItemTypeGet" resultType="com.ruike.hme.domain.vo.HmeSnBindEoVO2">
+        SELECT
+	      mb.ITEM_TYPE AS pro_item_type,
+	      ms.SITE_ID
+        FROM
+	      mt_material_site ms
+	    LEFT JOIN mt_work_order wo ON ms.MATERIAL_ID = wo.MATERIAL_ID
+	    LEFT JOIN mt_material_basic mb ON mb.MATERIAL_SITE_ID = ms.MATERIAL_SITE_ID
+	    WHERE
+	    	ms.TENANT_ID = #{tenantId}
+		AND ms.SITE_ID  in
+		<foreach collection="siteIdList" separator="," open="(" close=")" item="item" index="index">
+			#{item}
+		</foreach>
+	    AND wo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+
+	<select id="eoWorkcellIdDescQuery" resultType="java.lang.String">
+        SELECT
+	      mw.WORKCELL_NAME
+        FROM
+	      hme_eo_job_sn ejs
+		LEFT JOIN ( SELECT * FROM mt_mod_organization_rel WHERE organization_type = "WORKCELL" AND PARENT_ORGANIZATION_TYPE = "WORKCELL" ) mor
+		ON mor.ORGANIZATION_ID = ejs.WORKCELL_ID
+	    LEFT JOIN mt_mod_workcell mw ON mw.WORKCELL_ID = mor.PARENT_ORGANIZATION_ID
+	    WHERE ejs.eo_id = #{eoId}
+	    AND ejs.tenant_id = #{tenantId}
+	    ORDER BY ejs.last_update_date DESC
+	    LIMIT 1
+    </select>
+
+	<select id="eoWorkcellIdDescQuery2" resultType="java.lang.String">
+        SELECT
+	      mw.WORKCELL_NAME
+        FROM
+	      hme_eo_job_sn ejs
+		LEFT JOIN ( SELECT * FROM mt_mod_organization_rel WHERE organization_type = "WORKCELL" AND PARENT_ORGANIZATION_TYPE = "WORKCELL" ) mor
+		ON mor.ORGANIZATION_ID = ejs.WORKCELL_ID
+	    LEFT JOIN mt_mod_workcell mw ON mw.WORKCELL_ID = mor.PARENT_ORGANIZATION_ID
+	    WHERE ejs.eo_id = #{eoId}
+	    AND ejs.tenant_id = #{tenantId}
+	    ORDER BY ejs.last_update_date DESC
+	    LIMIT 1
+    </select>
+
+	<select id="queryBomListByEoIds" resultType="tarzan.method.domain.entity.MtBom">
+		SELECT
+		    mb.BOM_ID AS bomId,
+			mb.BOM_NAME AS bomName,
+			mb.REVISION,
+			mb.DESCRIPTION,
+			mb.BOM_TYPE AS bomType,
+			mb.BOM_STATUS AS bomStatus,
+			mb.PRIMARY_QTY AS primaryQty,
+			mb.DATE_FROM AS dateFrom
+		FROM
+			mt_eo_bom eb LEFT JOIN mt_bom mb ON mb.BOM_ID = eb.BOM_ID
+		WHERE
+			eb.TENANT_ID = #{tenantId}
+		AND eb.EO_ID IN
+		<foreach collection="eoIdList" open="(" close=")" separator="," item="ids" index="index">
+			#{ids}
+		</foreach>
+		GROUP BY
+		mb.BOM_ID,
+		mb.BOM_NAME,
+		mb.REVISION,
+		mb.DESCRIPTION,
+		mb.BOM_TYPE,
+		mb.BOM_STATUS,
+		mb.PRIMARY_QTY,
+		mb.DATE_FROM
+	</select>
+
+	<select id="queryOperationIdByName" resultType="tarzan.method.domain.entity.MtOperation">
+		SELECT
+		  OPERATION_ID AS operationId
+		FROM
+		  mt_operation
+		WHERE
+		  tenant_id = #{tenantId}
+		AND OPERATION_NAME = #{operationName}
+	</select>
+
+	<select id="queryQualificationByName" resultType="com.ruike.hme.domain.entity.HmeQualification">
+		SELECT
+		  quality_id AS qualityId
+		FROM
+		  hme_qualification
+		WHERE
+		  tenant_id = #{tenantId}
+		  AND quality_name = #{qualityName}
+	</select>
+
+	<select id="queryDispositionGroupIdByDesc" resultType="tarzan.method.domain.entity.MtDispositionGroup">
+		SELECT
+		  DISPOSITION_GROUP_ID AS dispositionGroupId
+		FROM
+		  mt_disposition_group
+		WHERE
+		  tenant_id = #{tenantId}
+		AND DISPOSITION_GROUP = #{dispositionGroup}
+	</select>
+
+	<select id="queryNcCodeInfo" resultType="tarzan.method.domain.entity.MtNcCode">
+		SELECT
+		  nc_code_Id AS ncCodeId
+		FROM
+		  mt_nc_code
+		WHERE
+		  tenant_id = #{tenantId}
+		AND NC_CODE = #{ncCodeDesc}
+	</select>
+
+	<select id="queryNcGroupInfo" resultType="tarzan.method.domain.entity.MtNcGroup">
+		SELECT
+		  nc_group_id AS ncGroupId
+		FROM
+		  mt_nc_group
+		WHERE
+		  tenant_id = #{tenantId}
+		AND NC_GROUP_CODE = #{ncGroupDesc}
+	</select>
+
+	<insert id="insetMtNcCodeTl">
+		INSERT INTO `mt_nc_code_tl`
+			( `NC_CODE_ID`, `LANG`, `DESCRIPTION` )
+		VALUES
+			( #{ncCodeId}, #{lang}, #{description} );
+	</insert>
+
+	<insert id="insetMtNcGroupTl">
+		INSERT INTO `mt_nc_group_tl`
+			( `NC_GROUP_ID`, `LANG`, `DESCRIPTION` )
+		VALUES
+			( #{ncGroupId}, #{lang}, #{description} );
+	</insert>
+
+	<select id="queryModSiteByCode" resultType="tarzan.modeling.domain.entity.MtModSite">
+		SELECT
+			SITE_ID AS siteId
+		FROM
+			mt_mod_site
+		WHERE TENANT_ID = #{tenantId}
+		AND SITE_CODE = #{siteCode}
+	</select>
+
+	<select id="queryMtUomByUomCode" resultType="tarzan.material.domain.entity.MtUom">
+		SELECT
+		 	*
+		FROM
+			mt_uom
+		WHERE
+			ENABLE_FLAG = "Y"
+		AND TENANT_ID = #{tenantId}
+		AND UOM_CODE = #{uomCode}
+		LIMIT 1
+	</select>
+
+	<select id="queryOneRouterByName" resultType="tarzan.method.domain.entity.MtRouter">
+		SELECT
+		  *
+		FROM
+			mt_router
+		WHERE
+			ROUTER_NAME = #{routerName}
+		AND TENANT_ID = #{tenantId}
+	</select>
+
+	<select id="queryOperationComponentCount" resultType="java.lang.Integer">
+		SELECT
+   			COUNT(1)
+		FROM
+   			mt_work_order wo,
+			mt_router_step rs,
+	 		mt_router_operation ro,
+	 		mt_router_operation_component roc
+		WHERE rs.ROUTER_ID = wo.ROUTER_ID
+		AND ro.ROUTER_STEP_ID = rs.ROUTER_STEP_ID
+		AND roc.ROUTER_OPERATION_ID = ro.ROUTER_OPERATION_ID
+		AND roc.ENABLE_FLAG = 'Y'
+		AND wo.WORK_ORDER_ID = #{workOrderId}
+		AND wo.TENANT_ID = #{tenantId};
+	</select>
+
+	<select id="queryBomComponentCount" resultType="java.lang.Integer">
+		SELECT
+   			COUNT(1)
+		FROM
+   			mt_work_order wo,
+	 		mt_bom mb,
+	 		mt_bom_component bc
+		WHERE
+			mb.BOM_ID = wo.BOM_ID
+		AND bc.BOM_ID = mb.BOM_ID
+		AND mb.BOM_STATUS = 'CAN_RELEASE'
+		AND wo.WORK_ORDER_ID = #{workOrderId}
+		AND wo.TENANT_ID = #{tenantId};
+	</select>
+
+	<select id="queryProductionManager" resultType="java.lang.String">
+		SELECT
+ 			sa.ATTR_VALUE
+		FROM
+ 			mt_material_site mms,
+ 			mt_material_site_attr sa
+		WHERE
+ 			mms.MATERIAL_SITE_ID = sa.MATERIAL_SITE_ID
+ 		AND mms.TENANT_ID = #{tenantId}
+ 		AND sa.ATTR_NAME = 'attribute18'
+ 		AND mms.SITE_ID = #{siteId}
+ 		AND mms.MATERIAL_ID = #{materialId}
+ 		AND mms.ENABLE_FLAG = 'Y'
+	</select>
+
+	<select id="batchQuerySoNum" resultType="com.ruike.hme.domain.vo.HmeEoVO3">
+		SELECT
+		attr.ATTR_VALUE SO_NUM,
+		wo.WORK_ORDER_ID
+		FROM
+		mt_work_order wo
+		LEFT JOIN mt_work_order_attr attr ON wo.WORK_ORDER_ID = attr.WORK_ORDER_ID AND attr.ATTR_NAME = 'attribute1'
+		WHERE wo.TENANT_ID = 0
+		AND wo.WORK_ORDER_ID IN
+		<foreach collection="workOrderIdList" index="index" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="queryEoIdByProcessId" resultType="java.lang.String">
+		SELECT
+		me.EO_ID
+		FROM
+		mt_eo me,
+		mt_eo_step_wip sw,
+		mt_eo_router_actual ra,
+		mt_eo_step_actual sa,
+		mt_mod_organization_rel org
+		WHERE me.EO_ID = ra.EO_ID
+		AND sa.EO_ROUTER_ACTUAL_ID = ra.EO_ROUTER_ACTUAL_ID
+		AND sa.EO_STEP_ACTUAL_ID = sw.EO_STEP_ACTUAL_ID
+		AND org.ORGANIZATION_ID = sw.WORKCELL_ID
+		AND org.ORGANIZATION_TYPE = 'WORKCELL'
+		AND org.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		AND org.PARENT_ORGANIZATION_ID = #{processId}
+		AND me.TENANT_ID = #{tenantId}
+		<if test="siteId != null and siteId !=''">
+			AND org.TOP_SITE_ID = #{siteId}
+		</if>
+	</select>
+
+    <select id="select" resultType="java.lang.String">
+		SELECT
+			sa.ATTR_VALUE
+		FROM
+			mt_material_site mms,
+			mt_material_site_attr sa
+		WHERE
+			mms.MATERIAL_SITE_ID = sa.MATERIAL_SITE_ID
+			AND mms.TENANT_ID = #{tenantId}
+			AND sa.ATTR_NAME = 'attribute18'
+			AND mms.SITE_ID = #{siteId}
+			AND mms.MATERIAL_ID = #{materialId}
+			AND mms.ENABLE_FLAG = 'Y'
+	</select>
+
+	<select id="queryBomComponentCountByWorkOrderIds" resultType="com.ruike.hme.domain.vo.HmeSnBindEoVO3">
+		 select
+		 count(1) COUNT_NUM,
+		 wo.WORK_ORDER_ID
+		from
+		 mt_work_order wo,
+		 mt_router mr,
+		 mt_router_step mrs,
+		 mt_router_operation mro,
+		 mt_router_operation_component mroc,
+		 mt_bom_component mbc
+		where wo.router_id = mr.router_id
+		and mr.router_id = mrs.router_id
+		and mrs.router_step_id = mro.router_step_id
+		and mro.router_operation_id = mroc.router_operation_id
+		and mroc.bom_component_id = mbc.bom_component_id
+		and wo.bom_id = mbc.bom_id
+		and wo.work_order_id IN 
+		<foreach collection="workOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		GROUP BY wo.WORK_ORDER_ID
+	</select>
+
+	<select id="queryModelName" resultType="java.lang.String">
+		SELECT
+			attr.ATTR_VALUE
+		FROM
+		  mt_material mm,
+		  mt_material_site mms,
+		  mt_material_site_attr attr
+		WHERE
+		mm.TENANT_ID = #{tenantId}
+		AND mm.MATERIAL_CODE = #{materialCode}
+		AND mms.SITE_ID = #{siteId}
+		AND mms.MATERIAL_ID = mm.MATERIAL_ID
+		AND mms.TENANT_ID = #{tenantId}
+		AND attr.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+		AND attr.ATTR_NAME = 'attribute5'
+	</select>
+</mapper>

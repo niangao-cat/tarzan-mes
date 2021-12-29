@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.SitePlantReleationMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.SitePlantReleation">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="RELEATION_ID" property="releationId" jdbcType="VARCHAR"/>
+        <result column="SITE_TYPE" property="siteType" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PLANT_ID" property="plantId" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="selectByPlantCode"  resultType="java.lang.String">
+        select SITE_ID from mt_site_plant_releation where PLANT_CODE = #{plantCode,jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectByLoctorType" resultType="java.lang.String">
+        select LOCATOR_ID from mt_mod_locator
+        where LOCATOR_TYPE = 'AUTO'
+    </select>
+
+    <select id="selectByLoctorId" resultType="java.lang.String">
+        select h.MATERIAL_LOT_CODE from mt_material_lot h
+        left join mt_material_lot_attr a on h.MATERIAL_LOT_ID = a.MATERIAL_LOT_ID
+        where h.ENABLE_FLAG = 'Y'
+        and a.ATTR_NAME = 'STATUS'
+        and a.ATTR_VALUE = 'INSTOCK'
+        and h.LOCATOR_ID in
+        <foreach collection="locatorId" item="i" separator="," open="(" close=")" index="index">
+            #{i}
+        </foreach>
+    </select>
+
+
+
+</mapper>

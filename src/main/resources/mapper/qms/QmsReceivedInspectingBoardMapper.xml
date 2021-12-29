@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsReceivedInspectingBoardMapper">
+
+    <select id="selectCardData" resultType="com.ruike.qms.api.dto.QmsSelectCardDataReturnDTO">
+        SELECT
+            qih.IQC_HEADER_ID,
+            qih.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            qih.QUANTITY,
+            qih.UOM_ID,
+            mu.UOM_CODE,
+            qih.SUPPLIER_ID,
+            ms.SUPPLIER_CODE,
+            ms.SUPPLIER_NAME,
+            qih.CREATED_DATE,
+            qih.LOCATOR_ID,
+            mml.LOCATOR_CODE,
+            mml.LOCATOR_NAME,
+            qih.IDENTIFICATION,
+            qih.UAI_FLAG,
+            qih.INSPECTION_TYPE,
+            qih.CREATED_DATE,
+            TIMESTAMPDIFF(DAY,qih.CREATED_DATE,NOW()) TEST_DAY,
+            CASE qih.INSPECTION_TYPE WHEN 'FIRST_INSPECTION' THEN  mid.INSTRUCTION_DOC_NUM
+			WHEN 'SECOND_INSPECTION' THEN (
+			SELECT id.INSTRUCTION_DOC_NUM FROM
+				qms_iqc_header ih,
+			    mt_instruction_doc id
+				WHERE ih.DOC_HEADER_ID = id.INSTRUCTION_DOC_ID
+				AND ih.IQC_HEADER_ID = qih.DOC_HEADER_ID
+				LIMIT 1
+			) ELSE '' END INSTRUCTION_DOC_NUM
+        FROM
+            QMS_IQC_HEADER qih
+            LEFT JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = qih.DOC_HEADER_ID
+            LEFT JOIN mt_material mm ON qih.MATERIAL_ID = mm.MATERIAL_ID
+            LEFT JOIN mt_uom mu ON mu.UOM_ID = qih.UOM_ID
+            LEFT JOIN mt_supplier ms ON qih.SUPPLIER_ID = ms.SUPPLIER_ID
+            LEFT JOIN mt_mod_locator mml ON qih.LOCATOR_ID = mml.LOCATOR_ID
+        where qih.TENANT_ID = #{tenantId}
+        AND qih.INSPECTION_STATUS = 'NEW'
+        AND NOT EXISTS (
+			SELECT 1 FROM
+			qms_iqc_header qh
+			WHERE qh.INSPECTION_TYPE = 'SECOND_INSPECTION'
+		    AND qh.DOC_HEADER_ID = qih.IQC_HEADER_ID
+		)
+        ORDER BY qih.CREATED_DATE ASC
+    </select>
+    <select id="selectReceivedQuantity" resultType="com.ruike.qms.api.dto.QmsReceivedQuantutyDTO">
+        SELECT
+            date( mida.ATTR_VALUE ) ACTUAL_RECEIVE_DATE,
+            sum( mia.ACTUAL_QTY  ) ACTUAL_RECEIVE_QTY
+        FROM
+            mt_instruction_doc mid
+		LEFT JOIN mt_instruction_doc_attr mida ON mid.INSTRUCTION_DOC_ID = mida.INSTRUCTION_DOC_ID
+        AND mida.ATTR_NAME = 'ACTUAL_RECEIVED_DATE'
+		LEFT JOIN mt_instruction mi ON mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+		LEFT JOIN mt_instruction_actual mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        WHERE
+            mid.TENANT_ID = #{tenantId}
+            AND mid.INSTRUCTION_DOC_STATUS = 'RECEIVE_COMPLETE'
+            AND mid.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+			AND mi.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+            AND DATE_SUB( CURDATE( ), INTERVAL 30 DAY ) &lt; date( mida.ATTR_VALUE )
+        GROUP BY
+            date( mida.ATTR_VALUE )
+    </select>
+
+    <select id="selectYearReceivedQuantity" resultType="com.ruike.qms.api.dto.QmsReceivedQuantutyDTO">
+        SELECT
+            date_format(mida.ATTR_VALUE ,'%Y-%m') ACTUAL_RECEIVE_DATE,
+            sum( mia.ACTUAL_QTY ) ACTUAL_RECEIVE_QTY
+        FROM
+            mt_instruction_doc mid
+        LEFT JOIN mt_instruction_doc_attr mida ON mid.INSTRUCTION_DOC_ID = mida.INSTRUCTION_DOC_ID
+            AND mida.ATTR_NAME = 'ACTUAL_RECEIVED_DATE'
+        LEFT JOIN mt_instruction mi ON mid.INSTRUCTION_DOC_ID = mi.SOURCE_DOC_ID
+        LEFT JOIN mt_instruction_actual mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        WHERE
+            mid.TENANT_ID = #{tenantId}
+            AND mid.INSTRUCTION_DOC_STATUS = 'RECEIVE_COMPLETE'
+            AND mid.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+            AND LAST_DAY(DATE_SUB(mida.ATTR_VALUE, INTERVAL 12 MONTH)) &lt; mida.ATTR_VALUE
+         GROUP BY
+            date_format(mida.ATTR_VALUE ,'%Y-%m')
+        ORDER BY
+            date_format(mida.ATTR_VALUE ,'%Y-%m')
+    </select>
+
+    <select id="selectYearInspectionTime" resultType="com.ruike.qms.api.dto.QmsInspectionTimeDTO">
+        SELECT
+            date_format( qih.INSPECTION_FINISH_DATE, '%Y-%m' ) INSPECTION_FINISH_DATE,
+            sum( qih.INSPECTION_TIME ) INSPECTION_TIME
+        FROM
+            QMS_IQC_HEADER qih
+        WHERE
+            qih.TENANT_ID = #{tenantId}
+            AND  qih.INSPECTION_STATUS = 'COMPLETED'
+            AND LAST_DAY( DATE_SUB( qih.INSPECTION_FINISH_DATE, INTERVAL 12 MONTH ) ) &lt;
+            qih.INSPECTION_FINISH_DATE
+         GROUP BY
+            date_format( qih.INSPECTION_FINISH_DATE, '%Y-%m' )
+        ORDER BY
+            date_format( qih.INSPECTION_FINISH_DATE, '%Y-%m' )
+    </select>
+
+</mapper>

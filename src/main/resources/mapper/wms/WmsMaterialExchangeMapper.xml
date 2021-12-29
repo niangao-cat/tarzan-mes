@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialExchangeMapper">
+
+    <select id="selectDocByConditionForUi" resultType="com.ruike.wms.api.dto.WmsMaterialExchangeDocDTO"
+            parameterType="com.ruike.wms.api.dto.WmsMaterialExchangeParamDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+          doc.INSTRUCTION_DOC_ID,
+          doc.INSTRUCTION_DOC_NUM,
+          doc.INSTRUCTION_DOC_STATUS,
+          doc.SITE_ID,
+          mms.SITE_CODE,
+          mms_tl.SITE_NAME,
+          doc.SUPPLIER_ID,
+          ms.SUPPLIER_CODE,
+          ms_tl.SUPPLIER_NAME,
+          doc.CREATED_BY,
+          doc.CREATION_DATE,
+          doc.REMARK
+        FROM
+        mt_instruction_doc doc
+        LEFT JOIN mt_mod_site mms ON doc.SITE_ID = mms.SITE_ID
+        LEFT JOIN mt_mod_site_tl mms_tl ON mms.SITE_ID = mms_tl.SITE_ID AND mms_tl.LANG = #{lang}
+        LEFT JOIN mt_supplier ms ON doc.SUPPLIER_ID = ms.SUPPLIER_ID
+        LEFT JOIN mt_supplier_tl ms_tl ON ms.SUPPLIER_ID = ms_tl.SUPPLIER_ID AND ms_tl.LANG = #{lang}
+        WHERE doc.TENANT_ID = #{tenantId}
+        AND doc.INSTRUCTION_DOC_TYPE = 'SUPPLIER_EXCHANGE_DOC'
+        AND EXISTS (SELECT 1 FROM mt_instruction mi
+                    <if test="materialVersion != null">
+                        ,mt_instruction_attr arv
+                    </if>
+                    WHERE mi.SOURCE_DOC_ID = doc.INSTRUCTION_DOC_ID
+                    <if test="materialId != null">
+                        and mi.MATERIAL_ID = #{materialId}
+                    </if>
+                    <if test="materialVersion != null">
+                        and mi.INSTRUCTION_ID = arv.INSTRUCTION_ID
+                        and arv.attr_name='MATERIAL_VERSION'
+                        and arv.attr_value = #{materialVersion}
+                    </if>)
+        <if test="siteId != null">
+            and doc.SITE_ID = #{siteId}
+        </if>
+        <if test="instructionDocNum != null">
+            and doc.INSTRUCTION_DOC_NUM Like CONCAT('%',#{instructionDocNum},'%')
+        </if>
+        <if test="instructionDocStatus != null">
+            and doc.INSTRUCTION_DOC_STATUS = #{instructionDocStatus}
+        </if>
+        <if test="supplierId != null">
+            and doc.SUPPLIER_ID = #{supplierId}
+        </if>
+        <if test="createDateFrom != null">
+            and STR_TO_DATE(doc.CREATION_DATE,'%Y-%m-%d') &gt;= STR_TO_DATE(#{createDateFrom},'%Y-%m-%d')
+        </if>
+        <if test="createDateTo != null">
+            and STR_TO_DATE(doc.CREATION_DATE,'%Y-%m-%d') &lt;= STR_TO_DATE(#{createDateTo},'%Y-%m-%d')
+        </if>
+        order by doc.CREATION_DATE desc
+    </select>
+
+    <select id="selectLineByConditionForUi" resultType="com.ruike.wms.api.dto.WmsMaterialExchangeDocLineDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+            mi.INSTRUCTION_ID,
+            arv1.attr_value INSTRUCTION_LINE_NUM,
+            mi.INSTRUCTION_NUM,
+            mi.INSTRUCTION_STATUS,
+            mi.MATERIAL_ID,
+            item.MATERIAL_CODE,
+            tl.MATERIAL_NAME,
+            arv2.attr_value MATERIAL_VERSION,
+            mi.QUANTITY,
+            arv3.attr_value EXECUTE_QTY,
+            ia.ACTUAL_QTY,
+            mi.UOM_ID,
+            uom.UOM_CODE,
+            uom_tl.UOM_NAME,
+            wh.LOCATOR_ID AS WAREHOUSE_ID,
+            wh.LOCATOR_CODE AS WAREHOUSE_CODE,
+            wh_tl.LOCATOR_NAME AS WAREHOUSE_NAME,
+            loc.LOCATOR_ID AS LOCATOR_ID,
+            loc.LOCATOR_CODE,
+            loc_tl.LOCATOR_NAME,
+            mi.REMARK
+        FROM
+            mt_instruction mi
+        LEFT JOIN mt_instruction_attr arv ON mi.INSTRUCTION_ID = arv.INSTRUCTION_ID
+        AND arv.attr_name = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_instruction_attr arv1 ON mi.INSTRUCTION_ID = arv1.INSTRUCTION_ID
+        AND arv1.attr_name = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr arv2 ON mi.INSTRUCTION_ID = arv2.INSTRUCTION_ID
+        AND arv2.attr_name = 'MATERIAL_VERSION'
+        LEFT JOIN mt_instruction_attr arv3 ON mi.INSTRUCTION_ID = arv3.INSTRUCTION_ID
+        AND arv3.attr_name = 'EXECUTE_QTY'
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = mi.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        LEFT JOIN mt_uom uom ON uom.UOM_ID = mi.UOM_ID
+        LEFT JOIN mt_uom_tl uom_tl ON uom_tl.UOM_ID = uom.UOM_ID
+        AND uom_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator wh ON wh.LOCATOR_ID = mi.TO_LOCATOR_ID
+        LEFT JOIN mt_mod_locator_tl wh_tl ON wh_tl.LOCATOR_ID = wh.LOCATOR_ID
+        AND wh_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator loc ON loc.LOCATOR_ID = arv.attr_value
+        LEFT JOIN mt_mod_locator_tl loc_tl ON loc_tl.LOCATOR_ID = loc.LOCATOR_ID
+        AND loc_tl.LANG = #{lang}
+        LEFT JOIN (SELECT sum(t.ACTUAL_QTY) ACTUAL_QTY, t.INSTRUCTION_ID
+                   FROM mt_instruction_actual t
+                   GROUP BY t.INSTRUCTION_ID) ia ON ia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        WHERE
+            mi.TENANT_ID = #{tenantId}
+        <if test="instructionDocId != null">
+            and mi.SOURCE_DOC_ID = #{instructionDocId}
+        </if>
+        ORDER BY
+            arv1.attr_value
+    </select>
+</mapper>

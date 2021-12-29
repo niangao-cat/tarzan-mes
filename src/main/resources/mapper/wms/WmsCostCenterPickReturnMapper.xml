@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsCostCenterPickReturnMapper">
+
+
+    <select id="selectCostCenterPickReturnOrder" resultType="com.ruike.wms.domain.vo.WmsPickReturnReceiveVO">
+        SELECT
+            mid.INSTRUCTION_DOC_ID,
+            mid.INSTRUCTION_DOC_NUM,
+            mid.INSTRUCTION_DOC_TYPE,
+            mid.INSTRUCTION_DOC_STATUS,
+            mid.SITE_ID,
+            mid.COST_CENTER_ID,
+            mid.PERSON_ID,
+            mid.CREATION_DATE,
+            mid.REMARK,
+            mms.SITE_CODE,
+            mms.SITE_NAME,
+            mc.COSTCENTER_CODE,
+            mc.COSTCENTER_TYPE AS COST_CENTER_TYPE,
+            mida.ATTR_VALUE SETTLE_ACCOUNTS,
+            mida2.ATTR_VALUE INTERNAL_ORDER_ID,
+            wio.INTERNAL_ORDER,
+            mida3.ATTR_VALUE MOVE_TYPE,
+            mida4.ATTR_VALUE PRINT_FLAG,
+            mida5.ATTR_VALUE SCRAP_DEPARTMENT,
+            mida6.ATTR_VALUE PROFIT_CENTER,
+            mida7.ATTR_VALUE MOVE_REASON,
+            mida8.ATTR_VALUE INTERNAL_ORDER_TYPE,
+            mida9.ATTR_VALUE COST_TYPE
+        FROM
+            mt_instruction_doc mid
+        left join mt_mod_site mms on mid.SITE_ID = mms.SITE_ID
+        left join mt_costcenter mc on mid.COST_CENTER_ID = mc.COSTCENTER_ID
+        left join mt_instruction_doc_attr mida on mid.INSTRUCTION_DOC_ID = mida.INSTRUCTION_DOC_ID and mida.ATTR_NAME = 'SETTLE_ACCOUNTS'
+        left join mt_instruction_doc_attr mida2 on mid.INSTRUCTION_DOC_ID = mida2.INSTRUCTION_DOC_ID and mida2.ATTR_NAME = 'INTERNAL_ORDER_ID'
+        left join wms_internal_order wio on wio.INTERNAL_ORDER_ID = mida2.ATTR_VALUE
+        left join mt_instruction_doc_attr mida3 on mid.INSTRUCTION_DOC_ID = mida3.INSTRUCTION_DOC_ID and mida3.ATTR_NAME = 'MOVE_TYPE'
+        left join mt_instruction_doc_attr mida4 on mid.INSTRUCTION_DOC_ID = mida4.INSTRUCTION_DOC_ID and mida4.ATTR_NAME = 'PRINT_FLAG'
+        left join mt_instruction_doc_attr mida5 on mid.INSTRUCTION_DOC_ID = mida5.INSTRUCTION_DOC_ID and mida5.ATTR_NAME = 'SCRAP_DEPARTMENT'
+        left join mt_instruction_doc_attr mida6 on mid.INSTRUCTION_DOC_ID = mida6.INSTRUCTION_DOC_ID and mida6.ATTR_NAME = 'PROFIT_CENTER'
+        left join mt_instruction_doc_attr mida7 on mid.INSTRUCTION_DOC_ID = mida7.INSTRUCTION_DOC_ID and mida7.ATTR_NAME = 'MOVE_REASON'
+        left join mt_instruction_doc_attr mida8 on mid.INSTRUCTION_DOC_ID = mida8.INSTRUCTION_DOC_ID and mida8.ATTR_NAME = 'INTERNAL_ORDER_TYPE'
+        left join mt_instruction_doc_attr mida9 on mid.INSTRUCTION_DOC_ID = mida9.INSTRUCTION_DOC_ID and mida9.ATTR_NAME = 'COST_TYPE'
+        WHERE
+            mid.TENANT_ID = #{tenantId}
+            <if test="vo.instructionDocId != null and vo.instructionDocId != ''">
+                AND mid.INSTRUCTION_DOC_ID = #{vo.instructionDocId}
+            </if>
+            <if test="vo.instructionDocNum != null and vo.instructionDocNum != ''">
+                and mid.INSTRUCTION_DOC_NUM like CONCAT('%',#{vo.instructionDocNum},'%')
+            </if>
+            <choose>
+                <when test="vo.instructionDocType != null and vo.instructionDocType != ''">
+                    AND mid.INSTRUCTION_DOC_TYPE = #{vo.instructionDocType}
+                </when>
+                <when test="vo.instructionDocType == null or vo.instructionDocType == ''">
+                    AND mid.INSTRUCTION_DOC_TYPE in ('CCA_REQUISITION','CCA_RETURN')
+                </when>
+            </choose>
+            <if test="vo.instructionDocStatus != null and vo.instructionDocStatus != ''">
+                AND mid.INSTRUCTION_DOC_STATUS in
+                <foreach collection="vo.instructionDocStatusList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="vo.siteId != null and vo.siteId != ''">
+                AND mid.SITE_ID = #{vo.siteId}
+            </if>
+            <if test="vo.costCenterId != null and vo.costCenterId != ''">
+                AND mid.COST_CENTER_ID = #{vo.costCenterId}
+            </if>
+            <if test="vo.createdBy != null and vo.createdBy != ''">
+                AND  mid.CREATED_BY = #{vo.createdBy}
+            </if>
+            <if test="vo.creationDateFrom != null and vo.creationDateFrom != ''">
+                AND  mid.CREATION_DATE >= #{vo.creationDateFrom}
+            </if>
+            <if test="vo.creationDateTo != null and vo.creationDateTo != ''">
+                AND  mid.CREATION_DATE &lt;= #{vo.creationDateTo}
+            </if>
+            <if test="vo.settleAccounts != null and vo.settleAccounts != ''">
+                and mida.ATTR_VALUE = #{vo.settleAccounts}
+            </if>
+            <if test="vo.internalOrderId != null and vo.internalOrderId != ''">
+                and mida3.ATTR_VALUE = #{vo.internalOrderId}
+            </if>
+            <if test="vo.profitCenter != null and vo.profitCenter != ''">
+                and mida6.ATTR_VALUE = #{vo.profitCenter}
+            </if>
+            <if test="vo.moveReason != null and vo.moveReason != ''">
+                and mida7.ATTR_VALUE = #{vo.moveReason}
+            </if>
+            <if test="vo.internalOrderType != null and vo.internalOrderType != ''">
+                and mida8.ATTR_VALUE = #{vo.internalOrderType}
+            </if>
+            <if test="(vo.materialId != null and vo.materialId != '') or (vo.toLocatorId != null and vo.toLocatorId != '')
+                    or (vo.materialVersion != null and vo.materialVersion != '') or (vo.toWarehouseId != null and vo.toWarehouseId != '')">
+                AND EXISTS (
+                    SELECT 1 FROM mt_instruction mi
+                    left join mt_instruction_doc doc on doc.INSTRUCTION_DOC_ID = mi.SOURCE_DOC_ID
+                    left join mt_instruction_attr mia on mi.INSTRUCTION_ID = mia.INSTRUCTION_ID and mia.ATTR_NAME = 'MATERIAL_VERSION'
+                    left join mt_instruction_attr mia2 on mi.INSTRUCTION_ID = mia2.INSTRUCTION_ID and mia2.ATTR_NAME = 'TO_LOCATOR_ID'
+                WHERE mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+                    <if test="vo.materialId != null and vo.materialId != ''">
+                        AND mi.MATERIAL_ID = #{vo.materialId}
+                    </if>
+                    <if test="vo.toLocatorId != null and vo.toLocatorId != ''">
+                        AND mia2.ATTR_VALUE = #{vo.toLocatorId}
+                    </if>
+                    <if test="vo.toWarehouseId != null and vo.toWarehouseId != ''">
+                    AND CASE doc.INSTRUCTION_DOC_TYPE WHEN 'CCA_REQUISITION' THEN  mi.FROM_LOCATOR_ID = #{vo.toWarehouseId}
+                    WHEN 'CCA_RETURN' THEN  mi.TO_LOCATOR_ID = #{vo.toWarehouseId}
+                    ELSE 1 != 1
+                    END
+                    </if>
+                    <if test="vo.materialVersion != null and vo.materialVersion != ''">
+                        and mia.ATTR_VALUE LIKE CONCAT("%",#{vo.materialVersion},"%")
+                    </if>
+                )
+            </if>
+        ORDER BY mid.CREATION_DATE desc
+    </select>
+
+    <select id="selectPickReturnLineOrder" resultType="com.ruike.wms.api.dto.WmsPickReturnLineReceiveVO">
+        SELECT
+            mi.instruction_id,
+            mi.INSTRUCTION_NUM,
+            mi.TO_SITE_ID,
+            mi.MATERIAL_ID,
+            mi.UOM_ID,
+            mi.QUANTITY,
+            mi.REMARK,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mma.ATTR_VALUE MATERIAL_VERSION,
+            mia.ACTUAL_QTY EXECUTE_QTY,
+            mu.UOM_CODE,
+            mms.SITE_CODE TO_SITE_CODE,
+            mma3.ATTR_VALUE TO_LOCATOR_ID,
+            mml.LOCATOR_CODE TO_LOCATOR_CODE,
+            mi.INSTRUCTION_STATUS,
+            mu.UOM_NAME,
+            mml2.LOCATOR_CODE TO_STORAGE_CODE,
+            mi.TO_LOCATOR_ID TO_STORAGE_ID,
+            mma4.ATTR_VALUE INSTRUCTION_LINE_NUM,
+            mi.LAST_UPDATED_BY,
+			mi.LAST_UPDATE_DATE,
+			mia.ACTUAL_QTY,
+			mml4.LOCATOR_CODE FROM_STORAGE_CODE,
+			mi.FROM_LOCATOR_ID FROM_STORAGE_ID,
+			mma5.ATTR_VALUE EXCESS_SETTING,
+			mma6.ATTR_VALUE EXCESS_VALUE
+        FROM
+            mt_instruction mi
+            LEFT JOIN mt_material mm ON mi.MATERIAL_ID = mm.MATERIAL_ID
+            LEFT JOIN mt_instruction_attr mma ON mma.INSTRUCTION_ID = mi.INSTRUCTION_ID
+            AND mma.ATTR_NAME = 'MATERIAL_VERSION'
+            LEFT JOIN mt_instruction_attr mma2 ON mma2.INSTRUCTION_ID = mi.INSTRUCTION_ID
+            AND mma2.ATTR_NAME = 'EXECUTE_QTY'
+            LEFT JOIN mt_instruction_attr mma3 ON mma3.INSTRUCTION_ID = mi.INSTRUCTION_ID
+            AND mma3.ATTR_NAME = 'TO_LOCATOR_ID'
+            left join mt_instruction_attr mma4 on mma4.instruction_id = mi.INSTRUCTION_ID
+						AND mma4.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+            left join mt_instruction_attr mma5 on mma5.instruction_id = mi.INSTRUCTION_ID
+						AND mma5.ATTR_NAME = 'EXCESS_SETTING'
+            left join mt_instruction_attr mma6 on mma6.instruction_id = mi.INSTRUCTION_ID
+						AND mma6.ATTR_NAME = 'EXCESS_VALUE'
+            LEFT JOIN mt_uom mu ON mi.UOM_ID = mu.UOM_ID
+            LEFT JOIN mt_mod_site mms ON mms.SITE_ID = mi.TO_SITE_ID
+            LEFT JOIN mt_mod_locator mml ON mma3.ATTR_VALUE = mml.LOCATOR_ID
+            left join mt_mod_locator mml2 on mml2.LOCATOR_ID = mi.TO_LOCATOR_ID
+            left join mt_instruction_actual mia on mi.INSTRUCTION_ID = mia.INSTRUCTION_ID and mia.TENANT_ID = #{tenantId}
+            left join mt_mod_locator mml4 on mml4.LOCATOR_ID = mi.FROM_LOCATOR_ID
+        WHERE
+            mi.TENANT_ID = #{tenantId}
+            and mi.SOURCE_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="selectPickReturnDetail" resultType="com.ruike.wms.domain.vo.WmsPickReturnDetailReceiveVO">
+        SELECT
+            mia.ACTUAL_ID,
+            miad.MATERIAL_LOT_ID,
+            miad.ACTUAL_QTY,
+            mml.MATERIAL_LOT_CODE,
+            mml.ENABLE_FLAG,
+            mml.LOCATOR_ID,
+        mml.MATERIAL_ID,
+        mml.LOT,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mloc.LOCATOR_CODE,
+        mloc2.LOCATOR_CODE STORAGE_CODE,
+        mloc2.LOCATOR_ID STORAGE_ID,
+        mla.ATTR_VALUE MATERIAL_LOT_STATUS,
+        mgs.DESCRIPTION MATERIAL_LOT_STATUS_MEANING,
+        miad.LAST_UPDATED_BY,
+        miad.LAST_UPDATE_DATE,
+        miad.CONTAINER_ID,
+        mc.CONTAINER_CODE
+        FROM
+        mt_instruction_actual mia,
+        mt_instruction_actual_detail miad
+        left join mt_container mc ON miad.CONTAINER_ID = mc.CONTAINER_ID
+        left join mt_material_lot mml on miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        left join mt_material mm on mml.MATERIAL_ID = mm.MATERIAL_ID
+        left join mt_mod_locator mloc on mml.LOCATOR_ID = mloc.LOCATOR_ID
+        left join mt_mod_locator mloc2 on mloc.PARENT_LOCATOR_ID = mloc2.LOCATOR_ID
+        left join mt_material_lot_attr mla on mml.MATERIAL_LOT_ID = mla.MATERIAL_LOT_ID
+        and mla.ATTR_NAME = 'STATUS'
+        left join mt_gen_status mgs on mgs.status_code = mla.attr_value
+        and mgs.status_group = 'MATERIAL_LOT_STATUS'
+        WHERE
+        mia.ACTUAL_ID = miad.ACTUAL_ID
+            AND mia.TENANT_ID = #{tenantId}
+            AND mia.INSTRUCTION_ID = #{dto.instructionId}
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            <bind name="materialLotCodeLike" value="'%'+dto.materialLotCode+'%'"/>
+            AND mml.MATERIAL_LOT_CODE like #{materialLotCodeLike}
+        </if>
+        <if test="dto.materialLotStatus != null and dto.materialLotStatus != ''">
+            AND mla.ATTR_VALUE = #{dto.materialLotStatus}
+        </if>
+    </select>
+
+    <select id="queryInstructionsForUnique" resultType="com.ruike.wms.api.dto.WmsPickReturnLineReceiveVO">
+        select mi.material_id, mia.attr_value material_version
+          from mt_instruction mi
+          left join mt_instruction_attr mia
+            on mi.instruction_id = mia.instruction_id
+           and mia.attr_name = 'MATERIAL_VERSION'
+           and mi.tenant_id = mia.tenant_id
+         where mi.tenant_id = #{tenantId}
+           and mi.source_doc_id = #{instructionDocId}
+           and mi.material_id in
+        <foreach collection="materialIds" separator="," item="item" index="in" open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="printHeadDataQuery" resultType="com.ruike.wms.domain.vo.WmsCostCenterPickReturnVO3">
+        SELECT
+            mid.INSTRUCTION_DOC_NUM,
+            mid.INSTRUCTION_DOC_TYPE,
+            mms.SITE_NAME,
+            mc.COSTCENTER_CODE,
+            mc.DESCRIPTION AS COSTCENTER_desc,
+            mida.ATTR_VALUE AS SETTLE_ACCOUNTS,
+            wio.INTERNAL_ORDER
+        FROM
+            mt_instruction_doc mid
+        LEFT JOIN mt_mod_site mms ON mms.SITE_ID = mid.SITE_ID
+        LEFT JOIN mt_costcenter mc ON mc.COSTCENTER_ID = mid.COST_CENTER_ID
+        LEFT JOIN mt_instruction_doc_attr mida ON mid.INSTRUCTION_DOC_ID = mida.INSTRUCTION_DOC_ID
+        AND mida.TENANT_ID = #{tenantId}
+        AND mida.ATTR_NAME = 'SETTLE_ACCOUNTS'
+        LEFT JOIN mt_instruction_doc_attr mida2 ON mida2.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND mida2.ATTR_NAME = 'INTERNAL_ORDER_ID'
+        LEFT JOIN wms_internal_order wio ON wio.INTERNAL_ORDER_ID = mida2.ATTR_VALUE
+        WHERE mid.TENANT_ID = #{tenantId}
+        AND mid.INSTRUCTION_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="printLineDataQuery" resultType="com.ruike.wms.api.dto.WmsStockTransferDTO3">
+        select mia.ATTR_VALUE as line_num, mm.MATERIAL_CODE as item_code, mm.MATERIAL_NAME as item_desc, mi.QUANTITY as qty, mia2.ATTR_VALUE as version,
+               mu.UOM_CODE as uom, mml.LOCATOR_NAME, mmb.OLD_ITEM_CODE, mi.REMARK, mml2.LOCATOR_NAME as FROM_LOCATOR_NAME
+        from mt_instruction mi
+        left join mt_instruction_attr mia
+        on mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        and mia.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        left join mt_material mm
+        on mm.MATERIAL_ID = mi.MATERIAL_ID
+        left join mt_instruction_attr mia2
+        on mia2.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        and mia2.ATTR_NAME = 'MATERIAL_VERSION'
+        left join mt_uom mu
+        on mu.UOM_ID = mi.UOM_ID
+        left join mt_mod_locator mml
+        on mml.LOCATOR_ID = mi.TO_LOCATOR_ID
+        left join mt_mod_locator mml2
+        on mml2.LOCATOR_ID = mi.FROM_LOCATOR_ID
+        LEFT JOIN mt_material_site mms
+        ON mms.MATERIAL_ID = mi.MATERIAL_ID
+        AND mms.site_id = mi.site_id
+        LEFT JOIN mt_material_basic mmb
+        ON mi.MATERIAL_ID = mmb.MATERIAL_ID
+        AND mmb.MATERIAL_site_id = mms.MATERIAL_site_id
+        where mi.TENANT_ID = #{tenantId}
+        and mi.SOURCE_DOC_ID = #{instructionDocId}
+    </select>
+</mapper>

@@ -1,0 +1,184 @@
+spring:
+  datasource:
+    dynamic:
+      primary: mysql #设置默认的数据源或者数据源组,默认值即为master
+      strict: false #设置严格模式,默认false不启动. 启动后在未匹配到指定数据源时候回抛出异常,不启动会使用默认数据源.
+      datasource:
+        mysql:
+          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://mestst-db.raycus.com:3306/tarzan_mes?useUnicode=true&characterEncoding=utf-8&useSSL=false&rewriteBatchedStatements=true}
+          username: ${SPRING_DATASOURCE_USERNAME:hzero}
+          password: ${SPRING_DATASOURCE_PASSWORD:hzero}
+          driver-class-name: com.mysql.jdbc.Driver
+          hikari:
+            # 连接池最小空闲连接数
+            min-idle: ${SPRING_DATASOURCE_MINIMUM_IDLE:20}
+            # 连接池允许的最大连接数
+            max-pool-size: ${SPRING_DATASOURCE_MAXIMUM_POOL_SIZE:200}
+            # 等待连接池分配连接的最大时长（毫秒）
+            connection-timeout: ${SPRING_DATASOURCE_CONNECTION_TIMEOUT:30000}
+        sql-server:
+          url: ${SPRING_DATASOURCE_SQLSERVER_URL:jdbc:sqlserver://192.168.0.99:1433;DatabaseName=tester}
+          username: ${SPRING_DATASOURCE_SQLSERVER_USERNAME:sa}
+          password: ${SPRING_DATASOURCE_SQLSERVER_PASSWORD:123456}
+          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+          hikari:
+            # 连接池最小空闲连接数
+            min-idle: ${SPRING_DATASOURCE_MINIMUM_IDLE:20}
+            # 连接池允许的最大连接数
+            max-pool-size: ${SPRING_DATASOURCE_MAXIMUM_POOL_SIZE:200}
+            # 等待连接池分配连接的最大时长（毫秒）
+            connection-timeout: ${SPRING_DATASOURCE_CONNECTION_TIMEOUT:30000}
+            connection-test-query: SELECT 1
+  redis:
+    ## redis的地址
+    host: ${REDIS_DEFAULT_URL:mestst-redis.raycus.com}
+    port: 6379
+    database: 2
+    jedis:
+      pool:
+        # 资源池中最大连接数
+        # 默认8，-1表示无限制；可根据服务并发redis情况及服务端的支持上限调整
+        max-active: ${SPRING_REDIS_POOL_MAX_ACTIVE:50}
+        # 资源池运行最大空闲的连接数
+        # 默认8，-1表示无限制；可根据服务并发redis情况及服务端的支持上限调整，一般建议和max-active保持一致，避免资源伸缩带来的开销
+        max-idle: ${SPRING_REDIS_POOL_MAX_IDLE:50}
+        min-idle: ${SPRING_REDIS_POOL_MIN_IDLE:20}
+        # 当资源池连接用尽后，调用者的最大等待时间(单位为毫秒)
+        # 默认 -1 表示永不超时，设置5秒
+        max-wait: ${SPRING_REDIS_POOL_MAX_WAIT:5000}
+  aop:
+    auto: true
+server:
+  undertow:
+    ##设置IO线程数, 它主要执行非阻塞的任务,它们会负责多个连接, 默认设置每个CPU核心一个线程
+    io-threads: 4
+    ##阻塞任务线程池, 当执行类似servlet请求阻塞操作, undertow会从这个线程池中取得线程,它的值设置取决于系统的负载
+    worker-threads: 128
+    ##是否分配的直接内存
+    buffer-size: 1024
+    direct-buffers: true
+    ##HTTP POST请求最大的大小
+    max-http-post-size: 10485760
+    allow-unescaped-characters-in-url: true
+
+feign:
+  hystrix:
+    enabled: true
+
+hystrix:
+  threadpool:
+    default:
+      # 执行命令线程池的核心线程数，也是命令执行的最大并发量
+      # 默认10
+      coreSize: 1000
+      # 最大执行线程数
+      maximumSize: 1000
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            # HystrixCommand 执行的超时时间，超时后进入降级处理逻辑。一个接口，理论的最佳响应速度应该在200ms以内，或者慢点的接口就几百毫秒。
+            # 默认 1000 毫秒，最高设置 2000足矣。如果超时，首先看能不能优化接口相关业务、SQL查询等，不要盲目加大超时时间，否则会导致线程堆积过多，hystrix 线程池卡死，最终服务不可用。
+            timeoutInMilliseconds: ${HYSTRIX_COMMAND_TIMEOUT_IN_MILLISECONDS:40000}
+
+ribbon:
+  # 客户端读取超时时间，超时时间要小于Hystrix的超时时间，否则重试机制就无意义了
+  ReadTimeout: ${RIBBON_READ_TIMEOUT:30000}
+  # 客户端连接超时时间
+  ConnectTimeout: ${RIBBON_CONNECT_TIMEOUT:3000}
+  # 访问实例失败(超时)，允许自动重试，设置重试次数，失败后会更换实例访问，请一定确保接口的幂等性，否则重试可能导致数据异常。
+  OkToRetryOnAllOperations: true
+  MaxAutoRetries: 1
+  MaxAutoRetriesNextServer: 1
+
+eureka:
+  instance:
+    preferIpAddress: true
+    leaseRenewalIntervalInSeconds: 10
+    leaseExpirationDurationInSeconds: 30
+    metadata-map:
+      VERSION: 1.3.6
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://mestst.raycus.com:8000/eureka/}
+    registryFetchIntervalSeconds: 10
+    disable-delta: true
+
+mybatis:
+  mapperLocations: classpath*:/mapper/**/*.xml
+  configuration: # 数据库下划线转驼峰配置
+    mapUnderscoreToCamelCase: true
+    jdbc-type-for-null: 'null'
+    local-cache-scope: statement
+
+choerodon:
+  resource:
+    pattern: /v1/*
+
+logging:
+  path: /home/mes/hcms/logs/tarzan-mes-logs
+  level:
+    org.apache.ibatis: ${LOGGING_LEVEL:info}
+    io.choerodon: ${LOGGING_LEVEL:debug}
+    org.hzero: ${LOGGING_LEVEL:debug}
+    tarzan.inventory: ${LOGGING_LEVEL:debug}
+    tarzan.actual.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.calendar.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.dispatch.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.general.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.iface.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.instruction.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.inventory.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.material.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.method.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.modeling.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.order.infra.mapper: ${LOGGING_LEVEL:debug}
+    tarzan.stocktake.infra.mapper: ${LOGGING_LEVEL:debug}
+    io.tarzan.common.infra.mapper: ${LOGGING_LEVEL:debug}
+    com.ruike.hme.infra.mapper: ${LOGGING_LEVEL:debug}
+    com.ruike.wms.infra.mapper: ${LOGGING_LEVEL:debug}
+    com.ruike.qms.infra.mapper: ${LOGGING_LEVEL:debug}
+    com.ruike.itf.infra.mapper: ${LOGGING_LEVEL:debug}
+    com.zaxxer: ${LOGGING_LEVEL:debug}
+    com.baomidou: ${LOGGING_LEVEL:debug}
+hzero:
+  cache-value:
+    enable: true
+  import:
+    init-table: true
+  scheduler:
+    auto-register: ${AUTO_REGISTER:true}
+    executor-code: WMS_EXECUTOR
+    upload-log: false
+  lov:
+    value:
+      enabled: true
+  websocket:
+    # websocket方式连接路径
+    websocket: /websocket
+    # sock-js连接路径
+    sockJs: /sock-js
+    # redis库
+    redisDb: 1
+hwms:
+  system:
+    tenantId: 0
+    tenantNum: "HZERO"
+    suffix: ".1"
+  interface:
+    defaultNamespace: "RAYCUS"
+  server:
+    qualityAnalyze:
+      host: "192.168.0.44"
+      port: 22
+      user: "messrm"
+      password: "mes123"
+jco:
+  client:
+    lang: "ZH"
+    client: "710"
+    passwd: "Init1234"
+    user: "HAND"
+    sysnr: "00"
+    ashost: "192.168.0.42"

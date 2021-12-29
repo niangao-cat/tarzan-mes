@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsSoDeliveryDocMapper">
+
+    <select id="selectListByQueryCondition" resultType="com.ruike.wms.domain.vo.WmsSoDeliveryDocVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+        t.*
+        from(
+            select doc.instruction_doc_id
+            ,doc.instruction_doc_num
+            ,doc.instruction_doc_status
+            ,doc.instruction_doc_type
+            ,doc.site_id
+            ,mms.site_code
+            ,mms.site_name
+            ,doc.customer_id
+            ,mc.customer_code
+            ,mc.customer_name
+            ,doc.customer_site_id
+            ,doc.remark
+            ,doc.CREATED_BY
+            ,doc.LAST_UPDATED_BY
+            ,doc.CREATION_DATE
+            ,doc.LAST_UPDATE_DATE
+            from mt_instruction_doc doc
+            ,mt_mod_site mms
+            ,mt_customer mc
+            ,mt_user_organization muo_site
+            where doc.site_id = mms.site_id
+            and doc.customer_id = mc.customer_id
+            and doc.instruction_doc_type in ('SO_DELIVERY', 'NO_SO_DELIVERY','SALES_RETURN')
+            and doc.site_id = muo_site.organization_id
+            and muo_site.organization_type = 'SITE'
+            and muo_site.user_id = #{userId}
+            and muo_site.tenant_id = #{tenantId}
+            and muo_site.enable_flag = 'Y'
+            <if test="dto.instructionDocId != null and dto.instructionDocId != ''">
+                and doc.instruction_doc_id = #{dto.instructionDocId}
+            </if>
+            <if test="dto.instructionDocType != null and dto.instructionDocType != ''">
+                and doc.instruction_doc_type = #{dto.instructionDocType}
+            </if>
+            <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+                <bind name="instructionDocNumLike" value="'%'+dto.instructionDocNum+'%'"/>
+                and doc.instruction_doc_num like #{instructionDocNumLike}
+            </if>
+            <if test="dto.instructionDocStatus != null and dto.instructionDocStatus != ''">
+                and doc.instruction_doc_status = #{dto.instructionDocStatus}
+            </if>
+            <if test="dto.siteId != null and dto.siteId != ''">
+                and doc.site_id = #{dto.siteId}
+            </if>
+            <if test="dto.customerCode != null and dto.customerCode != ''">
+                <bind name="customerCodeLike" value="'%'+dto.customerCode+'%'"/>
+                and mc.customer_code like #{customerCodeLike}
+            </if>
+            <if test="dto.locatorId != null">
+                and exists(select 1 from mt_instruction mi where mi.source_doc_id = doc.instruction_doc_id
+                and (mi.FROM_LOCATOR_ID = #{dto.locatorId} or mi.TO_LOCATOR_ID = #{dto.locatorId}))
+            </if>
+            <if test="dto.lastUpdatedBy != null">
+                and doc.LAST_UPDATED_BY = #{dto.lastUpdatedBy}
+            </if>
+            <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+                AND doc.CREATION_DATE >= #{dto.creationDateFrom}
+            </if>
+            <if test="dto.creationDateTo != null and dto.creationDateTo != ''">
+                AND doc.CREATION_DATE &lt;= #{dto.creationDateTo}
+            </if>
+            <if test="dto.materialCode != null and dto.materialCode != ''
+                    or dto.materialVersion != null and dto.materialVersion != ''">
+                and exists(
+                select 1
+                from mt_instruction ins
+                ,mt_material mm
+                where ins.source_doc_id = doc.instruction_doc_id
+                and mm.material_id = ins.material_id
+                <if test="dto.materialCode != null and dto.materialCode != '' ">
+                    <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+                    and mm.material_code like #{materialCodeLike}
+                </if>
+                <if test="dto.materialVersion != null and dto.materialVersion != ''">
+                    <bind name="materialVersionLike" value="'%'+dto.materialVersion+'%'"/>
+                    and exists (select 1 from mt_instruction_attr mia where mia.INSTRUCTION_ID = ins.INSTRUCTION_ID and
+                    mia.ATTR_NAME
+                    = 'MATERIAL_VERSION' and mia.ATTR_VALUE like #{materialVersionLike})
+                </if>
+                )
+            </if>
+            and doc.tenant_id = #{tenantId}
+            union
+            select doc.instruction_doc_id
+            ,doc.instruction_doc_num
+            ,doc.instruction_doc_status
+            ,doc.instruction_doc_type
+            ,doc.site_id
+            ,mms.site_code
+            ,mms.site_name
+            ,doc.customer_id
+            ,mc.customer_code
+            ,mc.customer_name
+            ,doc.customer_site_id
+            ,doc.remark
+            ,doc.CREATED_BY
+            ,doc.LAST_UPDATED_BY
+            ,doc.CREATION_DATE
+            ,doc.LAST_UPDATE_DATE
+            from mt_instruction_doc doc
+            ,mt_mod_site mms
+            ,mt_customer mc
+            where doc.site_id = mms.site_id
+            and doc.customer_id = mc.customer_id
+            and doc.instruction_doc_type in ('SO_DELIVERY', 'NO_SO_DELIVERY')
+            <if test="dto.instructionDocId != null and dto.instructionDocId != ''">
+                and doc.instruction_doc_id = #{dto.instructionDocId}
+            </if>
+            <if test="dto.instructionDocType != null and dto.instructionDocType != ''">
+                and doc.instruction_doc_type = #{dto.instructionDocType}
+            </if>
+            <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+                <bind name="instructionDocNumLike" value="'%'+dto.instructionDocNum+'%'"/>
+                and doc.instruction_doc_num like #{instructionDocNumLike}
+            </if>
+            <if test="dto.instructionDocStatus != null and dto.instructionDocStatus != ''">
+                and doc.instruction_doc_status = #{dto.instructionDocStatus}
+            </if>
+            <if test="dto.siteId != null and dto.siteId != ''">
+                and doc.site_id = #{dto.siteId}
+            </if>
+            <if test="dto.customerCode != null and dto.customerCode != ''">
+                <bind name="customerCodeLike" value="'%'+dto.customerCode+'%'"/>
+                and mc.customer_code like #{customerCodeLike}
+            </if>
+            <if test="dto.locatorId != null">
+                and exists(select 1 from mt_instruction mi where mi.source_doc_id = doc.instruction_doc_id
+                and (mi.FROM_LOCATOR_ID = #{dto.locatorId} or mi.TO_LOCATOR_ID = #{dto.locatorId}))
+            </if>
+            <if test="dto.lastUpdatedBy != null">
+                and doc.LAST_UPDATED_BY = #{dto.lastUpdatedBy}
+            </if>
+            <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+                AND doc.CREATION_DATE >= #{dto.creationDateFrom}
+            </if>
+            <if test="dto.creationDateTo != null and dto.creationDateTo != ''">
+                AND doc.CREATION_DATE &lt;= #{dto.creationDateTo}
+            </if>
+            and exists (
+            select 1
+            from mt_instruction ins
+            ,mt_material mm
+            ,mt_user_organization muo_site
+            where ins.source_doc_id = doc.instruction_doc_id
+            and mm.material_id = ins.material_id
+            and ins.from_site_id = muo_site.organization_id
+            and muo_site.organization_type = 'SITE'
+            and muo_site.user_id = #{userId}
+            and muo_site.tenant_id = #{tenantId}
+            and muo_site.enable_flag = 'Y'
+            <if test="dto.materialCode != null and dto.materialCode != '' ">
+                <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+                and mm.material_code like #{materialCodeLike}
+            </if>
+            <if test="dto.materialVersion != null and dto.materialVersion != ''">
+                <bind name="materialVersionLike" value="'%'+dto.materialVersion+'%'"/>
+                and exists (select 1 from mt_instruction_attr mia where mia.INSTRUCTION_ID = ins.INSTRUCTION_ID and
+                mia.ATTR_NAME
+                = 'MATERIAL_VERSION' and mia.ATTR_VALUE like #{materialVersionLike})
+            </if>
+            )
+            and doc.tenant_id = #{tenantId}
+        ) as t
+        order by t.creation_date desc
+    </select>
+
+    <select id="selectPrepareListByCondition" resultType="com.ruike.wms.domain.vo.WmsProductPrepareDocVO">
+        select doc.instruction_doc_id
+        , doc.instruction_doc_num
+        , doc.instruction_doc_status
+        , doc.site_id
+        , mms.site_name
+        , doc.customer_id
+        , mc.customer_code
+        , mc.customer_name
+        , doc.expected_arrival_time
+        , mcs.address
+        , doc.remark
+        from mt_instruction_doc doc
+        left join mt_customer_site mcs on mcs.CUSTOMER_SITE_ID = doc.CUSTOMER_SITE_ID
+        , mt_mod_site mms
+        , mt_customer mc
+        where doc.site_id = mms.site_id
+        and doc.customer_id = mc.customer_id
+        <if test="dto.instructionDocNum != null and dto.instructionDocNum != '' ">
+            <bind name="instructionDocNumLike" value="'%'+dto.instructionDocNum+'%'"/>
+            and doc.instruction_doc_num like #{instructionDocNumLike}
+        </if>
+        <if test="dto.instructionDocId != null and dto.instructionDocId != '' ">
+            and doc.instruction_doc_id = #{dto.instructionDocId}
+        </if>
+        <if test="dto.customerId != null and dto.customerId != '' ">
+            and doc.customer_id = #{dto.customerId}
+        </if>
+        <if test="dto.expectedArrivalTime != null">
+            and doc.expected_arrival_time between #{dto.expectedArrivalTime}
+            and date_add(date_add(#{dto.expectedArrivalTime},interval 1 day),interval -1 second)
+        </if>
+        <if test="dto.siteId != null and dto.siteId != '' ">
+            and exists (select 1
+            from mt_instruction ins
+            where ins.source_doc_id = doc.instruction_doc_id
+            and ins.from_site_id = #{dto.siteId} )
+        </if>
+        and doc.instruction_doc_type in ('SO_DELIVERY','NO_SO_DELIVERY')
+        and doc.instruction_doc_status in ('RELEASED','PREPARE_EXECUTE','PREPARE_COMPLETE','DELIVERY_EXECUTE')
+        and doc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectPrepareDocByNum" resultType="com.ruike.wms.domain.vo.WmsProductPrepareDocVO">
+        select doc.instruction_doc_id
+             , doc.instruction_doc_num
+             , doc.instruction_doc_status
+             , doc.site_id
+             , mms.site_name
+             , doc.customer_id
+             , mc.customer_code
+             , mc.customer_name
+             , doc.expected_arrival_time
+             , mcs.address
+             , doc.remark
+        from mt_instruction_doc doc
+                 left join mt_customer_site mcs on mcs.CUSTOMER_SITE_ID = doc.CUSTOMER_SITE_ID
+           , mt_mod_site mms
+           , mt_customer mc
+        where doc.site_id = mms.site_id
+          and doc.customer_id = mc.customer_id
+          and doc.instruction_doc_type in ('SO_DELIVERY', 'NO_SO_DELIVERY')
+          and doc.instruction_doc_num like #{instructionDocNum}
+          and doc.tenant_id = #{tenantId}
+        limit 1
+    </select>
+
+    <select id="selectMaterialLotIdByDocId" resultType="java.lang.String">
+        select miad.material_lot_id
+        from mt_instruction ins
+        , mt_instruction_actual mia
+        , mt_instruction_actual_detail miad
+        left join mt_material_lot_attr mmla_st on mmla_st.material_lot_id = miad.material_lot_id
+        and mmla_st.attr_name = 'STATUS'
+        where ins.instruction_id = mia.instruction_id
+        and mia.actual_id = miad.actual_id
+        <if test="materialLotStatus != null and materialLotStatus != ''">
+            and mmla_st.attr_value = #{materialLotStatus}
+        </if>
+        and ins.source_order_id = #{instructionDocId}
+        and ins.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectPrepareTargetLocators" resultType="com.ruike.wms.domain.vo.WmsProdPrepareExecVO">
+        select distinct loc.PARENT_LOCATOR_ID target_warehouse_id
+        ,loc.locator_id target_locator_Id
+        from mt_mod_locator loc
+        where loc.LOCATOR_TYPE = 'TO_SHIP'
+        and loc.LOCATOR_CATEGORY = 'INVENTORY'
+        and loc.TENANT_ID = #{tenantId}
+        and loc.PARENT_LOCATOR_ID in
+        <foreach collection="warehouseIds" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectPrepareTargetSites" resultType="com.ruike.wms.domain.vo.WmsProdPrepareExecVO">
+        select distinct mmlor.LOCATOR_ID target_warehouse_id
+        ,mmor.TOP_SITE_ID target_site_id
+        from mt_mod_locator_org_rel mmlor
+        ,mt_mod_organization_rel mmor
+        where mmlor.ORGANIZATION_ID = mmor.ORGANIZATION_ID
+        and mmlor.ORGANIZATION_TYPE = mmor.ORGANIZATION_TYPE
+        and mmlor.LOCATOR_ID in
+        <foreach collection="warehouseIds" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

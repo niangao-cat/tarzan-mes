@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModAreaScheduleMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModAreaSchedule">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="AREA_SCHEDULE_ID" property="areaScheduleId" jdbcType="VARCHAR"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="PLAN_START_TIME" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="DEMAND_TIME_FENCE" property="demandTimeFence" jdbcType="DECIMAL"/>
+        <result column="FIX_TIME_FENCE" property="fixTimeFence" jdbcType="DECIMAL"/>
+        <result column="FROZEN_TIME_FENCE" property="frozenTimeFence" jdbcType="DECIMAL"/>
+        <result column="FORWARD_PLANNING_TIME_FENCE" property="forwardPlanningTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="ORDER_TIME_FENCE" property="orderTimeFence" jdbcType="DECIMAL"/>
+        <result column="BASIC_ALGORITHM" property="basicAlgorithm" jdbcType="VARCHAR"/>
+        <result column="FOLLOW_AREA_ID" property="followAreaId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_RULE" property="prodLineRule" jdbcType="VARCHAR"/>
+        <result column="PHASE_TYPE" property="phaseType" jdbcType="VARCHAR"/>
+        <result column="PLANNING_BASE" property="planningBase" jdbcType="VARCHAR"/>
+        <result column="DELAY_TIME_FENCE" property="delayTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_CONCURRENT_RULE" property="releaseConcurrentRule" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select t1.*
+        from mt_mod_area_schedule t1
+        where
+        t1.TENANT_ID = #{tenantId}
+        and t1.AREA_ID IN
+        <foreach collection="areaIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

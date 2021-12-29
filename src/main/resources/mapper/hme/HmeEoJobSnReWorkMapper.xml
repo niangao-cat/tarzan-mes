@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobSnReWorkMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+	<select id="lastServiceSplitRecordGet" resultType="com.ruike.hme.domain.entity.HmeServiceSplitRecord">
+        SELECT
+        	hssr.split_record_id,
+        	hssr.internal_order_num,
+        	hssr.work_order_id,
+        	hssr.top_split_record_id,
+			hssr.locator_id
+        FROM
+        	hme_service_split_record hssr
+        WHERE
+        	hssr.tenant_id = #{tenantId}
+        	AND hssr.work_order_num = #{workOrderNum}
+        	AND hssr.top_split_record_id = hssr.split_record_id
+        ORDER BY
+        	hssr.last_update_date DESC
+        LIMIT 1
+    </select>
+
+	<select id="selectMaterial" resultType="com.ruike.hme.domain.vo.HmeEoJobSnReworkVO">
+        SELECT
+		mm.MATERIAL_ID,
+		mm.MATERIAL_CODE,
+		mm.MATERIAL_NAME,
+		mmsa.ATTR_VALUE AS material_type,
+		mmsat.ATTR_VALUE AS upgrade_flag,
+		mm.PRIMARY_UOM_ID AS uom_id,
+		mu.UOM_CODE,
+		mu.UOM_NAME,
+		0 AS will_release_qty,
+		0 AS is_released,
+	    mm.SECONDARY_UOM_ID
+	FROM
+		mt_material mm
+		LEFT JOIN mt_uom mu ON mu.UOM_ID = mm.PRIMARY_UOM_ID,
+		mt_material_site mms
+		LEFT JOIN mt_material_site_attr mmsa ON mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+		AND mmsa.ATTR_NAME = 'attribute14'
+		AND mmsa.TENANT_ID = mms.TENANT_ID
+		LEFT JOIN mt_material_site_attr mmsat ON mmsat.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+		AND mmsat.ATTR_NAME = 'attribute17'
+		AND mmsat.TENANT_ID = mms.TENANT_ID
+	WHERE mms.MATERIAL_ID = mm.MATERIAL_ID
+		AND mms.SITE_ID = #{siteId}
+		AND mms.TENANT_ID = mm.TENANT_ID
+		AND mm.MATERIAL_ID = #{materialId}
+    </select>
+
+	<select id="selectMaterialLot" resultType="com.ruike.hme.domain.vo.HmeEoJobSnReworkVO3">
+        SELECT
+		mml.MATERIAL_LOT_ID,
+		mml.MATERIAL_LOT_CODE,
+		mml.MATERIAL_ID,
+		mml.LOCATOR_ID,
+		mml.LOT,
+		mml.PRIMARY_UOM_QTY,
+		mmlt.LOCATOR_CODE,
+		mml.ENABLE_FLAG,
+		mml.QUALITY_STATUS,
+		mml.FREEZE_FLAG,
+		mml.STOCKTAKE_FLAG
+	FROM
+		mt_material_lot mml
+		LEFT JOIN mt_mod_locator mmlt ON mmlt.LOCATOR_ID = mml.LOCATOR_ID
+	WHERE
+		mml.TENANT_ID = #{tenantId}
+		AND mml.MATERIAL_LOT_CODE = #{materialLotCode}
+    </select>
+
+	<select id="queryAssembleQty" resultType="java.math.BigDecimal">
+		SELECT
+			IFNULL(sum( meca.ASSEMBLE_QTY ), 0)  AS ASSEMBLE_QTY
+		FROM
+			mt_eo_component_actual meca
+		WHERE
+		meca.TENANT_ID = #{tenantId}
+		AND meca.MATERIAL_ID = #{materialId}
+		AND meca.ROUTER_STEP_ID = #{eoStepId}
+		AND meca.EO_ID  = #{eoId}
+		and meca.ASSEMBLE_EXCESS_FLAG = 'Y'
+		GROUP BY
+		meca.EO_ID,
+		meca.ROUTER_STEP_ID,
+		meca.MATERIAL_ID
+	</select>
+
+	<select id="queryDeliveryLocator" resultType="tarzan.modeling.domain.entity.MtModLocator">
+		SELECT
+			mml.LOCATOR_ID,
+			mml.LOCATOR_CODE,
+			mml.PARENT_LOCATOR_ID
+		FROM
+			mt_mod_organization_rel mor,
+			mt_mod_organization_rel mor2,
+			mt_mod_locator_org_rel lor,
+			mt_mod_locator mml
+		WHERE
+			mor.TOP_SITE_ID = #{siteId}
+		AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor.ORGANIZATION_ID = #{workcellId}
+		AND mor.TENANT_ID = #{tenantId}
+		AND mor2.TOP_SITE_ID = mor.TOP_SITE_ID
+		AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+		AND mor2.TENANT_ID = mor.TENANT_ID
+		AND lor.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+		AND lor.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mml.LOCATOR_ID = lor.LOCATOR_ID
+		AND mml.LOCATOR_TYPE = 'DEFAULT_STORAGE'
+	</select>
+
+	<select id="queryReworkMaterialLotByMaterialLotId" resultType="java.lang.String">
+		SELECT
+			attr.ATTR_VALUE
+		FROM
+			mt_material_lot mml,
+			mt_eo me,
+			mt_eo_attr attr
+		WHERE
+			mml.MATERIAL_LOT_ID = #{materialLotId}
+		AND mml.TENANT_ID = #{tenantId}
+		AND me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+		AND me.TENANT_ID = mml.TENANT_ID
+		AND attr.EO_ID = me.EO_ID
+		AND attr.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+	</select>
+
+	<select id="queryNewMaterialLotByOldMaterialLot" resultType="java.lang.String">
+		SELECT
+			mml.MATERIAL_LOT_ID
+		FROM
+		  	mt_material_lot ml,
+			mt_eo_attr attr,
+			mt_eo me,
+			mt_material_lot mml
+		WHERE
+			ml.MATERIAL_LOT_ID = #{materialLotId}
+		AND	attr.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+		AND attr.ATTR_VALUE = ml.MATERIAL_LOT_CODE
+		AND attr.TENANT_ID = #{tenantId}
+		AND me.EO_ID = attr.EO_ID
+		AND mml.MATERIAL_LOT_CODE = me.IDENTIFICATION
+		AND mml.TENANT_ID = me.TENANT_ID
+		ORDER BY me.LAST_UPDATE_DATE DESC
+	</select>
+
+	<select id="queryNearNewMaterialLotByOldMaterialLot" resultType="java.lang.String">
+		SELECT
+			mml.MATERIAL_LOT_CODE
+		FROM
+			mt_eo_attr attr,
+			mt_eo me,
+			mt_material_lot mml
+		WHERE
+			attr.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+		AND attr.ATTR_VALUE = #{materialLotCode}
+		AND attr.TENANT_ID = #{tenantId}
+		AND me.EO_ID = attr.EO_ID
+		AND mml.MATERIAL_LOT_CODE = me.IDENTIFICATION
+		AND mml.TENANT_ID = me.TENANT_ID
+		ORDER BY me.LAST_UPDATE_DATE DESC
+		LIMIT 1
+	</select>
+
+	<select id="queryReworkMaterialLotCode" resultType="java.lang.String">
+		SELECT
+			attr.ATTR_VALUE
+		FROM
+			mt_material_lot mml,
+			mt_eo me,
+			mt_eo_attr attr
+		WHERE
+			mml.MATERIAL_LOT_ID = #{materialLotId}
+		AND mml.TENANT_ID = #{tenantId}
+		AND me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+		AND me.TENANT_ID = mml.TENANT_ID
+		AND attr.EO_ID = me.EO_ID
+		AND attr.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+	</select>
+
+	<select id="queryReworkMaterialLotCodeByOldCode" resultType="java.lang.String">
+		SELECT
+			eo.IDENTIFICATION
+		FROM
+			mt_eo_attr ea,
+			mt_eo eo
+		WHERE
+			eo.TENANT_ID = #{tenantId}
+		AND eo.EO_ID = ea.EO_ID
+		AND ea.tenant_id = #{tenantId}
+		AND ea.attr_name = 'REWORK_MATERIAL_LOT'
+		AND ea.attr_value = #{materialLotCode}
+		ORDER BY eo.LAST_UPDATE_DATE DESC
+		LIMIT 1
+	</select>
+
+	<select id="queryReworkEoIdsByOldCode" resultType="java.lang.String">
+		SELECT
+			ea.eo_id
+		FROM
+			mt_eo_attr ea
+		LEFT JOIN mt_eo me ON me.eo_id = ea.eo_id
+		WHERE ea.tenant_id = #{tenantId}
+		  AND ea.attr_name = 'REWORK_MATERIAL_LOT'
+		  AND ea.attr_value = #{materialLotCode}
+		ORDER BY me.CREATION_DATE DESC
+	</select>
+
+	<select id="queryPumpProcessFlag" resultType="java.lang.Long">
+		SELECT
+			COUNT(frh.rule_head_id)
+		FROM
+			hme_pump_filter_rule_header frh
+		WHERE frh.tenant_id = #{tenantId}
+		AND frh.material_id = #{materialId}
+		AND frh.enable_flag = 'Y'
+	</select>
+
+	<select id="getRouterStepIdByEoId" resultType="java.lang.String">
+		SELECT
+			mrs.ROUTER_STEP_ID
+		FROM
+			mt_eo_router er,
+			mt_router_step mrs
+		WHERE
+			er.eo_id = #{eoId}
+		AND er.TENANT_ID = #{tenantId}
+		AND mrs.ROUTER_ID = er.ROUTER_ID
+		AND mrs.TENANT_ID = #{tenantId}
+	</select>
+
+	<select id="getBomComponentIdByRouterStepAndOperation" resultType="tarzan.method.domain.entity.MtBomComponent">
+		select mbc.BOM_COMPONENT_ID, mbc.MATERIAL_ID
+		from mt_router_operation mro,
+		mt_router_operation_component mroc,
+		mt_bom_component mbc
+		where mro.OPERATION_ID = #{operationId}
+		and mro.ROUTER_STEP_ID IN
+		<foreach collection="routerStepIdList" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		and mro.TENANT_ID = #{tenantId}
+		and mroc.ROUTER_OPERATION_ID = mro.ROUTER_OPERATION_ID
+		and mroc.TENANT_ID = mro.TENANT_ID
+		and mbc.BOM_COMPONENT_ID = mroc.BOM_COMPONENT_ID
+	</select>
+
+	<select id="queryPumpCombListByMaterialLotId" resultType="com.ruike.hme.api.dto.HmePumpCombDTO">
+        SELECT
+        	jpc.job_id,
+            jpc.pump_req_qty,
+            jpc.sub_barcode,
+            jpc.sub_barcode_seq,
+            jpc.material_lot_id
+        FROM
+        	hme_eo_job_pump_comb jpc
+        WHERE
+        	jpc.tenant_id = #{tenantId}
+        AND jpc.comb_material_lot_id = #{materialLotId}
+    </select>
+
+	<select id="queryPumpTagRecordResult" resultType="com.ruike.hme.api.dto.HmePumpCombDTO2">
+		SELECT
+		jdr.result,
+		mt.tag_code
+		FROM
+		hme_eo_job_data_record jdr,
+		mt_tag mt
+		WHERE
+		jdr.job_id IN
+		<foreach collection="cmbJobIds" item="jobId" index="index" open="(" close=")" separator=",">
+			#{jobId}
+		</foreach>
+		AND jdr.tenant_id = #{tenantId}
+		AND mt.TAG_ID = jdr.tag_id
+		AND mt.TAG_CODE IN ('B05-BPYZH-P', 'B05-BPYZH-V')
+	</select>
+	<select id="queryReleaseBackLocator" resultType="tarzan.modeling.domain.entity.MtModLocator">
+		SELECT
+			mml.LOCATOR_ID,
+			mml.LOCATOR_CODE,
+			mml.PARENT_LOCATOR_ID
+		FROM
+			mt_mod_organization_rel mor,
+			mt_mod_organization_rel mor2,
+			mt_mod_locator_org_rel lor,
+			mt_mod_locator mml
+		WHERE
+			mor.TOP_SITE_ID = #{siteId}
+		  AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		  AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+		  AND mor.ORGANIZATION_ID = #{workcellId}
+		  AND mor.TENANT_ID = #{tenantId}
+		  AND mor2.TOP_SITE_ID = mor.TOP_SITE_ID
+		  AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		  AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+		  AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+		  AND mor2.TENANT_ID = mor.TENANT_ID
+		  AND lor.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+		  AND lor.ORGANIZATION_TYPE = 'WORKCELL'
+		  AND mml.LOCATOR_ID = lor.LOCATOR_ID
+		  AND mml.LOCATOR_TYPE = 'RELEASE_BACK'
+	</select>
+
+	<select id="querySourceMaterialLotSoNum" resultType="com.ruike.hme.domain.vo.HmeWorkOrderVO2">
+		SELECT
+		  	attr1.ATTR_VALUE SO_NUM,
+		  	attr2.ATTR_VALUE SO_LINE_NUM
+		FROM
+			mt_eo_attr attr,
+			mt_material_lot mml
+			LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'SO_NUM'
+			LEFT JOIN mt_material_lot_attr attr2 ON attr2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr2.ATTR_NAME = 'SO_LINE_NUM'
+		WHERE
+			attr.TENANT_ID = #{tenantId}
+		AND attr.eo_id = #{eoId}
+		AND attr.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+		AND mml.MATERIAL_LOT_CODE = attr.ATTR_VALUE
+		AND mml.TENANT_ID = #{tenantId}
+	</select>
+
+	<select id="queryLastWorkingMaterialLotCode" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+		SELECT
+			mml.MATERIAL_LOT_ID,
+		  	mml.MATERIAL_LOT_CODE,
+		  	mml.MATERIAL_ID
+		FROM
+			mt_eo_attr ea,
+			mt_eo me,
+			mt_material_lot mml
+		WHERE ea.TENANT_ID = #{tenantId}
+		AND ea.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+		AND ea.ATTR_VALUE = #{materialLotCode}
+		AND me.EO_ID = ea.EO_ID
+		AND me.`STATUS` = 'WORKING'
+		AND mml.MATERIAL_LOT_CODE = me.IDENTIFICATION
+		AND mml.TENANT_ID = #{tenantId}
+		ORDER BY me.LAST_UPDATE_DATE DESC
+		LIMIT 1
+	</select>
+</mapper>

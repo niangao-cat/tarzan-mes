@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeTagMapper">
+
+    <select id="operationLimitForCompleteBoxing" resultType="com.ruike.hme.domain.vo.HmeTagVO">
+        select tgp.TAG_GROUP_ID,
+               tgp.TAG_GROUP_CODE,
+               tg.TAG_ID,
+               tg.TAG_CODE,
+               tg.TAG_DESCRIPTION,
+               tg.value_type,
+               tga.MAXIMAL_VALUE,
+               tga.MINIMUM_VALUE,
+               t.MATERIAL_ID,
+               tgp.BUSINESS_TYPE GROUP_PURPOSE
+        from mt_tag tg,
+			 mt_tag_group tgp,
+			 mt_tag_group_assign tga,
+             mt_tag_group_object t
+        where t.TAG_GROUP_ID = tgp.TAG_GROUP_ID
+		and tgp.TAG_GROUP_ID = tga.TAG_GROUP_ID
+		and tg.TAG_ID = tga.TAG_ID
+        and tgp.STATUS = 'RELEASE'
+        and tgp.BUSINESS_TYPE = 'GENERAL'
+        and t.OPERATION_ID = #{operationId}
+        and t.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="operationLimitForEoJobSn" resultType="com.ruike.hme.domain.vo.HmeTagVO">
+        select tga.TAG_GROUP_ID,
+               tga.tag_id,
+               tg.TAG_CODE,
+               tg.TAG_DESCRIPTION,
+               tg.value_type,
+               tga.MAXIMAL_VALUE,
+               tga.MINIMUM_VALUE,
+               tgp.BUSINESS_TYPE GROUP_PURPOSE
+        from mt_tag tg,
+             mt_tag_group tgp,
+             mt_tag_group_assign tga,
+             mt_tag_group_object t
+        where t.TAG_GROUP_ID = tgp.TAG_GROUP_ID
+        and tgp.status = 'RELEASE'
+        and tgp.TAG_GROUP_ID = tga.TAG_GROUP_ID
+        and tg.TAG_ID = tga.TAG_ID
+        and tgp.BUSINESS_TYPE in 
+        <foreach collection="businessTypeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and (t.MATERIAL_ID IS NULL or length(t.MATERIAL_ID) = 0)
+        and (t.ITEM_TYPE IS NULL or length(t.ITEM_TYPE) = 0)
+        and t.OPERATION_ID = #{operationId}
+        and t.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="operationMaterialLimitForEoJobSn" resultType="com.ruike.hme.domain.vo.HmeTagVO">
+        select tga.TAG_GROUP_ID,
+               tga.tag_id,
+               tg.TAG_CODE,
+               tg.TAG_DESCRIPTION,
+               tg.value_type,
+               tga.MAXIMAL_VALUE,
+               tga.MINIMUM_VALUE,
+               tgp.BUSINESS_TYPE GROUP_PURPOSE
+        from mt_tag tg,
+             mt_tag_group tgp,
+             mt_tag_group_assign tga,
+             mt_tag_group_object t
+        where t.TAG_GROUP_ID = tgp.TAG_GROUP_ID
+        and tgp.status = 'RELEASE'
+        and tgp.TAG_GROUP_ID = tga.TAG_GROUP_ID
+        and tg.TAG_ID = tga.TAG_ID
+        and tgp.BUSINESS_TYPE in ('DATA', 'GENERAL')
+        and t.MATERIAL_ID = #{materialId}
+        and t.OPERATION_ID = #{operationId}
+        and t.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="operationMaterialVersionLimitForEoJobSn" resultType="com.ruike.hme.domain.vo.HmeTagVO">
+        select tga.TAG_GROUP_ID,
+               tga.tag_id,
+               tg.TAG_CODE,
+               tg.TAG_DESCRIPTION,
+               tg.value_type,
+               tga.MAXIMAL_VALUE,
+               tga.MINIMUM_VALUE,
+               tgp.BUSINESS_TYPE GROUP_PURPOSE
+        from mt_tag tg,
+             mt_tag_group tgp,
+             mt_tag_group_assign tga,
+             mt_tag_group_object t
+        where t.TAG_GROUP_ID = tgp.TAG_GROUP_ID
+        and tgp.status = 'RELEASE'
+        and tgp.TAG_GROUP_ID = tga.TAG_GROUP_ID
+        and tg.TAG_ID = tga.TAG_ID
+        and tgp.BUSINESS_TYPE in
+        <foreach collection="businessTypeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="productionVersion == null or productionVersion ==''">
+            and (t.PRODUCTION_VERSION is null or t.PRODUCTION_VERSION = '')
+        </if>
+        <if test="productionVersion != null and productionVersion !=''">
+            and t.PRODUCTION_VERSION = #{productionVersion}
+        </if>
+        and t.MATERIAL_ID = #{materialId}
+        and t.OPERATION_ID = #{operationId}
+        and t.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="operationMaterialVersionLimitForEoJobSn2" resultType="com.ruike.hme.domain.vo.HmeTagVO">
+        select tga.TAG_GROUP_ID,
+        tga.tag_id,
+        tg.TAG_CODE,
+        tg.TAG_DESCRIPTION,
+        tg.value_type,
+        tga.MAXIMAL_VALUE,
+        tga.MINIMUM_VALUE,
+        tgp.BUSINESS_TYPE GROUP_PURPOSE
+        from mt_tag tg,
+        mt_tag_group tgp,
+        mt_tag_group_assign tga,
+        mt_tag_group_object t,
+        mt_tag_group_attr mtga
+        WHERE mtga.TAG_GROUP_ID = tgp.TAG_GROUP_ID
+        AND mtga.ATTR_NAME = 'LAB_CODE'
+        AND mtga.TENANT_ID = tgp.TENANT_ID
+        AND mtga.ATTR_VALUE = #{labCode}
+        AND t.TAG_GROUP_ID = tgp.TAG_GROUP_ID
+        and tgp.status = 'RELEASE'
+        and tgp.TAG_GROUP_ID = tga.TAG_GROUP_ID
+        and tg.TAG_ID = tga.TAG_ID
+        and tgp.BUSINESS_TYPE in
+        <foreach collection="businessTypeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and t.MATERIAL_ID = #{materialId}
+        and t.OPERATION_ID = #{operationId}
+        and t.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="operationItemTypeLimitForEoJobSn" resultType="com.ruike.hme.domain.vo.HmeTagVO">
+        select tga.TAG_GROUP_ID,
+               tga.tag_id,
+               tg.TAG_CODE,
+               tg.TAG_DESCRIPTION,
+               tg.value_type,
+               tga.MAXIMAL_VALUE,
+               tga.MINIMUM_VALUE,
+               tgp.BUSINESS_TYPE GROUP_PURPOSE
+        from mt_tag tg,
+             mt_tag_group tgp,
+             mt_tag_group_assign tga,
+             mt_tag_group_object t
+        where t.TAG_GROUP_ID = tgp.TAG_GROUP_ID
+        and tgp.status = 'RELEASE'
+        and tgp.TAG_GROUP_ID = tga.TAG_GROUP_ID
+        and tg.TAG_ID = tga.TAG_ID
+        and tgp.BUSINESS_TYPE in
+        <foreach collection="businessTypeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and (t.MATERIAL_ID is null or length(t.MATERIAL_ID) = 0)
+        and t.ITEM_TYPE = #{itemType}
+        and t.OPERATION_ID = #{operationId}
+        and t.TENANT_ID = #{tenantId}
+    </select>
+</mapper>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtEventTypeMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtEventType">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EVENT_TYPE_ID" property="eventTypeId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TYPE_CODE" property="eventTypeCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_EVENT_TYPE_FLAG" property="defaultEventTypeFlag" jdbcType="VARCHAR"/>
+        <result column="ONHAND_CHANGE_FLAG" property="onhandChangeFlag" jdbcType="VARCHAR"/>
+        <result column="ONHAND_CHANGE_TYPE" property="onhandChangeType" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="propertyLimitEventTypeQuery" resultType="java.lang.String">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t.EVENT_TYPE_ID
+        FROM
+        mt_event_type t
+        INNER JOIN mt_event_type_tl tl ON tl.EVENT_TYPE_ID = t.EVENT_TYPE_ID
+        AND tl.LANG = #{locale}
+        WHERE 1=1
+        AND t.TENANT_ID = ${tenantId}
+        <if test="dto.eventTypeCode != null">
+            AND t.EVENT_TYPE_CODE = #{dto.eventTypeCode}
+        </if>
+        <if test="dto.description != null">
+            AND tl.DESCRIPTION LIKE concat('%', concat(#{dto.description}, '%'))
+        </if>
+        <if test="dto.enableFlag != null">
+            AND t.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.defaultEventTypeFlag != null">
+            AND t.DEFAULT_EVENT_TYPE_FLAG = #{dto.defaultEventTypeFlag}
+        </if>
+        <if test="dto.onhandChangeFlag != null">
+            AND t.ONHAND_CHANGE_FLAG = #{dto.onhandChangeFlag}
+        </if>
+        <if test="dto.onhandChangeType != null">
+            AND t.ONHAND_CHANGE_TYPE = #{dto.onhandChangeType}
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t1.EVENT_TYPE_ID,
+        t1.EVENT_TYPE_CODE,
+        t2.DESCRIPTION,
+        t1.ENABLE_FLAG,
+        t1.DEFAULT_EVENT_TYPE_FLAG,
+        t1.ONHAND_CHANGE_FLAG,
+        t1.ONHAND_CHANGE_TYPE,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        FROM mt_event_type t1
+        INNER join mt_event_type_tl t2 ON t1.EVENT_TYPE_ID=t2.EVENT_TYPE_ID
+        AND t2.LANG=#{locale}
+        WHERE t1.TENANT_ID = ${tenantId}
+        AND t1.EVENT_TYPE_ID IN
+        <foreach collection="eventTypeIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByEventId" resultMap="BaseResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t1.EVENT_TYPE_ID,
+        t1.EVENT_TYPE_CODE,
+        t2.DESCRIPTION,
+        t1.ENABLE_FLAG,
+        t1.DEFAULT_EVENT_TYPE_FLAG,
+        t1.ONHAND_CHANGE_FLAG,
+        t1.ONHAND_CHANGE_TYPE,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        FROM
+        mt_event_type t1,
+        mt_event_type_tl t2,
+        mt_event ev
+        WHERE
+        t1.EVENT_TYPE_ID = t2.EVENT_TYPE_ID
+        AND t2.LANG = #{locale}
+        AND ev.EVENT_TYPE_ID = t1.EVENT_TYPE_ID
+        AND ev.EVENT_ID = #{eventId}
+        AND t1.TENANT_ID = ${tenantId}
+        AND ev.TENANT_ID = ${tenantId}
+    </select>
+
+    <select id="selectEventType" resultMap="BaseResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t.EVENT_TYPE_ID,
+        t.EVENT_TYPE_CODE,
+        tl.DESCRIPTION,
+        t.ENABLE_FLAG,
+        t.DEFAULT_EVENT_TYPE_FLAG,
+        t.ONHAND_CHANGE_FLAG,
+        t.ONHAND_CHANGE_TYPE,
+        t.CID
+        FROM
+        mt_event_type t
+        INNER JOIN mt_event_type_tl tl ON tl.EVENT_TYPE_ID = t.EVENT_TYPE_ID AND tl.LANG =
+        #{locale}
+        where 1=1
+        and t.TENANT_ID = ${tenantId}
+        <if test="dto.eventTypeCode != null">
+            AND t.EVENT_TYPE_CODE LIKE concat('%', concat(#{dto.eventTypeCode}, '%'))
+        </if>
+        <if test="dto.description != null">
+            AND tl.DESCRIPTION LIKE concat('%', concat(#{dto.description}, '%'))
+        </if>
+        <if test="dto.enableFlag != null">
+            AND t.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+    </select>
+
+
+
+</mapper>

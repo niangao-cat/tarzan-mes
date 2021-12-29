@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWoInputRecordMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeWoInputRecord">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="input_record_id" property="inputRecordId" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="router_step_id" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_version" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="lot" property="lot" jdbcType="VARCHAR"/>
+        <result column="qty" property="qty" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="workOrderGet" resultType="com.ruike.hme.api.dto.HmeWoInputRecordDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        wo.SITE_ID,
+        ms.SITE_CODE,
+        mst.SITE_NAME,
+        wo.WORK_ORDER_ID,
+        wo.WORK_ORDER_NUM,
+        wo.WORK_ORDER_TYPE,
+        gtt.DESCRIPTION AS WO_TYPE,
+        wo.STATUS,
+        gst.DESCRIPTION AS WO_STATUS,
+        wo.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        wo.QTY,
+        wo.UOM_ID,
+        mu.UOM_CODE,
+        wo.PRODUCTION_LINE_ID AS PROD_LINE_ID,
+        mpl.PROD_LINE_CODE,
+        wo.BOM_ID,
+        mb.BOM_NAME,
+        wo.ROUTER_ID,
+        mr.ROUTER_NAME,
+        wo.LOCATOR_ID,
+        mml.LOCATOR_CODE
+        FROM
+        mt_work_order wo
+        INNER JOIN mt_mod_site ms ON wo.SITE_ID = ms.SITE_ID
+        INNER JOIN mt_mod_site_tl mst ON ms.SITE_ID = mst.SITE_ID AND mst.LANG = #{lang}
+        INNER JOIN mt_material mm ON wo.MATERIAL_ID = mm.MATERIAL_ID
+        INNER JOIN mt_material_tl mmt ON mm.MATERIAL_ID = mmt.MATERIAL_ID AND mmt.LANG = #{lang}
+        INNER JOIN mt_uom mu ON wo.UOM_ID = mu.UOM_ID
+        INNER JOIN mt_mod_production_line mpl ON wo.PRODUCTION_LINE_ID = mpl.PROD_LINE_ID
+        LEFT JOIN mt_gen_type gt ON wo.WORK_ORDER_TYPE = gt.TYPE_CODE AND gt.TYPE_GROUP = 'WO_TYPE'
+        LEFT JOIN mt_gen_type_tl gtt ON gt.GEN_TYPE_ID = gtt.GEN_TYPE_ID AND gtt.LANG = #{lang}
+        LEFT JOIN mt_gen_status gs ON wo.STATUS = gs.STATUS_CODE AND gs.STATUS_GROUP = 'WO_STATUS'
+        LEFT JOIN mt_gen_status_tl gst ON gs.GEN_STATUS_ID = gst.GEN_STATUS_ID AND gst.LANG = #{lang}
+        LEFT JOIN mt_bom mb ON wo.BOM_ID = mb.BOM_ID
+        LEFT JOIN mt_router mr ON wo.ROUTER_ID = mr.ROUTER_ID
+        LEFT JOIN mt_mod_locator mml ON wo.LOCATOR_ID = mml.LOCATOR_ID
+        WHERE wo.TENANT_ID = #{tenantId}
+        <if test="workOrderNum != null">
+            and wo.WORK_ORDER_NUM = #{workOrderNum}
+        </if>
+    </select>
+
+    <select id="woBomCompInfoQuery" resultType="com.ruike.hme.api.dto.HmeWoInputRecordDTO4">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t.work_order_id,
+        t.work_order_num,
+        t.site_id,
+        t.bom_id,
+        t.bom_component_id,
+        t.related_project_num,
+        t.router_step_id,
+        t.step_name,
+        t.step_desc,
+        t.line_number,
+        t.material_id,
+        t.material_code,
+        t.material_name,
+        t.material_version,
+        0 + CAST(t.unit_dosage AS CHAR) unit_dosage,
+        0 + CAST(t.qty AS CHAR) qty,
+        CASE WHEN t.plan_flag = 'INSIDE' THEN
+        0 + CAST(t.qty * t.unit_dosage AS CHAR)
+        END AS need_qty,
+        t.assemble_qty,
+        t.primary_uom_id,
+        t.uom_code,
+        t.recoil_flag,
+        t.special_inv_flag,
+        t.parent_virtual_part,
+        t.virtual_part_flag,
+        t.demand_qty,
+        t.total_demand_qty,
+        t.so_num,
+        t.so_Line_num,
+        t.plan_flag
+        FROM
+        (SELECT
+        wo.WORK_ORDER_ID,
+        wo.WORK_ORDER_NUM,
+        wo.SITE_ID,
+        wo.BOM_ID,
+        mbc.BOM_COMPONENT_ID,
+        mbca.ATTR_VALUE AS related_project_num,
+        mrs.ROUTER_STEP_ID,
+        mrs.STEP_NAME,
+        mrs.DESCRIPTION AS STEP_DESC,
+        mbc.LINE_NUMBER,
+        mbc.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mbca1.ATTR_VALUE AS MATERIAL_VERSION,
+        CASE
+        WHEN mb.PRIMARY_QTY IS NULL OR mb.PRIMARY_QTY = 0 THEN
+        mbc.QTY
+        ELSE
+        mbc.QTY/mb.PRIMARY_QTY
+        END AS UNIT_DOSAGE,
+        wo.QTY,
+        (select ifnull(sum(qty),0)
+        from hme_wo_input_record wir
+        where wir.material_id = mbc.material_id
+        and wir.work_order_id = wo.WORK_ORDER_ID) AS ASSEMBLE_QTY,
+        mm.PRIMARY_UOM_ID,
+        mu.UOM_CODE,
+        mmsa.ATTR_VALUE AS recoil_flag,
+        mbca2.ATTR_VALUE AS special_inv_flag,
+        mbca3.ATTR_VALUE AS parent_virtual_part,
+        mbca4.ATTR_VALUE AS virtual_part_flag,
+        mbca5.ATTR_VALUE AS erp_virtual_flag,
+        mbca6.ATTR_VALUE AS demand_qty,
+        mbca7.ATTR_VALUE AS total_demand_qty,
+        mwoa1.ATTR_VALUE AS so_num,
+        mwoa2.ATTR_VALUE AS so_line_num,
+        'INSIDE' AS plan_flag
+        FROM
+        mt_work_order wo
+        INNER JOIN mt_router_step mrs ON wo.ROUTER_ID = mrs.ROUTER_ID AND wo.TENANT_ID = mrs.TENANT_ID
+        INNER JOIN mt_router_operation mro ON mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+        INNER JOIN mt_router_operation_component mroc ON mro.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+        INNER JOIN mt_bom_component mbc ON mroc.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+        INNER JOIN mt_material mm ON mbc.MATERIAL_ID = mm.MATERIAL_ID
+        INNER JOIN mt_material_tl mmt ON mm.MATERIAL_ID = mmt.MATERIAL_ID AND mmt.LANG = #{lang}
+        INNER JOIN mt_uom mu ON mm.PRIMARY_UOM_ID = mu.UOM_ID
+        INNER JOIN mt_bom mb ON mbc.BOM_ID = mb.BOM_ID
+        LEFT JOIN mt_material_site mms ON mm.MATERIAL_ID = mms.MATERIAL_ID AND wo.site_id = mms.site_id
+        LEFT JOIN mt_material_site_attr mmsa ON mms.MATERIAL_SITE_ID = mmsa.MATERIAL_SITE_ID
+        AND mmsa.ATTR_NAME = 'attribute1' and mms.TENANT_ID = mmsa.TENANT_ID
+        LEFT JOIN mt_bom_component_attr mbca ON mbc.BOM_COMPONENT_ID = mbca.BOM_COMPONENT_ID
+        AND mbca.ATTR_NAME = 'lineAttribute10' and mbc.TENANT_ID = mbca.TENANT_ID
+        LEFT JOIN mt_bom_component_attr mbca1 ON mbc.BOM_COMPONENT_ID = mbca1.BOM_COMPONENT_ID
+        AND mbca1.ATTR_NAME = 'lineAttribute7' and mbc.TENANT_ID = mbca1.TENANT_ID
+        LEFT JOIN mt_bom_component_attr mbca2 ON mbc.BOM_COMPONENT_ID = mbca2.BOM_COMPONENT_ID
+        AND mbca2.ATTR_NAME = 'lineAttribute11' and mbc.TENANT_ID = mbca2.TENANT_ID
+        LEFT JOIN mt_bom_component_attr mbca3 ON mbc.BOM_COMPONENT_ID = mbca3.BOM_COMPONENT_ID
+        AND mbca3.ATTR_NAME = 'lineAttribute2' and mbc.TENANT_ID = mbca3.TENANT_ID
+        LEFT JOIN mt_bom_component_attr mbca4 ON mbc.BOM_COMPONENT_ID = mbca4.BOM_COMPONENT_ID
+        AND mbca4.ATTR_NAME = 'lineAttribute9' and mbc.TENANT_ID = mbca4.TENANT_ID
+        LEFT JOIN mt_bom_component_attr mbca5 ON mbc.BOM_COMPONENT_ID = mbca5.BOM_COMPONENT_ID
+        AND mbca5.ATTR_NAME = 'lineAttribute8' and mbca5.TENANT_ID = mbc.TENANT_ID
+        LEFT JOIN mt_bom_component_attr mbca6 ON mbc.BOM_COMPONENT_ID = mbca6.BOM_COMPONENT_ID
+        AND mbca6.ATTR_NAME = 'lineAttribute4' and mbca6.TENANT_ID = mbc.TENANT_ID
+        LEFT JOIN mt_bom_component_attr mbca7 ON mbc.BOM_COMPONENT_ID = mbca7.BOM_COMPONENT_ID
+        AND mbca7.ATTR_NAME = 'lineAttribute5' and mbca7.TENANT_ID = mbc.TENANT_ID
+        LEFT JOIN mt_work_order_attr mwoa1 ON wo.WORK_ORDER_ID = mwoa1.WORK_ORDER_ID
+        AND mwoa1.ATTR_NAME = 'attribute1' and wo.TENANT_ID = mwoa1.TENANT_ID
+        LEFT JOIN mt_work_order_attr mwoa2 ON wo.WORK_ORDER_ID = mwoa2.WORK_ORDER_ID
+        AND mwoa2.ATTR_NAME = 'attribute7' and wo.TENANT_ID = mwoa2.TENANT_ID
+        WHERE wo.TENANT_ID = #{tenantId}
+        <if test="dto.workOrderId != null and dto.workOrderId != ''">
+            AND wo.WORK_ORDER_ID = #{dto.workOrderId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND mbc.material_id = #{dto.materialId}
+        </if>
+        UNION ALL
+        SELECT
+        wo.WORK_ORDER_ID,
+        wo.WORK_ORDER_NUM,
+        wo.SITE_ID,
+        wo.BOM_ID,
+        NULL AS BOM_COMPONENT_ID,
+        NULL AS related_project_num,
+        NULL AS ROUTER_STEP_ID,
+        NULL AS STEP_NAME,
+        NULL AS STEP_DESC,
+        NULL AS LINE_NUMBER,
+        act.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        NULL AS MATERIAL_VERSION,
+        NULL AS UNIT_DOSAGE,
+        wo.QTY,
+        sum(act.qty) ASSEMBLE_QTY,
+        mm.PRIMARY_UOM_ID,
+        mu.UOM_CODE,
+        mmsa.ATTR_VALUE AS recoil_flag,
+        NULL AS special_inv_flag,
+        NULL AS parent_virtual_part,
+        NULL AS virtual_part_flag,
+        NULL AS erp_virtual_flag,
+        NULL AS demand_qty,
+        NULL AS total_demand_qty,
+        mwoa1.ATTR_VALUE AS so_num,
+        mwoa2.ATTR_VALUE AS so_line_num,
+        'OUTER' AS plan_flag
+        FROM
+        mt_work_order wo
+        INNER JOIN hme_wo_input_record act ON wo.WORK_ORDER_ID = act.WORK_ORDER_ID
+        INNER JOIN mt_material mm ON act.MATERIAL_ID = mm.MATERIAL_ID
+        INNER JOIN mt_material_tl mmt ON mm.MATERIAL_ID = mmt.MATERIAL_ID
+        AND mmt.LANG = #{lang}
+        INNER JOIN mt_uom mu ON mm.PRIMARY_UOM_ID = mu.UOM_ID
+        LEFT JOIN mt_work_order_attr mwoa1 ON wo.WORK_ORDER_ID = mwoa1.WORK_ORDER_ID
+        AND mwoa1.ATTR_NAME = 'attribute1'
+        AND wo.TENANT_ID = mwoa1.TENANT_ID
+        LEFT JOIN mt_work_order_attr mwoa2 ON wo.WORK_ORDER_ID = mwoa2.WORK_ORDER_ID
+        AND mwoa2.ATTR_NAME = 'attribute7'
+        AND wo.TENANT_ID = mwoa2.TENANT_ID
+        LEFT JOIN mt_material_site mms ON mm.MATERIAL_ID = mms.MATERIAL_ID
+        AND wo.site_id = mms.site_id AND mms.TENANT_ID = wo.TENANT_ID
+        LEFT JOIN mt_material_site_attr mmsa ON mms.MATERIAL_SITE_ID = mmsa.MATERIAL_SITE_ID
+        AND mmsa.ATTR_NAME = 'attribute1'
+        AND mms.TENANT_ID = mmsa.TENANT_ID
+        WHERE wo.TENANT_ID = #{tenantId}
+        <if test="dto.workOrderId != null and dto.workOrderId != ''">
+            AND wo.WORK_ORDER_ID = #{dto.workOrderId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND act.material_id = #{dto.materialId}
+        </if>
+        and (act.router_step_id is null or act.router_step_id = '')
+        GROUP BY
+        wo.WORK_ORDER_ID,
+        wo.WORK_ORDER_NUM,
+        wo.SITE_ID,
+        wo.BOM_ID,
+        act.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        wo.QTY,
+        mm.PRIMARY_UOM_ID,
+        mu.UOM_CODE,
+        mwoa1.ATTR_VALUE,
+        mwoa2.ATTR_VALUE,
+        mmsa.ATTR_VALUE
+        ) t
+        WHERE 1=1
+        AND (t.erp_virtual_flag != 'X' OR t.erp_virtual_flag IS NULL)
+        <if test="dto.bomComponentId != null and dto.bomComponentId != ''">
+            AND t.bom_component_id = #{dto.bomComponentId}
+        </if>
+        <if test="dto.routerStepId != null and dto.routerStepId != ''">
+            AND t.router_step_id = #{dto.routerStepId}
+        </if>
+        <if test="dto.planFlag != null and dto.planFlag != ''">
+            AND t.plan_flag = #{dto.planFlag}
+        </if>
+        ORDER BY t.plan_flag,
+        t.step_name,
+        t.line_number
+    </select>
+
+    <select id="woInputRecordQuery" resultType="com.ruike.hme.api.dto.HmeWoInputRecordDTO2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        wir.input_record_id,
+        wir.work_order_id,
+        wir.router_step_id,
+        wir.material_id,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mml.LOCATOR_ID,
+        mu.UOM_CODE,
+        wir.material_version,
+        wir.material_lot_id,
+        mml.MATERIAL_LOT_CODE,
+        mml.SITE_ID,
+        mml.ENABLE_FLAG,
+        mml.QUALITY_STATUS,
+        wir.lot,
+        wir.qty,
+        wir.created_by AS feeder,
+        iu.login_name AS feeder_name,
+        wir.creation_date AS feed_date
+        FROM
+        hme_wo_input_record wir
+        INNER JOIN mt_material mm ON wir.MATERIAL_ID = mm.MATERIAL_ID
+        INNER JOIN mt_material_tl mmt ON mm.MATERIAL_ID = mmt.MATERIAL_ID AND mmt.LANG = #{lang}
+        INNER JOIN mt_material_lot mml ON wir.material_lot_id = mml.MATERIAL_LOT_ID
+        INNER JOIN mt_uom mu ON mm.PRIMARY_UOM_ID = mu.UOM_ID
+        INNER JOIN hzero_platform.iam_user iu ON wir.created_by = iu.id
+        WHERE wir.TENANT_ID = #{tenantId}
+        <if test="dto.workOrderId != null and dto.workOrderId != ''">
+            and wir.work_order_id = #{dto.workOrderId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and wir.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion != ''">
+            and wir.material_version = #{dto.materialVersion}
+        </if>
+        <if test="dto.routerStepId != null and dto.routerStepId != ''">
+            and wir.router_step_id = #{dto.routerStepId}
+        </if>
+    </select>
+
+    <select id="materialLotGet" resultType="com.ruike.hme.api.dto.HmeWoInputRecordDTO2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mml.SITE_ID,
+        mml.material_id,
+        mml.PRIMARY_UOM_ID AS material_lot_uom_id,
+        mm.PRIMARY_UOM_ID AS material_uom_id,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mml.LOCATOR_ID,
+        mml.PRIMARY_UOM_QTY AS qty,
+        mu.UOM_CODE,
+        mml.LOT,
+        mmla.ATTR_VALUE AS material_version,
+        mml.ENABLE_FLAG,
+        mml.QUALITY_STATUS,
+        mmla1.ATTR_VALUE AS mf_flag,
+        mmla2.ATTR_VALUE AS so_num,
+        mmla3.ATTR_VALUE AS so_line_num,
+        mml.STOCKTAKE_FLAG,
+        mml.FREEZE_FLAG
+        FROM
+        mt_material_lot mml
+        INNER JOIN mt_material mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+        INNER JOIN mt_material_tl mmt ON mm.MATERIAL_ID = mmt.MATERIAL_ID AND mmt.LANG = #{lang}
+        INNER JOIN mt_uom mu ON mm.PRIMARY_UOM_ID = mu.UOM_ID
+        LEFT JOIN mt_material_lot_attr mmla ON mml.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'MATERIAL_VERSION' and mml.TENANT_ID = mmla.TENANT_ID
+        LEFT JOIN mt_material_lot_attr mmla1 ON mml.MATERIAL_LOT_ID = mmla1.MATERIAL_LOT_ID
+        and mmla1.ATTR_NAME = 'MF_FLAG' and mml.TENANT_ID = mmla1.TENANT_ID
+        LEFT JOIN mt_material_lot_attr mmla2 ON mml.MATERIAL_LOT_ID = mmla2.MATERIAL_LOT_ID
+        and mmla2.ATTR_NAME = 'SO_NUM' and mml.TENANT_ID = mmla2.TENANT_ID
+        LEFT JOIN mt_material_lot_attr mmla3 ON mml.MATERIAL_LOT_ID = mmla3.MATERIAL_LOT_ID
+        and mmla3.ATTR_NAME = 'SO_LINE_NUM' and mml.TENANT_ID = mmla3.TENANT_ID
+        WHERE mml.TENANT_ID = #{tenantId}
+        <if test="materialLotCode != null and materialLotCode != ''">
+            and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+        </if>
+    </select>
+
+    <select id="workOrderNumGet" resultType="com.ruike.hme.api.dto.HmeWoInputRecordDTO6">
+        SELECT
+        wo.SITE_ID,
+        wo.BOM_ID,
+        wo.WORK_ORDER_NUM,
+        mpl.PROD_LINE_CODE
+        FROM
+        mt_work_order wo,
+        mt_mod_production_line mpl
+        WHERE wo.TENANT_ID = #{tenantId}
+        AND wo.PRODUCTION_LINE_ID = mpl.PROD_LINE_ID
+        <if test="workOrderId != null and workOrderId != ''">
+            AND wo.WORK_ORDER_ID = #{workOrderId}
+        </if>
+    </select>
+
+    <select id="mainSubstituteMaterialGet" resultType="com.ruike.hme.api.dto.HmeWoInputRecordDTO7">
+        SELECT t.MATERIAL_ID,
+               t.BOM_COMPONENT_ID
+        FROM (SELECT mbc.MATERIAL_ID,
+                     mbc.BOM_COMPONENT_ID,
+                     CASE
+                         WHEN mb.PRIMARY_QTY IS NULL OR mb.PRIMARY_QTY = 0 THEN
+                             mbc.QTY
+                         ELSE
+                             mbc.QTY / mb.PRIMARY_QTY
+                         END AS UNIT_DOSAGE
+              FROM mt_work_order wo,
+                   mt_router_step mrs,
+                   mt_router_operation mro,
+                   mt_router_operation_component mroc,
+                   mt_bom_component mbc,
+                   mt_bom mb,
+                   mt_bom_substitute mbs,
+                   mt_bom_substitute_group mbsg
+              WHERE 1 = 1
+                AND wo.ROUTER_ID = mrs.ROUTER_ID
+                AND wo.TENANT_ID = mrs.TENANT_ID
+                AND mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+                AND mro.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+                AND mroc.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+                AND mbc.BOM_ID = mb.BOM_ID
+                AND mbsg.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+                AND mbs.BOM_SUBSTITUTE_GROUP_ID = mbsg.BOM_SUBSTITUTE_GROUP_ID
+                AND mbc.BOM_ID = mb.BOM_ID
+                AND mbs.tenant_id = #{tenantId}
+                AND mbs.MATERIAL_ID = #{materialId}
+                AND wo.WORK_ORDER_ID = #{workOrderId}
+              UNION
+              SELECT mbc.MATERIAL_ID,
+                     mbc.BOM_COMPONENT_ID,
+                     CASE
+                         WHEN mb.PRIMARY_QTY IS NULL OR mb.PRIMARY_QTY = 0 THEN
+                             mbc.QTY
+                         ELSE
+                             mbc.QTY / mb.PRIMARY_QTY
+                         END AS UNIT_DOSAGE
+              FROM mt_work_order wo,
+                   mt_router_step mrs,
+                   mt_router_operation mro,
+                   mt_router_operation_component mroc,
+                   mt_bom_component mbc,
+                   mt_bom mb,
+                   wms_material_substitute_rel rel,
+                   wms_material_substitute_rel wmsr
+              WHERE 1 = 1
+                AND wo.ROUTER_ID = mrs.ROUTER_ID
+                AND wo.TENANT_ID = mrs.TENANT_ID
+                AND mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+                AND mro.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+                AND mroc.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+                AND mbc.BOM_ID = mb.BOM_ID
+                AND mbc.MATERIAL_ID = wmsr.MATERIAL_ID
+                AND rel.SUBSTITUTE_GROUP = wmsr.SUBSTITUTE_GROUP
+                AND rel.tenant_id = wmsr.tenant_id
+                AND rel.MATERIAL_ID = #{materialId}
+                AND rel.SITE_ID = #{siteId}
+                AND rel.tenant_id = #{tenantId}
+                AND wo.WORK_ORDER_ID = #{workOrderId}) t
+        WHERE t.UNIT_DOSAGE > 0
+    </select>
+
+    <select id="mainWoMaterialGet" resultType="com.ruike.hme.api.dto.HmeWoInputRecordDTO7">
+        SELECT mbc.MATERIAL_ID,
+               mrs.ROUTER_STEP_ID,
+               mbc.BOM_COMPONENT_ID,
+               mro.OPERATION_ID,
+               CASE
+                   WHEN mb.PRIMARY_QTY IS NULL OR mb.PRIMARY_QTY = 0 THEN
+                       0 + CAST(mbc.QTY AS CHAR)
+                   ELSE
+                       0 + CAST(mbc.QTY / mb.PRIMARY_QTY AS CHAR)
+                   END AS UNIT_DOSAGE
+        FROM mt_work_order wo,
+             mt_router_step mrs,
+             mt_router_operation mro,
+             mt_router_operation_component mroc,
+             mt_bom_component mbc,
+             mt_bom mb,
+             mt_bom_substitute mbs,
+             mt_bom_substitute_group mbsg
+        WHERE 1 = 1
+          AND wo.ROUTER_ID = mrs.ROUTER_ID
+          AND wo.TENANT_ID = mrs.TENANT_ID
+          AND mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+          AND mro.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+          AND mroc.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+          AND mbc.BOM_ID = mb.BOM_ID
+          AND mbsg.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+          AND mbs.BOM_SUBSTITUTE_GROUP_ID = mbsg.BOM_SUBSTITUTE_GROUP_ID
+          AND mbc.BOM_ID = mb.BOM_ID
+          AND mbs.tenant_id = #{tenantId}
+          AND mbs.MATERIAL_ID IN
+          <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+              #{item}
+          </foreach>
+          AND wo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+
+    <select id="mainGlobalMaterialGet" resultType="com.ruike.hme.api.dto.HmeWoInputRecordDTO7">
+        SELECT mbc.MATERIAL_ID,
+               mrs.ROUTER_STEP_ID,
+               mbc.BOM_COMPONENT_ID,
+               mro.OPERATION_ID,
+               CASE
+                   WHEN mb.PRIMARY_QTY IS NULL OR mb.PRIMARY_QTY = 0 THEN
+                       0 + CAST(mbc.QTY AS CHAR)
+                   ELSE
+                       0 + CAST(mbc.QTY / mb.PRIMARY_QTY AS CHAR)
+                   END AS UNIT_DOSAGE
+        FROM mt_work_order wo,
+             mt_router_step mrs,
+             mt_router_operation mro,
+             mt_router_operation_component mroc,
+             mt_bom_component mbc,
+             mt_bom mb,
+             wms_material_substitute_rel rel,
+             wms_material_substitute_rel wmsr
+        WHERE 1 = 1
+          AND wo.ROUTER_ID = mrs.ROUTER_ID
+          AND wo.TENANT_ID = mrs.TENANT_ID
+          AND mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+          AND mro.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+          AND mroc.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+          AND mbc.BOM_ID = mb.BOM_ID
+          AND mbc.MATERIAL_ID = wmsr.MATERIAL_ID
+          AND rel.SUBSTITUTE_GROUP = wmsr.SUBSTITUTE_GROUP
+          AND rel.tenant_id = wmsr.tenant_id
+          AND rel.MATERIAL_ID IN
+          <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+          </foreach>
+          AND rel.SITE_ID = #{siteId}
+          AND rel.tenant_id = #{tenantId}
+          AND wo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+
+    <select id="substituteMaterialGet" resultType="java.lang.String">
+        SELECT
+        wmsr.MATERIAL_ID
+        FROM
+        wms_material_substitute_rel rel,
+        wms_material_substitute_rel wmsr
+        WHERE rel.tenant_id = #{tenantId}
+        AND rel.SITE_ID = #{siteId}
+        AND rel.MATERIAL_ID = #{materialId}
+        AND rel.SUBSTITUTE_GROUP = wmsr.SUBSTITUTE_GROUP
+        AND rel.tenant_id = wmsr.tenant_id
+        <if test="materialIds != null and materialIds.size() != 0">
+            AND wmsr.MATERIAL_ID NOT IN
+            <foreach collection="materialIds" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="assembleQtyGet" resultType="java.math.BigDecimal">
+        SELECT
+        sum(t.ASSEMBLE_QTY)
+        FROM
+        (SELECT
+        act.ASSEMBLE_QTY AS ASSEMBLE_QTY
+        FROM
+        mt_bom_component mbc,
+        mt_work_order_component_actual act
+        WHERE mbc.TENANT_ID = #{tenantId}
+        AND mbc.BOM_COMPONENT_ID = act.BOM_COMPONENT_ID
+        AND act.WORK_ORDER_ID = #{workOrderId}
+        <if test="bomComponentIds != null and bomComponentIds.size() != 0">
+            AND mbc.BOM_COMPONENT_ID IN
+            <foreach collection="bomComponentIds" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="bomComponentIds == null and bomComponentIds.size() == 0">
+            AND 1 = 2
+        </if>
+        UNION ALL
+        SELECT
+        act.ASSEMBLE_QTY
+        FROM
+        mt_work_order_component_actual act
+        WHERE ( act.BOM_COMPONENT_ID IS NULL OR act.BOM_COMPONENT_ID = '' )
+        AND act.WORK_ORDER_ID = #{workOrderId}
+        <if test="materialIds != null and materialIds.size() != 0">
+            AND act.MATERIAL_ID IN
+            <foreach collection="materialIds" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="materialIds == null and materialIds.size() == 0">
+            AND 1 = 2
+        </if>
+        ) t
+    </select>
+
+    <select id="queryMainMaterialOperationId" resultType="java.lang.String">
+        SELECT
+        	mro.OPERATION_ID
+        FROM
+        	mt_work_order wo,
+        	mt_router_step mrs,
+        	mt_router_operation mro,
+        	mt_router_operation_component mroc,
+        	mt_bom_component mbc
+        WHERE
+        	wo.TENANT_ID = #{tenantId}
+        	AND wo.ROUTER_ID = mrs.ROUTER_ID
+        	AND wo.TENANT_ID = mrs.TENANT_ID
+        	AND mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+        	AND mro.ROUTER_OPERATION_ID = mroc.ROUTER_OPERATION_ID
+        	AND mroc.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+        	AND wo.WORK_ORDER_ID = #{workOrderId}
+        	AND mbc.BOM_COMPONENT_ID = #{bomComponentId}
+    </select>
+</mapper>

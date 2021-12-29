@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeExceptionMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeException">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="exception_id" property="exceptionId" jdbcType="VARCHAR"/>
+        <result column="exception_type" property="exceptionType" jdbcType="VARCHAR"/>
+        <result column="exception_code" property="exceptionCode" jdbcType="VARCHAR"/>
+        <result column="exception_name" property="exceptionName" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="uiQuery"
+            resultType="com.ruike.hme.domain.entity.HmeException">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select exc.tenant_id,
+               exc.exception_id,
+               exc.exception_type,
+               tl.DESCRIPTION exception_type_name,
+               exc.exception_code,
+               exc.exception_name,
+               exc.enable_flag,
+               exc.object_version_number,
+               exc.creation_date,
+               exc.created_by,
+               exc.last_updated_by,
+               exc.last_update_date
+        from   mt_gen_type mgt
+               left join mt_gen_type_tl tl on mgt.GEN_TYPE_ID = tl.GEN_TYPE_ID and tl.LANG = #{locale}
+			  ,hme_exception exc
+        where exc.exception_type = mgt.TYPE_CODE
+		and   mgt.TYPE_GROUP = 'EXCEPTION_TYPE'
+        and   exc.tenant_id = #{tenantId}
+        <if test="dto.exceptionId!=null">
+            and exc.exception_id = #{dto.exceptionId}
+        </if>
+        <if test="dto.enableFlag!=null">
+            and exc.enable_flag = #{dto.enableFlag}
+        </if>
+        <if test="dto.exceptionType!=null">
+            and exc.exception_type = #{dto.exceptionType}
+        </if>
+        <if test="dto.exceptionCode!=null">
+            and exc.exception_code like CONCAT(#{dto.exceptionCode},"%")
+        </if>
+        <if test="dto.exceptionName!=null">
+            and exc.exception_name like CONCAT(#{dto.exceptionName},"%")
+        </if>
+    </select>
+</mapper>

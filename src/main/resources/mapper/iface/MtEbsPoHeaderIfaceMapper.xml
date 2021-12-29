@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtEbsPoHeaderIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtEbsPoHeaderIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="PO_HEADER_ID" property="poHeaderId" jdbcType="VARCHAR"/>
+        <result column="PO_NUMBER" property="poNumber" jdbcType="VARCHAR"/>
+        <result column="PO_RELEASE_ID" property="poReleaseId" jdbcType="VARCHAR"/>
+        <result column="PO_RELEASE_NUM" property="poReleaseNum" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="BUYER_CODE" property="buyerCode" jdbcType="VARCHAR"/>
+        <result column="PO_ORDER_TYPE" property="poOrderType" jdbcType="VARCHAR"/>
+        <result column="APPROVED_STATUS" property="approvedStatus" jdbcType="VARCHAR"/>
+        <result column="CANCELED_FLAG" property="canceledFlag" jdbcType="VARCHAR"/>
+        <result column="CLOSED_CODE" property="closedCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="CURRENCY_CODE" property="currencyCode" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE1" property="poAttribute1" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE2" property="poAttribute2" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE3" property="poAttribute3" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE4" property="poAttribute4" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE5" property="poAttribute5" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE6" property="poAttribute6" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE7" property="poAttribute7" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE8" property="poAttribute8" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE9" property="poAttribute9" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE10" property="poAttribute10" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE11" property="poAttribute11" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE12" property="poAttribute12" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE13" property="poAttribute13" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE14" property="poAttribute14" jdbcType="VARCHAR"/>
+        <result column="PO_ATTRIBUTE15" property="poAttribute15" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE1" property="releaseAttribute1" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE2" property="releaseAttribute2" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE3" property="releaseAttribute3" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE4" property="releaseAttribute4" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE5" property="releaseAttribute5" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE6" property="releaseAttribute6" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE7" property="releaseAttribute7" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE8" property="releaseAttribute8" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE9" property="releaseAttribute9" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE10" property="releaseAttribute10" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE11" property="releaseAttribute11" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE12" property="releaseAttribute12" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE13" property="releaseAttribute13" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE14" property="releaseAttribute14" jdbcType="VARCHAR"/>
+        <result column="RELEASE_ATTRIBUTE15" property="releaseAttribute15" jdbcType="VARCHAR"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="getUnprocessedList" resultMap="BaseResultMap" fetchSize="5000">
+        select t.* from mt_ebs_po_header_iface t where t.TENANT_ID = ${tenantId} and t.STATUS in ('N', 'E')
+    </select>
+</mapper>

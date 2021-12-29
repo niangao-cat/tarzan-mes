@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtBomSubstituteGroupHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtBomSubstituteGroupHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="BOM_SUBSTITUTE_GROUP_HIS_ID" property="bomSubstituteGroupHisId" jdbcType="VARCHAR"/>
+        <result column="BOM_SUBSTITUTE_GROUP_ID" property="bomSubstituteGroupId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_GROUP" property="substituteGroup" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_POLICY" property="substitutePolicy" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_GROUP_ID" property="copiedFromGroupId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap1" type="tarzan.method.domain.vo.MtBomSubstituteGroupHisVO1">
+        <result column="BOM_SUBSTITUTE_GROUP_HIS_ID" property="bomSubstituteGroupHisId" jdbcType="VARCHAR"/>
+        <result column="BOM_SUBSTITUTE_GROUP_ID" property="bomSubstituteGroupId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_GROUP" property="substituteGroup" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_POLICY" property="substitutePolicy" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_GROUP_ID" property="copiedFromGroupId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+
+        <collection property="bomSubstituteHisList" ofType="tarzan.method.domain.entity.MtBomSubstituteHis"
+                    javaType="java.util.List">
+            <result column="BOM_SUBSTITUTE_HIS_ID" property="bomSubstituteHisId" jdbcType="VARCHAR"/>
+            <result column="BOM_SUBSTITUTE_ID" property="bomSubstituteId" jdbcType="VARCHAR"/>
+            <result column="BOM_SUBSTITUTE_GROUP_ID" property="bomSubstituteGroupId" jdbcType="VARCHAR"/>
+            <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+            <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+            <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+            <result column="SUBSTITUTE_VALUE" property="substituteValue" jdbcType="DECIMAL"/>
+            <result column="COPIED_FROM_SUBSTITUTE_ID" property="copiedFromSubstituteId" jdbcType="VARCHAR"/>
+            <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+            <result column="SUBSTITUTE_HIS_CID" property="cid" jdbcType="DECIMAL"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectBomSubstituteGroup" resultMap="BaseResultMap1">
+	    SELECT mbsgh.BOM_SUBSTITUTE_GROUP_HIS_ID,
+	           mbsgh.BOM_SUBSTITUTE_GROUP_ID,
+	           mbsgh.BOM_COMPONENT_ID,
+	           mbsgh.SUBSTITUTE_GROUP,
+	           mbsgh.SUBSTITUTE_POLICY,
+	           mbsgh.ENABLE_FLAG,
+	           mbsgh.COPIED_FROM_GROUP_ID,
+	           mbsgh.EVENT_ID,
+	           mbsgh.CID,
+	           mbsh.BOM_SUBSTITUTE_HIS_ID,
+	           mbsh.BOM_SUBSTITUTE_ID,
+	           mbsh.BOM_SUBSTITUTE_GROUP_ID,
+	           mbsh.MATERIAL_ID,
+	           mbsh.DATE_FROM,
+	           mbsh.DATE_TO,
+	           mbsh.SUBSTITUTE_VALUE,
+	           mbsh.COPIED_FROM_SUBSTITUTE_ID,
+	           mbsh.EVENT_ID,
+	           mbsh.CID AS SUBSTITUTE_HIS_CID
+	      FROM mt_bom_substitute_group_his mbsgh LEFT JOIN mt_bom_substitute_his mbsh ON (mbsgh.BOM_SUBSTITUTE_GROUP_ID = mbsh.BOM_SUBSTITUTE_GROUP_ID AND mbsgh.EVENT_ID = mbsh.EVENT_ID AND AND mbsh.TENANT_ID = ${tenantId})
+         WHERE mbsgh.TENANT_ID = ${tenantId}
+           AND mbsgh.BOM_COMPONENT_ID = #{bomComponentId}
+           AND mbsgh.EVENT_ID = #{eventId}
+	</select>
+
+    <select id="selectBomSubstituteGroupByEventIds" resultMap="BaseResultMap">
+        select * from mt_bom_substitute_group_his where TENANT_ID = ${tenantId} AND EVENT_ID in
+        <foreach collection="eventIds" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByBomSubstituteGroupId" resultMap="BaseResultMap">
+        select * from mt_bom_substitute_group_his where TENANT_ID = ${tenantId} AND BOM_SUBSTITUTE_GROUP_ID = #{bomSubstituteGroupId} ORDER BY EVENT_ID + 0 DESC
+    </select>
+</mapper>

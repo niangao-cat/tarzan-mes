@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeVirtualNumMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeVirtualNum">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="VIRTUAL_ID" property="virtualId" jdbcType="VARCHAR"/>
+        <result column="VIRTUAL_NUM" property="virtualNum" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="PRODUCT_CODE" property="productCode" jdbcType="VARCHAR"/>
+        <result column="BIND_FLAG" property="bindFlag" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="WAREHOUSE_ID" property="warehouseId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="SELECT_DATE" property="selectDate" jdbcType="DATE"/>
+        <result column="SELECT_BY" property="selectBy" jdbcType="VARCHAR"/>
+        <result column="SELECT_WORKCELL_ID" property="selectWorkcellId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="BaseResultVOMap" type="com.ruike.hme.domain.vo.HmeVirtualNumVO">
+        <result column="VIRTUAL_ID" property="virtualId" jdbcType="VARCHAR"/>
+        <result column="VIRTUAL_NUM" property="virtualNum" jdbcType="VARCHAR"/>
+        <result column="PRODUCT_CODE" property="productCode" jdbcType="VARCHAR"/>
+        <result column="BIND_FLAG" property="bindFlag" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="EO_IDENTIFICATION" property="eoIdentification" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_CODE" property="materialLotCode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <collection property="detailList" resultMap="DetailVOMap"/>
+    </resultMap>
+    <resultMap id="DetailVOMap" type="com.ruike.hme.domain.vo.HmeSelectionDetailsVO">
+        <result column="new_load" property="newLoad" jdbcType="VARCHAR"/>
+        <result column="new_load_row" property="newLoadRow" jdbcType="DECIMAL"/>
+        <result column="new_load_column" property="newLoadColumn" jdbcType="DECIMAL"/>
+        <result column="hot_sink_code" property="hotSinkCode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryVirtualNumByBarcode" resultMap="BaseResultVOMap">
+         select vn.virtual_id,
+                vn.virtual_num,
+                vn.product_code,
+                vn.bind_flag,
+                vn.work_order_id,
+                wo.work_order_num,
+                vn.eo_id,
+                me.identification eo_identification,
+                vn.quantity,
+                vn.material_lot_id,
+                ml.material_lot_code,
+                vn.enable_flag,
+                sd.new_load,
+                substring_index(sd.new_load, ',' ,1) new_load_row,
+                substring_index(sd.new_load, ',' ,-1) new_load_column,
+                hmll.hot_sink_code
+           from mt_material_lot ml,
+                hme_virtual_num vn
+           left join mt_work_order wo
+             on wo.work_order_id = vn.work_order_id
+            and wo.tenant_id = vn.tenant_id
+           left join mt_eo me
+             on me.eo_id = vn.eo_id
+            and me.tenant_id = vn.tenant_id
+           left join hme_selection_details sd
+             on sd.tenant_id = vn.tenant_id
+            and sd.new_material_lot_id = vn.material_lot_id
+            and sd.virtual_num = vn.virtual_num
+            and sd.new_load is not null
+            and sd.new_load != ''
+        LEFT JOIN hme_material_lot_load hmll ON hmll.tenant_id = sd.tenant_id
+        AND hmll.load_sequence = sd.load_sequence
+          where ml.material_lot_id = vn.material_lot_id
+            and ml.tenant_id = vn.tenant_id
+            and ml.tenant_id = #{tenantId}
+            and ml.material_lot_code in
+        <foreach collection="materialLotCodeList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        ORDER BY sd.new_load ASC
+    </select>
+
+    <select id="queryMaxVirtualNumWoId" resultMap="BaseResultMap">
+        select vn.virtual_id, vn.work_order_id
+          from hme_virtual_num vn
+         where vn.tenant_id = #{tenantId}
+           and vn.material_lot_id = #{materialLotId}
+         order by vn.virtual_id+0 desc
+         limit 1
+    </select>
+    
+    <update id="batchUpdateVirtualNumForRelease">
+        update hme_virtual_num
+           set eo_id = #{eoId},
+               enable_flag = 'N',
+               object_version_number = object_version_number + 1,
+               last_updated_by = #{userId},
+               last_update_date = CURRENT_TIMESTAMP
+         where tenant_id = #{tenantId}
+           and virtual_id in
+        <foreach collection="virtualIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="updateVirtualNumForReleaseBack">
+         update hme_virtual_num
+           set eo_id = null,
+               enable_flag = 'Y',
+               object_version_number = object_version_number + 1,
+               last_updated_by = #{userId},
+               last_update_date = CURRENT_TIMESTAMP
+         where tenant_id = #{tenantId}
+           and eo_id = #{eoId}
+    </update>
+</mapper>

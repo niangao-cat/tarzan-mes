@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeSelectionDetailsMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeSelectionDetails">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SELECTION_DETAILS_ID" property="selectionDetailsId" jdbcType="VARCHAR"/>
+        <result column="PRE_SELECTION_ID" property="preSelectionId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="VIRTUAL_NUM" property="virtualNum" jdbcType="VARCHAR"/>
+        <result column="NEW_MATERIAL_LOT_ID" property="newMaterialLotId" jdbcType="VARCHAR"/>
+        <result column="NEW_LOAD" property="newLoad" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OLD_MATERIAL_LOT_ID" property="oldMaterialLotId" jdbcType="VARCHAR"/>
+        <result column="OLD_LOAD" property="oldLoad" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="DECIMAL"/>
+        <result column="COS_TYPE" property="cosType" jdbcType="VARCHAR"/>
+        <result column="POWER" property="power" jdbcType="VARCHAR"/>
+        <result column="RULE1" property="rule1" jdbcType="VARCHAR"/>
+        <result column="RULE2" property="rule2" jdbcType="VARCHAR"/>
+        <result column="RULE3" property="rule3" jdbcType="VARCHAR"/>
+        <result column="RULE4" property="rule4" jdbcType="VARCHAR"/>
+        <result column="RULE5" property="rule5" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectionDetailsQuery" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO8">
+        SELECT
+        me.IDENTIFICATION new_material_lot_code,
+        hsd.virtual_num,
+        mml.material_lot_code old_material_lot_code,
+        hsd.old_load,
+        hmll.hot_sink_code,
+        hcf.a04,
+        hcf1.a02,
+        hcf3.a06,
+        mm1.material_code cos_material_code,
+        hmll.attribute2 wafer,
+        hsd.created_by,
+        hsd.creation_date,
+        mm.material_code,
+        mm.material_name,
+        mwo.work_order_num,
+        mwo.qty,
+        hsd.new_load,
+        vn.last_update_date ASSEMBLY_TIME,
+        hsd.ATTRIBUTE2 as ways
+        FROM
+        hme_selection_details hsd,
+        hme_virtual_num vn,
+        mt_eo me
+        LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = me.work_order_id
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = me.MATERIAL_ID,
+        mt_material_lot mml,
+        mt_material mm1,
+        hme_cos_function hcf,
+        hme_material_lot_load hmll,
+        hme_pre_selection hps
+        LEFT JOIN hme_cos_rule_head hcrh ON hcrh.cos_rule_code = hps.ATTRIBUTE1
+        LEFT JOIN hme_cos_rule_logic hcrl ON hcrl.cos_rule_id = hcrh.cos_rule_id
+        AND hcrl.Collection_item = 'A06'
+        LEFT JOIN hme_cos_function hcf3 ON hcf3.`current` = hcrl.`current`
+        LEFT JOIN hme_cos_rule_logic hcrl2 ON hcrl2.cos_rule_id = hcrh.cos_rule_id
+        AND hcrl2.Collection_item = 'A02'
+        LEFT JOIN hme_cos_function hcf1 ON hcf1.`current` = hcrl2.`current`
+        WHERE
+        mml.MATERIAL_LOT_ID = hsd.old_material_lot_id
+        AND hsd.virtual_num = vn.VIRTUAL_NUM
+        AND vn.EO_ID = me.EO_ID
+        AND hcf.load_sequence = hsd.load_sequence
+        AND mm1.MATERIAL_ID = hsd.MATERIAL_ID
+        AND hcf.`current` = '5'
+        AND hcf1.load_sequence = hsd.load_sequence
+        AND hmll.load_sequence = hsd.load_sequence
+        AND hps.pre_selection_id = hsd.pre_selection_id
+        AND hcf3.load_sequence = hsd.load_sequence
+        <if test='queryVO.loadSequenceList != null and queryVO.loadSequenceList.size() > 0'>
+            AND me.IDENTIFICATION IN
+            <foreach collection="queryVO.loadSequenceList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='queryVO.virtualNum != null and queryVO.virtualNum != ""'>
+            AND hsd.virtual_num LIKE CONCAT(#{queryVO.virtualNum}, '%')
+        </if>
+        <if test='queryVO.workOrderNum != null and queryVO.workOrderNum != ""'>
+            AND mwo.work_order_num LIKE CONCAT(#{queryVO.workOrderNum}, '%')
+        </if>
+        <if test="queryVO.assemblyStartTime != null and queryVO.assemblyStartTime != ''">
+            AND vn.last_update_date >= #{queryVO.assemblyStartTime}
+        </if>
+        <if test="queryVO.assemblyEndTime != null and queryVO.assemblyEndTime != ''">
+            AND vn.last_update_date <![CDATA[<=]]> #{queryVO.assemblyEndTime}
+        </if>
+        group by
+        me.IDENTIFICATION,
+        hsd.virtual_num,
+        mml.material_lot_code,
+        hsd.old_load,
+        hmll.hot_sink_code,
+        hcf.a04,
+        hcf1.a02,
+        hcf3.a06,
+        mm1.material_code,
+        hmll.attribute2,
+        hsd.created_by,
+        hsd.creation_date,
+        mm.material_code,
+        mm.material_name,
+        mwo.work_order_num,
+        mwo.qty,
+        hsd.new_load,
+        vn.last_update_date,
+        hsd.ATTRIBUTE2
+        order by hsd.virtual_num ,hsd.new_load
+    </select>
+
+    <select id="summaryCosFunction" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO8">
+        SELECT
+        hsd.virtual_num,
+        hcf.A04 a04,
+        hcf2.A02 a02,
+        hcf2.cos_function_id
+        FROM
+        hme_selection_details hsd,
+        hme_cos_function hcf,
+        hme_pre_selection hps
+        LEFT JOIN hme_cos_rule_head hcrh ON hcrh.cos_rule_code = hps.ATTRIBUTE1
+        LEFT JOIN hme_cos_rule_logic hcrl ON hcrl.cos_rule_id = hcrh.cos_rule_id
+        AND hcrl.Collection_item = 'A02'
+        LEFT JOIN hme_cos_function hcf2 ON hcf2.`current` = hcrl.`current`
+        WHERE hsd.TENANT_ID = #{tenantId}
+        AND hsd.virtual_num IN
+        <foreach collection="virtualNumList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND hcf.load_sequence = hsd.load_sequence
+        AND hcf.`current` = '5'
+        AND hps.pre_selection_id = hsd.pre_selection_id
+        AND hcf2.load_sequence = hsd.load_sequence
+    </select>
+</mapper>

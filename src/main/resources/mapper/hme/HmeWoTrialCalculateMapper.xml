@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWoTrialCalculateMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeWoTrialCalculate">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="wo_trial_calculate_id" property="woTrialCalculateId" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="date_from" property="dateFrom" jdbcType="DATE"/>
+        <result column="date_to" property="dateTo" jdbcType="DATE"/>
+        <result column="qty" property="qty" jdbcType="DECIMAL"/>
+        <result column="shift_date" property="shiftDate" jdbcType="DATE"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="reportResultMap" type="com.ruike.hme.domain.vo.HmeWoTrialCalculateReportWoVO">
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="work_order_num" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="material_code" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="material_name" property="materialName" jdbcType="VARCHAR"/>
+        <result column="work_order_type" property="workOrderType" jdbcType="VARCHAR"/>
+        <result column="work_order_type_desc" property="workOrderTypeDesc" jdbcType="VARCHAR"/>
+        <result column="qty" property="qty" jdbcType="DECIMAL"/>
+        <result column="due_date" property="dueDate" jdbcType="VARCHAR"/>
+        <result column="max_ability" property="maxAbility" jdbcType="DECIMAL"/>
+        <result column="date_from" property="dateFrom" jdbcType="DATE"/>
+        <result column="date_to" property="dateTo" jdbcType="DATE"/>
+        <result column="trial_flag" property="trialFlag" jdbcType="VARCHAR"/>
+        <collection property="detailList" resultMap="reportDetailResultMap"/>
+    </resultMap>
+    <resultMap id="reportDetailResultMap" type="com.ruike.hme.domain.vo.HmeWoTrialCalculateReportWoDetailVO">
+        <result column="shift_date" property="shiftDate" jdbcType="DATE"/>
+        <result column="trial_qty" property="trialQty" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="queryTrialCalculateReport" parameterType="com.ruike.hme.api.dto.HmeWoTrialCalculateReportQueryDTO" resultMap="reportResultMap">
+        select
+            wo.work_order_id,
+            wo.work_order_num,
+            mm.material_code,
+            mm.material_name,
+            wo.work_order_type,
+            gt.description work_order_type_desc,
+            wo.qty,
+            woa.attr_value due_date,
+            case
+              when pma.attr_value is null
+                then '1'
+              else pma.attr_value
+            end max_ability,
+            wtc.date_from,
+            wtc.date_to,
+            wtc.shift_date,
+            wtc.qty trial_qty,
+            (select 'Y'
+               from hme_wo_trial_calculate tc
+              where tc.work_order_id = wo.work_order_id
+                and tc.tenant_id = wo.tenant_id
+              limit 1) trial_flag
+        from
+            mt_work_order wo
+            left join mt_material mm on wo.material_id = mm.material_id
+            left join mt_gen_type gt on wo.work_order_type = gt.type_code
+            and gt.tenant_id = wo.tenant_id
+            and gt.module = 'ORDER'
+            and gt.type_group = 'WO_TYPE'
+            left join mt_work_order_attr woa on woa.work_order_id = wo.work_order_id
+            and woa.tenant_id = wo.tenant_id
+            and woa.attr_name = 'attribute9'
+            left join mt_material_site ms on ms.material_id = wo.material_id
+            and ms.tenant_id = wo.tenant_id
+            and ms.site_id = wo.site_id
+            and ms.enable_flag = 'Y'
+            left join mt_pfep_manufacturing pm on pm.material_site_id = ms.material_site_id
+            and pm.tenant_id = wo.tenant_id
+            and pm.organization_id = wo.production_line_id
+            and pm.organization_type = 'PRODUCTIONLINE'
+            left join mt_pfep_manufacturing_attr pma on pma.pfep_manufacturing_id = pm.pfep_manufacturing_id
+            and pma.tenant_id = wo.tenant_id
+            and pma.attr_name = 'MAX_ABILITY'
+            left join hme_wo_trial_calculate wtc on wtc.tenant_id = wo.tenant_id
+            and wtc.work_order_id = wo.work_order_id
+            and wtc.shift_date >= date_format(now(), '%Y-%m-%d')
+        where
+            1 = 1
+            and wo.status in ('EORELEASED', 'RELEASED')
+            and wo.tenant_id = #{tenantId}
+        <if test="queryDTO.productionLineId != null">
+            and wo.production_line_id = #{queryDTO.productionLineId}
+        </if>
+        <if test="queryDTO.workOrderId != null">
+            and wo.work_order_id = #{queryDTO.workOrderId}
+        </if>
+        <if test="queryDTO.workOrderType != null">
+            and wo.work_order_type = #{queryDTO.workOrderType}
+        </if>
+        <if test="queryDTO.materialCode != null">
+            <bind name="materialCodeLike" value="'%'+queryDTO.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        order by wo.work_order_num
+    </select>
+
+    <select id="queryCalendarShiftByTime" resultType="java.time.LocalDate">
+        select cs.shift_date
+          from mt_calendar_shift cs
+         where cs.calendar_id = #{vo.calendarId}
+           and cs.tenant_id = #{tenantId}
+           and cs.enable_flag = 'Y'
+        <if test="vo.shiftDateFrom != null">
+            and cs.shift_date &gt;= DATE_FORMAT(#{vo.shiftDateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="vo.shiftDateTo != null">
+            and cs.shift_date &lt;= DATE_FORMAT(#{vo.shiftDateTo}, '%Y-%m-%d')
+        </if>
+        group by cs.shift_date
+        order by cs.shift_date
+    </select>
+
+    <delete id="deleteByWorkOrderId">
+        delete from hme_wo_trial_calculate
+         where tenant_id = #{tenantId}
+           and work_order_id = #{workOrderId}
+    </delete>
+
+    <select id="hasTrialCalculateDataByWoId" resultType="int">
+        select 1
+          from hme_wo_trial_calculate
+         where tenant_id = #{tenantId}
+           and work_order_id = #{workOrderId}
+         limit 1
+    </select>
+
+    <insert id="batchInsert" parameterType="com.ruike.hme.domain.entity.HmeWoTrialCalculate">
+        INSERT INTO hme_wo_trial_calculate
+        (
+        tenant_id,
+        wo_trial_calculate_id,
+        work_order_id,
+        date_from,
+        date_to,
+        qty,
+        shift_date,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute_category,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10
+        )
+         VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.woTrialCalculateId},
+            #{item.workOrderId},
+            #{item.dateFrom},
+            #{item.dateTo},
+            #{item.qty},
+            #{item.shiftDate},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10}
+            )
+        </foreach>
+    </insert>
+</mapper>

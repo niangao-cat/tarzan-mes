@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.reports.infra.mapper.HmeSsnInspectResultMapper">
+    <select id="selectHeaderLinesByCondition" resultType="com.ruike.reports.domain.vo.HmeSsnInspectResultHeaderLinesVO">
+        SELECT
+        hsirh.ssn_inspect_result_header_id,
+        hsirh.standard_sn_code,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        hsirh.cos_type,
+        hsirh.work_way,
+        mmw.WORKCELL_CODE,
+        mmw.WORKCELL_NAME,
+        DATE_FORMAT(hsirh.shift_date,'%Y-%m-%d') shift_date,
+        hsirh.shift_code,
+        hpiu.real_name,
+        hsirh.result,
+        hsirl.sequence,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        hsirl.minimum_value,
+        hsirl.maximal_value,
+        hsirl.inspect_value,
+        hsirl.result lineResult,
+        mmw2.WORKCELL_NAME process_name,
+        mmw3.WORKCELL_NAME line_workcell,
+        mmpl.PROD_LINE_NAME,
+        mo.DESCRIPTION,
+        hsirh.creation_date
+        FROM
+        hme_ssn_inspect_result_header hsirh,
+        mt_material mm,
+        mt_mod_workcell mmw,
+        mt_mod_workcell mmw2,
+        mt_mod_workcell mmw3,
+        hzero_platform.iam_user hpiu,
+        hme_ssn_inspect_result_line hsirl,
+        mt_tag mt,
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmor2,
+        mt_mod_organization_rel mmor3,
+        mt_mod_production_line mmpl,
+        mt_operation_wkc_dispatch_rel mowdr,
+        mt_operation mo
+        WHERE
+        hsirh.tenant_id = #{tenantId}
+        AND hsirh.material_id = mm.MATERIAL_ID
+        AND hpiu.id = hsirh.created_by
+        AND hsirh.ssn_inspect_result_header_id = hsirl.ssn_inspect_result_header_id
+        AND mt.TAG_ID = hsirl.tag_id
+        AND hsirh.tenant_id = hsirl.tenant_id
+        AND hsirh.workcell_id = mmw.WORKCELL_ID
+        AND hsirh.WORKCELL_ID = mmor.ORGANIZATION_ID
+        AND mmor.PARENT_ORGANIZATION_ID = mmw2.WORKCELL_ID
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.PARENT_ORGANIZATION_ID = mmor2.ORGANIZATION_ID
+        AND mmor2.PARENT_ORGANIZATION_ID = mmw3.WORKCELL_ID
+        AND mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor2.PARENT_ORGANIZATION_ID = mmor3.ORGANIZATION_ID
+        AND mmor3.PARENT_ORGANIZATION_ID = mmpl.PROD_LINE_ID
+        AND mmor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mowdr.OPERATION_ID = mo.OPERATION_ID
+        AND mmor.PARENT_ORGANIZATION_ID = mowdr.WORKCELL_ID
+        AND mowdr.priority = '1'
+        <if test="dto.standardSnCodeList != null and dto.standardSnCodeList.size() > 0">
+            AND hsirh.standard_sn_code IN
+            <foreach collection="dto.standardSnCodeList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.materialIdList != null and dto.materialIdList.size() > 0">
+            AND hsirh.material_id IN
+            <foreach collection="dto.materialIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.createdByList != null and dto.createdByList.size() > 0">
+            AND hsirh.created_by IN
+            <foreach collection="dto.createdByList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.processIdList != null and dto.processIdList.size() > 0">
+            AND mmw2.WORKCELL_ID IN
+            <foreach collection="dto.processIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.cosType != null and dto.cosType != ''">
+            and hsirh.cos_type = #{dto.cosType}
+        </if>
+        <if test="dto.workWay != null and dto.workWay != ''">
+            and hsirh.work_way = #{dto.workWay}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hsirh.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and mmpl.PROD_LINE_ID = #{dto.prodLineId}
+        </if>
+        <if test="dto.shiftDateFrom != null and dto.shiftDateFrom != ''">
+            and hsirh.creation_date &gt;= #{dto.shiftDateFrom}
+        </if>
+        <if test="dto.shiftDateTo != null and dto.shiftDateTo != ''">
+            and hsirh.creation_date &lt;= #{dto.shiftDateTo}
+        </if>
+        <if test="dto.lineWorkcellId != null and dto.lineWorkcellId != ''">
+            and mmw3.WORKCELL_ID = #{dto.lineWorkcellId}
+        </if>
+        <if test="dto.result != null and dto.result != ''">
+            and hsirh.result = #{dto.result}
+        </if>
+        ORDER BY
+        hsirh.creation_date DESC,
+        hsirh.ssn_inspect_result_header_id,
+        hsirl.sequence
+    </select>
+</mapper>

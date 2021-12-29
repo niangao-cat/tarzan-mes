@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobPumpCombMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEoJobPumpComb">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="job_pump_comb_id" property="jobPumpCombId" jdbcType="VARCHAR"/>
+        <result column="job_id" property="jobId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="eo_id" property="eoId" jdbcType="VARCHAR"/>
+        <result column="comb_material_lot_id" property="combMaterialLotId" jdbcType="VARCHAR"/>
+        <result column="comb_material_id" property="combMaterialId" jdbcType="VARCHAR"/>
+        <result column="pump_req_qty" property="pumpReqQty" jdbcType="DECIMAL"/>
+        <result column="sub_barcode" property="subBarcode" jdbcType="VARCHAR"/>
+        <result column="sub_barcode_seq" property="subBarcodeSeq" jdbcType="DECIMAL"/>
+        <result column="print_time" property="printTime" jdbcType="DATE"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="countPumpFilterRuleHeaderByMaterial" resultType="java.lang.Long">
+        SELECT count(1)
+        from hme_pump_filter_rule_header hpfrh
+        where hpfrh.material_id = #{materialId}
+        and hpfrh.enable_flag = 'Y'
+        and hpfrh.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getWipMaterialLotCodeByWo" resultType="java.lang.String">
+        SELECT mml.MATERIAL_LOT_CODE
+        from hme_eo_job_sn hejs,
+             mt_material_lot mml
+        where hejs.work_order_id = #{workOrderId}
+        and hejs.workcell_id = #{workcellId}
+        and hejs.job_type = 'PUMP_PROCESS'
+        and (hejs.site_out_date is null or hejs.site_out_date = '')
+        and hejs.tenant_id = #{tenantId}
+        and mml.MATERIAL_LOT_ID = hejs.material_lot_id
+        limit 1
+    </select>
+
+    <select id="getEoIdentificationByWo" resultType="java.lang.String">
+        select me.IDENTIFICATION
+        from mt_eo me
+        where me.WORK_ORDER_ID = #{workOrderId}
+        and me.`STATUS` = 'WORKING'
+        and me.SITE_ID = #{siteId}
+        and me.TENANT_ID = #{tenantId}
+        and not EXISTS (
+            select 1
+            from hme_eo_job_sn hejs
+            where hejs.eo_id = me.EO_ID
+            and hejs.tenant_id = #{tenantId}
+        )
+        order by me.CREATION_DATE asc
+        limit 1
+    </select>
+
+    <select id="pumpFilterRuleHeaderByMaterial" resultType="com.ruike.hme.domain.vo.HmeEoJobPumpCombVO2">
+        SELECT
+            hpfrh.material_id,
+            hpfrh.qty
+        FROM
+            mt_material_lot mml,
+            hme_pump_filter_rule_header hpfrh
+        WHERE
+            mml.MATERIAL_LOT_ID = #{materialLotId}
+        AND hpfrh.material_id = mml.MATERIAL_ID
+        AND hpfrh.enable_flag = 'Y'
+        AND hpfrh.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getHmeEoJobPumpComb" resultType="com.ruike.hme.domain.entity.HmeEoJobPumpComb">
+        select hejpc.*
+        from hme_eo_job_pump_comb hejpc
+        where hejpc.job_id = #{jobId}
+        and hejpc.material_lot_id = ''
+        and hejpc.tenant_id = #{tenantId}
+        order by hejpc.sub_barcode_seq asc
+        limit 1
+    </select>
+
+    <select id="getMaxSubBarcodeSeqByJobId" resultType="java.lang.Long">
+        select max(hejpc.sub_barcode_seq)
+        from hme_eo_job_pump_comb hejpc
+        where hejpc.job_id = #{jobId}
+        and hejpc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="qureyPumpFilterRuleLineByMaterial" resultType="com.ruike.hme.domain.vo.HmeEoJobPumpCombVO3">
+        select hpfrl.rule_line_id, hpfrl.parameter_code, hpfrl.tag_id, hpfrl.calculate_type,
+               hpfrl.min_value, hpfrl.max_value, hpfrl.formula
+        from hme_pump_filter_rule_header hpfrh,
+             hme_pump_filter_rule_line hpfrl
+        where hpfrh.material_id = #{materialId}
+        and hpfrh.enable_flag = 'Y'
+        and hpfrh.tenant_id = #{tenantId}
+        and hpfrl.rule_head_id = hpfrh.rule_head_id
+        and hpfrl.enable_flag = 'Y'
+    </select>
+
+    <select id="getPumpMaterialLotIdByJobId" resultType="java.lang.String">
+        select hejpc.material_lot_id
+        from hme_eo_job_pump_comb hejpc
+        where hejpc.job_id = #{jobId}
+        and hejpc.material_lot_id != ''
+        and hejpc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getWorkcellByOperation" resultType="java.lang.String">
+        select mmor.ORGANIZATION_ID
+        from mt_operation mo,
+        mt_operation_wkc_dispatch_rel mowdr,
+        mt_mod_organization_rel mmor
+        where mo.operation_name in
+        <foreach collection="operationCodeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and mo.TENANT_ID = #{tenantId}
+        and mowdr.OPERATION_ID = mo.OPERATION_ID
+        and mowdr.TENANT_ID = mo.TENANT_ID
+        and mmor.PARENT_ORGANIZATION_ID = mowdr.WORKCELL_ID
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.TENANT_ID = mo.TENANT_ID
+    </select>
+
+    <select id="getJobId" resultType="com.ruike.hme.domain.vo.HmeEoJobPumpCombVO4">
+        select hejs.job_id, hejs.workcell_id, mmor.PARENT_ORGANIZATION_ID as process_id,
+               hejs.material_lot_id, hejs.last_update_date
+        from hme_eo_job_sn hejs,
+             mt_mod_organization_rel mmor
+        where hejs.workcell_id in
+        <foreach collection="workcellIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejs.material_lot_id in
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejs.tenant_id = #{tenantId}
+        and mmor.ORGANIZATION_ID = hejs.workcell_id
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.TENANT_ID = hejs.tenant_id
+    </select>
+
+    <select id="queryDataRecordByJobTag" resultType="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        select hejdr.tag_id, hejdr.result
+        from hme_eo_job_data_record hejdr
+        where hejdr.job_id in
+        <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejdr.tag_id in
+        <foreach collection="tagIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejdr.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryPumbCombByJobCombMaterialLot" resultType="com.ruike.hme.domain.entity.HmeEoJobPumpComb">
+        select hejpc.job_pump_comb_id, hejpc.sub_barcode_seq, hejpc.material_lot_id, hejpc.sub_barcode, hejpc.pump_req_qty
+        from hme_eo_job_pump_comb hejpc
+        where hejpc.job_id = #{jobId}
+        and hejpc.comb_material_lot_id = #{combMaterialLotId}
+        and hejpc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getPumpCombByCombMaterialLot" resultType="com.ruike.hme.domain.entity.HmeEoJobPumpComb">
+        select hejpc.*
+        from hme_eo_job_pump_comb hejpc
+        where hejpc.comb_material_lot_id = #{combMaterialLotId}
+        and hejpc.material_lot_id != ''
+        and hejpc.tenant_id = #{tenantId}
+        limit 1
+    </select>
+
+    <select id="getCombMaterialBySelectionDetailsMaterialLot" resultType="java.lang.String">
+        select hpps.comb_material_id
+        from hme_pump_selection_details hpsd,
+             hme_pump_pre_selection hpps
+        where hpsd.material_lot_id = #{materialLotId}
+        and hpsd.status = 'LOADED'
+        and hpsd.tenant_id = #{tenantId}
+        and hpps.pump_pre_selection_id = hpsd.pump_pre_selection_id
+    </select>
+
+    <select id="getPumpSelectionDetailsByMaterialLotId" resultType="com.ruike.hme.domain.vo.HmeEoJobPumpCombVO6">
+        select hpsd.pump_selection_details_id, hpsd.pump_pre_selection_id, hpsd.selection_order
+        from hme_pump_selection_details hpsd
+        where hpsd.material_lot_id = #{materialLotId}
+        and hpsd.status = 'LOADED'
+        and hpsd.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getSameSelectionOrderDetailsIdByMaterialLotId" resultType="java.lang.String">
+        select hpsd2.pump_selection_details_id
+        from hme_pump_selection_details hpsd,
+             hme_pump_selection_details hpsd2
+        where hpsd.material_lot_id = #{materialLotId}
+        and hpsd.tenant_id = #{tenantId}
+        and hpsd2.pump_pre_selection_id = hpsd.pump_pre_selection_id
+        and hpsd2.selection_order = hpsd.selection_order
+        and hpsd2.tenant_id = hpsd.tenant_id
+    </select>
+
+    <update id="updatePumbSelectionDetailsStatus">
+        update hme_pump_selection_details
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            status = #{status}
+        </set>
+        <where>
+            pump_selection_details_id in
+            <foreach collection="pumpSelectionDetailsIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="getPumpMaterialLotIdByCombBarcodeId" resultType="java.lang.String">
+        select hejpc.material_lot_id
+        from hme_eo_job_pump_comb hejpc
+        where hejpc.comb_material_lot_id = #{combMaterialLotId}
+        and hejpc.material_lot_id != ''
+        and hejpc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryPumbCombByCombMaterialLot" resultType="com.ruike.hme.domain.entity.HmeEoJobPumpComb">
+        select hejpc.job_pump_comb_id, hejpc.sub_barcode_seq, hejpc.material_lot_id, hejpc.sub_barcode, hejpc.pump_req_qty
+        from hme_eo_job_pump_comb hejpc
+        where
+            hejpc.comb_material_lot_id = #{combMaterialLotId}
+        and hejpc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getLastSiteInDateWorkcellIdBySn" resultType="java.lang.String">
+        select hejs.workcell_id
+        from hme_eo_job_sn hejs
+        where hejs.material_lot_id = #{materialLotId}
+        and hejs.tenant_id = #{tenantId}
+        order by hejs.site_in_date desc
+        limit 1
+    </select>
+
+    <select id="eoJobPumpCombQueryByMaterialLotId" resultType="com.ruike.hme.domain.entity.HmeEoJobPumpComb">
+        select hejpc.comb_material_lot_id
+        from hme_eo_job_pump_comb hejpc
+        where hejpc.material_lot_id = #{materialLotId}
+        and hejpc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryEoJobMaterial" resultType="java.lang.Long">
+        SELECT
+        	COUNT(1)
+        FROM
+        	hme_eo_job_material ejm
+        WHERE ejm.material_lot_id = #{materialLotId}
+        AND ejm.tenant_id = #{tenantId}
+        AND ejm.release_qty > 0
+    </select>
+</mapper>

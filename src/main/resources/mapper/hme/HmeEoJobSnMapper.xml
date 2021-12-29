@@ -1,0 +1,3999 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobSnMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEoJobSn">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="job_id" property="jobId" jdbcType="VARCHAR"/>
+        <result column="site_in_date" property="siteInDate" jdbcType="DATE"/>
+        <result column="site_out_date" property="siteOutDate" jdbcType="DATE"/>
+        <result column="shift_id" property="shiftId" jdbcType="VARCHAR"/>
+        <result column="site_in_by" property="siteInBy" jdbcType="DECIMAL"/>
+        <result column="site_out_by" property="siteOutBy" jdbcType="DECIMAL"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="operation_id" property="operationId" jdbcType="VARCHAR"/>
+        <result column="sn_material_id" property="snMaterialId" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="eo_id" property="eoId" jdbcType="VARCHAR"/>
+        <result column="eo_step_id" property="eoStepId" jdbcType="VARCHAR"/>
+        <result column="eo_step_num" property="eoStepNum" jdbcType="DECIMAL"/>
+        <result column="job_container_id" property="jobContainerId" jdbcType="VARCHAR"/>
+        <result column="rework_flag" property="reworkFlag" jdbcType="VARCHAR"/>
+        <result column="job_type" property="jobType" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <resultMap id="MtEoStepWipResultMap" type="tarzan.actual.domain.entity.MtEoStepWip">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_STEP_WIP_ID" property="eoStepWipId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="QUEUE_QTY" property="queueQty" jdbcType="DECIMAL"/>
+        <result column="WORKING_QTY" property="workingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_PENDING_QTY" property="completePendingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QTY" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="queryEoWorkingByWkc"
+            resultType="com.ruike.hme.domain.vo.HmeEoJobWipVO2">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select esw.WORKCELL_ID,
+             eo.eo_id,
+			 esa.EO_STEP_ACTUAL_ID,
+			 esa.ROUTER_STEP_ID,
+			 esa.OPERATION_ID,
+			 m.MATERIAL_ID,
+             m.material_code,
+			 mtl.MATERIAL_NAME,
+			 utl.UOM_NAME,
+			 esw.WORKING_QTY,
+			 esw.COMPLETED_QTY,
+			 esw.QUEUE_QTY,
+			 esa.status
+        from mt_work_order wo,
+             mt_eo_step_actual esa,
+             mt_eo_router_actual era,
+             mt_material m,
+             mt_material_tl mtl,
+             mt_uom u,
+             mt_uom_tl utl,
+             mt_eo eo,
+			 mt_mod_organization_rel rel,
+             mt_eo_step_workcell_actual esw
+        where eo.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND era.EO_ID = eo.EO_ID
+        AND u.UOM_ID = utl.UOM_ID
+        AND m.MATERIAL_ID = mtl.MATERIAL_ID
+        and mtl.LANG = #{locale}
+        and m.MATERIAL_ID = eo.MATERIAL_ID
+        and m.primary_uom_id = u.uom_id
+        and utl.LANG = #{locale}
+        AND era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        AND esw.EO_STEP_ACTUAL_ID = esa.EO_STEP_ACTUAL_ID
+		and rel.TOP_SITE_ID = wo.SITE_ID
+		and rel.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		and rel.ORGANIZATION_TYPE = 'WORKCELL'
+		and rel.ORGANIZATION_ID = esw.WORKCELL_ID
+        AND eo.TENANT_ID = #{tenantId}
+        and wo.PRODUCTION_LINE_ID = #{productionLineId}
+        and rel.PARENT_ORGANIZATION_ID = #{workcellId}
+        and wo.status in ('RELEASED', 'EORELEASED', 'HOLD')
+    </select>
+
+    <select id="queryForWorkcell"
+            resultType="com.ruike.hme.domain.vo.HmeCompleteBoxingVO2">
+        select mw.WORKCELL_ID,
+               mw.WORKCELL_CODE,
+               wdr.OPERATION_ID
+        from   mt_operation_wkc_dispatch_rel wdr,
+               mt_mod_organization_rel rel,
+               mt_mod_workcell mw
+        where  mw.TENANT_ID = #{tenantId}
+        and    rel.PARENT_ORGANIZATION_ID = wdr.WORKCELL_ID
+        and    rel.organization_id = mw.workcell_id
+        and    rel.parent_organization_type = 'WORKCELL'
+        and    rel.top_site_id = #{dto.siteId}
+        and    rel.organization_type  = 'WORKCELL'
+        and    mw.WORKCELL_TYPE = 'STATION'
+        and    mw.WORKCELL_CODE = #{dto.workcellCode}
+    </select>
+
+    <select id="queryMaterialByLotId"
+            resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        mm.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        wo.site_id,
+        wo.work_order_id,
+        wo.WORK_ORDER_NUM,
+        wo.qty wo_qty,
+        wo.locator_id,
+        woa.completed_qty,
+        mml.QUALITY_STATUS,
+        gst.DESCRIPTION quality_status_meaning,
+        eo.EO_ID,
+        eo.qty eo_qty,
+        eo.status,
+        eo.last_eo_status,
+        mml.material_lot_id,
+        mml.CURRENT_CONTAINER_ID,
+        CONCAT(
+        woa_att1.ATTR_VALUE,
+        CASE
+          WHEN woa_att1.ATTR_VALUE IS NULL
+            OR woa_att1.ATTR_VALUE = ''
+            OR woa_att2.ATTR_VALUE IS NULL
+            OR woa_att2.ATTR_VALUE = '' THEN
+              ''
+          ELSE '||' END, woa_att2.ATTR_VALUE) remark
+        FROM
+        mt_gen_status gs,
+        mt_gen_status_tl gst,
+        mt_material mm,
+        mt_material_lot mml
+        LEFT JOIN mt_eo eo ON mml.eo_id = eo.eo_id
+        LEFT JOIN mt_work_order wo ON wo.WORK_ORDER_ID = eo.WORK_ORDER_ID
+        LEFT JOIN mt_work_order_actual woa ON wo.work_order_id = woa.work_order_id AND wo.tenant_id = woa.tenant_id
+        LEFT JOIN mt_work_order_attr woa_att1 ON woa_att1.WORK_ORDER_ID = wo.WORK_ORDER_ID
+          AND woa_att1.ATTR_NAME = 'attribute8'
+        LEFT JOIN mt_work_order_attr woa_att2 ON woa_att2.WORK_ORDER_ID = wo.WORK_ORDER_ID
+          AND woa_att2.ATTR_NAME = 'wo_remark'
+        WHERE
+        mml.tenant_id = #{tenantId}
+        AND mml.material_lot_id = #{materialLotId}
+        AND mml.material_id = mm.material_id
+        AND gst.LANG = #{locale}
+        AND gs.GEN_STATUS_ID = gst.GEN_STATUS_ID
+        AND gs.STATUS_GROUP = 'QUALITY_STATUS'
+        AND gs.STATUS_CODE = mml.QUALITY_STATUS
+    </select>
+
+    <select id="queryMaterialByLot" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        mm.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        wo.site_id,
+        wo.work_order_id,
+        wo.WORK_ORDER_NUM,
+        wo.qty wo_qty,
+        wo.locator_id,
+        woa.completed_qty,
+        mml.QUALITY_STATUS,
+        gst.DESCRIPTION quality_status_meaning,
+        wo.REMARK,
+        eo.EO_ID,
+        eo.qty eo_qty,
+        eo.status,
+        eo.last_eo_status,
+        mml.material_lot_id,
+        mml.CURRENT_CONTAINER_ID,
+        mmpl.PROD_LINE_CODE,
+        mml.MATERIAL_LOT_CODE,
+        mml.STOCKTAKE_FLAG,
+        mml.FREEZE_FLAG,
+        mml.lot
+        FROM
+        mt_gen_status gs,
+        mt_gen_status_tl gst,
+        mt_material mm,
+        mt_material_lot mml
+        LEFT JOIN mt_eo eo ON mml.eo_id = eo.eo_id
+        LEFT JOIN mt_work_order wo ON wo.WORK_ORDER_ID = eo.WORK_ORDER_ID
+        LEFT JOIN mt_work_order_actual woa ON wo.work_order_id = woa.work_order_id AND wo.tenant_id = woa.tenant_id
+        LEFT JOIN mt_mod_production_line mmpl ON mmpl.enable_flag = 'Y' AND mmpl.prod_line_id = wo.production_line_id
+        WHERE
+        mml.tenant_id = #{tenantId}
+        AND mml.ENABLE_FLAG = #{dto.enableFlag}
+        AND mml.SITE_ID = #{dto.siteId}
+        AND mml.MATERIAL_LOT_CODE IN
+        <foreach collection="dto.materialLotCodeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND mml.material_id = mm.material_id
+        AND gst.LANG = #{locale}
+        AND gs.GEN_STATUS_ID = gst.GEN_STATUS_ID
+        AND gs.STATUS_GROUP = 'QUALITY_STATUS'
+        AND gs.STATUS_CODE = mml.QUALITY_STATUS
+    </select>
+
+    <select id="queryMaterialLotInfoForSingle" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+            mm.material_id,
+            mm.material_code,
+            mm.material_name,
+            wo.site_id,
+            wo.work_order_id,
+            wo.work_order_num,
+            wo.qty wo_qty,
+            wo.locator_id,
+            wo.production_version wo_production_version,
+            woa.completed_qty,
+            mml.quality_status,
+            mla_rf.attr_value rework_flag,
+            mla_drf.attr_value designed_rework_flag,
+            IFNULL(mla_jxt.attr_value, '') cross_retest_flag,
+            gst.description quality_status_meaning,
+            CONCAT(
+            CASE
+
+            WHEN woa_att1.ATTR_VALUE IS NULL
+            OR woa_att1.ATTR_VALUE = '' THEN
+            '' ELSE woa_att1.ATTR_VALUE
+            END,
+            CASE
+
+            WHEN woa_att1.ATTR_VALUE IS NULL
+            OR woa_att1.ATTR_VALUE = ''
+            OR woa_att2.ATTR_VALUE IS NULL
+            OR woa_att2.ATTR_VALUE = '' THEN
+            '' ELSE '||'
+            END,
+            CASE
+
+            WHEN woa_att2.ATTR_VALUE IS NULL
+            OR woa_att2.ATTR_VALUE = '' THEN
+            '' ELSE woa_att2.ATTR_VALUE
+            END
+            ) remark,
+            eo.eo_id,
+            eo.qty eo_qty,
+            eo.status,
+            eo.last_eo_status,
+            mml.material_lot_id,
+            mml.current_container_id,
+            mmpl.prod_line_code,
+            mmb.item_type
+        from
+            mt_material mm,
+            mt_material_lot mml
+            left join mt_material_lot_attr mla_rf on mla_rf.material_lot_id = mml.material_lot_id and mla_rf.attr_name = 'REWORK_FLAG'
+            left join mt_material_lot_attr mla_drf on mla_drf.material_lot_id = mml.material_lot_id and mla_drf.attr_name = 'DESIGNED_REWORK_FLAG'
+            left join mt_material_lot_attr mla_jxt on mla_jxt.material_lot_id = mml.material_lot_id and mla_jxt.attr_name = 'JCRETEST'
+            left join mt_eo eo on mml.eo_id = eo.eo_id
+            left join mt_work_order wo on wo.work_order_id = eo.work_order_id
+            left join mt_work_order_actual woa on wo.work_order_id = woa.work_order_id and wo.tenant_id = woa.tenant_id
+        LEFT JOIN mt_work_order_attr woa_att1 ON woa_att1.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_att1.ATTR_NAME = 'attribute8'
+        LEFT JOIN mt_work_order_attr woa_att2 ON woa_att2.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_att2.ATTR_NAME = 'wo_remark'
+            left join mt_mod_production_line mmpl on mmpl.enable_flag = 'Y' and mmpl.prod_line_id = wo.production_line_id
+            left join mt_gen_status gs on gs.status_group = 'QUALITY_STATUS' and gs.status_code = mml.quality_status and gs.tenant_id = mml.tenant_id
+            left join mt_gen_status_tl gst on gs.gen_status_id = gst.gen_status_id and gst.lang = #{locale}
+            left join mt_material_site ms on ms.material_id = mml.material_id and ms.site_id = mml.site_id and ms.tenant_id = mml.tenant_id and ms.enable_flag = 'Y'
+            left join mt_material_basic mmb on mmb.material_site_id = ms.material_site_id and mmb.tenant_id = ms.tenant_id
+        where
+            mml.material_id = mm.material_id
+            and mml.tenant_id = mm.tenant_id
+            and mml.tenant_id = #{tenantId}
+            and mml.material_lot_id = #{materialLotId}
+            and mml.site_id = #{siteId}
+            and mml.enable_flag = 'Y'
+    </select>
+
+    <select id="queryMaterialLotInfoForRework" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mm.material_id,
+        mm.material_code,
+        mm.material_name,
+        wo.site_id,
+        wo.work_order_id,
+        wo.work_order_num,
+        wo.qty wo_qty,
+        wo.locator_id,
+        wo.work_order_type,
+        wo.status work_order_status,
+        wo.production_version wo_production_version,
+        woa.completed_qty,
+        mml.quality_status,
+        mla.attr_value rework_flag,
+        gst.description quality_status_meaning,
+        wo.remark,
+        eo.eo_id,
+        eo.qty eo_qty,
+        eo.status,
+        eo.last_eo_status,
+        mml.material_lot_id,
+        mml.material_lot_code,
+        mml.current_container_id,
+        mmpl.prod_line_code,
+        mlat.ATTR_VALUE AS af_flag
+        from
+        mt_material mm,
+        mt_material_lot mml
+        left join mt_material_lot_attr mla on mla.tenant_id = mml.tenant_id AND mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+        LEFT JOIN mt_material_lot_attr mlat ON mlat.tenant_id = mml.tenant_id AND mlat.material_lot_id = mml.material_lot_id AND mlat.attr_name = 'AF_FLAG'
+        left join mt_eo_attr ea on ea.tenant_id = mml.tenant_id and ea.attr_name = 'REWORK_MATERIAL_LOT' and ea.attr_value = mml.material_lot_code
+        left join mt_eo eo on ea.eo_id = eo.eo_id
+        left join mt_work_order wo on wo.work_order_id = eo.work_order_id
+        left join mt_work_order_actual woa on wo.work_order_id = woa.work_order_id and wo.tenant_id = woa.tenant_id
+        left join mt_mod_production_line mmpl on mmpl.enable_flag = 'Y' and mmpl.prod_line_id = wo.production_line_id
+        left join mt_gen_status gs on gs.status_group = 'QUALITY_STATUS' and gs.status_code = mml.quality_status and gs.tenant_id = mml.tenant_id
+        left join mt_gen_status_tl gst on gs.gen_status_id = gst.gen_status_id and gst.lang = #{locale}
+        where
+        mml.material_id = mm.material_id
+        and mml.tenant_id = mm.tenant_id
+        and mml.tenant_id = #{tenantId}
+        and mml.material_lot_id = #{materialLotId}
+        and mml.site_id = #{siteId}
+        and mml.enable_flag = 'Y'
+        and eo.`STATUS` = 'WORKING'
+    </select>
+
+    <select id="batchQueryMaterialLotInfoForRework" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mm.material_id,
+        mm.material_code,
+        mm.material_name,
+        mml.material_lot_id,
+        mml.material_lot_code,
+        mml.current_container_id,
+        mml.quality_status,
+        mla.attr_value rework_flag,
+        eo.eo_id,
+        eo.qty eo_qty,
+        eo.status,
+        eo.last_eo_status,
+        eo.work_order_id
+        from
+        mt_material mm,
+        mt_material_lot mml
+        left join mt_material_lot_attr mla on mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+        left join mt_eo_attr ea on ea.tenant_id = mml.tenant_id and ea.attr_name = 'REWORK_MATERIAL_LOT' and ea.attr_value = mml.material_lot_code
+        left join mt_eo eo on ea.eo_id = eo.eo_id
+        where
+        mml.material_id = mm.material_id
+        and mml.tenant_id = mm.tenant_id
+        and mml.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and mml.site_id = #{siteId}
+        and mml.enable_flag = 'Y'
+        and eo.`STATUS` = 'WORKING'
+        UNION
+        select
+        mm.material_id,
+        mm.material_code,
+        mm.material_name,
+        mml.material_lot_id,
+        mml.material_lot_code,
+        mml.current_container_id,
+        mml.quality_status,
+        mla.attr_value rework_flag,
+        eo.eo_id,
+        eo.qty eo_qty,
+        eo.status,
+        eo.last_eo_status,
+        eo.work_order_id
+        from
+        mt_material mm,
+        mt_material_lot mml
+        left join mt_material_lot_attr mla on mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+        left join mt_eo eo on eo.IDENTIFICATION = mml.material_lot_code AND eo.tenant_id = mml.tenant_id
+        where
+        mml.material_id = mm.material_id
+        and mml.tenant_id = mm.tenant_id
+        and mml.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and mml.site_id = #{siteId}
+        and mml.enable_flag = 'Y'
+        and eo.`STATUS` = 'WORKING'
+        AND EXISTS (
+        SELECT 1 FROM hme_eo_rel WHERE EO_ID = eo.eo_id and TENANT_ID = #{tenantId} AND EO_ID != top_eo_id
+        )
+    </select>
+
+    <resultMap id="MaterialLotResultMap" type="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_code" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="material_name" property="materialName" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="work_order_num" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="wo_qty" property="woQty" jdbcType="DECIMAL"/>
+        <result column="locator_id" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="quality_status" property="qualityStatus" jdbcType="VARCHAR"/>
+        <result column="material_lot_enable_flag" property="materialLotEnableFlag" jdbcType="VARCHAR"/>
+        <result column="rework_flag" property="reworkFlag" jdbcType="VARCHAR"/>
+        <result column="designed_rework_flag" property="designedReworkFlag" jdbcType="VARCHAR"/>
+        <result column="quality_status_meaning" property="qualityStatusMeaning" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="eo_id" property="eoId" jdbcType="VARCHAR"/>
+        <result column="eo_qty" property="eoQty" jdbcType="DECIMAL"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="last_eo_status" property="lastEoStatus" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="material_lot_code" property="materialLotCode" jdbcType="VARCHAR"/>
+        <result column="current_container_id" property="currentContainerId" jdbcType="VARCHAR"/>
+        <result column="item_type" property="itemType" jdbcType="VARCHAR"/>
+        <result column="work_order_type" property="workOrderType" jdbcType="VARCHAR"/>
+        <result column="work_order_status" property="workOrderStatus" jdbcType="VARCHAR"/>
+        <result column="wo_production_version" property="woProductionVersion" jdbcType="VARCHAR"/>
+        <result column="stocktake_flag" property="stocktakeFlag" jdbcType="VARCHAR"/>
+        <collection property="routerStepList" resultMap="RouterStepResultMap"/>
+    </resultMap>
+    <resultMap id="RouterStepResultMap" type="com.ruike.hme.domain.vo.HmeRouterStepVO2">
+        <result column="router_step_id" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="eo_step_actual_id" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="rework_step_flag" property="reworkStepFlag" jdbcType="VARCHAR"/>
+        <result column="wip_workcell_id" property="wipWorkcellId" jdbcType="VARCHAR"/>
+        <result column="eo_step_wip_id" property="eoStepWipId" jdbcType="VARCHAR"/>
+        <result column="completed_qty" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="queue_qty" property="queueQty" jdbcType="DECIMAL"/>
+        <result column="working_qty" property="workingQty" jdbcType="DECIMAL"/>
+        <result column="complete_pending_qty" property="completePendingQty" jdbcType="DECIMAL"/>
+        <result column="scrapped_qty" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="hold_qty" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="sequence" property="sequence" jdbcType="BIGINT"/>
+    </resultMap>
+    <select id="batchQueryMaterialLotByIdsForTime" resultMap="MaterialLotResultMap">
+        select
+            mm.material_id,
+            mm.material_code,
+            mm.material_name,
+            mml.enable_flag material_lot_enable_flag,
+            mml.quality_status,
+            mml.material_lot_id,
+            mml.material_lot_code,
+            mml.current_container_id,
+            mla.attr_value rework_flag,
+            mla_drf.attr_value designed_rework_flag,
+            eo.work_order_id,
+            eo.eo_id,
+            eo.qty eo_qty,
+            eo.status,
+            eo.last_eo_status,
+            sa.router_step_id,
+            sa.eo_step_actual_id,
+            sa.last_update_date,
+            sa.rework_step_flag,
+            sa.SEQUENCE,
+            wip.eo_step_wip_id,
+            wip.workcell_id wip_workcell_id,
+            wip.completed_qty,
+            wip.queue_qty,
+            wip.working_qty,
+            wip.complete_pending_qty,
+            wip.scrapped_qty,
+            wip.hold_qty,
+            mb.item_type,
+            wo.production_version wo_production_version,
+            mml.STOCKTAKE_FLAG
+        from
+            mt_material mm,
+            mt_material_lot mml
+            left join mt_material_lot_attr mla on mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+            left join mt_material_lot_attr mla_drf on mla_drf.material_lot_id = mml.material_lot_id and mla_drf.attr_name = 'DESIGNED_REWORK_FLAG'
+            left join mt_eo eo on  mml.eo_id = eo.eo_id and mml.tenant_id = eo.tenant_id
+            left join mt_eo_router_actual ra on ra.eo_id = eo.eo_id and ra.tenant_id = eo.tenant_id
+            left join mt_eo_step_actual sa on ra.eo_router_actual_id = sa.eo_router_actual_id and sa.tenant_id = ra.tenant_id
+            left join mt_eo_step_wip wip on sa.eo_step_actual_id = wip.eo_step_actual_id and sa.tenant_id = wip.tenant_id
+            left join mt_material_site ms on ms.material_id = mml.material_id and ms.site_id = mml.site_id and ms.tenant_id = mml.tenant_id and ms.enable_flag = 'Y'
+            left join mt_material_basic mb on mb.material_site_id = ms.material_site_id and mb.tenant_id = ms.tenant_id
+            left join mt_work_order wo on wo.work_order_id = eo.work_order_id and wo.tenant_id = eo.tenant_id
+        where 1 = 1
+            and mml.material_id = mm.material_id
+            and mml.tenant_id = mm.tenant_id
+            and mml.tenant_id = #{tenantId}
+            and mml.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQueryMaterialLotByIdsForTimeRework" resultMap="MaterialLotResultMap">
+        select
+            mm.material_id,
+            mm.material_code,
+            mm.material_name,
+            mml.enable_flag material_lot_enable_flag,
+            mml.quality_status,
+            mml.material_lot_id,
+            mml.material_lot_code,
+            mml.current_container_id,
+            mla.attr_value rework_flag,
+            eo.work_order_id,
+            eo.eo_id,
+            eo.qty eo_qty,
+            eo.status,
+            eo.last_eo_status,
+            sa.router_step_id,
+            sa.eo_step_actual_id,
+            sa.last_update_date,
+            sa.rework_step_flag,
+            wip.eo_step_wip_id,
+            wip.workcell_id wip_workcell_id,
+            wip.completed_qty,
+            wip.queue_qty,
+            wip.working_qty,
+            wip.complete_pending_qty,
+            wip.scrapped_qty,
+            wip.hold_qty,
+            mb.item_type,
+            wo.work_order_num,
+            wo.work_order_type,
+            wo.status work_order_status,
+            wo.production_version wo_production_version,
+            mmpl.prod_line_code,
+            mml.STOCKTAKE_FLAG
+        from
+            mt_material mm,
+            mt_material_lot mml
+            left join mt_material_lot_attr mla on mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+            left join mt_eo_attr ea on ea.tenant_id = mml.tenant_id and ea.attr_name = 'REWORK_MATERIAL_LOT' and ea.attr_value = mml.material_lot_code
+            left join mt_eo eo on ea.eo_id = eo.eo_id and ea.tenant_id = eo.tenant_id
+            left join mt_eo_router_actual ra on ra.eo_id = eo.eo_id and ra.tenant_id = eo.tenant_id
+            left join mt_eo_step_actual sa on ra.eo_router_actual_id = sa.eo_router_actual_id and sa.tenant_id = ra.tenant_id
+            left join mt_eo_step_wip wip on sa.eo_step_actual_id = wip.eo_step_actual_id and sa.tenant_id = wip.tenant_id
+            left join mt_material_site ms on ms.material_id = mml.material_id and ms.site_id = mml.site_id and ms.tenant_id = mml.tenant_id and ms.enable_flag = 'Y'
+            left join mt_material_basic mb on mb.material_site_id = ms.material_site_id and mb.tenant_id = ms.tenant_id
+            left join mt_work_order wo on wo.work_order_id = eo.work_order_id and wo.tenant_id = eo.tenant_id
+            left join mt_mod_production_line mmpl on mmpl.enable_flag = 'Y' and mmpl.prod_line_id = wo.production_line_id
+        where 1 = 1
+            and mml.material_id = mm.material_id
+            and mml.tenant_id = mm.tenant_id
+            and mml.tenant_id = #{tenantId}
+            and mml.material_lot_id = #{materialLotId}
+            and eo.`STATUS` = 'WORKING'
+    </select>
+
+    <select id="batchQueryMaterialLotByIdsForTimeRework2" resultMap="MaterialLotResultMap">
+        select
+            mm.material_id,
+            mm.material_code,
+            mm.material_name,
+            mml.enable_flag material_lot_enable_flag,
+            mml.quality_status,
+            mml.material_lot_id,
+            mml.material_lot_code,
+            mml.current_container_id,
+            mla.attr_value rework_flag,
+            eo.work_order_id,
+            eo.eo_id,
+            eo.qty eo_qty,
+            eo.status,
+            eo.last_eo_status,
+            sa.router_step_id,
+            sa.eo_step_actual_id,
+            sa.last_update_date,
+            sa.rework_step_flag,
+            wip.eo_step_wip_id,
+            wip.workcell_id wip_workcell_id,
+            wip.completed_qty,
+            wip.queue_qty,
+            wip.working_qty,
+            wip.complete_pending_qty,
+            wip.scrapped_qty,
+            wip.hold_qty,
+            mb.item_type,
+            wo.work_order_num,
+            wo.work_order_type,
+            wo.status work_order_status,
+            wo.production_version wo_production_version,
+            mmpl.prod_line_code,
+            mml.STOCKTAKE_FLAG
+        from
+            mt_material mm,
+            mt_material_lot mml
+            left join mt_material_lot_attr mla on mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+            left join mt_eo eo on eo.IDENTIFICATION = mml.material_lot_code and eo.tenant_id = mml.tenant_id
+            left join mt_eo_router_actual ra on ra.eo_id = eo.eo_id and ra.tenant_id = eo.tenant_id
+            left join mt_eo_step_actual sa on ra.eo_router_actual_id = sa.eo_router_actual_id and sa.tenant_id = ra.tenant_id
+            left join mt_eo_step_wip wip on sa.eo_step_actual_id = wip.eo_step_actual_id and sa.tenant_id = wip.tenant_id
+            left join mt_material_site ms on ms.material_id = mml.material_id and ms.site_id = mml.site_id and ms.tenant_id = mml.tenant_id and ms.enable_flag = 'Y'
+            left join mt_material_basic mb on mb.material_site_id = ms.material_site_id and mb.tenant_id = ms.tenant_id
+            left join mt_work_order wo on wo.work_order_id = eo.work_order_id and wo.tenant_id = eo.tenant_id
+            left join mt_mod_production_line mmpl on mmpl.enable_flag = 'Y' and mmpl.prod_line_id = wo.production_line_id
+        where 1 = 1
+            and mml.material_id = mm.material_id
+            and mml.tenant_id = mm.tenant_id
+            and mml.tenant_id = #{tenantId}
+            and mml.material_lot_id = #{materialLotId}
+            and eo.`STATUS` = 'WORKING'
+    </select>
+
+    <select id="batchQueryCurrentRouterStep" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO3">
+        select rs.entry_step_flag,
+            rs.router_step_id,
+            rs.step_name,
+            rs.sequence,
+            rs.ROUTER_STEP_TYPE,
+            ro.operation_id,
+            er.ROUTER_ID,
+            er.EO_ID,
+            rs.DESCRIPTION,
+            mrsa.ATTR_VALUE AS lab_code,
+            mrsat.ATTR_VALUE AS router_step_remark
+        from mt_eo_router er,
+            mt_router_step rs
+            LEFT JOIN mt_router_step_attr mrsa ON mrsa.ROUTER_STEP_ID = rs.router_step_id
+            AND mrsa.ATTR_NAME = 'LAB_CODE'
+            AND mrsa.TENANT_ID = rs.TENANT_ID
+            LEFT JOIN mt_router_step_attr mrsat ON mrsat.ROUTER_STEP_ID = rs.router_step_id
+            AND mrsat.ATTR_NAME = 'REMARK'
+            AND mrsat.TENANT_ID = rs.tenant_id,
+            mt_router_operation ro
+        where er.router_id = rs.router_id
+        and er.tenant_id = rs.tenant_id
+        and rs.router_step_id = ro.router_step_id
+        and rs.tenant_id = ro.tenant_id
+        and er.tenant_id = #{tenantId}
+        and er.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and ro.operation_id in
+        <foreach collection="operationIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQueryCurrentRouterStepForTime" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO3">
+        select rs.entry_step_flag,
+            rs.router_step_id,
+            rs.step_name,
+            rs.sequence,
+            rs.router_step_type,
+            ro.operation_id,
+            er.ROUTER_ID,
+            er.EO_ID,
+            mrsa.ATTR_VALUE AS lab_code,
+            mrsat.ATTR_VALUE AS router_step_remark
+        from mt_eo_router er,
+            mt_router_step rs
+            LEFT JOIN mt_router_step_attr mrsa ON mrsa.ROUTER_STEP_ID = rs.router_step_id
+            AND mrsa.ATTR_NAME = 'LAB_CODE'
+            AND mrsa.TENANT_ID = rs.TENANT_ID
+            LEFT JOIN mt_router_step_attr mrsat ON mrsat.ROUTER_STEP_ID = rs.router_step_id
+            AND mrsat.ATTR_NAME = 'REMARK'
+            AND mrsat.TENANT_ID = rs.tenant_id,
+            mt_router_operation ro
+        where er.router_id = rs.router_id
+        and er.tenant_id = rs.tenant_id
+        and rs.router_step_id = ro.router_step_id
+        and rs.tenant_id = ro.tenant_id
+        and er.tenant_id = #{tenantId}
+        and er.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and ro.operation_id = #{operationId}
+    </select>
+
+    <select id="workOrderQuery" resultType="com.ruike.hme.domain.vo.HmeWorkOrderVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        wo.WORK_ORDER_ID,
+        wo.WORK_ORDER_NUM,
+        wo.qty WO_QTY,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        wo.remark
+        FROM
+        mt_work_order wo,
+        mt_user_organization muo,
+        mt_material item
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        WHERE muo.organization_id = wo.production_line_id
+--         AND wo.status IN ('RELEASED', 'EORELEASED')
+        AND muo.user_id = #{userId}
+        AND muo.organization_type = 'PROD_LINE'
+        AND muo.enable_flag = 'Y'
+        AND item.MATERIAL_ID = wo.MATERIAL_ID
+        AND item.TENANT_ID = wo.TENANT_ID
+        AND wo.TENANT_ID = #{tenantId}
+        <if test="dto.workOrderNum != null">
+            <bind name="workOrderNumLike" value="'%'+dto.workOrderNum+'%'"/>
+            and wo.WORK_ORDER_NUM LIKE #{workOrderNumLike}
+        </if>
+        <if test="dto.materialCode != null">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and item.MATERIAL_CODE LIKE #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null">
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            and tl.MATERIAL_NAME LIKE #{materialNameLike}
+        </if>
+    </select>
+
+    <select id="materialQuery" resultType="com.ruike.hme.domain.vo.HmePrepareMaterialVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        bc.qty COMPONENT_QTY,
+        gt.description MATERIAL_TYPE,
+        msa.ATTR_VALUE MATERIAL_PREPARE_TYPE
+        FROM
+        mt_material_site site
+        LEFT JOIN mt_material_basic mb ON site.material_site_id = mb.material_site_id
+        LEFT JOIN mt_gen_type gt ON mb.item_type = gt.type_code AND gt.module = 'MATERIAL' AND gt.type_group = 'ITEM_TYPE'
+        LEFT JOIN mt_material_site_attr msa ON site.material_site_id = msa.material_site_id AND msa.attr_name = 'attribute14',
+        mt_bom_component bc,
+        mt_work_order wo,
+        mt_material item
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID AND tl.LANG = #{lang},
+        mt_router mr,
+        mt_router_step mrs,
+        mt_router_operation mro,
+        mt_router_operation_component mroc
+        WHERE 1 = 1
+        AND item.MATERIAL_ID = bc.MATERIAL_ID
+        AND item.TENANT_ID = bc.TENANT_ID
+        AND bc.bom_component_type = 'PHANTOM'
+        AND bc.bom_component_id = mroc.bom_component_id
+        AND mroc.enable_flag = 'Y'
+        AND mroc.router_operation_id = mro.router_operation_id
+        AND mro.router_step_id = mrs.router_step_id
+        AND mrs.router_id = mr.router_id
+        AND mr.router_id = wo.router_id
+        AND mr.router_status = 'CAN_RELEASE'
+        AND site.MATERIAL_ID = bc.MATERIAL_ID
+        AND site.enable_flag = 'Y'
+        AND site.site_id = #{siteId}
+        AND wo.work_order_id = #{dto.workOrderId}
+        AND wo.TENANT_ID = #{tenantId}
+        AND mro.operation_id in
+        <foreach collection="dto.operationIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="dto.materialCode != null">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and item.MATERIAL_CODE LIKE #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null">
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            and tl.MATERIAL_NAME LIKE #{materialNameLike}
+        </if>
+    </select>
+
+    <select id="selectPreparedQtyByMaterialId" resultType="com.ruike.hme.domain.vo.HmePrepareMaterialVO">
+        SELECT
+        IFNULL(sum(mml.primary_uom_qty), 0) preparedQty
+        FROM
+         hme_eo_job_sn job
+        left join mt_material_lot mml on job.material_lot_id = mml.material_lot_id
+		WHERE job.work_order_id = #{dto.workOrderId}
+		  and mml.MATERIAL_ID = #{dto.materialId}
+		  and mml.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="prepareEoJobMaterialQuery" resultType="com.ruike.hme.domain.vo.HmePrepareMaterialVO">
+        select item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        item.MATERIAL_NAME,
+        bc.qty componentQty,
+        bc.bom_component_id,
+        bc.line_number
+        from mt_work_order wo,
+        mt_bom b,
+        mt_bom_component bc
+		join mt_bom_component_attr bca ON bc.bom_component_id = bca.bom_component_id AND bca.attr_name = 'lineAttribute2' and bca.attr_value = #{materialCode}
+		join mt_bom_component_attr bca01 ON bc.bom_component_id = bca01.bom_component_id AND bca01.attr_name = 'lineAttribute9' and bca01.attr_value = 'X',
+        mt_material item,
+        mt_material_site c_site
+        join mt_material_site_attr c_site_attr on c_site.material_site_id = c_site_attr.material_site_id and c_site_attr.attr_name = 'attribute14' and c_site_attr.attr_value = 'SN'
+        where wo.bom_id = b.bom_id
+        and b.bom_id = bc.bom_id
+        and bc.material_id = item.material_id
+        and c_site.MATERIAL_ID = bc.MATERIAL_ID
+        and wo.work_order_id = #{workOrderId}
+        and c_site.site_id = #{siteId}
+        AND c_site.TENANT_ID = #{tenantId}
+        and c_site.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="prepareEoJobLotMaterialQuery" resultType="com.ruike.hme.domain.vo.HmePrepareMaterialVO">
+        select item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        item.MATERIAL_NAME,
+        bc.qty componentQty,
+        bc.bom_component_id,
+        bc.line_number
+        from mt_work_order wo,
+        mt_bom b,
+        mt_bom_component bc
+        join mt_bom_component_attr bca ON bc.bom_component_id = bca.bom_component_id AND bca.attr_name = 'lineAttribute2' and bca.attr_value = #{materialCode}
+        join mt_bom_component_attr bca01 ON bc.bom_component_id = bca01.bom_component_id AND bca01.attr_name = 'lineAttribute9' and bca01.attr_value = 'X',
+        mt_material item,
+        mt_material_site c_site
+        left join mt_material_site_attr c_site_attr on c_site.material_site_id = c_site_attr.material_site_id and c_site_attr.attr_name = 'attribute14'
+        where wo.bom_id = b.bom_id
+        and b.bom_id = bc.bom_id
+        and c_site.MATERIAL_ID = bc.MATERIAL_ID
+        and bc.material_id = item.material_id
+        and wo.work_order_id = #{workOrderId}
+        and c_site.site_id = #{siteId}
+        AND c_site.TENANT_ID = #{tenantId}
+        and c_site.ENABLE_FLAG = 'Y'
+        and (c_site_attr.attr_value is null or c_site_attr.attr_value = '' or c_site_attr.attr_value = 'LOT')
+    </select>
+
+    <select id="prepareEoJobTimeMaterialQuery" resultType="com.ruike.hme.domain.vo.HmePrepareMaterialVO">
+        select item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        item.MATERIAL_NAME,
+        bc.qty componentQty,
+        time_attr.attr_value available_time,
+        bc.bom_component_id,
+        bc.line_number
+        from mt_work_order wo,
+        mt_bom b,
+        mt_bom_component bc
+        join mt_bom_component_attr bca ON bc.bom_component_id = bca.bom_component_id AND bca.attr_name = 'lineAttribute2' and bca.attr_value = #{materialCode}
+        join mt_bom_component_attr bca01 ON bc.bom_component_id = bca01.bom_component_id AND bca01.attr_name = 'lineAttribute9' and bca01.attr_value = 'X',
+        mt_material item,
+        mt_material_site c_site
+        join mt_material_site_attr c_site_attr on c_site.material_site_id = c_site_attr.material_site_id and c_site_attr.attr_name = 'attribute14' and c_site_attr.attr_value = 'TIME'
+        join mt_material_site_attr time_attr on c_site.material_site_id = time_attr.material_site_id and time_attr.attr_name = 'ATTRIBUTE9'
+        where wo.bom_id = b.bom_id
+        and b.bom_id = bc.bom_id
+        and c_site.MATERIAL_ID = bc.MATERIAL_ID
+        and bc.material_id = item.material_id
+        and wo.work_order_id = #{workOrderId}
+        and c_site.site_id = #{siteId}
+        AND c_site.TENANT_ID = #{tenantId}
+        and c_site.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="prepareEoJobMaterialQuery2" resultType="com.ruike.hme.domain.vo.HmePrepareMaterialVO">
+        select item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        item.MATERIAL_NAME,
+        bc.qty componentQty,
+        time_attr.attr_value available_time,
+        bc.bom_component_id,
+        bc.line_number,
+        c_site_attr.attr_value AS material_type,
+	    b.BOM_ID
+        from mt_work_order wo,
+        mt_bom b,
+        mt_bom_component bc
+        join mt_bom_component_attr bca ON bc.bom_component_id = bca.bom_component_id AND bca.attr_name = 'lineAttribute2' and bca.attr_value = #{materialCode}
+        join mt_bom_component_attr bca01 ON bc.bom_component_id = bca01.bom_component_id AND bca01.attr_name = 'lineAttribute9' and bca01.attr_value = 'X',
+        mt_material item,
+        mt_material_site c_site
+        left join mt_material_site_attr c_site_attr on c_site.material_site_id = c_site_attr.material_site_id and c_site_attr.attr_name = 'attribute14'
+        left join mt_material_site_attr time_attr on c_site.material_site_id = time_attr.material_site_id and time_attr.attr_name = 'ATTRIBUTE9'
+        where wo.bom_id = b.bom_id
+        and b.bom_id = bc.bom_id
+        and c_site.MATERIAL_ID = bc.MATERIAL_ID
+        and bc.material_id = item.material_id
+        and wo.work_order_id = #{workOrderId}
+        and c_site.site_id = #{siteId}
+        AND c_site.TENANT_ID = #{tenantId}
+        and c_site.ENABLE_FLAG = 'Y'
+        and bc.date_from &lt;= now()
+        and (bc.date_to is null or bc.date_to = '' or bc.date_to &gt;= now())
+    </select>
+
+    <select id="selectNormalStepByEoId" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO">
+        SELECT
+            a.ROUTER_STEP_ID,
+            a.STATUS,
+            a.EO_STEP_ACTUAL_ID
+        FROM
+            mt_eo_step_actual a,
+			mt_eo_router_actual r
+        WHERE r.EO_ROUTER_ACTUAL_ID = a.EO_ROUTER_ACTUAL_ID
+		  AND r.eo_id = #{eoId}
+          AND r.tenant_id = #{tenantId}
+          AND ( a.REWORK_STEP_FLAG IS NULL OR a.REWORK_STEP_FLAG = '' )
+        ORDER BY
+            a.LAST_UPDATE_DATE DESC
+            LIMIT 1
+    </select>
+
+    <select id="selectNearStepByEoId" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO">
+        SELECT
+            a.ROUTER_STEP_ID,
+            a.STATUS,
+            a.EO_STEP_ACTUAL_ID,
+            a.EO_ROUTER_ACTUAL_ID,
+			wip.COMPLETED_QTY,
+            wip.QUEUE_QTY,
+            wip.WORKING_QTY,
+            wip.COMPLETE_PENDING_QTY,
+            wip.SCRAPPED_QTY,
+            wip.HOLD_QTY
+        FROM
+            mt_eo_step_actual a,
+			mt_eo_router_actual r,
+			mt_eo_step_wip wip
+        WHERE a.EO_STEP_ACTUAL_ID = wip.EO_STEP_ACTUAL_ID
+          AND a.EO_ROUTER_ACTUAL_ID = r.EO_ROUTER_ACTUAL_ID
+		  AND r.eo_id = #{eoId}
+          AND r.tenant_id = #{tenantId}
+        ORDER BY
+            a.LAST_UPDATE_DATE DESC
+            LIMIT 1
+    </select>
+
+    <select id="batchSelectStepByEoIds" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO">
+        SELECT
+            a.ROUTER_STEP_ID,
+            a.STATUS,
+            a.EO_STEP_ACTUAL_ID,
+			wip.COMPLETED_QTY,
+            wip.QUEUE_QTY,
+            wip.WORKING_QTY,
+            wip.COMPLETE_PENDING_QTY,
+            wip.SCRAPPED_QTY,
+            wip.HOLD_QTY,
+            r.eo_id,
+            a.LAST_UPDATE_DATE,
+            wip.WORKCELL_ID,
+            mrs.STEP_NAME,
+            a.SEQUENCE
+        FROM
+            mt_eo_step_actual a,
+            mt_router_step mrs,
+			mt_eo_router_actual r,
+			mt_eo_step_wip wip
+        WHERE a.EO_STEP_ACTUAL_ID = wip.EO_STEP_ACTUAL_ID
+          AND a.EO_ROUTER_ACTUAL_ID = r.EO_ROUTER_ACTUAL_ID
+          AND mrs.tenant_id = a.TENANT_ID
+          AND mrs.ROUTER_STEP_ID = a.ROUTER_STEP_ID
+		  AND r.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+          AND r.tenant_id = #{tenantId}
+    </select>
+
+    <select id="batchSelectNormalStepByEoIds" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO">
+        SELECT
+        a.ROUTER_STEP_ID,
+        a.STATUS,
+        a.EO_STEP_ACTUAL_ID,
+        r.eo_id,
+        a.LAST_UPDATE_DATE,
+        a.CREATION_DATE,
+        a.SEQUENCE,
+        mrs.STEP_NAME
+        FROM
+        mt_eo_step_actual a,
+        mt_eo_router_actual r,
+        mt_router_step mrs
+        WHERE r.EO_ROUTER_ACTUAL_ID = a.EO_ROUTER_ACTUAL_ID
+        AND r.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND r.tenant_id = #{tenantId}
+        AND ( a.REWORK_STEP_FLAG IS NULL OR a.REWORK_STEP_FLAG = '' )
+        AND mrs.ROUTER_STEP_ID = a.ROUTER_STEP_ID
+    </select>
+
+    <select id="selectSnLineByMaterialLotIds"
+            resultType="com.ruike.hme.domain.vo.HmeEoJobTimeSnVO3">
+        select "MATERIAL_LOT" sn_type,
+                eo.eo_id,
+                mml.MATERIAL_LOT_ID,
+                mml.MATERIAL_LOT_CODE,
+                mm.MATERIAL_ID,
+                mm.MATERIAL_CODE,
+                mm.MATERIAL_NAME,
+                mla.attr_value rework_flag,
+                mla_drf.attr_value designed_rework_flag,
+                eo.WORK_ORDER_ID
+        from   mt_eo eo,
+               mt_material mm,
+               mt_material_lot mml
+               left join mt_material_lot_attr mla on mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+               left join mt_material_lot_attr mla_drf on mla_drf.material_lot_id = mml.material_lot_id and mla_drf.attr_name = 'DESIGNED_REWORK_FLAG'
+        WHERE  mml.TENANT_ID = #{tenantId}
+        and    mml.eo_id = eo.eo_id
+        and    eo.material_id = mm.material_id
+        <if test="materialLotIds != null">
+            AND mml.MATERIAL_LOT_ID in
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectEquipmentByWorkcellId"
+            resultType="com.ruike.hme.domain.vo.HmeEquipmentVO2">
+        select eq.ASSET_ENCODING,
+			   eq.DESCRIPTIONS
+        from   hme_equipment eq
+              ,hme_equipment_wkc_rel ewr
+        where  eq.EQUIPMENT_ID = ewr.EQUIPMENT_ID
+        and    ewr.tenant_id = #{tenantId}
+        and    ewr.station_id = #{workcellId}
+        and    ewr.enable_flag = 'Y'
+        and    eq.equipment_status = 'KY'
+    </select>
+
+    <select id="selectLastestJobSn"
+            resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO">
+        SELECT
+        t.site_out_date
+    FROM
+        hme_eo_job_sn t
+    WHERE
+        t.tenant_id = #{tenantId}
+        AND t.eo_step_id = #{hmeEoJobSn.eoStepId}
+        AND t.operation_id = #{hmeEoJobSn.operationId}
+        AND t.eo_id = #{hmeEoJobSn.eoId}
+    ORDER BY
+        t.creation_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectLastestJobSnOfEo"
+            resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO">
+        SELECT
+        t.operation_id
+    FROM
+        hme_eo_job_sn t
+    WHERE
+        t.tenant_id = #{tenantId}
+        AND t.eo_id = #{eoId}
+    ORDER BY
+        t.creation_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectLastestJobSnOfEoBatch" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO">
+        SELECT
+            t.operation_id
+        FROM
+            hme_eo_job_sn t
+        WHERE
+            t.tenant_id = #{tenantId}
+            AND t.eo_id IN
+            <foreach collection="eoIds" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        ORDER BY
+            t.creation_date DESC
+            LIMIT 1
+    </select>
+
+    <select id="selectLastestJobSnOfEoWkc"
+            resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        SELECT
+            IFNULL(t.rework_flag,'N') rework_flag
+        FROM
+            hme_eo_job_sn t
+        WHERE
+            t.tenant_id = #{tenantId}
+            AND t.site_out_date IS NULL
+            AND t.eo_id = #{hmeEoJobSn.eoId}
+            AND t.workcell_id = #{hmeEoJobSn.workcellId}
+    ORDER BY
+        t.creation_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="checkGettingChipFlag" resultType="int">
+        select 1
+          from hme_eo_job_sn hejs
+         where hejs.job_type = 'COS_FETCH_IN'
+            and hejs.tenant_id = #{tenantId}
+            and hejs.material_lot_id = #{materialLotId}
+            and hejs.operation_id = #{operationId}
+            and hejs.site_out_date is null
+          limit 1
+    </select>
+
+    <select id="checkChipInputFlag" resultType="int">
+        select 1
+        from hme_eo_job_sn hejs
+        where hejs.job_type = 'CHIP_NUM_ENTERING'
+        and hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materialLotId}
+        and hejs.operation_id = #{operationId}
+        and hejs.site_out_date is null
+        limit 1
+    </select>
+
+    <select id="querySourceMaterialLotIdForSiteOut" resultType="string">
+         select hejs.material_lot_id
+          from hme_eo_job_sn hejs
+         where hejs.job_type = 'COS_FETCH_IN'
+            and hejs.tenant_id = #{tenantId}
+			and hejs.work_order_id = #{workOrderId}
+			and hejs.operation_id = #{operationId}
+			and hejs.workcell_id = #{workcellId}
+          order by hejs.site_in_date desc
+          limit 1
+    </select>
+
+    <select id="queryEoJobSnBySourceJobId" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        select hejs.material_lot_id, hejs.job_id, hejs.job_type
+          from hme_eo_job_sn hejs
+         where hejs.job_type = #{jobType}
+            and hejs.tenant_id = #{tenantId}
+            and hejs.source_job_id = #{sourceJobId}
+            and hejs.site_out_date is null
+    </select>
+
+    <select id="queryLastEoJobId" parameterType="com.ruike.hme.domain.entity.HmeEoJobSn" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        select ejs.job_id, ejs.material_lot_id
+          from hme_eo_job_sn ejs
+         where ejs.tenant_id = #{tenantId}
+           and ejs.job_type = 'NC_RECORD'
+           and ejs.operation_id = #{dto.operationId}
+           and ejs.workcell_id = #{dto.workcellId}
+           and ejs.site_out_date is null
+         order by ejs.site_in_date desc
+         limit 1
+    </select>
+
+    <select id="queryMaterialLotByJobId" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select ejs.job_id eo_job_sn_id,
+               ml.material_lot_id,
+               ml.material_lot_code,
+               ml.primary_uom_qty,
+               nc.nc_code,
+               nc.description nc_desc,
+               case
+                 when mlnl.nc_load_id is null
+                    then 'N'
+                 else 'Y'
+               end  nc_flag,
+               case
+                  when ejs.site_out_date is null
+                     then 'N'
+                  else 'Y'
+		       end print_flag,
+           mmla.ATTR_VALUE as lab_code
+          from mt_material_lot ml
+          left join hme_eo_job_sn ejs
+            on ml.material_lot_id = ejs.material_lot_id
+          left join hme_material_lot_load mll
+            on mll.material_lot_id = ml.material_lot_id
+           and mll.tenant_id = ejs.tenant_id
+          left join hme_material_lot_nc_load mlnl
+            on mlnl.load_sequence = mll.load_sequence
+          left join hme_material_lot_nc_record mlnr
+            on mlnl.nc_load_id = mlnr.nc_load_id
+          left join mt_nc_code nc
+            on nc.nc_code = mlnr.nc_code
+          left join mt_material_lot_attr mmla
+            on mmla.MATERIAL_LOT_ID = ml.MATERIAL_LOT_ID
+            and mmla.ATTR_NAME = 'LAB_CODE'
+            and mmla.TENANT_ID = ml.TENANT_ID
+         where ejs.job_type = 'COS_FETCH_OUT'
+           and ejs.tenant_id = #{tenantId}
+           and ejs.source_job_id = #{sourceJobId}
+         group by ejs.job_id,
+                  ml.material_lot_id,
+                  ml.material_lot_code,
+                  ml.primary_uom_qty,
+                  nc.nc_code,
+                  nc.description,
+                  nc_flag,
+                  print_flag,
+                  mmla.ATTR_VALUE
+    </select>
+
+    <insert id="batchInsert" parameterType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        INSERT INTO hme_eo_job_sn
+        (
+        tenant_id,
+        job_id,
+        site_in_date,
+        site_out_date,
+        shift_id,
+        site_in_by,
+        site_out_by,
+        workcell_id,
+        work_order_id,
+        operation_id,
+        sn_material_id,
+        material_lot_id,
+        eo_id,
+        eo_step_id,
+        eo_step_num,
+        job_container_id,
+        rework_flag,
+        job_type,
+        source_container_id,
+        source_job_id,
+        sn_qty,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.jobId},
+            #{item.siteInDate},
+            #{item.siteOutDate},
+            #{item.shiftId},
+            #{item.siteInBy},
+            #{item.siteOutBy},
+            #{item.workcellId},
+            #{item.workOrderId},
+            #{item.operationId},
+            #{item.snMaterialId},
+            #{item.materialLotId},
+            #{item.eoId},
+            #{item.eoStepId},
+            #{item.eoStepNum},
+            #{item.jobContainerId},
+            #{item.reworkFlag},
+            #{item.jobType},
+            #{item.sourceContainerId},
+            #{item.sourceJobId},
+            #{item.snQty},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10}
+            )
+        </foreach>
+    </insert>
+
+    <select id="checkSiteOutById" resultType="int">
+        select 1
+          from hme_eo_job_sn hejs
+         where hejs.tenant_id = #{tenantId}
+           and hejs.job_id = #{jobId}
+           and hejs.site_out_date is not null
+         limit 1
+    </select>
+
+    <select id="prepareCosInputQuery" resultType="com.ruike.hme.domain.vo.HmeCosChipInputVO">
+        SELECT
+        t.material_lot_id,
+        t.job_id,
+        mwo.WORK_ORDER_NUM,
+        hcr.cos_num,
+        mml.MATERIAL_LOT_CODE,
+        round(mml.PRIMARY_UOM_QTY,2) PRIMARY_UOM_QTY,
+        mmla2.ATTR_VALUE wafer,
+        mmla1.ATTR_VALUE,
+        round(mwo.QTY,2) QTY,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        hcr.remark
+        FROM
+        hme_eo_job_sn t
+        LEFT JOIN mt_material_lot_attr mmla1 ON t.material_lot_id = mmla1.material_lot_id
+        AND mmla1.ATTR_NAME = 'WORKING_LOT'
+        LEFT JOIN mt_material_lot_attr mmla2 ON t.material_lot_id = mmla2.material_lot_id
+        AND mmla2.ATTR_NAME = 'WAFER_NUM',
+        hme_cos_operation_record hcr,
+        mt_material_lot mml,
+        mt_material_lot_attr mmla,
+        mt_work_order mwo,
+        mt_material mm
+        WHERE
+        t.workcell_id = #{workcellId}
+        and t.tenant_id = #{tenantId}
+        AND t.operation_id = #{operationId}
+        AND t.site_out_date IS NULL
+        AND t.job_type = 'CHIP_NUM_ENTERING'
+        AND t.work_order_id = mwo.WORK_ORDER_ID
+        AND t.material_lot_id = mml.MATERIAL_LOT_ID
+        AND t.material_lot_id = mmla.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'COS_RECORD'
+        AND mmla.ATTR_VALUE = hcr.operation_record_id
+        AND mml.MATERIAL_ID = mm.MATERIAL_ID
+        <if test="materialLotId != null">
+            AND mml.material_lot_id = #{materialLotId}
+        </if>
+    </select>
+
+    <select id="workOrderQueryForFirst" resultType="com.ruike.hme.domain.vo.HmeWorkOrderVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+        wo.work_order_id,
+        wo.work_order_num,
+        wo.qty wo_qty,
+        wo.material_id,
+        item.material_code,
+        tl.material_name,
+        wo.remark,
+        wo.site_id
+        from
+        mt_work_order wo,
+        mt_material item
+        left join mt_material_tl tl on tl.material_id = item.material_id
+        and tl.lang = #{lang}
+        where wo.production_line_id = #{dto.productionLineId}
+        and wo.status in ('RELEASED', 'EORELEASED')
+        and item.material_id = wo.material_id
+        and item.tenant_id = wo.tenant_id
+        and wo.tenant_id = #{tenantId}
+        <if test="dto.workOrderNum != null">
+            <bind name="workOrderNumLike" value="'%'+dto.workOrderNum+'%'"/>
+            and wo.work_order_num like #{workOrderNumLike}
+        </if>
+        <if test="dto.materialCode != null">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and item.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null">
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            and tl.material_name like #{materialNameLike}
+        </if>
+        order by wo.work_order_num
+    </select>
+
+    <select id="eoQueryForFirst" resultType="com.ruike.hme.domain.vo.HmeEoVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+            me.eo_id,
+            me.eo_num,
+            me.material_id,
+            mm.material_code,
+            tl.material_name,
+            me.qty,
+            me.identification,
+            mla.attr_value first_step_in_flag
+        from
+            mt_eo me,
+            mt_material_lot ml
+            left join mt_material_lot_attr mla on ml.material_lot_id = mla.material_lot_id
+             and mla.attr_name = 'FIRST_STEP_IN_FLAG',
+            mt_eo_router_actual era,
+            mt_eo_step_actual esa,
+            mt_router_step rs,
+            mt_material mm
+            left join mt_material_tl tl on tl.material_id = mm.material_id
+             and tl.lang = #{lang}
+        where 1 = 1
+        and me.eo_id = era.eo_id
+        and me.tenant_id = era.tenant_id
+        and ml.material_lot_code = me.identification
+        and ml.tenant_id = me.tenant_id
+        and esa.eo_router_actual_id = era.eo_router_actual_id
+        and esa.tenant_id = era.tenant_id
+        and esa.router_step_id = rs.router_step_id
+        and esa.tenant_id = rs.tenant_id
+        and mm.material_id = me.material_id
+        and mm.tenant_id = me.tenant_id
+        and me.work_order_id = #{dto.workOrderId}
+        and me.status = 'WORKING'
+        and me.tenant_id = #{tenantId}
+        and me.site_id = #{dto.siteId}
+        and esa.status != 'COMPLETED'
+        and rs.entry_step_flag = 'Y'
+        and era.last_update_date = (select max(er.last_update_date)
+                                      from mt_eo_router_actual er
+                                     where er.eo_id = era.eo_id
+                                       and er.tenant_id = era.tenant_id)
+        and esa.last_update_date = (select max(es.last_update_date)
+                                      from mt_eo_step_actual es
+                                     where esa.eo_router_actual_id = es.eo_router_actual_id
+                                       and es.tenant_id = esa.tenant_id)
+        <if test="dto.eoNum != null">
+            <bind name="eoNumLike" value="'%'+dto.eoNum+'%'"/>
+            and me.eo_num like #{eoNumLike}
+        </if>
+        <if test="dto.materialCode != null">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null">
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            and tl.material_name like #{materialNameLike}
+        </if>
+        <if test="dto.identification != null">
+            <bind name="identificationLike" value="'%'+dto.identification+'%'"/>
+            and me.identification like #{identificationLike}
+        </if>
+        order by mla.attr_value,  me.eo_num
+    </select>
+
+    <select id="materialLotLovQueryForFirst" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+            ml.material_lot_id,
+            ml.material_lot_code,
+            ml.primary_uom_qty,
+            ml.material_id,
+            mm.material_code,
+            tl.material_name
+        from
+            mt_material_lot ml,
+            mt_material mm
+            left join mt_material_tl tl on tl.material_id = mm.material_id
+             and tl.lang = #{lang}
+        where
+            ml.material_id = mm.material_id
+            and ml.tenant_id = mm.tenant_id
+            and ml.tenant_id = #{tenantId}
+            and ml.material_lot_id in
+        <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="dto.materialLotCode != null">
+            <bind name="materialLotCodeLike" value="'%'+dto.materialLotCode+'%'"/>
+            and ml.material_lot_code like #{materialLotCodeLike}
+        </if>
+        <if test="dto.materialCode != null">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null">
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            and tl.material_name like #{materialNameLike}
+        </if>
+        order by ml.material_lot_code
+    </select>
+
+    <select id="queryEoActualByEoId" resultType="com.ruike.hme.domain.vo.HmeEoVO2">
+        select
+            me.eo_id,
+            me.eo_num,
+            rs.router_step_id,
+            rs.entry_step_flag,
+            esa.status,
+            wo.work_order_id,
+            wo.work_order_num
+        from
+            mt_eo me,
+            mt_eo_router_actual era,
+            mt_eo_step_actual esa,
+            mt_router_step rs,
+            mt_work_order wo
+        where 1 = 1
+        and me.eo_id = era.eo_id
+        and me.tenant_id = era.tenant_id
+        and esa.eo_router_actual_id = era.eo_router_actual_id
+        and esa.tenant_id = era.tenant_id
+        and esa.router_step_id = rs.router_step_id
+        and esa.tenant_id = rs.tenant_id
+        and me.work_order_id = wo.work_order_id
+        and me.tenant_id = wo.tenant_id
+        and me.eo_id = #{eoId}
+        and me.tenant_id = #{tenantId}
+        and era.last_update_date = (select max(er.last_update_date)
+                                      from mt_eo_router_actual er
+                                     where er.eo_id = era.eo_id
+                                       and er.tenant_id = era.tenant_id)
+        and esa.last_update_date = (select max(es.last_update_date)
+                                      from mt_eo_step_actual es
+                                     where esa.eo_router_actual_id = es.eo_router_actual_id
+                                       and es.tenant_id = esa.tenant_id)
+        limit 1
+    </select>
+
+    <select id="queryJobIdFirstProcessSnUpgrade" resultType="string">
+        select ejs.job_id
+          from hme_eo_job_sn ejs
+         where ejs.tenant_id = #{tenantId}
+           and ejs.workcell_id = #{dto.workcellId}
+           and ejs.eo_id = #{dto.eoId}
+           and ejs.eo_step_id = #{dto.routerStepId}
+           and ejs.site_out_date is not null
+         order by ejs.last_update_date desc
+         limit 1
+    </select>
+
+    <select id="queryNotPrintQtyBySourceJobId" resultType="long">
+        select sum(ml.primary_uom_qty) sum_qty
+          from mt_material_lot ml,
+               hme_eo_job_sn ejs
+         where ml.material_lot_id = ejs.material_lot_id
+           and ml.tenant_id = ejs.tenant_id
+           and ejs.job_type = 'COS_FETCH_OUT'
+           and ejs.site_out_date is null
+           and ejs.tenant_id = #{tenantId}
+           and ejs.source_job_id = #{sourceJobId}
+    </select>
+
+    <select id="queryUnfinishedSection" resultType="com.ruike.hme.api.dto.HmeEoJobSnDTO3">
+        select
+            mor.parent_organization_id AS workcell_id,
+            wa.attr_value AS prepare_flag
+        from
+            mt_eo_router mer,
+            mt_router mr,
+            mt_router_step mrs,
+            mt_router_operation mro,
+            mt_operation_wkc_dispatch_rel wdr
+            LEFT JOIN mt_mod_workcell_attr wa ON wa.workcell_id = wdr.workcell_id
+            AND wa.attr_name = 'PREPARE_FLAG',
+            mt_mod_organization_rel mor
+        where
+            1 = 1
+            and mor.parent_organization_type = 'WORKCELL'
+            and mor.organization_type = 'WORKCELL'
+            and mor.organization_id = wdr.workcell_id
+	        and mor.tenant_id = wdr.tenant_id
+            and wdr.operation_id = mro.operation_id
+	        and mro.tenant_id = wdr.tenant_id
+            and mro.router_step_id = mrs.router_step_id
+            and mro.tenant_id = mrs.tenant_id
+            and mrs.router_id = mr.router_id
+            and mrs.tenant_id = mr.tenant_id
+            and mr.router_id = mer.router_id
+            and mr.tenant_id = mer.tenant_id
+            and mor.top_site_id = #{siteId}
+            and mer.eo_id = #{eoId}
+	        and mer.tenant_id = #{tenantId}
+            and not exists (
+                select
+                    1
+                from
+                    mt_eo_step_actual esa,
+                    mt_eo_router_actual era
+                where
+                    era.eo_id = #{eoId}
+                    and era.source_eo_step_actual_id = ''
+                    and esa.eo_router_actual_id = era.eo_router_actual_id
+                    and esa.tenant_id = era.tenant_id
+                    and esa.router_step_id = mrs.router_step_id
+                    and esa.tenant_id = mrs.tenant_id)
+        group by
+            mor.parent_organization_id, wa.attr_value
+    </select>
+
+    <select id="batchQueryUnfinishedSection" resultType="com.ruike.hme.api.dto.HmeEoJobSnDTO3">
+        select
+            mor.parent_organization_id workcell_id,
+            mer.eo_id,
+            wa.attr_value AS prepare_flag
+        from
+            mt_eo_router mer,
+            mt_router mr,
+            mt_router_step mrs,
+            mt_router_operation mro,
+            mt_operation_wkc_dispatch_rel wdr
+            LEFT JOIN mt_mod_workcell_attr wa ON wa.workcell_id = wdr.workcell_id
+            AND wa.attr_name = 'PREPARE_FLAG',
+            mt_mod_organization_rel mor
+        where
+            1 = 1
+            and mor.parent_organization_type = 'WORKCELL'
+            and mor.organization_type = 'WORKCELL'
+            and mor.organization_id = wdr.workcell_id
+            and mor.tenant_id = wdr.tenant_id
+            and wdr.operation_id = mro.operation_id
+            and mro.tenant_id = wdr.tenant_id
+            and mro.router_step_id = mrs.router_step_id
+            and mro.tenant_id = mrs.tenant_id
+            and mrs.router_id = mr.router_id
+            and mrs.tenant_id = mr.tenant_id
+            and mr.router_id = mer.router_id
+            and mr.tenant_id = mer.tenant_id
+            and mor.top_site_id = #{siteId}
+            and mer.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and mer.tenant_id = #{tenantId}
+            and not exists (
+                select 1
+                from
+                    mt_eo_step_actual esa,
+                    mt_eo_router_actual era
+                where
+                    era.eo_id = mer.eo_id
+                    and era.source_eo_step_actual_id = ''
+                    and esa.eo_router_actual_id = era.eo_router_actual_id
+                    and esa.tenant_id = era.tenant_id
+                    and esa.router_step_id = mrs.router_step_id
+                    and esa.tenant_id = mrs.tenant_id)
+        group by
+            mor.parent_organization_id, mer.eo_id, wa.attr_value
+    </select>
+
+    <select id="selectLastestNcRecord"
+            resultType="tarzan.actual.domain.entity.MtNcRecord">
+        SELECT
+        mnr.WORKCELL_ID
+        FROM
+        mt_nc_record mnr
+        WHERE
+        mnr.TENANT_ID = #{tenantId}
+        AND mnr.MATERIAL_LOT_ID = #{materialLotId}
+        and (mnr.parent_nc_record_id is null or mnr.parent_nc_record_id = '')
+        ORDER BY
+        mnr.CREATION_DATE DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryEoJobSnByMaterialLotId" resultMap="BaseResultMap">
+        select hejs.job_id,
+               hejs.shift_id,
+               hejs.site_in_by,
+               hejs.site_in_date,
+               hejs.workcell_id,
+               hejs.work_order_id,
+               hejs.operation_id,
+               hejs.sn_material_id,
+               hejs.eo_id,
+               hejs.eo_step_id,
+               hejs.eo_step_num,
+               hejs.job_container_id,
+               hejs.rework_flag,
+               hejs.job_type
+          from hme_eo_job_sn hejs
+         where hejs.tenant_id = #{tenantId}
+            and hejs.material_lot_id = #{materialLotId}
+            and hejs.site_out_date is null
+          order by hejs.site_in_date, hejs.last_update_date desc
+    </select>
+
+    <select id="queryWorkOrderTypeByEoId" resultType="string">
+        select wo.work_order_type
+          from mt_eo eo,
+               mt_work_order wo
+         where wo.work_order_id = eo.work_order_id
+           and wo.tenant_id = eo.tenant_id
+           and eo.eo_id = #{eoId}
+           and eo.tenant_id  = #{tenantId}
+    </select>
+
+    <select id="batchQueryWorkOrderTypeByEoId" resultType="com.ruike.hme.domain.vo.HmeEoJobSnBatchVO3">
+        select
+            eo.EO_ID,
+            wo.WORK_ORDER_ID,
+            wo.work_order_type
+          from mt_eo eo,
+               mt_work_order wo
+         where wo.work_order_id = eo.work_order_id
+           and wo.tenant_id = eo.tenant_id
+        and eo.eo_id IN
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+           and eo.tenant_id  = #{tenantId}
+    </select>
+
+    <select id="defaultEoQueryForFirst" resultType="com.ruike.hme.domain.vo.HmeEoVO">
+          select
+            me.eo_id,
+            me.eo_num,
+            me.material_id,
+            me.qty,
+            me.identification
+          from
+            mt_eo me,
+            mt_material_lot ml
+            left join mt_material_lot_attr mla on ml.material_lot_id = mla.material_lot_id
+             and mla.attr_name = 'FIRST_STEP_IN_FLAG',
+            mt_eo_router_actual era,
+            mt_eo_step_actual esa,
+            mt_router_step rs
+          where 1 = 1
+            and me.eo_id = era.eo_id
+            and me.tenant_id = era.tenant_id
+            and ml.material_lot_code = me.identification
+            and ml.tenant_id = me.tenant_id
+            and esa.eo_router_actual_id = era.eo_router_actual_id
+            and esa.tenant_id = era.tenant_id
+            and esa.router_step_id = rs.router_step_id
+            and esa.tenant_id = rs.tenant_id
+            and me.work_order_id = #{dto.workOrderId}
+            and me.status = 'WORKING'
+            and me.tenant_id = #{tenantId}
+            and me.site_id = #{dto.siteId}
+            and esa.status != 'COMPLETED'
+            and rs.entry_step_flag = 'Y'
+            and era.last_update_date = (select max(er.last_update_date)
+                                          from mt_eo_router_actual er
+                                         where er.eo_id = era.eo_id
+                                           and er.tenant_id = era.tenant_id)
+            and esa.last_update_date = (select max(es.last_update_date)
+                                          from mt_eo_step_actual es
+                                         where esa.eo_router_actual_id = es.eo_router_actual_id
+                                           and es.tenant_id = esa.tenant_id)
+            and (mla.attr_value != 'Y' or mla.attr_value is null)
+          order by me.eo_num
+          limit 1
+    </select>
+    <select id="queryLocator" resultType="com.ruike.hme.domain.vo.HmeModLocatorVO">
+        SELECT
+        t.LOCATOR_ID,
+        t.LOCATOR_CODE,
+        t.LOCATOR_NAME
+        FROM
+        (
+        <if test="dto.workcellLocatorTypeList != null and dto.workcellLocatorTypeList.size() > 0">
+            SELECT
+            smml.LOCATOR_ID,
+            smml.LOCATOR_CODE,
+            smml.LOCATOR_NAME
+            FROM
+            mt_mod_organization_rel mmor,
+            mt_mod_organization_rel pmmor,
+            mt_mod_locator_org_rel mmlor,
+            mt_mod_locator smml
+            WHERE
+            smml.TENANT_ID = mmlor.TENANT_ID
+            AND smml.ENABLE_FLAG = 'Y'
+            AND smml.LOCATOR_TYPE IN
+            <foreach collection="dto.workcellLocatorTypeList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            <if test="dto.locatorCode != null">
+                <bind name="locatorCodeLike" value="'%'+dto.locatorCode+'%'"/>
+                and smml.LOCATOR_CODE LIKE #{locatorCodeLike}
+            </if>
+            <if test="dto.locatorName != null">
+                <bind name="locatorNameLike" value="'%'+dto.locatorName+'%'"/>
+                and smml.LOCATOR_NAME LIKE #{locatorNameLike}
+            </if>
+            AND smml.LOCATOR_CATEGORY = 'INVENTORY'
+            AND smml.LOCATOR_ID = mmlor.LOCATOR_ID
+            AND mmlor.TENANT_ID = pmmor.TENANT_ID
+            AND mmlor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmlor.ORGANIZATION_ID = pmmor.PARENT_ORGANIZATION_ID
+            AND pmmor.TENANT_ID = mmor.TENANT_ID
+            AND pmmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND pmmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            AND pmmor.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+            AND mmor.TENANT_ID = #{tenantId}
+            AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmor.ORGANIZATION_ID = #{dto.workcellId}
+        </if>
+
+        <if test="dto.prodLineLocatorTypeList != null and dto.prodLineLocatorTypeList.size() > 0">
+
+            <if test="dto.workcellLocatorTypeList != null and dto.workcellLocatorTypeList.size() > 0">
+                UNION
+            </if>
+
+            SELECT
+            smml.LOCATOR_ID,
+            smml.LOCATOR_CODE,
+            smml.LOCATOR_NAME
+            FROM
+            mt_mod_organization_rel mmor,
+            mt_mod_organization_rel pmmor,
+            mt_mod_organization_rel tmmor,
+            mt_mod_locator_org_rel mmlor,
+            mt_mod_locator smml
+            WHERE
+            smml.TENANT_ID = mmlor.TENANT_ID
+            AND smml.ENABLE_FLAG = 'Y'
+            AND smml.LOCATOR_TYPE IN
+            <foreach collection="dto.prodLineLocatorTypeList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            <if test="dto.locatorCode != null">
+                <bind name="locatorCodeLike" value="'%'+dto.locatorCode+'%'"/>
+                and smml.LOCATOR_CODE LIKE #{locatorCodeLike}
+            </if>
+            <if test="dto.locatorName != null">
+                <bind name="locatorNameLike" value="'%'+dto.locatorName+'%'"/>
+                and smml.LOCATOR_NAME LIKE #{locatorNameLike}
+            </if>
+            AND smml.LOCATOR_CATEGORY = 'INVENTORY'
+            AND smml.LOCATOR_ID = mmlor.LOCATOR_ID
+            AND mmlor.TENANT_ID = tmmor.TENANT_ID
+            AND mmlor.ORGANIZATION_TYPE = tmmor.PARENT_ORGANIZATION_TYPE
+            AND mmlor.ORGANIZATION_ID = tmmor.PARENT_ORGANIZATION_ID
+            AND tmmor.TENANT_ID = pmmor.TENANT_ID
+            AND tmmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+            AND tmmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND tmmor.ORGANIZATION_ID = pmmor.PARENT_ORGANIZATION_ID
+            AND pmmor.TENANT_ID = mmor.TENANT_ID
+            AND pmmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            AND pmmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND pmmor.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+            AND mmor.TENANT_ID = #{tenantId}
+            AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmor.ORGANIZATION_ID = #{dto.workcellId}
+        </if>
+        ) t
+        ORDER BY
+        t.LOCATOR_CODE ASC
+    </select>
+
+    <select id="queryLocatorOnhandQuantity" resultType="com.ruike.hme.domain.vo.HmeLocatorOnhandQuantityVO">
+        SELECT
+        t.MATERIAL_ID,
+        t.MATERIAL_CODE,
+        t.MATERIAL_NAME,
+        t.LOCATOR_ID,
+        t.LOCATOR_CODE,
+        t.LOCATOR_NAME,
+        t.WAREHOUSE_ID,
+        t.WAREHOUSE_CODE,
+        t.WAREHOUSE_NAME,
+        t.ONHAND_QUANTITY,
+        t.PRIMARY_UOM_ID,
+        t.UOM_CODE,
+        t.UOM_NAME,
+        t.LOT_CODE
+        FROM
+        (
+        <if test="dto.workcellLocatorTypeList != null and dto.workcellLocatorTypeList.size() > 0">
+            SELECT
+            mioq.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mioq.LOCATOR_ID,
+            smml.LOCATOR_CODE,
+            smml.LOCATOR_NAME,
+            pmml.LOCATOR_ID AS WAREHOUSE_ID,
+            pmml.LOCATOR_CODE AS WAREHOUSE_CODE,
+            pmml.LOCATOR_NAME AS WAREHOUSE_NAME,
+            mioq.ONHAND_QUANTITY,
+            mm.PRIMARY_UOM_ID,
+            mu.UOM_CODE,
+            mu.UOM_NAME,
+            mioq.LOT_CODE
+            FROM
+            mt_mod_organization_rel mmor,
+            mt_mod_organization_rel pmmor,
+            mt_mod_locator_org_rel mmlor,
+            mt_mod_locator smml,
+            mt_inv_onhand_quantity mioq,
+            mt_material mm,
+            mt_mod_locator pmml,
+            mt_uom mu
+            WHERE mu.TENANT_ID = mm.TENANT_ID
+            AND mu.UOM_ID = mm.PRIMARY_UOM_ID
+            AND pmml.TENANT_ID = smml.TENANT_ID
+            AND pmml.LOCATOR_ID = smml.PARENT_LOCATOR_ID
+            AND mm.TENANT_ID = mioq.TENANT_ID
+            AND mm.MATERIAL_ID = mioq.MATERIAL_ID
+            AND mioq.TENANT_ID = smml.TENANT_ID
+            <if test="dto.materialCode != null">
+                <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+                AND mm.MATERIAL_CODE LIKE #{materialCodeLike}
+            </if>
+            <if test="dto.locatorId != null">
+                AND mioq.LOCATOR_ID = #{dto.locatorId}
+            </if>
+            <if test="dto.lotCode != null">
+                <bind name="lotCodeLike" value="'%'+dto.lotCode+'%'"/>
+                AND mioq.LOT_CODE LIKE #{lotCodeLike}
+            </if>
+            AND smml.LOCATOR_ID = mioq.LOCATOR_ID
+            AND smml.TENANT_ID = mmlor.TENANT_ID
+            AND smml.ENABLE_FLAG = 'Y'
+            AND smml.LOCATOR_TYPE IN
+            <foreach collection="dto.workcellLocatorTypeList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            AND smml.LOCATOR_CATEGORY = 'INVENTORY'
+            AND smml.LOCATOR_ID = mmlor.LOCATOR_ID
+            AND mmlor.TENANT_ID = pmmor.TENANT_ID
+            AND mmlor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmlor.ORGANIZATION_ID = pmmor.PARENT_ORGANIZATION_ID
+            AND pmmor.TENANT_ID = mmor.TENANT_ID
+            AND pmmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND pmmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            AND pmmor.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+            AND mmor.TENANT_ID = #{tenantId}
+            AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmor.ORGANIZATION_ID = #{dto.workcellId}
+        </if>
+
+        <if test="dto.prodLineLocatorTypeList != null and dto.prodLineLocatorTypeList.size() > 0">
+
+            <if test="dto.workcellLocatorTypeList != null and dto.workcellLocatorTypeList.size() > 0">
+                UNION ALL
+            </if>
+
+            SELECT
+            mioq.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mioq.LOCATOR_ID,
+            smml.LOCATOR_CODE,
+            smml.LOCATOR_NAME,
+            pmml.LOCATOR_ID AS WAREHOUSE_ID,
+            pmml.LOCATOR_CODE AS WAREHOUSE_CODE,
+            pmml.LOCATOR_NAME AS WAREHOUSE_NAME,
+            mioq.ONHAND_QUANTITY,
+            mm.PRIMARY_UOM_ID,
+            mu.UOM_CODE,
+            mu.UOM_NAME,
+            mioq.LOT_CODE
+            FROM
+            mt_mod_organization_rel mmor,
+            mt_mod_organization_rel pmmor,
+            mt_mod_organization_rel tmmor,
+            mt_mod_locator_org_rel mmlor,
+            mt_mod_locator smml,
+            mt_inv_onhand_quantity mioq,
+            mt_material mm,
+            mt_mod_locator pmml,
+            mt_uom mu
+            WHERE
+            mu.TENANT_ID = mm.TENANT_ID
+            AND mu.UOM_ID = mm.PRIMARY_UOM_ID
+            AND pmml.TENANT_ID = smml.TENANT_ID
+            AND pmml.LOCATOR_ID = smml.PARENT_LOCATOR_ID
+            AND mm.TENANT_ID = mioq.TENANT_ID
+            AND mm.MATERIAL_ID = mioq.MATERIAL_ID
+            AND mioq.TENANT_ID = smml.TENANT_ID
+            <if test="dto.materialCode != null">
+                <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+                AND mm.MATERIAL_CODE LIKE #{materialCodeLike}
+            </if>
+            <if test="dto.locatorId != null">
+                AND mioq.LOCATOR_ID = #{dto.locatorId}
+            </if>
+            <if test="dto.lotCode != null">
+                <bind name="lotCodeLike" value="'%'+dto.lotCode+'%'"/>
+                AND mioq.LOT_CODE LIKE #{lotCodeLike}
+            </if>
+
+            AND smml.LOCATOR_ID = mioq.LOCATOR_ID
+            AND smml.TENANT_ID = mmlor.TENANT_ID
+            AND smml.ENABLE_FLAG = 'Y'
+            AND smml.LOCATOR_TYPE IN
+            <foreach collection="dto.prodLineLocatorTypeList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            AND smml.LOCATOR_CATEGORY = 'INVENTORY'
+            AND smml.LOCATOR_ID = mmlor.LOCATOR_ID
+            AND mmlor.TENANT_ID = tmmor.TENANT_ID
+            AND mmlor.ORGANIZATION_TYPE = tmmor.PARENT_ORGANIZATION_TYPE
+            AND mmlor.ORGANIZATION_ID = tmmor.PARENT_ORGANIZATION_ID
+            AND tmmor.TENANT_ID = pmmor.TENANT_ID
+            AND tmmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+            AND tmmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND tmmor.ORGANIZATION_ID = pmmor.PARENT_ORGANIZATION_ID
+            AND pmmor.TENANT_ID = mmor.TENANT_ID
+            AND pmmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            AND pmmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND pmmor.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+            AND mmor.TENANT_ID = #{tenantId}
+            AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+            AND mmor.ORGANIZATION_ID = #{dto.workcellId}
+        </if>
+        ) t
+        ORDER BY
+        t.LOCATOR_CODE ASC
+    </select>
+
+    <select id="queryVirtualBomComponent" resultType="java.lang.String">
+            SELECT
+        mbca.BOM_COMPONENT_ID
+        FROM
+        mt_bom_component_attr mbca
+        WHERE
+        mbca.TENANT_ID = #{tenantId}
+        AND mbca.ATTR_VALUE = 'X'
+        AND mbca.ATTR_NAME = 'lineAttribute9'
+        <choose>
+            <when test="bomComponentIdList != null and bomComponentIdList.size() > 0">
+                AND mbca.BOM_COMPONENT_ID IN
+                <foreach collection="bomComponentIdList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryMaterialBasic" resultType="tarzan.iface.domain.entity.MtMaterialBasic">
+              SELECT
+        mmb.*
+        FROM
+        mt_material_site mms,
+        mt_material_basic mmb
+        WHERE
+        mmb.TENANT_ID = #{tenantId}
+        AND mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mmb.TENANT_ID = mms.TENANT_ID
+        AND mms.ENABLE_FLAG = 'Y'
+        AND mms.SITE_ID = #{siteId}
+        AND mms.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="queryBackFlush" resultType="com.ruike.hme.domain.vo.HmeBackFlushVO">
+        SELECT
+        mbca.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mbca.QTY AS component_qty,
+        mm.PRIMARY_UOM_ID AS uom_id,
+        mu.UOM_CODE,
+        mu.UOM_NAME,
+        mml.LOCATOR_ID,
+        mml.LOCATOR_CODE,
+        mml.LOCATOR_NAME,
+        sum( mioq.ONHAND_QUANTITY ) AS ONHAND_QUANTITY
+        FROM
+        mt_bom_component mbca,
+        mt_material_site mms
+        LEFT JOIN mt_inv_onhand_quantity mioq ON mioq.TENANT_ID = mms.TENANT_ID
+        AND mioq.LOCATOR_ID = #{dto.locatorId}
+        AND mioq.SITE_ID = mms.SITE_ID
+        AND mioq.MATERIAL_ID = mms.MATERIAL_ID,
+        mt_material_site_attr mmsa,
+        mt_material mm,
+        mt_uom mu,
+        mt_mod_locator mml
+        WHERE
+        mml.TENANT_ID = mm.TENANT_ID
+        AND mml.LOCATOR_ID = #{dto.locatorId}
+        AND mu.UOM_ID = mm.PRIMARY_UOM_ID
+        AND mm.TENANT_ID = mbca.TENANT_ID
+        AND mm.ENABLE_FLAG = 'Y'
+        AND mm.MATERIAL_ID = mbca.MATERIAL_ID
+        AND mmsa.TENANT_ID = mms.TENANT_ID
+        AND mmsa.ATTR_NAME = 'attribute1'
+        AND mmsa.ATTR_VALUE = '2'
+        AND mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mms.TENANT_ID = mbca.TENANT_ID
+        AND mms.ENABLE_FLAG = 'Y'
+        AND mms.MATERIAL_ID = mbca.MATERIAL_ID
+        AND mms.SITE_ID = #{dto.siteId}
+        AND mbca.TENANT_ID = #{tenantId}
+        AND mbca.DATE_FROM &lt;= NOW()
+        AND (
+        mbca.DATE_TO IS NULL
+        OR mbca.DATE_TO = ''
+        OR mbca.DATE_TO &gt;= NOW())
+        <choose>
+            <when test="dto.bomComponentIdList != null and dto.bomComponentIdList.size() > 0">
+                AND mbca.BOM_COMPONENT_ID IN
+                <foreach collection="dto.bomComponentIdList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+        GROUP BY
+        mbca.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mbca.QTY,
+        mm.PRIMARY_UOM_ID,
+        mu.UOM_CODE,
+        mu.UOM_NAME,
+        mml.LOCATOR_ID,
+        mml.LOCATOR_CODE,
+        mml.LOCATOR_NAME
+    </select>
+
+    <select id="queryMaterialSite" resultType="tarzan.material.domain.entity.MtMaterialSite">
+              SELECT
+        mms.*
+    FROM
+        mt_material_site mms
+    WHERE
+        mms.ENABLE_FLAG = 'Y'
+        AND mms.TENANT_ID = #{tenantId}
+        AND mms.SITE_ID = #{siteId}
+        <choose>
+            <when test="materialIdList != null and materialIdList.size() > 0">
+                AND mms.MATERIAL_ID IN
+                <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryExtendAttr" resultType="io.tarzan.common.domain.vo.MtExtendAttrVO1">
+        SELECT
+        t.ATTR_ID,
+        t.${keyId} AS key_id,
+        t.ATTR_NAME,
+        IFNULL(t.ATTR_VALUE,'') AS ATTR_VALUE,
+        t.LANG
+        FROM
+        ${tableName} t
+    WHERE
+        t.TENANT_ID = #{tenantId}
+        <choose>
+            <when test="attrNameList != null and attrNameList.size() > 0">
+                AND t.ATTR_NAME IN
+                <foreach collection="attrNameList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="keyIdList != null and keyIdList.size() > 0">
+                AND t.${keyId} IN
+                <foreach collection="keyIdList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryMaterialUom" resultType="com.ruike.hme.domain.vo.HmeEoJobSnMaterialUomVO">
+        SELECT
+        mm.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mu.UOM_TYPE
+        FROM
+        mt_material mm
+        LEFT JOIN mt_uom mu ON mu.TENANT_ID = mm.TENANT_ID
+        AND mu.UOM_ID = mm.PRIMARY_UOM_ID
+        WHERE
+        mm.TENANT_ID = #{tenantId}
+        <choose>
+            <when test="materialIdList != null and materialIdList.size() > 0">
+                AND mm.MATERIAL_ID IN
+                <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectForEoWkcAndStepWipQuery" resultMap="MtEoStepWipResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_eo_step_wip t
+        where
+        t.TENANT_ID=${tenantId}
+        <choose>
+            <when test="dtoList != null and dtoList.size() > 0">
+                AND t.EO_STEP_ACTUAL_ID IN
+                <foreach collection="dtoList" index="index" item="item" open="(" separator="," close=")">
+                    #{item.eoStepActualId}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="checkNotSiteOutByWkcId" resultType="int">
+        select 1
+        from hme_eo_job_sn hejs
+        where hejs.job_type = #{jobType}
+        and hejs.tenant_id = #{tenantId}
+        and hejs.workcell_id = #{workcellId}
+        and hejs.site_in_date is not null
+        and hejs.site_out_date is null
+        limit 1
+    </select>
+
+    <select id="queryEoJobSn" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        SELECT
+        t.*
+        FROM
+        hme_eo_job_sn t
+        WHERE
+        t.tenant_id = #{tenantId}
+        <choose>
+            <when test='dto.reworkFlag == "Y"'>
+                AND t.rework_flag = #{dto.reworkFlag}
+            </when>
+            <otherwise>
+                AND ( t.rework_flag = '' OR t.rework_flag = 'N' OR t.rework_flag IS NULL )
+            </otherwise>
+        </choose>
+        AND t.workcell_id = #{dto.workcellId}
+        AND t.material_lot_id =  #{dto.materialLotId}
+        AND t.eo_step_id = #{dto.eoStepId}
+        AND t.eo_step_num = #{dto.eoStepNum}
+        ORDER BY
+        t.site_in_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="batchQueryEoInfoById" resultType="com.ruike.hme.domain.vo.HmeEoVO4">
+        select me.tenant_id,
+            me.eo_id,
+            me.eo_num,
+            me.site_id,
+            me.work_order_id,
+            me.status,
+            me.last_eo_status,
+            me.production_line_id,
+            me.workcell_id,
+            me.plan_start_time,
+            me.plan_end_time,
+            me.qty,
+            me.uom_id,
+            me.eo_type,
+            me.validate_flag,
+            me.identification,
+            me.material_id,
+            me.latest_his_id,
+            mu.uom_code,
+            pl.prod_line_code,
+            mb.item_type
+        from mt_eo me
+            left join mt_uom mu on mu.uom_id = me.uom_id and mu.tenant_id = me.tenant_id
+            left join mt_mod_production_line pl on pl.prod_line_id = me.production_line_id and pl.tenant_id = me.tenant_id
+            left join mt_material_site ms on ms.material_id = me.material_id and ms.site_id = me.site_id and ms.tenant_id = me.tenant_id and ms.enable_flag = 'Y'
+            left join mt_material_basic mb on mb.material_site_id = ms.material_site_id and mb.tenant_id = ms.tenant_id
+        where me.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and me.tenant_id = #{tenantId}
+    </select>
+
+    <select id="batchQueryWoInfoById" resultType="com.ruike.hme.domain.vo.HmeWorkOrderVO2">
+        select wo.tenant_id,
+            wo.work_order_id,
+            wo.work_order_num,
+            wo.work_order_type,
+            wo.site_id,
+            wo.production_line_id,
+            wo.workcell_id,
+            wo.make_order_id,
+            wo.production_version,
+            wo.material_id,
+            wo.qty,
+            wo.uom_id,
+            wo.priority,
+            wo.status,
+            wo.last_wo_status,
+            wo.plan_start_time,
+            wo.plan_end_time,
+            wo.locator_id,
+            wo.bom_id,
+            wo.router_id,
+            wo.validate_flag,
+            wo.remark,
+            wo.opportunity_id,
+            wo.customer_id,
+            wo.complete_control_type,
+            wo.complete_control_qty,
+            wo.source_identification_id,
+            woa_attr1.attr_value so_num,
+            woa_attr7.attr_value so_line_num,
+            mm.material_code
+        from mt_work_order wo
+            left join mt_work_order_attr woa_attr1 on woa_attr1.work_order_id = wo.work_order_id and woa_attr1.tenant_id = wo.tenant_id and woa_attr1.attr_name = 'attribute1'
+            left join mt_work_order_attr woa_attr7 on woa_attr7.work_order_id = wo.work_order_id and woa_attr7.tenant_id = wo.tenant_id and woa_attr7.attr_name = 'attribute7'
+            left join mt_material mm on wo.material_id = mm.material_id and mm.tenant_id = wo.tenant_id
+        where wo.work_order_id in
+        <foreach collection="woIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and wo.tenant_id = #{tenantId}
+    </select>
+
+    <resultMap id="HmeEoResultMap" type="com.ruike.hme.domain.vo.HmeEoVO4">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="eo_id" property="eoId" jdbcType="VARCHAR"/>
+        <result column="eo_num" property="eoNum" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="last_eo_status" property="lastEoStatus" jdbcType="VARCHAR"/>
+        <result column="production_line_id" property="productionLineId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="plan_start_time" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="plan_end_time" property="planEndTime" jdbcType="TIMESTAMP"/>
+        <result column="qty" property="qty" jdbcType="VARCHAR"/>
+        <result column="uom_id" property="uomId" jdbcType="VARCHAR"/>
+        <result column="eo_type" property="eoType" jdbcType="VARCHAR"/>
+        <result column="validate_flag" property="validateFlag" jdbcType="VARCHAR"/>
+        <result column="identification" property="identification" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="latest_his_id" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="item_type" property="itemType" jdbcType="VARCHAR"/>
+        <result column="router_id" property="routerId" jdbcType="VARCHAR"/>
+        <result column="material_code" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="uom_code" property="uomCode" jdbcType="VARCHAR"/>
+        <result column="prod_line_code" property="prodLineCode" jdbcType="VARCHAR"/>
+        <result column="related_line_num" property="relatedLineNum" jdbcType="VARCHAR"/>
+        <result column="bom_id" property="bomId" jdbcType="VARCHAR"/>
+        <result column="bom_primary_qty" property="bomPrimaryQty" jdbcType="DECIMAL"/>
+        <collection property="bomComponentList" resultMap="EoBomComponentResultMap"/>
+    </resultMap>
+    <resultMap id="EoBomComponentResultMap" type="com.ruike.hme.domain.vo.HmeBomComponentVO">
+        <result column="bom_component_id" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="bom_component_qty" property="bomComponentQty" jdbcType="DECIMAL"/>
+        <result column="bom_component_material_id" property="bomComponentMaterialId" jdbcType="VARCHAR"/>
+        <result column="bom_component_line_number" property="bomComponentLineNumber" jdbcType="DECIMAL"/>
+        <result column="reserve_num" property="reserveNum" jdbcType="VARCHAR"/>
+        <result column="virtual_flag" property="virtualFlag" jdbcType="VARCHAR"/>
+        <result column="issued_flag" property="issuedFlag" jdbcType="VARCHAR"/>
+        <result column="item_group" property="itemGroup" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="batchQueryEoInfoWithComponentById" resultMap="HmeEoResultMap">
+        select me.tenant_id,
+            me.eo_id,
+            me.eo_num,
+            me.site_id,
+            me.work_order_id,
+            me.status,
+            me.last_eo_status,
+            me.production_line_id,
+            me.workcell_id,
+            me.plan_start_time,
+            me.plan_end_time,
+            me.qty,
+            me.uom_id,
+            me.eo_type,
+            me.validate_flag,
+            me.identification,
+            me.material_id,
+            me.latest_his_id,
+            mu.uom_code,
+            pl.prod_line_code,
+            mb.item_type,
+            er.router_id,
+            eb.bom_id,
+            bom.primary_qty bom_primary_qty,
+            bc.bom_component_id,
+            bc.qty bom_component_qty,
+            bc.material_id bom_component_material_id,
+            bc.line_number bom_component_line_number,
+            bca.attr_value reserve_num,
+            bca_vf.attr_value virtual_flag,
+            bc_msa.attr_value issued_flag,
+            mbc.ITEM_GROUP
+        from mt_eo me
+            left join mt_uom mu on mu.uom_id = me.uom_id and mu.tenant_id = me.tenant_id
+            left join mt_mod_production_line pl on pl.prod_line_id = me.production_line_id and pl.tenant_id = me.tenant_id
+            left join mt_material_site ms on ms.material_id = me.material_id and ms.site_id = me.site_id and ms.tenant_id = me.tenant_id and ms.enable_flag = 'Y'
+            left join mt_material_basic mb on mb.material_site_id = ms.material_site_id and mb.tenant_id = ms.tenant_id
+            left join mt_eo_router er on er.eo_id = me.eo_id and er.tenant_id = me.tenant_id
+            left join mt_eo_bom eb on eb.eo_id = me.eo_id and eb.tenant_id = me.tenant_id
+            left join mt_bom bom on bom.bom_id = eb.bom_id
+            left join mt_bom_component bc on bc.tenant_id = eb.tenant_id and bc.bom_id = eb.bom_id and bc.qty > 0
+            and bc.date_from &lt;= now() and (bc.date_to is null or bc.date_to = '' or bc.date_to &gt;= now())
+        and EXISTS (select 1
+                 from mt_router_operation ro,
+                      mt_router_operation_component roc
+                where ro.router_step_id = #{eoStepId} and ro.tenant_id = #{tenantId}
+                  and roc.router_operation_id = ro.router_operation_id and roc.tenant_id = ro.tenant_id
+                  and bc.bom_component_id = roc.bom_component_id )
+            left join mt_bom_component_attr bca on bca.bom_component_id = bc.bom_component_id and bca.attr_name = 'lineAttribute10'
+            left join mt_bom_component_attr bca_vf on bca_vf.bom_component_id = bc.bom_component_id and bca_vf.attr_name = 'lineAttribute8'
+            left join mt_material_site bc_ms on bc_ms.material_id = bc.material_id and bc_ms.site_id = me.site_id and bc_ms.tenant_id = me.tenant_id and bc_ms.enable_flag = 'Y'
+            left join mt_material_site_attr bc_msa on bc_msa.material_site_id = bc_ms.material_site_id and bc_msa.attr_name = 'ISSUED_FLAG'
+        LEFT JOIN mt_material_site msc ON msc.material_id = bc.material_id
+        AND msc.site_id = me.site_id
+        AND msc.tenant_id = me.tenant_id
+        AND msc.enable_flag = 'Y'
+        LEFT JOIN mt_material_basic mbc ON mbc.material_site_id = msc.material_site_id
+        AND mbc.tenant_id = msc.tenant_id
+        where me.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and me.tenant_id = #{tenantId}
+    </select>
+
+    <select id="batchQueryEoInfoWithCompByIdForDesignedRework" resultMap="HmeEoResultMap">
+        select me.tenant_id,
+            me.eo_id,
+            me.eo_num,
+            me.site_id,
+            me.work_order_id,
+            me.status,
+            me.last_eo_status,
+            me.production_line_id,
+            me.workcell_id,
+            me.plan_start_time,
+            me.plan_end_time,
+            me.qty,
+            me.uom_id,
+            me.eo_type,
+            me.validate_flag,
+            me.identification,
+            me.material_id,
+            me.latest_his_id,
+            mu.uom_code,
+            pl.prod_line_code,
+            mb.item_type,
+            bom.primary_qty bom_primary_qty,
+            bc.bom_component_id,
+            bc.qty bom_component_qty,
+            bc.material_id bom_component_material_id,
+            bc.line_number bom_component_line_number,
+            bca.attr_value reserve_num,
+            bca_vf.attr_value virtual_flag,
+            bc_msa.attr_value issued_flag
+        from mt_eo me
+            left join mt_uom mu on mu.uom_id = me.uom_id and mu.tenant_id = me.tenant_id
+            left join mt_mod_production_line pl on pl.prod_line_id = me.production_line_id and pl.tenant_id = me.tenant_id
+            left join mt_material_site ms on ms.material_id = me.material_id and ms.site_id = me.site_id and ms.tenant_id = me.tenant_id and ms.enable_flag = 'Y'
+            left join mt_material_basic mb on mb.material_site_id = ms.material_site_id and mb.tenant_id = ms.tenant_id
+            left join mt_bom bom on bom.bom_id = #{bomId}
+            left join mt_bom_component bc on bc.tenant_id = bom.tenant_id and bc.bom_id = bom.bom_id and bc.qty > 0
+            and bc.date_from &lt;= now() and (bc.date_to is null or bc.date_to = '' or bc.date_to &gt;= now())
+            and EXISTS (select 1
+                 from mt_router_operation ro,
+                      mt_router_operation_component roc
+                where ro.router_step_id = #{eoStepId} and ro.tenant_id = #{tenantId}
+                  and roc.router_operation_id = ro.router_operation_id and roc.tenant_id = ro.tenant_id
+                  and bc.bom_component_id = roc.bom_component_id )
+            left join mt_bom_component_attr bca on bca.bom_component_id = bc.bom_component_id and bca.attr_name = 'lineAttribute10'
+            left join mt_bom_component_attr bca_vf on bca_vf.bom_component_id = bc.bom_component_id and bca_vf.attr_name = 'lineAttribute8'
+            left join mt_material_site bc_ms on bc_ms.material_id = bc.material_id and bc_ms.site_id = me.site_id and bc_ms.tenant_id = me.tenant_id and bc_ms.enable_flag = 'Y'
+            left join mt_material_site_attr bc_msa on bc_msa.material_site_id = bc_ms.material_site_id and bc_msa.attr_name = 'ISSUED_FLAG'
+        where me.eo_id = #{eoId}
+        and me.tenant_id = #{tenantId}
+    </select>
+
+    <resultMap id="HmeWoResultMap" type="com.ruike.hme.domain.vo.HmeWorkOrderVO2">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_TYPE" property="workOrderType" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_LINE_ID" property="productionLineId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="MAKE_ORDER_ID" property="makeOrderId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_VERSION" property="productionVersion" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="LAST_WO_STATUS" property="lastWoStatus" jdbcType="VARCHAR"/>
+        <result column="PLAN_START_TIME" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="PLAN_END_TIME" property="planEndTime" jdbcType="TIMESTAMP"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="VALIDATE_FLAG" property="validateFlag" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="OPPORTUNITY_ID" property="opportunityId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_CONTROL_TYPE" property="completeControlType" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_CONTROL_QTY" property="completeControlQty" jdbcType="DECIMAL"/>
+        <result column="SOURCE_IDENTIFICATION_ID" property="sourceIdentificationId" jdbcType="DECIMAL"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="so_num" property="soNum" jdbcType="VARCHAR"/>
+        <result column="so_line_num" property="soLineNum" jdbcType="VARCHAR"/>
+        <result column="material_code" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="prod_line_code" property="prodLineCode" jdbcType="VARCHAR"/>
+        <result column="backflush_not_flag" property="backflushNotFlag" jdbcType="VARCHAR"/>
+        <result column="issued_flag" property="issuedFlag" jdbcType="VARCHAR"/>
+        <collection property="bomComponentList" resultMap="WoBomComponentResultMap"/>
+    </resultMap>
+    <resultMap id="WoBomComponentResultMap" type="com.ruike.hme.domain.vo.HmeBomComponentVO">
+        <result column="bom_component_id" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="bom_component_qty" property="bomComponentQty" jdbcType="DECIMAL"/>
+        <result column="bom_component_material_id" property="bomComponentMaterialId" jdbcType="VARCHAR"/>
+        <result column="bom_component_line_number" property="bomComponentLineNumber" jdbcType="DECIMAL"/>
+        <result column="wo_bom_component_demand_qty" property="woBomComponentDemandQty" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="batchQueryWoInfoWithComponentById" resultMap="HmeWoResultMap">
+        select wo.tenant_id,
+            wo.work_order_id,
+            wo.work_order_num,
+            wo.work_order_type,
+            wo.site_id,
+            wo.production_line_id,
+            wo.workcell_id,
+            wo.make_order_id,
+            wo.production_version,
+            wo.material_id,
+            wo.qty,
+            wo.uom_id,
+            wo.priority,
+            wo.status,
+            wo.last_wo_status,
+            wo.plan_start_time,
+            wo.plan_end_time,
+            wo.locator_id,
+            wo.bom_id,
+            wo.router_id,
+            wo.validate_flag,
+            wo.remark,
+            wo.opportunity_id,
+            wo.customer_id,
+            wo.complete_control_type,
+            wo.complete_control_qty,
+            wo.source_identification_id,
+            woa_attr1.attr_value so_num,
+            woa_attr7.attr_value so_line_num,
+            mm.material_code,
+            pl.prod_line_code,
+            pla.attr_value backflush_not_flag,
+            pla_if.attr_value issued_flag,
+            bc.bom_component_id,
+            bc.qty bom_component_qty,
+            bc.material_id bom_component_material_id,
+            bc.line_number bom_component_line_number,
+            bca.attr_value wo_bom_component_demand_qty
+        from mt_work_order wo
+            left join mt_work_order_attr woa_attr1 on woa_attr1.work_order_id = wo.work_order_id and woa_attr1.tenant_id = wo.tenant_id and woa_attr1.attr_name = 'attribute1'
+            left join mt_work_order_attr woa_attr7 on woa_attr7.work_order_id = wo.work_order_id and woa_attr7.tenant_id = wo.tenant_id and woa_attr7.attr_name = 'attribute7'
+            left join mt_material mm on wo.material_id = mm.material_id and mm.tenant_id = wo.tenant_id
+            left join mt_mod_production_line pl on pl.prod_line_id = wo.production_line_id and pl.enable_flag = 'Y'
+            left join mt_mod_production_line_attr pla on pla.prod_line_id = wo.production_line_id and pla.attr_name = 'BACKFLUSH_NOT_FLAG'
+            left join mt_mod_production_line_attr pla_if on pla_if.prod_line_id = wo.production_line_id and pla_if.attr_name = 'ISSUED_FLAG'
+            left join mt_bom_component bc on bc.tenant_id = wo.tenant_id and bc.bom_id = wo.bom_id
+            left join mt_bom_component_attr bca on bca.bom_component_id = bc.bom_component_id and bca.attr_name = 'lineAttribute5'
+        where wo.work_order_id in
+        <foreach collection="woIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and wo.tenant_id = #{tenantId}
+    </select>
+
+    <update id="batchOutSite">
+         update hme_eo_job_sn
+            set object_version_number = object_version_number + 1,
+                last_updated_by = #{userId},
+                last_update_date = CURRENT_TIMESTAMP,
+                site_out_by = #{userId},
+                site_out_date = CURRENT_TIMESTAMP
+          where tenant_id = #{tenantId}
+            and job_id in
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="batchOutSite2">
+        update hme_eo_job_sn
+        set object_version_number = object_version_number + 1,
+        last_updated_by = #{userId},
+        last_update_date = CURRENT_TIMESTAMP,
+        site_out_by = #{userId},
+        site_out_date = CURRENT_TIMESTAMP,
+        attribute8 = #{remark}
+        where tenant_id = #{tenantId}
+        and job_id in
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="batchQueryBomComponentAttrByEo" resultType="com.ruike.hme.domain.vo.HmeEoVO4">
+         select eb.eo_id, bc.material_id, bca.attr_value related_line_num
+           from mt_bom_component_attr bca,
+                mt_bom_component bc,
+                mt_eo_bom eb
+          where bca.bom_component_id = bc.bom_component_id
+            and bca.attr_name = #{attrName}
+            and bca.tenant_id = bc.tenant_id
+            and bc.bom_id = eb.bom_id
+            and bc.tenant_id = eb.tenant_id
+            and bc.material_id in
+        <foreach collection="materialIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and eb.eo_id in
+        <foreach collection="eoIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and eb.tenant_id = #{tenantId}
+    </select>
+
+    <select id="batchQueryEoInfoByWoId" resultType="com.ruike.hme.domain.vo.HmeEoVO4">
+        select me.tenant_id,
+            me.eo_id,
+            me.eo_num,
+            me.site_id,
+            me.work_order_id,
+            me.status,
+            me.last_eo_status,
+            me.production_line_id,
+            me.workcell_id,
+            me.plan_start_time,
+            me.plan_end_time,
+            me.qty,
+            me.uom_id,
+            me.eo_type,
+            me.validate_flag,
+            me.identification,
+            me.material_id,
+            me.latest_his_id,
+            mm.material_code
+        from mt_eo me
+            left join mt_material mm on me.material_id = mm.material_id and mm.tenant_id = me.tenant_id
+        where me.tenant_id = #{tenantId}
+            and me.status = #{eoStatus}
+            and me.work_order_id in
+        <foreach collection="woIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQueryRouterStepOfEoIds" resultType="com.ruike.hme.domain.vo.HmeEoJobSnRouterStepVO5">
+        SELECT
+        mer.EO_ID,
+        mer.ROUTER_ID,
+        t1.ROUTER_STEP_ID,
+        t1.STEP_NAME,
+        rob.OPERATION_ID,
+        ob.OPERATION_NAME,
+        ot.DESCRIPTION,
+        t1.SEQUENCE
+        FROM
+        mt_eo_router mer,
+        mt_router_step t1
+        INNER JOIN mt_router_step_tl t2 ON ( t1.ROUTER_STEP_ID = t2.ROUTER_STEP_ID AND t2.LANG = '' )
+        JOIN mt_router_operation rob ON t1.ROUTER_STEP_ID = rob.ROUTER_STEP_ID
+        JOIN mt_operation ob ON rob.OPERATION_ID = ob.OPERATION_ID
+        LEFT JOIN mt_operation_tl ot ON ( ob.OPERATION_ID = ot.OPERATION_ID AND ot.LANG = '' )
+        WHERE
+        t1.TENANT_ID = 0
+        AND rob.TENANT_ID = 0
+        AND ob.TENANT_ID = 0
+        AND t1.ROUTER_ID = mer.ROUTER_ID
+        AND mer.TENANT_ID = 0
+        AND mer.EO_ID IN
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryBomComponentAttrByEoId" resultType="string">
+         select bca.attr_value
+           from mt_bom_component_attr bca,
+                mt_bom_component bc,
+                mt_eo_bom eb
+          where bca.bom_component_id = bc.bom_component_id
+            and bca.attr_name = #{attrName}
+            and bca.tenant_id = bc.tenant_id
+            and bc.bom_id = eb.bom_id
+            and bc.tenant_id = eb.tenant_id
+            and bc.material_id = #{materialId}
+            and eb.eo_id = #{eoId}
+            and eb.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectLastestNcRecordProcess" resultType="com.ruike.hme.domain.vo.HmeNcRecordVO">
+        select
+            mnr.nc_record_id,
+            mnr.workcell_id,
+            mnr.root_cause_workcell_id,
+            mor.parent_organization_id root_cause_process_id,
+            mw.workcell_code root_cause_process_code,
+            mw.workcell_name root_cause_process_name,
+            ( select rel.parent_organization_id
+                from mt_mod_organization_rel rel
+               where rel.parent_organization_type = 'WORKCELL'
+                 and rel.organization_type = 'WORKCELL'
+                 and rel.organization_id = #{workcellId} ) current_process_id
+        from
+            mt_nc_record mnr,
+            mt_mod_organization_rel mor
+            left join mt_mod_workcell mw on mw.workcell_id = mor.parent_organization_id,
+            mt_material_lot mml,
+            hme_nc_record_attr nra
+        where nra.tenant_id = mnr.tenant_id
+          and nra.parent_record_id = mnr.nc_record_id
+          and nra.process_method IN ('1','7')
+          and ( nra.attribute6 != 'Y' OR nra.attribute6 = '' OR nra.attribute6 IS NULL )
+          and mor.organization_id = mnr.root_cause_workcell_id
+          and mor.parent_organization_type = 'WORKCELL'
+          and mor.organization_type = 'WORKCELL'
+          and mnr.tenant_id = #{tenantId}
+          and mml.material_lot_id = #{materialLotId}
+          and mml.eo_id = mnr.eo_id
+          and (mnr.parent_nc_record_id is null or mnr.parent_nc_record_id = '')
+        order by mnr.creation_date desc
+        limit 1
+    </select>
+
+    <select id="selectLastNcRecordProcessForSingle" resultType="com.ruike.hme.domain.vo.HmeNcRecordVO">
+        select
+            mnr.nc_record_id,
+            mnr.workcell_id,
+            mnr.root_cause_workcell_id,
+            mor.parent_organization_id root_cause_process_id,
+            mw.workcell_code root_cause_process_code,
+            mw.workcell_name root_cause_process_name,
+            ( select rel.parent_organization_id
+                from mt_mod_organization_rel rel
+               where rel.parent_organization_type = 'WORKCELL'
+                 and rel.organization_type = 'WORKCELL'
+                 and rel.organization_id = #{workcellId} ) current_process_id
+        from
+            mt_nc_record mnr,
+            hme_nc_record_attr nra,
+            mt_mod_organization_rel mor
+            left join mt_mod_workcell mw on mw.workcell_id = mor.parent_organization_id
+        where nra.tenant_id = mnr.tenant_id
+          and nra.parent_record_id = mnr.nc_record_id
+          and nra.process_method IN ('1','7')
+          and ( nra.attribute6 != 'Y' OR nra.attribute6 = '' OR nra.attribute6 IS NULL )
+          and mor.organization_id = mnr.root_cause_workcell_id
+          and mor.parent_organization_type = 'WORKCELL'
+          and mor.organization_type = 'WORKCELL'
+          and mnr.tenant_id = #{tenantId}
+          and mnr.eo_id = #{eoId}
+          and (mnr.parent_nc_record_id is null or mnr.parent_nc_record_id = '')
+        order by nra.creation_date desc
+        limit 1
+    </select>
+
+    <select id="selectMaterialUpgradeInfo" resultType="com.ruike.hme.domain.vo.HmeUpgradeMaterialVO">
+        select mm.MATERIAL_ID
+             , mm.MATERIAL_CODE
+             , ifnull(mmsa.ATTR_VALUE, 'N') upgrade_flag
+        from mt_material mm
+           , mt_material_site mms
+                 left join mt_material_site_attr mmsa
+                           on mms.MATERIAL_SITE_ID = mmsa.MATERIAL_SITE_ID and mmsa.ATTR_NAME = 'attribute17'
+        where mm.MATERIAL_ID = mms.MATERIAL_ID
+          and mm.TENANT_ID = #{tenantId}
+          and mm.MATERIAL_CODE = #{materialCode}
+        limit 1
+    </select>
+
+    <select id="selectEoProdLine" resultType="java.lang.String">
+        SELECT
+        	mpl.PROD_LINE_CODE
+        FROM mt_material_lot mml,
+        	mt_eo me,
+        	mt_mod_production_line mpl
+        WHERE mml.TENANT_ID = #{tenantId}
+        AND mml.EO_ID = me.EO_ID
+        AND me.PRODUCTION_LINE_ID = mpl.PROD_LINE_ID
+        AND mml.material_lot_id = #{materialLotId}
+    </select>
+
+    <select id="batchQueryMaterialLotInfoById" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO3">
+        select
+            ml.tenant_id,
+            ml.material_lot_id,
+            ml.material_lot_code,
+            ml.site_id,
+            ml.enable_flag,
+            ml.quality_status,
+            ml.material_id,
+            ml.primary_uom_id,
+            ml.primary_uom_qty,
+            ml.secondary_uom_id,
+            ml.secondary_uom_qty,
+            ml.locator_id,
+            ml.assemble_point_id,
+            ml.load_time,
+            ml.unload_time,
+            ml.owner_type,
+            ml.owner_id,
+            ml.lot,
+            ml.oven_number,
+            ml.supplier_id,
+            ml.supplier_site_id,
+            ml.customer_id,
+            ml.customer_site_id,
+            ml.reserved_flag,
+            ml.reserved_object_type,
+            ml.reserved_object_id,
+            ml.create_reason,
+            ml.identification,
+            ml.eo_id,
+            ml.in_locator_time,
+            ml.freeze_flag,
+            ml.stocktake_flag,
+            ml.business_type,
+            ml.instruction_id,
+            ml.in_site_time,
+            ml.current_container_id,
+            ml.top_container_id,
+            ml.instruction_doc_id,
+            mla_rf.attr_value rework_flag,
+            mla_drf.attr_value designed_rework_flag,
+            ml.material_id,
+            mm.material_code,
+            mm.material_name,
+            mla_af.ATTR_VALUE af_flag,
+            mla_mv.ATTR_VALUE complete_production_version
+        from
+            mt_material_lot ml
+            left join mt_material_lot_attr mla_rf on mla_rf.tenant_id = ml.tenant_id AND mla_rf.material_lot_id = ml.material_lot_id
+            and mla_rf.attr_name = 'REWORK_FLAG'
+            left join mt_material_lot_attr mla_drf on mla_drf.tenant_id = ml.tenant_id AND mla_drf.material_lot_id = ml.material_lot_id and mla_drf.attr_name = 'DESIGNED_REWORK_FLAG'
+            LEFT JOIN mt_material_lot_attr mla_af ON mla_af.tenant_id = ml.tenant_id
+            AND mla_af.material_lot_id = ml.material_lot_id
+            AND mla_af.attr_name = 'AF_FLAG'
+            left join mt_material_lot_attr mla_mv on mla_mv.tenant_id = ml.tenant_id AND mla_mv.material_lot_id = ml.material_lot_id
+            and mla_mv.attr_name = 'MATERIAL_VERSION'
+            left join mt_material mm on ml.material_id = mm.material_id and mm.tenant_id = ml.tenant_id
+        where
+            ml.tenant_id = #{tenantId}
+            and ml.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQueryMaterialLotInfoForTime" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO3">
+        select
+            ml.material_lot_id,
+            ml.material_lot_code,
+            ml.enable_flag,
+            ml.quality_status,
+            ml.material_id,
+            ml.eo_id,
+            ml.current_container_id,
+            mla_rf.attr_value rework_flag,
+            mla_drf.attr_value designed_rework_flag,
+            ml.STOCKTAKE_FLAG
+        from
+            mt_material_lot ml
+            left join mt_material_lot_attr mla_rf on mla_rf.material_lot_id = ml.material_lot_id and mla_rf.attr_name = 'REWORK_FLAG'
+            left join mt_material_lot_attr mla_drf on mla_drf.material_lot_id = ml.material_lot_id and mla_drf.attr_name = 'DESIGNED_REWORK_FLAG'
+        where
+            ml.tenant_id = #{tenantId}
+            and ml.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryValueMissingCount" resultType="int">
+        select
+            count(1)
+        from
+            hme_eo_job_data_record ejdr
+            left join mt_tag_group_assign tga on tga.tag_group_id = ejdr.tag_group_id
+            and tga.tag_id = ejdr.tag_id
+            and tga.tenant_id = ejdr.tenant_id
+        where
+            ejdr.tenant_id = #{tenantId}
+            and ejdr.workcell_id = #{workcellId}
+            and ejdr.is_supplement != 1
+            and ejdr.job_id in
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and (ejdr.result = '' or ejdr.result is null)
+            and (tga.value_allow_missing != 'Y' or tga.value_allow_missing is null)
+    </select>
+
+    <select id="queryValueMissingTag" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO">
+        SELECT
+        ejdr.job_id,
+        ejdr.tag_id,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION
+        FROM
+        hme_eo_job_data_record ejdr
+        LEFT JOIN mt_tag_group_assign tga ON tga.tag_group_id = ejdr.tag_group_id
+        AND tga.tag_id = ejdr.tag_id
+        AND tga.tenant_id = ejdr.tenant_id
+        LEFT JOIN mt_tag mt ON mt.TAG_ID = ejdr.TAG_ID
+        WHERE
+        ejdr.tenant_id = #{tenantId}
+        AND ejdr.workcell_id = #{workcellId}
+        AND ejdr.is_supplement != 1
+        AND ejdr.job_id IN
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND ( ejdr.result = '' OR ejdr.result IS NULL )
+        AND ( tga.value_allow_missing != 'Y' OR tga.value_allow_missing IS NULL )
+    </select>
+
+    <select id="queryValueNgDataRecord" resultType="com.ruike.hme.domain.vo.HmeEoJobDataRecordVO2">
+        SELECT
+        ejdr.job_id,
+        ejdr.result,
+        ejdr.minimum_value,
+        ejdr.maximal_value,
+        mt.VALUE_TYPE,
+        mt.TAG_DESCRIPTION
+        FROM
+        hme_eo_job_data_record ejdr,
+        mt_tag mt
+        WHERE
+        ejdr.tenant_id = #{tenantId}
+        AND ejdr.workcell_id = #{workcellId}
+        AND ejdr.job_id IN
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND ejdr.result != ''
+        AND ejdr.result IS NOT NULL
+        AND mt.TAG_ID = ejdr.tag_id
+        AND mt.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="queryOtherOperationJobCount" resultType="int">
+        select
+            count(1)
+        from
+            hme_eo_job_sn ejs,
+            mt_material_lot ml
+        where
+            ml.eo_id = ejs.eo_id
+            and ml.tenant_id = ejs.tenant_id
+            and ml.tenant_id = #{tenantId}
+            and ml.material_lot_id in
+        <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and ejs.operation_id != #{operationId}
+            and ejs.job_id = (
+                select
+                    t.job_id
+                from
+                    hme_eo_job_sn t
+                where
+                    t.tenant_id = ejs.tenant_id
+                    and t.eo_id = ejs.eo_id
+                order by
+                    t.creation_date desc
+                    limit 1 )
+    </select>
+
+    <select id="queryWkcContainerOutValue" resultType="string">
+        select mwa.attr_value
+          from mt_mod_workcell_attr mwa
+         where mwa.workcell_id = #{workcellId}
+           and mwa.ATTR_NAME = 'CONTAINER_OUT'
+           and mwa.tenant_id = #{tenantId}
+    </select>
+
+    <update id="batchOutSiteWithMaterialLot">
+        update hme_eo_job_sn
+        set object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            site_out_by = #{userId},
+            site_out_date = CURRENT_TIMESTAMP,
+            material_lot_id =
+        <foreach collection="snLineList" index="index" item="item" separator=" " open="case job_id" close="end">
+            when #{item.jobId} then #{item.materialLotId}
+        </foreach>
+        where tenant_id = #{tenantId}
+        and job_id in
+        <foreach collection="snLineList" index="index" item="item" open="(" separator="," close=")">
+            #{item.jobId}
+        </foreach>
+    </update>
+
+    <select id="batchQueryCurrentAndNextStep" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO4">
+        select
+            rs.router_step_id,
+            rs.step_name,
+            rns.next_step_id,
+            nrs.step_name next_step_name,
+            rns.sequence
+        from
+            mt_router_step rs
+            left join mt_router_next_step rns on rns.router_step_id = rs.router_step_id
+            left join mt_router_step nrs on nrs.router_step_id = rns.next_step_id
+        where
+            rs.tenant_id = #{tenantId}
+            and rs.router_step_id in
+        <foreach collection="routerStepIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQueryMaterialReleaseInfoByJobId" resultType="com.ruike.hme.domain.vo.HmeEoJobReleaseMaterialVO">
+        select
+            slm.job_id,
+            slm.material_id,
+            slm.material_type,
+            IFNULL(slm.release_qty, 0) release_qty
+        from
+            hme_eo_job_sn_lot_material slm
+        where
+            slm.tenant_id = #{tenantId}
+            and slm.job_id in
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+
+        UNION ALL
+
+        select
+            ejm.job_id,
+            ejm.material_id,
+            'SN' material_type,
+            IFNULL(ejm.release_qty, 0) release_qty
+        from
+            hme_eo_job_material ejm
+        where
+            ejm.tenant_id = #{tenantId}
+            and ejm.is_released = 1
+            and ejm.job_id in
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQuerySubstituteMaterialComponent" resultType="com.ruike.hme.domain.vo.HmeBomComponentVO">
+        select
+            bsg.bom_component_id main_bom_component_id,
+            bc.bom_component_id,
+            bc.material_id bom_component_material_id
+        from
+            mt_bom_component bc,
+            mt_router_operation_component roc,
+            mt_router_operation ro,
+            mt_bom_substitute bs,
+            mt_bom_substitute_group bsg
+        where
+            bc.bom_component_id = roc.bom_component_id
+            and roc.router_operation_id = ro.router_operation_id
+            and roc.tenant_id = ro.tenant_id
+            and ro.router_step_id = #{eoStepId}
+            and ro.tenant_id = bsg.tenant_id
+            and bs.material_id = bc.material_id
+            and bs.bom_substitute_group_id = bsg.bom_substitute_group_id
+            and bsg.tenant_id = #{tenantId}
+            and bsg.bom_component_id in
+        <foreach collection="bomComponentIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectEoBom" resultType="com.ruike.hme.domain.vo.HmeEoBomVO">
+        SELECT
+        meb.EO_ID,
+        mb.BOM_ID,
+        mb.BOM_NAME
+        FROM
+        mt_eo_bom meb,
+        mt_bom mb
+        WHERE
+        mb.DATE_FROM &lt;= NOW()
+        AND ( mb.DATE_TO IS NULL OR mb.DATE_TO = '' OR mb.DATE_TO &gt;= now())
+        AND mb.BOM_ID = meb.BOM_ID
+        AND meb.TENANT_ID = #{tenantId}
+        AND meb.EO_ID IN
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectWoProdLine" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO19">
+            SELECT
+        wo.WORK_ORDER_ID,
+        wo.WORK_ORDER_NUM,
+        mmpl.PROD_LINE_CODE,
+        mmpl.ENABLE_FLAG
+    FROM
+        mt_work_order wo
+        LEFT JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_ID = wo.PRODUCTION_LINE_ID
+        WHERE
+        wo.TENANT_ID = #{tenantId}
+        AND wo.WORK_ORDER_ID IN
+        <foreach collection="workOrderIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryContainerInfo" resultType="com.ruike.hme.domain.vo.HmeContainerVO">
+        select
+	        mc.container_id,
+            mc.container_code,
+            mc.`status`,
+            mc.container_type_id,
+            mct.container_type_code,
+            mct.capacity_qty,
+            mct.mixed_material_flag,
+            mct.mixed_eo_flag,
+            mct.mixed_wo_flag
+        from
+            mt_container mc
+            left join mt_container_type mct on mct.container_type_id = mc.container_type_id
+        where
+            mc.container_id = #{containerId}
+            and mc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryContainerDetails" resultType="com.ruike.hme.domain.vo.HmeContainerDetailVO">
+        select
+            cld.container_id,
+            cld.container_load_detail_id,
+            cld.load_object_id,
+            ml.primary_uom_qty,
+            ml.material_id,
+            ml.eo_id,
+            ml.quality_status,
+            mla.attr_value rework_flag,
+            me.work_order_id
+        from
+            mt_container_load_detail cld
+            left join mt_material_lot ml on ml.material_lot_id = cld.load_object_id
+            left join mt_material_lot_attr mla on mla.material_lot_id = ml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+            left join mt_eo me on me.eo_id = ml.eo_id
+        where
+            cld.container_id = #{containerId}
+            and cld.tenant_id = #{tenantId}
+            and cld.load_object_type = 'MATERIAL_LOT'
+    </select>
+
+    <select id="batchQueryEoActualForGlobalMaterial" resultType="com.ruike.hme.domain.vo.HmeEoComponentActualVO">
+        select
+            msr_group.material_id main_material_id,
+            msr.material_id,
+            msr.substitute_group,
+            eca.eo_id,
+            eca.assemble_qty
+        from
+            wms_material_substitute_rel msr,
+            wms_material_substitute_rel msr_group,
+            mt_eo_component_actual eca
+        where
+            msr.tenant_id = msr_group.tenant_id
+            and msr.substitute_group = msr_group.substitute_group
+            AND msr.MATERIAL_ID != msr_group.MATERIAL_ID
+            and msr.tenant_id = eca.tenant_id
+            and msr.material_id = eca.material_id
+            and msr_group.tenant_id = #{tenantId}
+            and msr_group.material_id in
+        <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and eca.router_step_id = #{eoStepId}
+            and eca.operation_id = #{operationId}
+            and eca.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryEoActualForGlobalMaterial" resultType="com.ruike.hme.domain.vo.HmeEoComponentActualVO">
+        select
+            msr_group.material_id main_material_id,
+            msr.material_id,
+            msr.substitute_group,
+            eca.eo_id,
+            eca.assemble_qty
+        from
+            wms_material_substitute_rel msr,
+            wms_material_substitute_rel msr_group,
+            mt_eo_component_actual eca
+        where
+            msr.tenant_id = msr_group.tenant_id
+            and msr.substitute_group = msr_group.substitute_group
+            and msr.MATERIAL_ID != msr_group.MATERIAL_ID
+            and msr.tenant_id = eca.tenant_id
+            and msr.material_id = eca.material_id
+            and msr_group.tenant_id = #{tenantId}
+            and msr_group.material_id in
+        <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and eca.router_step_id = #{eoStepId}
+            and eca.operation_id = #{operationId}
+            and eca.eo_id = #{eoId}
+    </select>
+
+    <select id="queryNormalStepNameForRework" resultType="string">
+        select
+            rs.step_name
+        from
+            hme_eo_job_sn ejs,
+            mt_router_step rs
+        where
+            ejs.eo_step_id = rs.router_step_id
+            and ejs.tenant_id = rs.tenant_id
+            and ejs.eo_id = #{eoId}
+            and ejs.tenant_id = #{tenantId}
+            and ( ejs.rework_flag = '' or ejs.rework_flag is null or ejs.rework_flag = 'N' )
+        order by
+            ejs.site_out_date desc
+            limit 1
+    </select>
+
+    <select id="selectInSiteSn" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO23">
+        SELECT
+        hejs.*,
+        wo.WORK_ORDER_NUM,
+        mc.CONTAINER_CODE AS source_container_code
+        FROM
+        hme_eo_job_sn hejs
+        LEFT JOIN mt_container mc ON mc.container_id = hejs.source_container_id,
+        mt_eo eo,
+        mt_work_order wo
+        WHERE
+        wo.WORK_ORDER_ID = eo.WORK_ORDER_ID
+        AND eo.EO_ID = hejs.eo_id
+        AND hejs.tenant_id = #{tenantId}
+        <if test="jobType != null and jobType.length() != 0">
+            AND hejs.job_type = #{jobType}
+        </if>
+        AND ( hejs.rework_flag = '' OR hejs.rework_flag IS NULL OR hejs.rework_flag = 'N' )
+        AND hejs.material_lot_id = #{materialLotId}
+        AND hejs.workcell_id = #{workcellId}
+        AND ( hejs.site_out_date = '' OR hejs.site_out_date IS NULL )
+    </select>
+
+    <select id="selectEoJobSnForInSite" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO23">
+        select
+            hejs.*,
+            wo.work_order_num,
+            mc.container_code as source_container_code
+        from
+            hme_eo_job_sn hejs
+            left join mt_container mc on mc.container_id = hejs.source_container_id,
+            mt_eo eo,
+            mt_work_order wo
+        where
+            wo.work_order_id = eo.work_order_id
+            and eo.eo_id = hejs.eo_id
+            and hejs.tenant_id = #{tenantId}
+            and hejs.eo_id = #{eoId}
+        <choose>
+            <when test="isRework">
+                and hejs.rework_flag = 'Y'
+                and (hejs.site_out_date = '' or hejs.site_out_date is null)
+            </when>
+            <otherwise>
+                and hejs.operation_id = #{operationId}
+                and (hejs.rework_flag = 'N' or hejs.rework_flag = '' or hejs.rework_flag is null)
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryCurrentAndNextStepByCurrentId" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO5">
+        select
+            rs.entry_step_flag,
+            rs.router_step_id,
+            rs.step_name,
+            rs.sequence,
+            rs.router_step_type,
+            rs.description,
+            rns.next_step_id,
+            nrs.step_name next_step_name,
+            nrs.sequence next_sequence,
+            nrs.description next_description,
+            mrsa.ATTR_VALUE AS lab_code,
+            mrsat.ATTR_VALUE AS router_step_remark
+        from
+            mt_router_step rs
+            left join mt_router_next_step rns on rs.router_step_id = rns.router_step_id and rs.tenant_id = rns.tenant_id
+            left join mt_router_step nrs on nrs.router_step_id = rns.next_step_id
+            LEFT JOIN mt_router_step_attr mrsa ON mrsa.ROUTER_STEP_ID = rs.router_step_id
+            AND mrsa.ATTR_NAME = 'LAB_CODE'
+            AND mrsa.TENANT_ID = rs.tenant_id
+            LEFT JOIN mt_router_step_attr mrsat ON mrsat.ROUTER_STEP_ID = rs.router_step_id
+            AND mrsat.ATTR_NAME = 'REMARK'
+            AND mrsat.TENANT_ID = rs.tenant_id
+        where
+            rs.router_step_id = #{routerStepId}
+            and rs.tenant_id = #{tenantId}
+        order by
+            nrs.sequence
+        limit 1
+    </select>
+
+    <select id="queryCurrentAndNextStepByEoAndOperation" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO5">
+        select
+            rs.entry_step_flag,
+            rs.router_step_id,
+            rs.step_name,
+            rs.sequence,
+            rs.router_step_type,
+            rs.description,
+            ro.operation_id,
+            er.router_id,
+            er.eo_id,
+            rns.next_step_id,
+            nrs.step_name next_step_name,
+            nrs.sequence next_sequence,
+            nrs.description next_description,
+            mrsa.ATTR_VALUE AS lab_code,
+            mrsat.ATTR_VALUE AS router_step_remark
+        from
+            mt_eo_router er,
+            mt_router_operation ro,
+            mt_router_step rs
+            left join mt_router_next_step rns on rs.router_step_id = rns.router_step_id and rs.tenant_id = rns.tenant_id
+            left join mt_router_step nrs on nrs.router_step_id = rns.next_step_id
+            LEFT JOIN mt_router_step_attr mrsa ON mrsa.ROUTER_STEP_ID = rs.router_step_id
+            AND mrsa.ATTR_NAME = 'LAB_CODE'
+            AND mrsa.TENANT_ID = rs.tenant_id
+            LEFT JOIN mt_router_step_attr mrsat ON mrsat.ROUTER_STEP_ID = rs.router_step_id
+            AND mrsat.ATTR_NAME = 'REMARK'
+            AND mrsat.TENANT_ID = rs.tenant_id
+        where
+            rs.router_step_id = ro.router_step_id
+            and rs.router_id = er.router_id
+            and rs.tenant_id = er.tenant_id
+            and er.eo_id = #{eoId}
+            and er.tenant_id = #{tenantId}
+            and ro.operation_id = #{operationId}
+            and ro.tenant_id = #{tenantId}
+        order by
+            rs.sequence,
+            nrs.sequence
+        limit 1
+    </select>
+
+    <select id="queryCurrentStepByEoAndOperation" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO5">
+        select
+            rs.entry_step_flag,
+            rs.router_step_id,
+            rs.step_name,
+            rs.sequence,
+            rs.router_step_type,
+            rs.description,
+            ro.operation_id,
+            er.router_id,
+            er.eo_id,
+            rds.router_done_step_id
+        from
+            mt_eo_router er,
+            mt_router_operation ro,
+            mt_router_step rs
+            left join mt_router_done_step rds on rds.router_step_id = rs.router_step_id and rds.tenant_id = rs.tenant_id
+        where
+            rs.router_step_id = ro.router_step_id
+            and rs.router_id = er.router_id
+            and rs.tenant_id = er.tenant_id
+            and er.eo_id = #{eoId}
+            and er.tenant_id = #{tenantId}
+            and ro.operation_id = #{operationId}
+            and ro.tenant_id = #{tenantId}
+        order by
+            rs.sequence
+        limit 1
+    </select>
+
+    <select id="queryCurrentAndNextStepForDesignedRework" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO5">
+        select
+            rs.entry_step_flag,
+            rs.router_step_id,
+            rs.step_name,
+            rs.sequence,
+            rs.router_step_type,
+            rs.description,
+            ro.operation_id,
+            rs.router_id,
+            rns.next_step_id,
+            nrs.step_name next_step_name,
+            nrs.sequence next_sequence,
+            nrs.description next_description
+        from
+            mt_router_operation ro,
+            mt_router_step rs
+            left join mt_router_next_step rns on rs.router_step_id = rns.router_step_id and rs.tenant_id = rns.tenant_id
+            left join mt_router_step nrs on nrs.router_step_id = rns.next_step_id
+        where
+            rs.router_step_id = ro.router_step_id
+            and rs.router_id = #{routerId}
+            and rs.tenant_id = #{tenantId}
+            and ro.operation_id = #{operationId}
+            and ro.tenant_id = #{tenantId}
+        order by
+            rs.sequence,
+            nrs.sequence
+    </select>
+
+    <select id="queryPreviousStepForDesignedRework" resultType="com.ruike.hme.domain.vo.HmeRouterStepVO5">
+        select
+            esa.eo_step_actual_id,
+            esa.router_step_id,
+            rs.step_name,
+            rs.sequence,
+            rs.description,
+            rns.next_step_id
+        from
+            mt_eo_router_actual era,
+            mt_eo_step_actual esa
+            left join mt_router_next_step rns on esa.router_step_id = rns.router_step_id and esa.tenant_id = rns.tenant_id
+            left join mt_router_step rs on esa.router_step_id = rs.router_step_id
+        where esa.eo_router_actual_id = era.eo_router_actual_id
+            and esa.LAST_UPDATE_DATE BETWEEN #{startTime} AND NOW()
+            and era.eo_id = #{eoId}
+            and era.router_id = #{routerId}
+            and era.tenant_id = #{tenantId}
+        order by era.last_update_date desc, esa.LAST_UPDATE_DATE desc
+        limit 1
+    </select>
+
+    <select id="queryEoJobSnInfoForInSiteQuery" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO">
+        select
+            ejs.job_id,
+            ejs.shift_id,
+            ejs.workcell_id,
+            ejs.work_order_id,
+            ws.shift_code,
+            wo.production_version
+        from
+            hme_eo_job_sn ejs
+            left join mt_wkc_shift ws on ejs.shift_id = ws.wkc_shift_id and ejs.tenant_id = ws.tenant_id
+            left join mt_work_order wo on ejs.work_order_id = wo.work_order_id and ejs.tenant_id = wo.tenant_id
+        where ejs.job_id = #{jobId}
+            and ejs.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryEoJobSnForTimeInSite" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        select
+            hejs.job_id,
+            hejs.job_type,
+            hejs.workcell_id,
+            hejs.operation_id,
+            hejs.site_in_date,
+            hejs.site_out_date,
+            hejs.material_lot_id,
+            hejs.eo_step_id
+        from
+            hme_eo_job_sn hejs
+        where
+            hejs.tenant_id = #{tenantId}
+        <choose>
+            <when test="isRework">
+                and hejs.eo_id = #{eoId}
+                and hejs.rework_flag = 'Y'
+                and (hejs.site_out_date = '' or hejs.site_out_date is null)
+            </when>
+            <otherwise>
+                and hejs.eo_id in
+                <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                and hejs.operation_id = #{operationId}
+                and hejs.job_type = 'TIME_PROCESS'
+                and ( hejs.rework_flag = 'N' or hejs.rework_flag = '' or hejs.rework_flag is null )
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryEoJobSnCountByEoId" resultType="int">
+        select count(1) from hme_eo_job_sn ejs where ejs.tenant_id = #{tenantId} and ejs.eo_id = #{eoId}
+    </select>
+
+    <select id="queryEoComponentByEoIdAndMaterialId" resultType="com.ruike.hme.domain.vo.HmeBomComponentVO3">
+        select
+            er.router_id,
+            bc.bom_component_id,
+            bc.qty bom_component_qty,
+            bc.material_id bom_component_material_id,
+            bc.line_number,
+            bca.attr_value reserve_num
+        from
+            mt_eo_bom eb
+            left join mt_eo_router er on er.eo_id = eb.eo_id and er.tenant_id = eb.tenant_id,
+            mt_bom_component bc
+            left join mt_bom_component_attr bca on bca.bom_component_id = bc.bom_component_id and bca.attr_name = 'lineAttribute10'
+        where
+            bc.tenant_id = eb.tenant_id
+            and bc.bom_id = eb.bom_id
+            and bc.material_id = #{materialId}
+            and bc.qty > 0
+            and EXISTS (select 1
+                 from mt_router_operation ro,
+                      mt_router_operation_component roc
+                where ro.router_step_id = #{eoStepId} and ro.tenant_id = #{tenantId}
+                  and roc.router_operation_id = ro.router_operation_id and roc.tenant_id = ro.tenant_id
+                  and bc.bom_component_id = roc.bom_component_id )
+			and eb.eo_id = #{eoId}
+            and eb.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryMaterialLotInfoForInSiteRelease" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO4">
+        select
+            ml.material_lot_id,
+            ml.material_lot_code,
+            ml.material_id,
+            ml.primary_uom_id,
+            ml.primary_uom_qty,
+            ml.locator_id,
+            ml.lot,
+            ml.eo_id,
+            mla_sn.attr_value so_num,
+            mla_sln.attr_value so_line_num,
+            mm.material_code,
+            mm.material_name,
+            mm.primary_uom_id material_primary_uom_id,
+            mu.uom_code material_primary_uom_code,
+            mml.locator_code,
+            mmt.locator_id warehouse_id,
+            mmt.locator_code warehouse_code
+        from
+            mt_material_lot ml
+            left join mt_material_lot_attr mla_sn on mla_sn.material_lot_id = ml.material_lot_id and mla_sn.attr_name = 'SO_NUM'
+            left join mt_material_lot_attr mla_sln on mla_sln.material_lot_id = ml.material_lot_id and mla_sln.attr_name = 'SO_LINE_NUM'
+            left join mt_material mm on ml.material_id = mm.material_id and mm.tenant_id = ml.tenant_id
+            left join mt_uom mu on mu.uom_id = mm.primary_uom_id and mu.tenant_id = mm.tenant_id
+            left join mt_mod_locator mml on mml.locator_id = ml.locator_id and mml.tenant_id = ml.tenant_id and mml.enable_flag = 'Y'
+            left join mt_mod_locator mmt on mmt.tenant_id = ml.tenant_id and mmt.locator_id = mml.PARENT_LOCATOR_ID and mmt.locator_category = 'AREA' and mmt.enable_flag = 'Y'
+        where
+            ml.material_lot_id = #{materialLotId}
+            and ml.tenant_id = #{tenantId}
+        limit 1
+    </select>
+
+    <select id="queryReworkEoCount" resultType="int">
+        select
+          count( 1 )
+        from
+         mt_eo_attr ea,
+         mt_eo eo
+        where
+        eo.TENANT_ID = #{tenantId}
+        and eo.EO_ID = ea.EO_ID
+        and eo.`STATUS` = 'WORKING'
+        and ea.tenant_id = #{tenantId}
+        and ea.attr_name = 'REWORK_MATERIAL_LOT'
+        and ea.attr_value = #{materialLotCode}
+    </select>
+
+    <select id="queryEoComponentForMaterialInSite" resultType="com.ruike.hme.domain.vo.HmeBomComponentVO2">
+        select
+            bc.bom_component_id,
+            bc.qty,
+            bc.material_id,
+            bc.line_number,
+            bca_vf.attr_value virtual_flag,
+            mm.material_code,
+            mm.material_name,
+            mm.primary_uom_id,
+            mu.uom_type,
+            ms.material_site_id,
+            msa_bf.attr_value back_flash_flag,
+            msa_at.attr_value available_time,
+            msa_lt.attr_value lot_type
+        from
+            mt_bom_component bc
+            left join mt_bom_component_attr bca_vf on bca_vf.bom_component_id = bc.bom_component_id
+            and bca_vf.attr_name = 'lineAttribute9'
+            left join mt_material mm on mm.tenant_id = bc.tenant_id
+            and mm.material_id = bc.material_id
+            left join mt_uom mu on mu.uom_id = mm.primary_uom_id
+            and mm.tenant_id = mm.tenant_id
+            left join mt_material_site ms on ms.material_id = bc.material_id
+            and ms.site_id = #{siteId}
+            and ms.tenant_id = bc.tenant_id
+            and ms.enable_flag = 'Y'
+            left join mt_material_site_attr msa_bf on msa_bf.material_site_id = ms.material_site_id
+            and msa_bf.attr_name = 'attribute1'
+            left join mt_material_site_attr msa_at on msa_at.material_site_id = ms.material_site_id
+            and msa_at.attr_name = 'attribute9'
+            left join mt_material_site_attr msa_lt on msa_lt.material_site_id = ms.material_site_id
+            and msa_lt.attr_name = 'attribute14'
+        where
+            bc.tenant_id = #{tenantId}
+            and bc.bom_id = #{bomId}
+            and bc.qty > 0
+    </select>
+
+    <select id="queryMaterialSiteAttr" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO25">
+        SELECT
+        mms.MATERIAL_ID,
+        mms.SITE_ID,
+        mmsa.ATTR_VALUE AS fac
+    FROM
+        mt_material_site mms,
+        mt_material_site_attr mmsa
+    WHERE
+        mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mmsa.ATTR_NAME = 'attribute5'
+        AND mmsa.TENANT_ID = mms.TENANT_ID
+        AND mms.MATERIAL_ID IN
+        <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND mms.SITE_ID = #{siteId}
+        AND mms.TENANT_ID = #{tenantId}
+        AND mms.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="queryFacMaterialId" resultType="java.lang.String">
+        SELECT
+        mms.material_id
+    FROM
+        mt_operation mo,
+        hme_eo_job_sn hejs,
+        hme_eo_job_sn_lot_material hejslm,
+        mt_material_site mms,
+        mt_material_site_attr mmsa
+    WHERE
+        mo.SITE_ID = #{siteId}
+        AND mo.OPERATION_NAME = #{operationName}
+        AND mo.TENANT_ID = #{tenantId}
+        AND hejs.eo_id = #{eoId}
+        AND hejs.operation_id = mo.OPERATION_ID
+        AND hejs.tenant_id = mo.TENANT_ID
+        AND hejslm.job_id = hejs.job_id
+        AND hejslm.tenant_id = hejs.tenant_id
+        AND mms.MATERIAL_ID = hejslm.material_id
+        AND mms.SITE_ID = mo.SITE_ID
+        AND mms.TENANT_ID = hejslm.tenant_id
+        AND mms.ENABLE_FLAG = 'Y'
+        AND mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mmsa.ATTR_NAME = 'attribute5'
+        AND mmsa.TENANT_ID = mms.TENANT_ID
+        AND mmsa.ATTR_VALUE = 'B05FAC'
+ORDER BY
+	hejslm.last_update_date
+	LIMIT 1
+    </select>
+
+    <select id="queryCountFromMaterialLotAndContainerByCode" resultType="int">
+        select sum(mm.count)
+          from (
+            select count(1) count
+              from mt_container mc
+             where mc.container_code = #{code}
+               and mc.tenant_id = #{tenantId}
+            union all
+            select count(1) count
+              from mt_material_lot mml
+             where mml.material_lot_code = #{code}
+               and mml.tenant_id = #{tenantId}
+            ) mm
+    </select>
+
+    <select id="queryOperationBomFlag" resultType="string">
+        select oa.attr_value
+          from mt_operation_attr oa
+         where oa.operation_id = #{operationId}
+           and oa.attr_name = 'BOM_FLAG'
+           and oa.tenant_id = #{tenantId}
+         limit 1
+    </select>
+
+    <select id="queryReworkMaxEoStepNum" resultType="int">
+        SELECT
+        IFNULL( max( hejs.eo_step_num ), 0 ) AS eo_step_num
+    FROM
+        hme_eo_job_sn hejs
+    WHERE
+        hejs.tenant_id = #{tenantId}
+        AND hejs.workcell_id = #{dto.workcellId}
+        AND hejs.eo_id = #{dto.eoId}
+        AND hejs.material_lot_id = #{dto.materialLotId}
+        AND hejs.operation_id = #{dto.operationId}
+        AND hejs.rework_flag = 'Y'
+        AND hejs.job_type = #{dto.jobType}
+    </select>
+
+    <select id="queryMaxEoStepNum" resultType="java.lang.Integer">
+        SELECT
+        IFNULL(MAX(ejs.eo_step_num), 0)
+        FROM
+        hme_eo_job_sn ejs
+        WHERE ejs.tenant_id = #{tenantId}
+        AND ejs.workcell_id = #{workcellId}
+        <choose>
+            <when test="eoId != null">
+                AND ejs.eo_id = #{eoId}
+            </when>
+            <otherwise>
+                AND (ejs.eo_id is null OR ejs.eo_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="materialLotId != null">
+                AND ejs.material_lot_id = #{materialLotId}
+            </when>
+            <otherwise>
+                AND (ejs.material_lot_id is null OR ejs.material_lot_id = '')
+            </otherwise>
+        </choose>
+        AND ejs.operation_id = #{operationId}
+        AND ejs.rework_flag = #{reworkFlag}
+        AND ejs.job_type = #{jobType}
+    </select>
+
+    <select id="queryHaveInSiteCount" resultType="java.lang.Integer">
+        SELECT
+        count( 1 )
+    FROM
+        hme_eo_job_sn hejs
+    WHERE
+        hejs.tenant_id = #{tenantId}
+	    AND hejs.eo_id = #{eoId}
+        AND ( hejs.site_out_date IS NULL OR hejs.site_out_date = '' );
+    </select>
+
+    <select id="batchQueryHaveInSiteCount" resultType="java.lang.Integer">
+        SELECT
+        count( 1 )
+    FROM
+        hme_eo_job_sn hejs
+    WHERE
+        hejs.tenant_id = #{tenantId}
+	    AND hejs.eo_id IN
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND ( hejs.site_out_date IS NULL OR hejs.site_out_date = '' );
+    </select>
+
+    <select id="queryOperationAgeingFlag" resultType="string">
+        select oa.attr_value
+          from mt_operation_attr oa
+         where oa.operation_id = #{operationId}
+           and oa.attr_name = 'AGEING_FLAG'
+           and oa.tenant_id = #{tenantId}
+         limit 1
+    </select>
+
+    <select id="queryWkcStation" resultType="string">
+        select mw.workcell_id
+          from mt_mod_workcell mw,
+               mt_mod_organization_rel mor
+         where mor.top_site_id = #{siteId}
+            and mor.parent_organization_type = 'WORKCELL'
+            and mor.parent_organization_id = mw.workcell_id
+            and mor.organization_type = 'WORKCELL'
+            and mor.organization_id = #{workcellId}
+            and mor.tenant_id = #{tenantId}
+            and mw.workcell_type = 'PROCESS'
+            and mw.tenant_id = mor.tenant_id
+        limit 1
+    </select>
+
+    <select id="selectEoStepOfEo" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        SELECT
+            hejs.eo_step_id,
+            hejs.site_out_date
+        FROM
+            hme_eo_job_sn hejs
+        WHERE
+            hejs.tenant_id = #{tenantId}
+          AND hejs.eo_step_id IS NOT NULL
+          AND hejs.eo_step_id != ''
+	      AND hejs.eo_id = #{eoId}
+        ORDER BY
+            hejs.eo_step_id,
+            hejs.site_in_date DESC
+    </select>
+
+    <select id="queryFirstProcessFlag" resultType="java.lang.String">
+         select oa.attr_value
+         from mt_operation_attr oa
+         where oa.operation_id = #{operationId}
+         and oa.attr_name = 'FIRST'
+         and oa.tenant_id = #{tenantId}
+         limit 1
+    </select>
+
+    <select id="queryLastEoByReworkMaterialLot" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        select
+        mmpl.prod_line_code,
+        wo.site_id,
+        wo.work_order_id,
+        wo.work_order_num,
+        wo.qty wo_qty,
+        wo.locator_id,
+        wo.work_order_type,
+        wo.status work_order_status,
+        wo.production_version wo_production_version,
+        woa.completed_qty,
+        wo.remark,
+        eo.eo_id,
+        eo.qty eo_qty,
+        eo.status,
+        eo.last_eo_status,
+        IFNULL(mla_jxt.attr_value, '') cross_retest_flag
+        from
+        mt_material_lot mml
+        left join mt_material_lot_attr mla_jxt on mla_jxt.material_lot_id = mml.material_lot_id and mla_jxt.attr_name = 'JCRETEST'
+        left join mt_eo_attr ea on ea.tenant_id = mml.tenant_id and ea.attr_name = 'REWORK_MATERIAL_LOT' and ea.attr_value = mml.material_lot_code
+        left join mt_eo eo on ea.eo_id = eo.eo_id
+        left join mt_work_order wo on wo.work_order_id = eo.work_order_id
+        left join mt_work_order_actual woa on wo.work_order_id = woa.work_order_id and wo.tenant_id = woa.tenant_id
+        left join mt_mod_production_line mmpl on mmpl.enable_flag = 'Y' and mmpl.prod_line_id = wo.production_line_id
+        where
+         mml.tenant_id = #{tenantId}
+        and mml.material_lot_id =  #{materialLotId}
+        and mml.enable_flag = 'Y'
+        and eo.`STATUS` = 'WORKING'
+        ORDER BY eo.LAST_UPDATE_DATE DESC
+    </select>
+
+    <select id="queryMaterialLotInfoForRework2" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mm.material_id,
+        mm.material_code,
+        mm.material_name,
+        mml.quality_status,
+        mla.attr_value rework_flag,
+        gst.description quality_status_meaning,
+        mml.material_lot_id,
+        mml.material_lot_code,
+        mml.current_container_id,
+        mlat.ATTR_VALUE AS af_flag
+        from
+        mt_material mm,
+        mt_material_lot mml
+        left join mt_material_lot_attr mla on mla.tenant_id = mml.tenant_id AND mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+        LEFT JOIN mt_material_lot_attr mlat ON mlat.tenant_id = mml.tenant_id AND mlat.material_lot_id = mml.material_lot_id AND mlat.attr_name = 'AF_FLAG'
+        left join mt_gen_status gs on gs.status_group = 'QUALITY_STATUS' and gs.status_code = mml.quality_status and gs.tenant_id = mml.tenant_id
+        left join mt_gen_status_tl gst on gs.gen_status_id = gst.gen_status_id and gst.lang = #{locale}
+        where
+        mml.material_id = mm.material_id
+        and mml.tenant_id = mm.tenant_id
+        and mml.tenant_id = #{tenantId}
+        and mml.material_lot_id = #{materialLotId}
+        and mml.site_id = #{siteId}
+        and mml.enable_flag = 'Y'
+    </select>
+
+    <select id="queryMaterialLotInfoForRework3" resultType="com.ruike.hme.domain.vo.HmeEoJobSnVO5">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mm.material_id,
+        mm.material_code,
+        mm.material_name,
+        wo.site_id,
+        wo.work_order_id,
+        wo.work_order_num,
+        wo.qty wo_qty,
+        wo.locator_id,
+        wo.work_order_type,
+        wo.status work_order_status,
+        wo.production_version wo_production_version,
+        woa.completed_qty,
+        mml.quality_status,
+        mla.attr_value rework_flag,
+        gst.description quality_status_meaning,
+        wo.remark,
+        eo.eo_id,
+        eo.qty eo_qty,
+        eo.status,
+        eo.last_eo_status,
+        mml.material_lot_id,
+        mml.material_lot_code,
+        mml.current_container_id,
+        mmpl.prod_line_code,
+        mlat.ATTR_VALUE AS af_flag,
+        IFNULL(mla_jxt.attr_value, '') cross_retest_flag
+        from
+        mt_material mm,
+        mt_material_lot mml
+        left join mt_material_lot_attr mla on mla.tenant_id = mml.tenant_id AND mla.material_lot_id = mml.material_lot_id and mla.attr_name = 'REWORK_FLAG'
+        LEFT JOIN mt_material_lot_attr mlat ON mlat.tenant_id = mml.tenant_id AND mlat.material_lot_id = mml.material_lot_id AND mlat.attr_name = 'AF_FLAG'
+        left join mt_material_lot_attr mla_jxt on mla_jxt.material_lot_id = mml.material_lot_id and mla_jxt.attr_name = 'JCRETEST'
+        left join mt_eo eo on eo.IDENTIFICATION = mml.material_lot_code AND eo.tenant_id = #{tenantId}
+        left join mt_work_order wo on wo.work_order_id = eo.work_order_id
+        left join mt_work_order_actual woa on wo.work_order_id = woa.work_order_id and wo.tenant_id = woa.tenant_id
+        left join mt_mod_production_line mmpl on mmpl.enable_flag = 'Y' and mmpl.prod_line_id = wo.production_line_id
+        left join mt_gen_status gs on gs.status_group = 'QUALITY_STATUS' and gs.status_code = mml.quality_status and gs.tenant_id = mml.tenant_id
+        left join mt_gen_status_tl gst on gs.gen_status_id = gst.gen_status_id and gst.lang = #{locale}
+        where
+        mml.material_id = mm.material_id
+        and mml.tenant_id = mm.tenant_id
+        and mml.tenant_id = #{tenantId}
+        and mml.material_lot_id = #{materialLotId}
+        and mml.site_id = #{siteId}
+        and mml.enable_flag = 'Y'
+        and eo.`STATUS` = 'WORKING'
+    </select>
+
+    <select id="queryOperationDeviceFlag" resultType="java.lang.String">
+         select oa.attr_value
+         from mt_operation_attr oa
+         where oa.operation_id = #{operationId}
+           and oa.attr_name = 'TEST_FLAG'
+           and oa.tenant_id = #{tenantId}
+         limit 1
+    </select>
+
+    <select id="queryNearNormalProcess" resultType="java.lang.String">
+        SELECT
+        	mor.PARENT_ORGANIZATION_ID
+        FROM
+        	hme_eo_job_sn ejs,
+        	mt_mod_organization_rel mor
+        WHERE
+        	ejs.tenant_id = #{tenantId}
+        AND ejs.eo_id = #{eoId}
+        AND IFNULL(ejs.rework_flag,'') != 'Y'
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = ejs.workcell_id
+        AND mor.TENANT_ID = #{tenantId}
+        ORDER BY ejs.site_in_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="judgeProcessConformity" resultType="java.lang.Long">
+        SELECT
+        	COUNT(1)
+        FROM
+        	  mt_mod_organization_rel mor
+        WHERE mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.PARENT_ORGANIZATION_ID = #{processId}
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = #{workcellId}
+        AND mor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryOperationReflectorFlag" resultType="java.lang.String">
+         select oa.attr_value
+         from mt_operation_attr oa
+         where oa.operation_id = #{operationId}
+         and oa.attr_name = 'REFLECTOR_FLAG'
+         and oa.tenant_id = #{tenantId}
+         limit 1
+    </select>
+
+    <select id="queryProcessNcTagList" resultType="com.ruike.hme.domain.vo.HmeProcessNcVO">
+        SELECT
+        	pnl.line_id,
+        	mt.TAG_CODE,
+        	mt.TAG_ID,
+        	pnd.detail_id,
+        	pnd.min_value,
+        	pnd.max_value
+        FROM
+        	hme_process_nc_line pnl
+        	LEFT JOIN hme_process_nc_detail pnd ON pnd.line_id = pnl.line_id AND pnd.tenant_id = pnl.tenant_id,
+        	mt_tag mt
+        WHERE
+        	pnl.tenant_id = #{tenantId}
+        AND pnl.header_id = #{processNcHeaderId}
+        AND mt.VALUE_TYPE = 'FORMULA'
+        AND mt.TAG_ID = pnl.tag_id
+        AND (pnd.nc_code_id is NULL OR pnd.nc_code_id = '')
+    </select>
+
+    <select id="queryProcessNcHeader" resultType="com.ruike.hme.domain.entity.HmeProcessNcHeader">
+        SELECT
+        	pnh.header_id,
+        	pnh.chip_combination
+        FROM
+        	hme_process_nc_header pnh
+        WHERE pnh.tenant_id = #{tenantId}
+        AND pnh.material_id = #{materialId}
+        AND pnh.cos_model = #{cosModel}
+        AND pnh.operation_id = #{operationId}
+    </select>
+
+</mapper>

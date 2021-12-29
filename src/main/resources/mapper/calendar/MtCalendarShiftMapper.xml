@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.calendar.infra.mapper.MtCalendarShiftMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.calendar.domain.entity.MtCalendarShift">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CALENDAR_SHIFT_ID" property="calendarShiftId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_ID" property="calendarId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="DATE"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="SHIFT_START_TIME" property="shiftStartTime" jdbcType="TIMESTAMP"/>
+        <result column="SHIFT_END_TIME" property="shiftEndTime" jdbcType="TIMESTAMP"/>
+        <result column="REST_TIME" property="restTime" jdbcType="DECIMAL"/>
+        <result column="UTILIZATION_RATE" property="utilizationRate" jdbcType="DECIMAL"/>
+        <result column="BORROWING_ABILITY" property="borrowingAbility" jdbcType="DECIMAL"/>
+        <result column="CAPACITY_UNIT" property="capacityUnit" jdbcType="VARCHAR"/>
+        <result column="STANDARD_CAPACITY" property="standardCapacity" jdbcType="DECIMAL"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="CalendarShiftResultMap" type="tarzan.calendar.domain.vo.MtCalendarShiftVO10">
+        <result column="CALENDAR_SHIFT_ID" property="calendarShiftId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_ID" property="calendarId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="calendarShiftDate" jdbcType="DATE"/>
+        <result column="SHIFT_CODE" property="calendarShiftCode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="SHIFT_START_TIME" property="shiftStartTime" jdbcType="TIMESTAMP"/>
+        <result column="SHIFT_END_TIME" property="shiftEndTime" jdbcType="TIMESTAMP"/>
+        <result column="REST_TIME" property="restTime" jdbcType="DECIMAL"/>
+        <result column="UTILIZATION_RATE" property="utilizationRate" jdbcType="DECIMAL"/>
+        <result column="BORROWING_ABILITY" property="borrowingAbility" jdbcType="DECIMAL"/>
+        <result column="CAPACITY_UNIT" property="capacityUnit" jdbcType="VARCHAR"/>
+        <result column="STANDARD_CAPACITY" property="standardCapacity" jdbcType="DECIMAL"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+    </resultMap>
+    <select id="calendarLimitShiftQuery" resultType="java.lang.String">
+        SELECT
+        cs.CALENDAR_SHIFT_ID
+        FROM
+        mt_calendar_shift cs
+        WHERE
+        cs.CALENDAR_ID = #{vo.calendarId}
+        AND cs.TENANT_ID = ${tenantId}
+        <if test="vo.shiftDate != null">
+            AND cs.SHIFT_DATE = DATE_FORMAT(#{vo.shiftDate}, '%Y-%m-%d')
+        </if>
+    </select>
+
+    <select id="timeLimitCalendarShiftQuery" resultType="java.lang.String">
+        SELECT
+        cs.CALENDAR_SHIFT_ID
+        FROM
+        mt_calendar_shift cs
+        WHERE
+        cs.CALENDAR_ID = #{vo.calendarId}
+        AND cs.TENANT_ID = ${tenantId}
+        <if test="vo.shiftDateFrom != null">
+            AND cs.SHIFT_DATE &gt;= DATE_FORMAT(#{vo.shiftDateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="vo.shiftDateTo != null">
+            AND cs.SHIFT_DATE &lt;= DATE_FORMAT(#{vo.shiftDateTo}, '%Y-%m-%d')
+        </if>
+    </select>
+
+    <select id="limitShiftDateQuery" resultMap="BaseResultMap">
+        SELECT
+        cs.*
+        FROM
+        mt_calendar_shift cs
+        WHERE
+        cs.CALENDAR_ID = #{vo.calendarId}
+        AND cs.TENANT_ID = ${tenantId}
+        <if test="vo.shiftDateFrom != null">
+            AND cs.SHIFT_DATE &gt;= DATE_FORMAT(#{vo.shiftDateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="vo.shiftDateTo != null">
+            AND cs.SHIFT_DATE &lt;= DATE_FORMAT(#{vo.shiftDateTo}, '%Y-%m-%d')
+        </if>
+    </select>
+
+    <select id="calendarShiftBatchGet" resultMap="BaseResultMap">
+        SELECT
+        cs.*
+        FROM
+        mt_calendar_shift cs
+        WHERE 1=1
+        AND cs.TENANT_ID = ${tenantId}
+        AND cs.CALENDAR_SHIFT_ID IN
+        <foreach collection="calendarShiftIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="timeLimitAvailableCalendarShiftQuery" resultType="java.lang.String">
+        SELECT
+        cs.CALENDAR_SHIFT_ID
+        FROM
+        mt_calendar_shift cs
+        WHERE
+        cs.CALENDAR_ID = #{vo.calendarId}
+        AND cs.TENANT_ID = ${tenantId}
+        AND cs.ENABLE_FLAG = 'Y'
+        <if test="vo.shiftDateFrom != null">
+            AND cs.SHIFT_DATE &gt;= DATE_FORMAT(#{vo.shiftDateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="vo.shiftDateTo != null">
+            AND cs.SHIFT_DATE &lt;= DATE_FORMAT(#{vo.shiftDateTo}, '%Y-%m-%d')
+        </if>
+    </select>
+
+    <select id="limitShiftDateBatchQuery" resultType="java.lang.String">
+        SELECT
+        cs.CALENDAR_SHIFT_ID
+        FROM
+        mt_calendar_shift cs
+        WHERE
+        cs.TENANT_ID = ${tenantId}
+        <if test="shiftDateFrom != null">
+            AND cs.SHIFT_DATE &gt;= DATE_FORMAT(#{shiftDateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="shiftDateTo != null">
+            AND cs.SHIFT_DATE &lt;= DATE_FORMAT(#{shiftDateTo}, '%Y-%m-%d')
+        </if>
+        <if test="ids!=null">
+            and ${ids}
+        </if>
+        <if test="ids==null">
+            and 1=-1
+        </if>
+    </select>
+
+    <delete id="deleteByIdsCustom">
+        delete from mt_calendar_shift
+        where
+        TENANT_ID = ${tenantId}
+        and CALENDAR_SHIFT_ID in (
+        <foreach collection="ids" item="id" separator=",">
+            #{id}
+        </foreach>
+        )
+    </delete>
+
+    <select id="queryCalendarShiftGridForUi" resultMap="BaseResultMap">
+        SELECT
+        s.SHIFT_CODE,
+        s.SHIFT_DATE,
+        s.SHIFT_START_TIME,
+        s.SHIFT_END_TIME
+        FROM
+        mt_calendar_shift s
+        WHERE
+        s.CALENDAR_ID = #{dto.calendarId}
+        AND DATE_FORMAT(s.SHIFT_DATE,'%Y-%m') = #{dto.calendarDate}
+        order by s.SEQUENCE asc
+    </select>
+
+    <select id="queryCalendarShiftListForUi" resultMap="BaseResultMap">
+        SELECT
+        cs.CALENDAR_SHIFT_ID,
+        cs.CALENDAR_ID,
+        cs.SHIFT_DATE,
+        cs.SHIFT_CODE,
+        cs.ENABLE_FLAG,
+        cs.SHIFT_START_TIME,
+        cs.SHIFT_END_TIME,
+        cs.REST_TIME,
+        cs.UTILIZATION_RATE,
+        cs.BORROWING_ABILITY,
+        cs.CAPACITY_UNIT,
+        cs.STANDARD_CAPACITY,
+        cs.SEQUENCE
+        FROM
+        mt_calendar_shift cs
+        WHERE
+            cs.TENANT_ID = ${tenantId}
+        <if test="vo.calendarShiftId != null">
+            AND cs.CALENDAR_SHIFT_ID = #{vo.calendarShiftId}
+        </if>
+        <if test="vo.calendarId != null">
+            AND cs.CALENDAR_ID = #{vo.calendarId}
+        </if>
+        <if test="vo.shiftDate != null">
+            AND cs.SHIFT_DATE = DATE_FORMAT(#{vo.shiftDate}, '%Y-%m-%d')
+        </if>
+        <if test="vo.shiftCode != null">
+            AND cs.SHIFT_CODE = Like CONCAT('%',CONCAT(#{vo.shiftCode},'%'))
+        </if>
+        <if test="vo.enableFlag != null">
+            AND cs.ENABLE_FLAG = #{vo.enableFlag}
+        </if>
+        <if test="vo.weekOfYear != null">
+            and weekofyear(cs.SHIFT_DATE)=#{vo.weekOfYear}
+        </if>
+        <if test="vo.dayOfWeek != null">
+            and WEEKDAY(cs.SHIFT_DATE) + 1 =#{vo.dayOfWeek}
+        </if>
+        <if test="vo.shiftStartTime != null">
+            and cs.SHIFT_START_TIME = #{vo.shiftStartTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="vo.shiftEndTime != null">
+            and  cs.SHIFT_END_TIME =  #{vo.shiftEndTime,jdbcType=TIMESTAMP}
+        </if>
+    </select>
+
+    <select id="propertyLimitCalendarShiftPropertyQuery" resultMap="CalendarShiftResultMap">
+        SELECT
+        cs.CALENDAR_SHIFT_ID,
+        cs.CALENDAR_ID,
+        cs.SHIFT_DATE,
+        cs.SHIFT_CODE,
+        cs.ENABLE_FLAG,
+        cs.SHIFT_START_TIME,
+        cs.SHIFT_END_TIME,
+        cs.REST_TIME,
+        cs.UTILIZATION_RATE,
+        cs.BORROWING_ABILITY,
+        cs.CAPACITY_UNIT,
+        cs.STANDARD_CAPACITY,
+        cs.SEQUENCE
+        FROM
+        mt_calendar_shift cs
+        where
+        cs.TENANT_ID=#{tenantId}
+        <if test="vo.calendarShiftId != null">
+            and cs.CALENDAR_SHIFT_ID=#{vo.calendarShiftId}
+        </if>
+        <if test="vo.calendarId != null">
+            and cs.CALENDAR_ID=#{vo.calendarId}
+        </if>
+        <if test="vo.calendarShiftDateFrom != null">
+            and cs.SHIFT_DATE &gt;= #{vo.calendarShiftDateFrom,jdbcType=DATE}
+        </if>
+        <if test="vo.calendarShiftDateTo != null">
+            and cs.SHIFT_DATE &lt;=#{vo.calendarShiftDateTo,jdbcType=DATE}
+        </if>
+        <if test="vo.calendarShiftCode != null">
+            and cs.SHIFT_CODE=#{vo.calendarShiftCode}
+        </if>
+        <if test="vo.enableFlag != null ">
+            and cs.ENABLE_FLAG=#{vo.enableFlag}
+        </if>
+        <if test="vo.shiftStartTimeFrom != null">
+            and cs.SHIFT_START_TIME &gt;=#{vo.shiftStartTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="vo.shiftStartTimeTo != null">
+            and cs.SHIFT_START_TIME &lt;=#{vo.shiftStartTimeTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="vo.shiftEndTimeFrom != null">
+            and cs.SHIFT_END_TIME &gt;=#{vo.shiftEndTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="vo.shiftEndTimeTo != null">
+            and cs.SHIFT_END_TIME &lt;=#{vo.shiftEndTimeTo,jdbcType=TIMESTAMP}
+        </if>
+    </select>
+    <select id="calendarShiftLimitTargetShiftQuery" resultType="tarzan.calendar.domain.vo.MtCalendarShiftVO12">
+        SELECT
+        cs.CALENDAR_SHIFT_ID as targetCalendarShiftId,
+        cs.SHIFT_DATE as shiftDate,
+        cs.SHIFT_CODE as shiftCode
+        FROM
+        mt_calendar_shift cs
+        left join mt_calendar t1
+        on cs.CALENDAR_ID=t1.CALENDAR_ID
+        left join mt_calendar_org_rel t2
+        on t1.CALENDAR_ID=t2.CALENDAR_ID
+        where
+        cs.TENANT_ID=${tenantId}
+        and t1.TENANT_ID=${tenantId}
+        and t2.TENANT_ID=${tenantId}
+        <if test="vo.organizationType != null">
+            and t2.ORGANIZATION_TYPE=#{vo.organizationType}
+        </if>
+        <if test="vo.organizationId != null">
+            and t2.ORGANIZATION_ID=#{vo.organizationId}
+        </if>
+        <if test="vo.calendarType != null">
+            and t1.CALENDAR_TYPE=#{vo.calendarType}
+        </if>
+        <if test="shiftStartTime != null">
+            and cs.SHIFT_END_TIME &gt;=DATE_FORMAT(#{shiftStartTime} ,'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="shiftEndTime != null">
+            and cs.SHIFT_START_TIME &lt;=DATE_FORMAT(#{shiftEndTime} ,'%Y-%m-%d %H:%i:%S')
+        </if>
+        order by cs.SHIFT_START_TIME ASC
+    </select>
+
+    <select id="calendarLimitShiftBatchQuery" resultType="java.lang.String">
+        SELECT
+            cs.CALENDAR_SHIFT_ID
+        FROM
+            mt_calendar_shift cs
+        WHERE
+            cs.TENANT_ID = ${tenantId}
+        AND
+        <foreach collection="dto" open="(" item="item" separator="OR" close=")">
+            (cs.CALENDAR_ID = #{item.calendarId}
+                <if test="item.shiftDate != null">
+                    AND cs.SHIFT_DATE = DATE_FORMAT(#{item.shiftDate}, '%Y-%m-%d')
+                </if>
+            )
+        </foreach>
+    </select>
+
+    <select id="queryCalendarShiftDispatchQty" resultType="tarzan.calendar.domain.entity.MtCalendarShift">
+        SELECT
+	        mcs.CALENDAR_SHIFT_ID,
+            mcs.SHIFT_CODE,
+            mcs.SHIFT_DATE
+        FROM
+	        hme_wo_dispatch_recode dr,
+            mt_calendar_shift mcs
+        WHERE dr.CALENDAR_SHIFT_ID  = mcs.CALENDAR_SHIFT_ID
+        AND mcs.TENANT_ID = #{tenantId}
+        AND dr.TENANT_ID = #{tenantId}
+        AND mcs.ENABLE_FLAG = 'Y'
+        AND dr.DISPATCH_QTY > 0
+        AND mcs.CALENDAR_SHIFT_ID IN
+        <foreach collection="calendarShiftList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        GROUP BY
+	    mcs.CALENDAR_SHIFT_ID,
+        mcs.SHIFT_CODE,
+        mcs.SHIFT_DATE
+    </select>
+</mapper>

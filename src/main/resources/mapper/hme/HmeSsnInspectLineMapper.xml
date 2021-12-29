@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeSsnInspectLineMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeSsnInspectLine">
+        <result column="ssn_inspect_line_id" property="ssnInspectLineId" jdbcType="VARCHAR"/>
+        <result column="ssn_inspect_header_id" property="ssnInspectHeaderId" jdbcType="VARCHAR"/>
+        <result column="sequence" property="sequence" jdbcType="DECIMAL"/>
+        <result column="tag_id" property="tagId" jdbcType="VARCHAR"/>
+        <result column="minimum_value" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="maximal_value" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="allow_differ" property="allowDiffer" jdbcType="DECIMAL"/>
+        <result column="couple_flag" property="coupleFlag" jdbcType="VARCHAR"/>
+        <result column="judge_flag" property="judgeFlag" jdbcType="VARCHAR"/>
+        <result column="check_allow_differ" property="checkAllowDiffer" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectLine" resultType="com.ruike.hme.domain.vo.HmeSsnInspectLineVO">
+        SELECT
+            hsil.ssn_inspect_line_id,
+            hsil.sequence,
+            hsil.tag_id,
+            mt.TAG_CODE,
+            mt.TAG_DESCRIPTION,
+            hsil.minimum_value,
+            hsil.maximal_value,
+            hsil.allow_differ,
+            hsil.couple_flag,
+            hsil.judge_flag,
+            hsil.cos_couple_flag,
+            hsil.cos_pos,
+            hsil.check_allow_differ
+        FROM
+            hme_ssn_inspect_line hsil,
+            mt_tag mt
+        WHERE
+            hsil.tag_id = mt.tag_id
+            AND hsil.tenant_id = #{tenantId}
+            AND hsil.ssn_inspect_header_id = #{ssnInspectHeaderId}
+        ORDER BY hsil.sequence
+    </select>
+
+    <delete id="deleteLineByHeade">
+        DELETE
+        FROM
+            hme_ssn_inspect_line
+        WHERE
+            tenant_id = #{tenantId}
+            AND ssn_inspect_header_id = #{ssnInspectHeaderId}
+    </delete>
+
+    <select id="selectByHeader" resultMap="BaseResultMap">
+        SELECT
+            ssn_inspect_line_id
+        FROM
+            hme_ssn_inspect_line
+        WHERE
+            tenant_id = #{tenantId}
+            AND ssn_inspect_header_id = #{ssnInspectHeaderId}
+    </select>
+
+    <select id="ssnInspectLineHisQuery" resultType="com.ruike.hme.domain.vo.HmeSsnInspectLineVO">
+        SELECT
+            hsil.ssn_inspect_line_id,
+            hsil.sequence,
+            hsil.tag_id,
+            mt.TAG_CODE,
+            mt.TAG_DESCRIPTION,
+            hsil.minimum_value,
+            hsil.maximal_value,
+            hsil.allow_differ,
+            hsil.couple_flag,
+            hsil.judge_flag,
+            hsil.cos_couple_flag,
+            hsil.cos_pos,
+            hsil.check_allow_differ,
+			iu.real_name last_update_by_name,
+			hsil.last_update_date
+        FROM
+            hme_ssn_inspect_line_his hsil
+			LEFT JOIN iam_user iu ON iu.id = hsil.last_updated_by,
+            mt_tag mt
+        WHERE
+            hsil.tag_id = mt.tag_id
+            AND hsil.tenant_id = #{tenantId}
+            AND hsil.ssn_inspect_line_id = #{ssnInspectLineId}
+        ORDER BY hsil.CREATION_DATE DESC
+    </select>
+
+    <insert id="mtBatchInsert">
+        insert into hme_ssn_inspect_line
+        (
+        tenant_id,
+        ssn_inspect_line_id,
+        ssn_inspect_header_id,
+        sequence,
+        tag_id,
+        minimum_value,
+        maximal_value,
+        allow_differ,
+        couple_flag,
+        judge_flag,
+        cos_couple_flag,
+        cos_pos,
+        check_allow_differ,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute_category,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10,
+        attribute11,
+        attribute12,
+        attribute13,
+        attribute14,
+        attribute15
+        )
+        values
+        <foreach collection="insertList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ssnInspectLineId},
+            #{item.ssnInspectHeaderId},
+            #{item.sequence},
+            #{item.tagId},
+            #{item.minimumValue},
+            #{item.maximalValue},
+            #{item.allowDiffer},
+            #{item.coupleFlag},
+            #{item.judgeFlag},
+            #{item.cosCoupleFlag},
+            #{item.cosPos},
+            #{item.checkAllowDiffer},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <update id="mtBatchUpdate">
+        update hme_ssn_inspect_line
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            ssn_inspect_header_id =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.ssnInspectHeaderId}
+            </foreach>,
+            sequence =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.sequence}
+            </foreach>,
+            tag_id =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.tagId}
+            </foreach>,
+            minimum_value =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.minimumValue}
+            </foreach>,
+            maximal_value =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.maximalValue}
+            </foreach>,
+            allow_differ =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.allowDiffer}
+            </foreach>,
+            couple_flag =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.coupleFlag}
+            </foreach>,
+            judge_flag =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.judgeFlag}
+            </foreach>,
+            check_allow_differ =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_line_id" close="end">
+                when #{clause.ssnInspectLineId} then #{clause.checkAllowDiffer}
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and ssn_inspect_line_id in
+            <foreach collection="domains" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.ssnInspectLineId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

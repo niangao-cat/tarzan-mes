@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.instruction.infra.mapper.MtInstructionHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.instruction.domain.entity.MtInstructionHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="INSTRUCTION_HIS_ID" property="instructionHisId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_NUM" property="instructionNum" jdbcType="VARCHAR"/>
+        <result column="SOURCE_INSTRUCTION_ID" property="sourceInstructionId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_ID" property="sourceDocId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_TYPE" property="instructionType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_STATUS" property="instructionStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="DIS_ROUTER_ID" property="disRouterId" jdbcType="VARCHAR"/>
+        <result column="ORDER_TYPE" property="orderType" jdbcType="VARCHAR"/>
+        <result column="ORDER_ID" property="orderId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_TYPE" property="sourceOrderType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_ID" property="sourceOrderId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_ID" property="sourceOrderLineId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_LOCATION_ID" property="sourceOrderLineLocationId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_DIST_ID" property="sourceOrderLineDistId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_OUTSIDE_COMP_LINE_ID" property="sourceOutsideCompLineId" jdbcType="VARCHAR"/>
+        <result column="FROM_SITE_ID" property="fromSiteId" jdbcType="VARCHAR"/>
+        <result column="TO_SITE_ID" property="toSiteId" jdbcType="VARCHAR"/>
+        <result column="FROM_LOCATOR_ID" property="fromLocatorId" jdbcType="VARCHAR"/>
+        <result column="TO_LOCATOR_ID" property="toLocatorId" jdbcType="VARCHAR"/>
+        <result column="COST_CENTER_ID" property="costCenterId" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="DEMAND_TIME" property="demandTime" jdbcType="TIMESTAMP"/>
+        <result column="WAVE_SEQUENCE" property="waveSequence" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="DATE"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="COVER_QTY" property="coverQty" jdbcType="DECIMAL"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="FROM_OWNER_TYPE" property="fromOwnerType" jdbcType="VARCHAR"/>
+        <result column="TO_OWNER_TYPE" property="toOwnerType" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="HistoryResultMap" type="tarzan.instruction.domain.vo.MtInstructionHisVO">
+        <result column="INSTRUCTION_HIS_ID" property="instructionHisId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_NUM" property="instructionNum" jdbcType="VARCHAR"/>
+        <result column="SOURCE_INSTRUCTION_ID" property="sourceInstructionId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_ID" property="sourceDocId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_TYPE" property="instructionType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_STATUS" property="instructionStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="DIS_ROUTER_ID" property="disRouterId" jdbcType="VARCHAR"/>
+        <result column="ORDER_TYPE" property="orderType" jdbcType="VARCHAR"/>
+        <result column="ORDER_ID" property="orderId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_TYPE" property="sourceOrderType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_ID" property="sourceOrderId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_ID" property="sourceOrderLineId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_LOCATION_ID" property="sourceOrderLineLocationId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_DIST_ID" property="sourceOrderLineDistId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_OUTSIDE_COMP_LINE_ID" property="sourceOutsideCompLineId" jdbcType="VARCHAR"/>
+        <result column="FROM_SITE_ID" property="fromSiteId" jdbcType="VARCHAR"/>
+        <result column="TO_SITE_ID" property="toSiteId" jdbcType="VARCHAR"/>
+        <result column="FROM_LOCATOR_ID" property="fromLocatorId" jdbcType="VARCHAR"/>
+        <result column="TO_LOCATOR_ID" property="toLocatorId" jdbcType="VARCHAR"/>
+        <result column="COST_CENTER_ID" property="costCenterId" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="DEMAND_TIME" property="demandTime" jdbcType="TIMESTAMP"/>
+        <result column="WAVE_SEQUENCE" property="waveSequence" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="DATE"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="COVER_QTY" property="coverQty" jdbcType="DECIMAL"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="FROM_OWNER_TYPE" property="fromOwnerType" jdbcType="VARCHAR"/>
+        <result column="TO_OWNER_TYPE" property="toOwnerType" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByEventIdList" resultMap="HistoryResultMap">
+        select
+        his.instruction_his_id,
+        his.event_id,
+        his.instruction_id,
+        his.instruction_num,
+        his.source_instruction_id,
+        his.source_doc_id,
+        his.instruction_type,
+        his.instruction_status,
+        his.site_id,
+        his.material_id,
+        his.uom_id,
+        his.eo_id,
+        his.dis_router_id,
+        his.order_type,
+        his.order_id,
+        his.source_order_type,
+        his.source_order_id,
+        his.source_order_line_id,
+        his.source_order_line_location_id,
+        his.source_order_line_dist_id,
+        his.source_outside_comp_line_id,
+        his.from_site_id,
+        his.to_site_id,
+        his.from_locator_id,
+        his.to_locator_id,
+        his.cost_center_id,
+        his.quantity,
+        his.supplier_id,
+        his.supplier_site_id,
+        his.customer_id,
+        his.customer_site_id,
+        his.demand_time,
+        his.wave_sequence,
+        his.shift_date,
+        his.shift_code,
+        his.cover_qty,
+        his.business_type,
+        his.remark,
+        his.identification,
+        his.FROM_OWNER_TYPE,
+        his.TO_OWNER_TYPE,
+        his.cid,
+        his.object_version_number,
+        his.created_by,
+        his.creation_date,
+        his.last_updated_by,
+        his.last_update_date,
+        e.event_by,
+        e.event_time
+        from
+        mt_instruction_his his
+        join mt_event e on his.EVENT_ID = e.EVENT_ID
+        where
+        his.TENANT_ID = #{tenantId}
+        and e.TENANT_ID = #{tenantId}
+        and his.EVENT_ID in
+        <foreach collection="eventIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByInstructionId" resultMap="HistoryResultMap">
+        select
+	        his.instruction_his_id,
+	        his.event_id,
+	        his.instruction_id,
+	        his.instruction_num,
+	        his.source_instruction_id,
+	        his.source_doc_id,
+	        his.instruction_type,
+	        his.instruction_status,
+	        his.site_id,
+	        his.material_id,
+	        his.uom_id,
+	        his.eo_id,
+	        his.dis_router_id,
+	        his.order_type,
+	        his.order_id,
+	        his.source_order_type,
+	        his.source_order_id,
+	        his.source_order_line_id,
+	        his.source_order_line_location_id,
+	        his.source_order_line_dist_id,
+	        his.source_outside_comp_line_id,
+	        his.from_site_id,
+	        his.to_site_id,
+	        his.from_locator_id,
+	        his.to_locator_id,
+	        his.cost_center_id,
+	        his.quantity,
+	        his.supplier_id,
+	        his.supplier_site_id,
+	        his.customer_id,
+	        his.customer_site_id,
+	        his.demand_time,
+	        his.wave_sequence,
+	        his.shift_date,
+	        his.shift_code,
+	        his.cover_qty,
+	        his.business_type,
+	        his.remark,
+	        his.identification,
+	        his.FROM_OWNER_TYPE,
+	        his.TO_OWNER_TYPE,
+	        his.cid,
+	        his.object_version_number,
+	        his.created_by,
+	        his.creation_date,
+	        his.last_updated_by,
+	        his.last_update_date,
+	        e.event_by,
+	        e.event_time
+        from 
+	        mt_instruction_his his
+	        join mt_event e on his.EVENT_ID = e.EVENT_ID
+        where 
+	        his.TENANT_ID = #{tenantId}
+	        and e.TENANT_ID = #{tenantId}
+	        and his.INSTRUCTION_ID = #{instructionId}
+    </select>
+    <select id="selectPropertyLimit" resultMap="BaseResultMap">
+        select his.*
+        from
+        mt_instruction_his his
+        where
+        his.TENANT_ID = #{tenantId}
+        <if test="property.instructionHisId!=null">
+            and his.INSTRUCTION_HIS_ID=#{property.instructionHisId}
+        </if>
+
+        <if test="property.eventId != null">
+            and his.event_id = #{property.eventId}
+        </if>
+        <if test="property.instructionId != null">
+            and his.instruction_id = #{property.instructionId}
+        </if>
+        <if test="property.instructionNum != null">
+            and his.INSTRUCTION_NUM = #{property.instructionNum}
+        </if>
+        <if test="property.sourceInstructionId != null">
+            and his.SOURCE_INSTRUCTION_ID = #{property.sourceInstructionId}
+        </if>
+        <if test="property.sourceDocId != null">
+            and his.SOURCE_DOC_ID = #{property.sourceDocId}
+        </if>
+        <if test="property.instructionType != null">
+            and his.INSTRUCTION_TYPE = #{property.instructionType}
+        </if>
+        <if test="property.instructionStatus != null">
+            and his.INSTRUCTION_STATUS = #{property.instructionStatus}
+        </if>
+        <if test="property.siteId != null">
+            and his.SITE_ID = #{property.siteId}
+        </if>
+        <if test="property.materialId != null">
+            and his.MATERIAL_ID = #{property.materialId}
+        </if>
+        <if test="property.uomId != null">
+            and his.UOM_ID = #{property.uomId}
+        </if>
+        <if test="property.eoId != null">
+            and his.EO_ID = #{property.eoId}
+        </if>
+        <if test="property.disRouterId != null">
+            and his.DIS_ROUTER_ID = #{property.disRouterId}
+        </if>
+        <if test="property.orderType != null">
+            and his.ORDER_TYPE = #{property.orderType}
+        </if>
+        <if test="property.orderId != null">
+            and his.ORDER_ID = #{property.orderId}
+        </if>
+        <if test="property.sourceOrderType != null">
+            and his.SOURCE_ORDER_TYPE = #{property.sourceOrderType}
+        </if>
+        <if test="property.sourceOrderId != null">
+            and his.SOURCE_ORDER_ID = #{property.sourceOrderId}
+        </if>
+        <if test="property.sourceOrderLineId != null">
+            and his.SOURCE_ORDER_LINE_ID = #{property.sourceOrderLineId}
+        </if>
+        <if test="property.sourceOrderLineLocationId != null">
+            and his.SOURCE_ORDER_LINE_LOCATION_ID = #{property.sourceOrderLineLocationId}
+        </if>
+        <if test="property.sourceOrderLineDistId != null">
+            and his.SOURCE_ORDER_LINE_DIST_ID = #{property.sourceOrderLineDistId}
+        </if>
+        <if test="property.sourceOutsideCompLineId != null">
+            and his.SOURCE_OUTSIDE_COMP_LINE_ID = #{property.sourceOutsideCompLineId}
+        </if>
+        <if test="property.fromSiteId != null">
+            and his.FROM_SITE_ID = #{property.fromSiteId}
+        </if>
+        <if test="property.toSiteId != null">
+            and his.TO_SITE_ID = #{property.toSiteId}
+        </if>
+        <if test="property.fromLocatorId != null">
+            and his.FROM_LOCATOR_ID = #{property.fromLocatorId}
+        </if>
+        <if test="property.toLocatorId != null">
+            and his.TO_LOCATOR_ID = #{property.toLocatorId}
+        </if>
+        <if test="property.costCenterId != null">
+            and his.COST_CENTER_ID = #{property.costCenterId}
+        </if>
+        <if test="property.quantity != null">
+            and his.QUANTITY = #{property.quantity}
+        </if>
+        <if test="property.supplierId != null">
+            and his.SUPPLIER_ID = #{property.supplierId}
+        </if>
+        <if test="property.supplierSiteId != null">
+            and his.SUPPLIER_SITE_ID = #{property.supplierSiteId}
+        </if>
+        <if test="property.customerId != null">
+            and his.CUSTOMER_ID = #{property.customerId}
+        </if>
+        <if test="property.customerSiteId != null">
+            and his.CUSTOMER_SITE_ID = #{property.customerSiteId}
+        </if>
+        <if test="property.waveSequence != null">
+            and his.WAVE_SEQUENCE = #{property.waveSequence}
+        </if>
+        <if test="property.shiftCode != null">
+            and his.SHIFT_CODE = #{property.shiftCode}
+        </if>
+        <if test="property.coverQty != null">
+            and his.COVER_QTY = #{property.coverQty}
+        </if>
+        <if test="property.businessType != null">
+            and his.BUSINESS_TYPE = #{property.businessType}
+        </if>
+        <if test="property.identification != null">
+            and his.IDENTIFICATION = #{property.identification}
+        </if>
+        <if test="property.remark != null">
+            and his.REMARK = #{property.remark}
+        </if>
+        <if test="property.fromOwnerType != null">
+            and his.FROM_OWNER_TYPE = #{property.fromOwnerType}
+        </if>
+        <if test="property.fromOwnerType != null">
+            and his.TO_OWNER_TYPE = #{property.toOwnerType}
+        </if>
+        <if test="property.demandTimeFrom != null">
+            and his.DEMAND_TIME &gt;= #{property.demandTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="property.demandTimeTo != null">
+            and his.DEMAND_TIME &lt;= #{property.demandTimeTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="property.shiftDateFrom != null">
+            and his.SHIFT_DATE &gt;= #{property.shiftDateFrom,jdbcType=DATE}
+        </if>
+        <if test="property.shiftDateTo != null">
+            and his.SHIFT_DATE &lt;= #{property.shiftDateTo,jdbcType=DATE}
+        </if>
+    </select>
+
+    <select id="selectRecent" resultType="tarzan.instruction.domain.vo.MtInstructionHisVO2">
+        SELECT INSTRUCTION_HIS_ID, EVENT_ID FROM
+        (
+	      SELECT
+	            his.INSTRUCTION_HIS_ID,
+	            his.EVENT_ID
+	        FROM
+	            mt_instruction_his his
+	        WHERE
+	            his.INSTRUCTION_ID= #{instructionId}
+	            and his.TENANT_ID = #{tenantId}
+	        ORDER BY his.INSTRUCTION_HIS_ID + 0 DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+</mapper>

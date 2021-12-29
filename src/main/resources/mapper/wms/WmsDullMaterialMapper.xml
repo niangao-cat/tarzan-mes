@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDullMaterialMapper">
+
+    <select id="queryOverDue"
+            resultType="com.ruike.wms.api.dto.WmsDullMaterialQueryResponseDTO">
+        SELECT
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MML.LOT,
+        MML.PRIMARY_UOM_QTY,
+        MU.UOM_ID,
+        MU.UOM_CODE,
+        IFNULL(
+        IFNULL( DATE_ADD( mla_oid.ATTR_VALUE, INTERVAL 30 DAY ), DATE_ADD( mla_pd.ATTR_VALUE,
+        INTERVAL MM.SHELF_LIFE DAY ) ),
+        DATE_ADD( MML.CREATION_DATE, INTERVAL MM.SHELF_LIFE DAY )
+        ) AS DULL_DATE,
+        '超期呆滞' AS DULL_TYPE,
+        mla_rr.ATTR_VALUE AS REVIEW_RESULT,
+        mla_s.ATTR_VALUE AS STATUS,
+        MML.QUALITY_STATUS,
+        LO.LOCATOR_ID AS WAREHOUSE_ID,
+        LO.LOCATOR_CODE AS WAREHOUSE_CODE,
+        SUBLO.LOCATOR_ID,
+        SUBLO.LOCATOR_CODE,
+        MC.CONTAINER_ID,
+        MC.CONTAINER_CODE
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr mla_oid ON mla_oid.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_oid.ATTR_NAME = 'OVERDUE_INSPECTION_DATE'
+        LEFT JOIN mt_material_lot_attr mla_pd ON mla_pd.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_pd.ATTR_NAME = 'PRODUCT_DATE'
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material_lot_attr mla_rr ON mla_rr.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_rr.ATTR_NAME = 'REVIEW_RESULT'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        WHERE
+        MML.SITE_ID = #{dto.siteId}
+        AND MML.TENANT_ID = #{tenantId}
+        AND MML.ENABLE_FLAG = 'Y'
+        AND mla_s.ATTR_VALUE = 'INSTOCK'
+        AND MML.QUALITY_STATUS = 'PENDING'
+        AND (
+        ( mla_oid.ATTR_VALUE IS NOT NULL AND DATEDIFF( CURRENT_TIMESTAMP, mla_oid.ATTR_VALUE
+        ) &gt; 30 )
+        OR ( mla_oid.ATTR_VALUE IS NULL AND MM.SHELF_LIFE IS NOT NULL AND DATEDIFF( CURRENT_TIMESTAMP,
+        mla_pd.ATTR_VALUE ) &gt; MM.SHELF_LIFE )
+        OR ( mla_oid.ATTR_VALUE IS NULL AND MM.SHELF_LIFE IS NOT NULL AND mla_pd.ATTR_VALUE IS NULL
+        AND DATEDIFF(CURRENT_TIMESTAMP, MML.CREATION_DATE ) &gt; MM.SHELF_LIFE )
+        )
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND MML.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND LO.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND MML.MATERIAL_LOT_CODE LIKE CONCAT('%',#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            AND MML.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+        <if test="dto.dullDateStart != null and dto.dullDateStart != ''">
+            AND STR_TO_DATE( IFNULL(
+            IFNULL( DATE_ADD( mla_oid.ATTR_VALUE, INTERVAL 30 DAY ), DATE_ADD( mla_pd.ATTR_VALUE,
+            INTERVAL MM.SHELF_LIFE DAY ) ),
+            DATE_ADD( MML.CREATION_DATE, INTERVAL MM.SHELF_LIFE DAY )
+            ),'%Y-%m-%d') &gt;= STR_TO_DATE(#{dto.dullDateStart},'%Y-%m-%d')
+        </if>
+        <if test="dto.dullDateEnd != null and dto.dullDateEnd != ''">
+            AND STR_TO_DATE( IFNULL(
+            IFNULL( DATE_ADD( mla_oid.ATTR_VALUE, INTERVAL 30 DAY ), DATE_ADD( mla_pd.ATTR_VALUE,
+            INTERVAL MM.SHELF_LIFE DAY ) ),
+            DATE_ADD( MML.CREATION_DATE, INTERVAL MM.SHELF_LIFE DAY )
+            ),'%Y-%m-%d') &lt;= STR_TO_DATE(#{dto.dullDateEnd},'%Y-%m-%d')
+        </if>
+        ORDER BY MM.MATERIAL_CODE,MML.MATERIAL_LOT_CODE
+    </select>
+
+    <select id="queryChange"
+            resultType="com.ruike.wms.api.dto.WmsDullMaterialQueryResponseDTO">
+        SELECT
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MML.LOT,
+        MML.PRIMARY_UOM_QTY,
+        MU.UOM_ID,
+        MU.UOM_CODE,
+        ZDM.LAST_UPDATE_DATE AS DULL_DATE,
+        '变更呆滞' AS DULL_TYPE,
+        mla_rr.ATTR_VALUE AS REVIEW_RESULT,
+        mla_s.ATTR_VALUE AS STATUS,
+        MML.QUALITY_STATUS,
+        LO.LOCATOR_ID AS WAREHOUSE_ID,
+        LO.LOCATOR_CODE AS WAREHOUSE_CODE,
+        SUBLO.LOCATOR_ID,
+        SUBLO.LOCATOR_CODE,
+        MC.CONTAINER_ID,
+        MC.CONTAINER_CODE
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr mla_rr ON mla_rr.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_rr.ATTR_NAME = 'REVIEW_RESULT'
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        JOIN wms_dull_material ZDM ON ZDM.MATERIAL_LOT_CODE = MML.MATERIAL_LOT_CODE
+        WHERE
+        ZDM.SITE_ID = #{dto.siteId}
+        AND MML.TENANT_ID = #{tenantId}
+        AND MML.ENABLE_FLAG = 'Y'
+        AND mla_s.ATTR_VALUE = 'INSTOCK'
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND MML.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND LO.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND MML.MATERIAL_LOT_CODE LIKE CONCAT('%',#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            AND MML.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+        <if test="dto.dullDateStart != null and dto.dullDateStart != ''">
+            AND STR_TO_DATE(ZDM.LAST_UPDATE_DATE,'%Y-%m-%d') &gt;= STR_TO_DATE(#{dto.dullDateStart},'%Y-%m-%d')
+        </if>
+        <if test="dto.dullDateEnd != null and dto.dullDateEnd != ''">
+            AND STR_TO_DATE(ZDM.LAST_UPDATE_DATE,'%Y-%m-%d') &lt;= STR_TO_DATE(#{dto.dullDateEnd},'%Y-%m-%d')
+        </if>
+        <if test="dullMaterialOverDueResponse != null and dullMaterialOverDueResponse.size() != 0">
+            AND MML.MATERIAL_LOT_ID NOT IN
+            <foreach collection="dullMaterialOverDueResponse" item="id" index="index" open="(" close=")"
+                     separator=",">
+                #{id.materialLotId}
+            </foreach>
+        </if>
+        ORDER BY MM.MATERIAL_CODE,MML.MATERIAL_LOT_CODE
+    </select>
+
+    <select id="queryNoMove"
+            resultType="com.ruike.wms.api.dto.WmsDullMaterialQueryResponseDTO">
+        SELECT
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MML.LOT,
+        MML.PRIMARY_UOM_QTY,
+        MU.UOM_ID,
+        MU.UOM_CODE,
+        DATE_ADD( IFNULL( mla_wid.ATTR_VALUE, MML.IN_LOCATOR_TIME ), INTERVAL 30 DAY ) AS DULL_DATE,
+        '无异动呆滞' AS DULL_TYPE,
+        mla_rr.ATTR_VALUE AS REVIEW_RESULT,
+        mla_s.ATTR_VALUE AS STATUS,
+        MML.QUALITY_STATUS,
+        LO.LOCATOR_ID AS WAREHOUSE_ID,
+        LO.LOCATOR_CODE AS WAREHOUSE_CODE,
+        SUBLO.LOCATOR_ID,
+        SUBLO.LOCATOR_CODE,
+        MC.CONTAINER_ID,
+        MC.CONTAINER_CODE
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr mla_rr ON mla_rr.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_rr.ATTR_NAME = 'REVIEW_RESULT'
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material_lot_attr mla_wid ON mla_wid.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_wid.ATTR_NAME = 'WO_ISSUE_DATE'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        WHERE
+        MML.SITE_ID = #{dto.siteId}
+        AND MML.TENANT_ID = #{tenantId}
+        AND MML.ENABLE_FLAG = 'Y'
+        AND mla_s.ATTR_VALUE = 'INSTOCK'
+        AND (
+        ( mla_wid.ATTR_VALUE IS NOT NULL AND DATEDIFF( CURRENT_TIMESTAMP, mla_wid.ATTR_VALUE ) &gt; 30 )
+        OR ( mla_wid.ATTR_VALUE IS NULL AND DATEDIFF( CURRENT_TIMESTAMP, MML.IN_LOCATOR_TIME ) &gt; 30 )
+        )
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND MML.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND LO.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND MML.MATERIAL_LOT_CODE LIKE CONCAT('%',#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            AND MML.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+        <if test="dto.dullDateStart != null and dto.dullDateStart != ''">
+            AND STR_TO_DATE(DATE_ADD( IFNULL( mla_wid.ATTR_VALUE, MML.IN_LOCATOR_TIME ), INTERVAL 30 DAY
+            ),'%Y-%m-%d') &gt;= STR_TO_DATE(#{dto.dullDateStart},'%Y-%m-%d')
+        </if>
+        <if test="dto.dullDateEnd != null and dto.dullDateEnd != ''">
+            AND STR_TO_DATE(DATE_ADD( IFNULL( mla_wid.ATTR_VALUE, MML.IN_LOCATOR_TIME ), INTERVAL 30 DAY
+            ),'%Y-%m-%d') &lt;= STR_TO_DATE(#{dto.dullDateEnd},'%Y-%m-%d')
+        </if>
+
+        <if test="dullMaterialOverDueResponse != null and dullMaterialOverDueResponse.size() != 0">
+            AND MML.MATERIAL_LOT_ID NOT IN
+            <foreach collection="dullMaterialOverDueResponse" item="id" index="index" open="(" close=")"
+                     separator=",">
+                #{id.materialLotId}
+            </foreach>
+        </if>
+        ORDER BY MM.MATERIAL_CODE,MML.MATERIAL_LOT_CODE
+    </select>
+    <select id="getMaterialLotIdByJob" resultType="java.lang.String">
+    SELECT
+        MML.MATERIAL_LOT_ID
+    FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr mla_oid ON mla_oid.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_oid.ATTR_NAME = 'OVERDUE_INSPECTION_DATE'
+        LEFT JOIN mt_material_lot_attr mla_pd ON mla_pd.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_pd.ATTR_NAME = 'PRODUCT_DATE'
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+    WHERE
+        mla_s.ATTR_VALUE = 'INSTOCK'
+        AND MML.QUALITY_STATUS = 'OK'
+        AND (
+            ( mla_oid.ATTR_VALUE IS NOT NULL AND DATEDIFF( CURRENT_TIMESTAMP, mla_oid.ATTR_VALUE ) > 30 )
+            OR ( mla_oid.ATTR_VALUE IS NULL AND MM.SHELF_LIFE IS NOT NULL AND DATEDIFF( CURRENT_TIMESTAMP, mla_pd.ATTR_VALUE ) > MM.SHELF_LIFE )
+            OR (
+                mla_oid.ATTR_VALUE IS NULL
+                AND MM.SHELF_LIFE IS NOT NULL
+                AND mla_pd.ATTR_VALUE IS NULL
+                AND DATEDIFF( CURRENT_TIMESTAMP, MML.CREATION_DATE ) > MM.SHELF_LIFE
+            )
+        )
+    </select>
+
+    <select id="importQuery"
+            resultType="com.ruike.wms.api.dto.WmsDullMaterialImportQueryResponseDTO">
+        SELECT
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MML.SITE_ID,
+        MML.LOT,
+        MML.PRIMARY_UOM_QTY,
+        MU.UOM_ID,
+        MU.UOM_CODE,
+        mla_s.ATTR_VALUE AS STATUS,
+        MML.QUALITY_STATUS,
+        LO.LOCATOR_ID AS WAREHOUSE_ID,
+        LO.LOCATOR_CODE AS WAREHOUSE_CODE,
+        SUBLO.LOCATOR_ID,
+        SUBLO.LOCATOR_CODE,
+        MC.CONTAINER_ID,
+        MC.CONTAINER_CODE
+        FROM
+        mt_material_lot MML
+        <if test="dto.poNum != null and dto.poNum != ''">
+            LEFT JOIN mt_instruction_actual_detail MIAD ON MIAD.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+            LEFT JOIN mt_instruction_actual MIA ON MIA.ACTUAL_ID = MIAD.ACTUAL_ID
+            LEFT JOIN mt_instruction MI ON MI.INSTRUCTION_ID = MIA.INSTRUCTION_ID
+        </if>
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+            LEFT JOIN mt_work_order MWO ON MWO.WORK_ORDER_ID = MML.RESERVED_OBJECT_ID
+        </if>
+        JOIN wms_dull_material ZDM ON ZDM.MATERIAL_LOT_CODE &lt;&gt; MML.MATERIAL_LOT_CODE
+        <where>
+            AND MML.TENANT_ID = #{tenantId}
+            AND MML.SITE_ID = #{dto.siteId}
+            <if test="dto.materialId != null and dto.materialId != ''">
+                AND MML.MATERIAL_ID = #{dto.materialId}
+            </if>
+            <if test="dto.lot != null and dto.lot != ''">
+                AND MML.LOT = #{dto.lot}
+            </if>
+            <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+                AND MML.RESERVED_FLAG = 'Y'
+                AND MML.RESERVED_OBJECT_TYPE = 'WO'
+                AND MWO.WORK_ORDER_NUM = #{dto.workOrderNum}
+            </if>
+            <if test="dto.poNum != null and dto.poNum != ''">
+                AND MI.SOURCE_ORDER_TYPE = 'PO'
+                AND MI.SOURCE_ORDER_ID =#{dto.poNum}
+            </if>
+            GROUP BY
+            MML.MATERIAL_LOT_ID,
+            MML.MATERIAL_LOT_CODE,
+            MM.MATERIAL_ID,
+            MM.MATERIAL_CODE,
+            MM.MATERIAL_NAME,
+            MML.LOT,
+            MML.PRIMARY_UOM_QTY,
+            MU.UOM_ID,
+            MU.UOM_CODE,
+            mla_s.ATTR_VALUE,
+            MML.QUALITY_STATUS,
+            LO.LOCATOR_ID,
+            LO.LOCATOR_CODE,
+            SUBLO.LOCATOR_ID,
+            SUBLO.LOCATOR_CODE,
+            MC.CONTAINER_ID,
+            MC.CONTAINER_CODE
+        </where>
+    </select>
+
+    <insert id="saveOverDueTemp">
+        INSERT INTO wms_dull_material_temp ( MATERIAL_LOT_CODE, DULL_DATE, DULL_TYPE )
+        SELECT DISTINCT
+        MML.MATERIAL_LOT_CODE,
+        IFNULL(
+        IFNULL( DATE_ADD( mla_oid.ATTR_VALUE, INTERVAL 30 DAY ), DATE_ADD( mla_pd.ATTR_VALUE, INTERVAL
+        MM.SHELF_LIFE DAY ) ),
+        DATE_ADD( MML.CREATION_DATE, INTERVAL MM.SHELF_LIFE DAY )
+        ) AS DULL_DATE,
+        '超期呆滞' AS DULL_TYPE
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr mla_oid ON mla_oid.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_oid.ATTR_NAME = 'OVERDUE_INSPECTION_DATE'
+        LEFT JOIN mt_material_lot_attr mla_pd ON mla_pd.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_pd.ATTR_NAME = 'PRODUCT_DATE'
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        LEFT JOIN wms_dull_material_temp ZDMT ON ZDMT.MATERIAL_LOT_CODE = MML.MATERIAL_LOT_CODE
+        WHERE
+        MML.SITE_ID = #{dto.siteId}
+        AND MML.TENANT_ID = #{tenantId}
+        AND MML.ENABLE_FLAG = 'Y'
+        AND mla_s.ATTR_VALUE = 'INSTOCK'
+        AND MML.QUALITY_STATUS = 'PENDING'
+        AND MML.MATERIAL_LOT_CODE NOT IN (SELECT MATERIAL_LOT_CODE FROM wms_dull_material_temp)
+        AND (
+        ( mla_oid.ATTR_VALUE IS NOT NULL AND DATEDIFF( CURRENT_TIMESTAMP, mla_oid.ATTR_VALUE ) >
+        30 )
+        OR ( mla_oid.ATTR_VALUE IS NULL AND MM.SHELF_LIFE IS NOT NULL AND DATEDIFF( CURRENT_TIMESTAMP,
+        mla_pd.ATTR_VALUE ) > MM.SHELF_LIFE )
+        OR (
+        mla_oid.ATTR_VALUE IS NULL
+        AND MM.SHELF_LIFE IS NOT NULL
+        AND mla_pd.ATTR_VALUE IS NULL
+        AND DATEDIFF( CURRENT_TIMESTAMP, MML.CREATION_DATE ) > MM.SHELF_LIFE
+        )
+        )
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND MML.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND LO.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND MML.MATERIAL_LOT_CODE LIKE CONCAT('%',#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            AND MML.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+    </insert>
+
+    <insert id="saveChangeTemp">
+        INSERT INTO wms_dull_material_temp ( MATERIAL_LOT_CODE, DULL_DATE, DULL_TYPE )
+        SELECT DISTINCT
+        MML.MATERIAL_LOT_CODE,
+        ZDM.LAST_UPDATE_DATE AS DULL_DATE,
+        '变更呆滞' AS DULL_TYPE
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        JOIN wms_dull_material ZDM ON ZDM.MATERIAL_LOT_CODE = MML.MATERIAL_LOT_CODE
+        LEFT JOIN wms_dull_material_temp ZDMT ON ZDMT.MATERIAL_LOT_CODE = MML.MATERIAL_LOT_CODE
+        WHERE
+        ZDM.SITE_ID = #{dto.siteId}
+        AND MML.TENANT_ID = #{tenantId}
+        AND MML.ENABLE_FLAG = 'Y'
+        AND mla_s.ATTR_VALUE = 'INSTOCK'
+        AND MML.MATERIAL_LOT_CODE NOT IN (SELECT MATERIAL_LOT_CODE FROM wms_dull_material_temp)
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND MML.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND LO.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND MML.MATERIAL_LOT_CODE LIKE CONCAT('%',#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            AND MML.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+    </insert>
+    <insert id="saveQueryNoMoveTemp">
+        INSERT INTO wms_dull_material_temp ( MATERIAL_LOT_CODE, DULL_DATE, DULL_TYPE )
+        SELECT DISTINCT
+        MML.MATERIAL_LOT_CODE,
+        DATE_ADD( IFNULL( mla_wid.ATTR_VALUE, MML.IN_LOCATOR_TIME ), INTERVAL 30 DAY ) AS DULL_DATE,
+        '无异动呆滞' AS DULL_TYPE
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material_lot_attr mla_wid ON mla_wid.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_wid.ATTR_NAME = 'WO_ISSUE_DATE'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        LEFT JOIN wms_dull_material_temp ZDMT ON ZDMT.MATERIAL_LOT_CODE = MML.MATERIAL_LOT_CODE
+        WHERE
+        MML.SITE_ID = #{dto.siteId}
+        AND MML.TENANT_ID = #{tenantId}
+        AND MML.ENABLE_FLAG = 'Y'
+        AND mla_s.ATTR_VALUE = 'INSTOCK'
+        AND MML.MATERIAL_LOT_CODE NOT IN (SELECT MATERIAL_LOT_CODE FROM wms_dull_material_temp)
+        AND (
+        ( mla_wid.ATTR_VALUE IS NOT NULL AND DATEDIFF( CURRENT_TIMESTAMP, mla_wid.ATTR_VALUE ) &gt; 30 )
+        OR ( mla_wid.ATTR_VALUE IS NULL AND DATEDIFF( CURRENT_TIMESTAMP, MML.IN_LOCATOR_TIME ) &gt; 30 )
+        )
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND MML.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND LO.LOCATOR_ID = #{dto.warehouseId}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND MML.MATERIAL_LOT_CODE LIKE CONCAT('%',#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            AND MML.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+    </insert>
+    <select id="tempQuery"
+            resultType="com.ruike.wms.api.dto.WmsDullMaterialQueryResponseDTO">
+        SELECT
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MML.LOT,
+        MML.PRIMARY_UOM_QTY,
+        MU.UOM_ID,
+        MU.UOM_CODE,
+        ZDMT.DULL_DATE,
+        ZDMT.DULL_TYPE,
+        mla_rr.ATTR_VALUE REVIEW_RESULT,
+        mla_s.ATTR_VALUE STATUS,
+        MML.QUALITY_STATUS,
+        LO.LOCATOR_ID AS WAREHOUSE_ID,
+        LO.LOCATOR_CODE AS WAREHOUSE_CODE,
+        SUBLO.LOCATOR_ID,
+        SUBLO.LOCATOR_CODE,
+        MC.CONTAINER_ID,
+        MC.CONTAINER_CODE
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr mla_rr ON mla_rr.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_rr.ATTR_NAME = 'REVIEW_RESULT'
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        JOIN wms_dull_material_temp ZDMT ON ZDMT.MATERIAL_LOT_CODE = MML.MATERIAL_LOT_CODE
+        <where>
+            AND 1=1
+            AND MML.TENANT_ID = #{tenantId}
+            AND MML.ENABLE_FLAG = 'Y'
+            <if test="dto.dullDateStart != null and dto.dullDateStart != ''">
+                AND STR_TO_DATE(ZDMT.DULL_DATE,'%Y-%m-%d') &gt;= STR_TO_DATE(#{dto.dullDateStart},'%Y-%m-%d')
+            </if>
+            <if test="dto.dullDateEnd != null and dto.dullDateEnd != ''">
+                AND STR_TO_DATE(ZDMT.DULL_DATE,'%Y-%m-%d') &lt;= STR_TO_DATE(#{dto.dullDateEnd},'%Y-%m-%d')
+            </if>
+            ORDER BY MM.MATERIAL_CODE,MML.MATERIAL_LOT_CODE
+        </where>
+    </select>
+    <select id="tempImportQuery"
+            resultType="com.ruike.wms.api.dto.WmsDullMaterialImportQueryResponseDTO">
+        SELECT
+        (CASE WHEN MMLA.STATUS='INSTOCK' THEN 0 ELSE 1 END) AS FLAG,
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        ZDMT.DULL_DATE,
+        ZDMT.DULL_TYPE,
+        ( CASE WHEN ZDMT.DULL_TYPE IS NULL THEN 'N' ELSE 'Y' END ) AS DULL_FLAG,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MML.SITE_ID,
+        MML.LOT,
+        MML.PRIMARY_UOM_QTY,
+        MU.UOM_ID,
+        MU.UOM_CODE,
+        mla_s.ATTR_VALUE STATUS,
+        MML.QUALITY_STATUS,
+        LO.LOCATOR_ID AS WAREHOUSE_ID,
+        LO.LOCATOR_CODE AS WAREHOUSE_CODE,
+        SUBLO.LOCATOR_ID,
+        SUBLO.LOCATOR_CODE,
+        MC.CONTAINER_ID,
+        MC.CONTAINER_CODE
+        FROM
+        mt_material_lot MML
+        <if test="dto.poNum != null and dto.poNum != ''">
+            LEFT JOIN mt_instruction_actual_detail MIAD ON MIAD.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+            LEFT JOIN mt_instruction_actual MIA ON MIA.ACTUAL_ID = MIAD.ACTUAL_ID
+            LEFT JOIN mt_instruction MI ON MI.INSTRUCTION_ID = MIA.INSTRUCTION_ID
+        </if>
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_material_lot_attr mla_s ON mla_s.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID and mla_s.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_mod_locator SUBLO ON SUBLO.LOCATOR_ID = MML.LOCATOR_ID
+        LEFT JOIN mt_mod_locator LO ON LO.LOCATOR_ID = SUBLO.PARENT_LOCATOR_ID
+        LEFT JOIN mt_container_load_detail MCLD ON MCLD.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        AND MCLD.LOAD_OBJECT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_container MC ON MC.CONTAINER_ID = MCLD.CONTAINER_ID
+        <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+            LEFT JOIN mt_work_order MWO ON MWO.WORK_ORDER_ID = MML.RESERVED_OBJECT_ID
+        </if>
+        LEFT JOIN wms_dull_material_temp ZDMT ON ZDMT.MATERIAL_LOT_CODE = MML.MATERIAL_LOT_CODE
+        <where>
+            AND MML.TENANT_ID = #{tenantId}
+            AND MML.SITE_ID = #{dto.siteId}
+            <if test="dto.materialId != null and dto.materialId != ''">
+                AND MML.MATERIAL_ID = #{dto.materialId}
+            </if>
+            <if test="dto.lot != null and dto.lot != ''">
+                AND MML.LOT = #{dto.lot}
+            </if>
+            <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+                AND MML.RESERVED_FLAG = 'Y'
+                AND MML.RESERVED_OBJECT_TYPE = 'WO'
+                AND MWO.WORK_ORDER_NUM = #{dto.workOrderNum}
+            </if>
+            <if test="dto.poNum != null and dto.poNum != ''">
+                AND MI.SOURCE_ORDER_TYPE = 'PO'
+                AND MI.SOURCE_ORDER_ID =#{dto.poNum}
+            </if>
+            ORDER BY FLAG,MM.MATERIAL_CODE,MML.MATERIAL_LOT_CODE
+        </where>
+    </select>
+    <delete id="clearTemp">
+        TRUNCATE TABLE wms_dull_material_temp
+    </delete>
+
+</mapper>

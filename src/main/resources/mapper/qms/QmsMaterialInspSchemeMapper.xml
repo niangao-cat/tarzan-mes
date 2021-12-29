@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsMaterialInspSchemeMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsMaterialInspScheme">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="inspection_scheme_id" property="inspectionSchemeId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="material_category_id" property="materialCategoryId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_version" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="inspection_type" property="inspectionType" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="inspection_file" property="inspectionFile" jdbcType="VARCHAR"/>
+        <result column="file_version" property="fileVersion" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="publish_flag" property="publishFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="attribute_category" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="attribute1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="attribute2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="attribute3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="attribute4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="attribute5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="attribute6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="attribute7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="attribute8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="attribute9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="attribute10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectHeadList" resultType="com.ruike.qms.api.dto.QmsMisHeadReturnDTO">
+        SELECT
+            qmis.inspection_scheme_id,
+            qmis.site_id,
+            mms.SITE_CODE,
+            mms.SITE_NAME,
+            qmis.material_category_id,
+            mmc.CATEGORY_CODE,
+            mmc.DESCRIPTION CATEGORY_DESC,
+            qmis.material_id,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            qmis.material_version,
+            qmis.inspection_type,
+            qmis.`status`,
+            qmis.inspection_file,
+            qmis.file_version,
+            qmis.enable_flag,
+            qmis.object_version_number
+        FROM
+            qms_material_insp_scheme qmis
+            LEFT JOIN mt_mod_site mms ON qmis.site_id = mms.SITE_ID
+            LEFT JOIN mt_material_category mmc ON qmis.material_category_id = mmc.MATERIAL_CATEGORY_ID
+            LEFT JOIN mt_material mm ON qmis.material_id = mm.MATERIAL_ID
+            where qmis.tenant_id = #{tenantId}
+            <if test="dto.siteId != null and dto.siteId != ''">
+                and qmis.SITE_ID = #{dto.siteId}
+            </if>
+            <if test="dto.materialId != null and dto.materialId != ''">
+                and qmis.material_id = #{dto.materialId}
+            </if>
+            <if test="dto.inspectionType != null and dto.inspectionType != ''">
+                and qmis.inspection_type = #{dto.inspectionType}
+            </if>
+            <if test="dto.enableFlag != null and dto.enableFlag != ''">
+                and qmis.enable_flag = #{dto.enableFlag}
+            </if>
+            ORDER BY qmis.creation_date DESC
+    </select>
+
+    <select id="queryOneMaterialInspectionScheme" resultType="com.ruike.qms.domain.entity.QmsMaterialInspScheme">
+        SELECT
+            *
+        FROM
+            qms_material_insp_scheme
+        WHERE
+            TENANT_ID = #{tenantId}
+        AND SITE_ID = #{dto.siteId}
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.materialCategoryId != null and dto.materialCategoryId != ''">
+            AND MATERIAL_CATEGORY_ID = #{dto.materialCategoryId}
+        </if>
+        <choose>
+            <when test="dto.materialVersion != null">
+                AND MATERIAL_VERSION = #{dto.materialVersion}
+            </when>
+            <otherwise>
+                AND MATERIAL_VERSION is NULL
+            </otherwise>
+        </choose>
+        AND INSPECTION_TYPE = #{dto.inspectionType}
+    </select>
+</mapper>

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModAreaMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModArea">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="AREA_CODE" property="areaCode" jdbcType="VARCHAR"/>
+        <result column="AREA_NAME" property="areaName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COUNTRY" property="country" jdbcType="VARCHAR"/>
+        <result column="PROVINCE" property="province" jdbcType="VARCHAR"/>
+        <result column="CITY" property="city" jdbcType="VARCHAR"/>
+        <result column="COUNTY" property="county" jdbcType="VARCHAR"/>
+        <result column="ADDRESS" property="address" jdbcType="VARCHAR"/>
+        <result column="AREA_CATEGORY" property="areaCategory" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap2" type="tarzan.modeling.domain.vo.MtModAreaVO2">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="AREA_CODE" property="areaCode" jdbcType="VARCHAR"/>
+        <result column="AREA_NAME" property="areaName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COUNTRY" property="country" jdbcType="VARCHAR"/>
+        <result column="PROVINCE" property="province" jdbcType="VARCHAR"/>
+        <result column="CITY" property="city" jdbcType="VARCHAR"/>
+        <result column="COUNTY" property="county" jdbcType="VARCHAR"/>
+        <result column="ADDRESS" property="address" jdbcType="VARCHAR"/>
+        <result column="AREA_CATEGORY" property="areaCategory" jdbcType="VARCHAR"/>
+        <result column="AREA_SCHEDULE_ID" property="areaScheduleId" jdbcType="VARCHAR"/>
+        <result column="PLAN_START_TIME" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="DEMAND_TIME_FENCE" property="demandTimeFence" jdbcType="DECIMAL"/>
+        <result column="FIX_TIME_FENCE" property="fixTimeFence" jdbcType="DECIMAL"/>
+        <result column="FROZEN_TIME_FENCE" property="frozenTimeFence" jdbcType="DECIMAL"/>
+        <result column="FORWARD_PLANNING_TIME_FENCE" property="forwardPlanningTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="ORDER_TIME_FENCE" property="orderTimeFence" jdbcType="DECIMAL"/>
+        <result column="BASIC_ALGORITHM" property="basicAlgorithm" jdbcType="VARCHAR"/>
+        <result column="FOLLOW_AREA_ID" property="followAreaId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_RULE" property="prodLineRule" jdbcType="VARCHAR"/>
+        <result column="PHASE_TYPE" property="phaseType" jdbcType="VARCHAR"/>
+        <result column="PLANNING_BASE" property="planningBase" jdbcType="VARCHAR"/>
+        <result column="DELAY_TIME_FENCE" property="delayTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_CONCURRENT_RULE" property="releaseConcurrentRule" jdbcType="VARCHAR"/>
+        <result column="AREA_PURCHASE_ID" property="areaPurchaseId" jdbcType="VARCHAR"/>
+        <result column="INSIDE_FLAG" property="insideFlag" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="supplierCode" property="supplierCode" jdbcType="VARCHAR"/>
+        <result column="supplierName" property="supplierName" jdbcType="VARCHAR"/>
+        <result column="supplierSiteCode" property="supplierSiteCode" jdbcType="VARCHAR"/>
+        <result column="supplierSiteName" property="supplierSiteName" jdbcType="VARCHAR"/>
+        <result column="followAreaCode" property="followAreaCode" jdbcType="VARCHAR"/>
+        <result column="followAreaName" property="followAreaName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectAreas" resultMap="BaseResultMap">
+        select b.* from mt_mod_area b
+        where
+        b.TENANT_ID = #{tenantId}
+        and b.AREA_ID IN
+        <foreach collection="areaIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectAreaById" resultMap="BaseResultMap2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        a.AREA_ID,
+        a.AREA_CODE,
+        tl.AREA_NAME,
+        tl.DESCRIPTION,
+        a.ENABLE_FLAG,
+        tl.COUNTRY,
+        tl.PROVINCE,
+        tl.CITY,
+        tl.COUNTY,
+        tl.ADDRESS,
+        a.AREA_CATEGORY,
+        s.AREA_SCHEDULE_ID,
+        S.PLAN_START_TIME,
+        S.DEMAND_TIME_FENCE,
+        s.FIX_TIME_FENCE,
+        s.FROZEN_TIME_FENCE,
+        s.FORWARD_PLANNING_TIME_FENCE,
+        s.RELEASE_TIME_FENCE,
+        s.ORDER_TIME_FENCE,
+        s.BASIC_ALGORITHM,
+        s.FOLLOW_AREA_ID,
+        s.PROD_LINE_RULE,
+        s.PHASE_TYPE,
+        s.PLANNING_BASE,
+        s.DEMAND_TIME_FENCE,
+        s.DELAY_TIME_FENCE,
+        s.RELEASE_CONCURRENT_RULE,
+        p.AREA_PURCHASE_ID,
+        p.INSIDE_FLAG,
+        p.SUPPLIER_ID,
+        p.SUPPLIER_SITE_ID,
+        b.SUPPLIER_CODE supplierCode,
+        b2.SUPPLIER_SITE_CODE supplierSiteCode,
+        tl4.SUPPLIER_SITE_NAME supplierSiteName,
+        a2.area_code followAreaCode,
+        a2.AREA_NAME followAreaName,
+        tl2.SUPPLIER_NAME supplierName
+        FROM
+        mt_mod_area a
+        INNER JOIN mt_mod_area_tl tl ON tl.area_id = a.area_id
+        AND tl.LANG =#{lang}
+        LEFT JOIN mt_mod_area_schedule s ON a.AREA_ID = s.AREA_ID and s.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_mod_area_purchase p ON a.AREA_ID = p.AREA_ID and p.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_supplier b ON b.SUPPLIER_ID = p.SUPPLIER_ID and b.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_supplier_tl tl2 ON tl2.SUPPLIER_ID = b.SUPPLIER_ID
+        AND tl2.LANG = #{lang}
+        LEFT JOIN mt_supplier_site b2 ON b2.SUPPLIER_SITE_ID = p.SUPPLIER_SITE_ID and b2.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_supplier_site_tl tl4 ON tl4.SUPPLIER_SITE_ID = b2.SUPPLIER_SITE_ID
+        AND tl4.LANG =#{lang}
+        LEFT JOIN mt_mod_area a2 ON a2.area_id = s.FOLLOW_AREA_ID and a2.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_mod_area_tl tl3 ON tl3.area_id = a2.area_id
+        AND tl3.LANG =#{lang}
+        WHERE
+        a.TENANT_ID = #{tenantId}
+        <if test="areaId!=null">
+            and a.AREA_ID =#{areaId}
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select t1.AREA_ID,
+        t1.TENANT_ID,
+        t1.AREA_CODE,
+        t1.AREA_NAME,
+        t2.DESCRIPTION,
+        t1.ENABLE_FLAG,
+        t2.COUNTRY,
+        t2.PROVINCE,
+        t2.CITY,
+        t2.COUNTY,
+        t2.ADDRESS,
+        t1.AREA_CATEGORY,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_mod_area t1 INNER join mt_mod_area_tl t2 on (t1.AREA_ID=t2.AREA_ID and t2.LANG=#{lang} )
+        WHERE
+        t1.TENANT_ID = #{tenantId}
+        and t1.AREA_ID IN
+        <foreach collection="areaIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        select
+        t1.TENANT_ID,
+        t1.AREA_ID,
+        t1.AREA_CODE,
+        t2.AREA_NAME,
+        t1.ENABLE_FLAG,
+        t2.DESCRIPTION,
+        t2.COUNTRY,
+        t2.PROVINCE,
+        t2.CITY,
+        t2.COUNTY,
+        t2.ADDRESS,
+        t1.AREA_CATEGORY
+        from mt_mod_area t1 INNER join mt_mod_area_tl t2 on (t1.AREA_ID=t2.AREA_ID and
+        t2.LANG=#{lang})
+        WHERE t1.TENANT_ID = #{tenantId}
+        <if test="dto.areaId!=null">
+            and t1.AREA_ID=#{dto.areaId}
+        </if>
+        <if test="dto.areaCode!=null">
+            and t1.AREA_CODE like concat('%',concat(#{dto.areaCode},'%'))
+        </if>
+        <if test="dto.areaName!=null">
+            and t2.AREA_NAME like concat('%',concat(#{dto.areaName},'%'))
+        </if>
+        <if test="dto.description!=null">
+            and t2.DESCRIPTION = #{dto.description}
+        </if>
+        <if test="dto.enableFlag!=null">
+            and t1.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.country!=null">
+            and t2.COUNTRY like concat('%',concat(#{dto.country},'%'))
+        </if>
+        <if test="dto.province!=null">
+            and t2.PROVINCE like concat('%',concat(#{dto.province},'%'))
+        </if>
+        <if test="dto.city!=null">
+            and t2.CITY like concat('%',concat(#{dto.city},'%'))
+        </if>
+        <if test="dto.county!=null">
+            and t2.COUNTY like concat('%',concat(#{dto.county},'%'))
+        </if>
+        <if test="dto.address!=null">
+            and t2.ADDRESS like concat('%',concat(#{dto.address},'%'))
+        </if>
+        <if test="dto.areaCategory!=null">
+            and t1.AREA_CATEGORY = #{dto.areaCategory}
+        </if>
+
+    </select>
+</mapper>

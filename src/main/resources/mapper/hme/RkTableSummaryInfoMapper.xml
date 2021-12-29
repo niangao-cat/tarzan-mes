@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.RkTableSummaryInfoMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.RkTableSummaryInfo">
+        <result column="id" property="id" jdbcType="DECIMAL"/>
+        <result column="schema_name" property="schemaName" jdbcType="VARCHAR"/>
+        <result column="table_name" property="tableName" jdbcType="VARCHAR"/>
+        <result column="table_rows" property="tableRows" jdbcType="DECIMAL"/>
+        <result column="data_size" property="dataSize" jdbcType="DECIMAL"/>
+        <result column="index_size" property="indexSize" jdbcType="DECIMAL"/>
+        <result column="statistics_date" property="statisticsDate" jdbcType="DATE"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="attribute_category" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="attribute1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="attribute2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="attribute3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="attribute4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="attribute5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="attribute6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="attribute7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="attribute8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="attribute9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="attribute10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryReport" resultMap="BaseResultMap">
+        select
+            tsi.id,
+            tsi.schema_name,
+            tsi.table_name,
+            tsi.table_rows,
+            tsi.data_size,
+            tsi.index_size,
+            tsi.statistics_date
+        from
+            rk_table_summary_info tsi
+        where
+            tsi.statistics_date >= date_format( date_sub( now( ), interval 7 day ), '%Y-%m-%d' )
+        <if test="dto.tableName != null and dto.tableName != ''">
+            and tsi.table_name = #{dto.tableName}
+        </if>
+        order by
+            tsi.schema_name,
+            tsi.table_name,
+            tsi.statistics_date
+    </select>
+</mapper>

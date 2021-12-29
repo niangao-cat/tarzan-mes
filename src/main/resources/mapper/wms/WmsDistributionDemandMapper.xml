@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDistributionDemandMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsDistributionDemand">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="dist_demand_id" property="distDemandId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="material_version" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="prod_line_id" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="distribution_basic_id" property="distributionBasicId" jdbcType="VARCHAR"/>
+        <result column="distribution_type" property="distributionType" jdbcType="VARCHAR"/>
+        <result column="requirement_qty" property="requirementQty" jdbcType="DECIMAL"/>
+        <result column="calendar_shift_id" property="calendarShiftId" jdbcType="VARCHAR"/>
+        <result column="so_num" property="soNum" jdbcType="VARCHAR"/>
+        <result column="so_line_num" property="soLineNum" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE16" property="attribute16" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE17" property="attribute17" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE18" property="attribute18" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE19" property="attribute19" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE20" property="attribute20" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectListByCondition" resultType="com.ruike.wms.domain.vo.WmsDistributionDemandVO">
+        select demand.*
+        ,mpl.prod_line_code
+        ,mpl.prod_line_name
+        ,mmw.workcell_code
+        ,mmw.workcell_name
+        ,(select ifnull(sum(ml.PRIMARY_UOM_QTY), 0)
+        from mt_material_lot ml
+        left join mt_material_lot_attr mml_ver on ml.material_lot_id = mml_ver.material_lot_id
+        and mml_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_material_lot_attr mml_so on ml.material_lot_id = mml_so.material_lot_id
+        and mml_so.attr_name = 'SO_NUM'
+        left join mt_material_lot_attr mml_soline on ml.material_lot_id = mml_soline.material_lot_id
+        and mml_soline.attr_name = 'SO_LINE_NUM'
+        ,mt_mod_locator_org_rel mlor
+        where ml.ENABLE_FLAG = 'Y'
+        and ml.QUALITY_STATUS = 'OK'
+        AND ml.MATERIAL_ID = demand.material_id
+        AND ml.SITE_ID = demand.site_Id
+        and ifnull(mml_ver.ATTR_VALUE, '') = ifnull(demand.material_Version, '')
+        and ifnull(mml_so.ATTR_VALUE, '') = ifnull(demand.so_Num, '')
+        and ifnull(mml_soline.ATTR_VALUE, '') = ifnull(demand.so_Line_Num, '')
+        and mlor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mlor.LOCATOR_ID = ml.LOCATOR_ID
+        and mlor.ORGANIZATION_ID = demand.workcell_id) workcell_qty
+        ,(select ifnull(sum(ml.PRIMARY_UOM_QTY), 0)
+        from mt_material_lot ml
+        left join mt_material_lot_attr mml_status on ml.material_lot_id = mml_status.material_lot_id
+        and mml_status.attr_name = 'STATUS'
+        left join mt_material_lot_attr mml_ver on ml.material_lot_id = mml_ver.material_lot_id
+        and mml_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_material_lot_attr mml_so on ml.material_lot_id = mml_so.material_lot_id
+        and mml_so.attr_name = 'SO_NUM'
+        left join mt_material_lot_attr mml_soline on ml.material_lot_id = mml_soline.material_lot_id
+        and mml_soline.attr_name = 'SO_LINE_NUM'
+        ,mt_mod_locator loc
+        ,mt_mod_locator wh
+        where ml.ENABLE_FLAG = 'Y'
+        and ml.QUALITY_STATUS = 'OK'
+        and mml_status.ATTR_VALUE = 'INSTOCK'
+        AND ml.MATERIAL_ID = demand.MATERIAL_ID
+        AND ml.SITE_ID = demand.SITE_ID
+        and ifnull(mml_ver.ATTR_VALUE, '') = ifnull(demand.material_Version, '')
+        and ifnull(mml_so.ATTR_VALUE, '') = ifnull(demand.so_Num, '')
+        and ifnull(mml_soline.ATTR_VALUE, '') = ifnull(demand.so_Line_Num, '')
+        and ml.locator_id = loc.locator_id
+        and loc.parent_locator_id = wh.locator_id
+        and wh.locator_type != '14') inventory_qty
+        from (SELECT distinct wdd.tenant_id
+        ,wdd.material_id
+        ,mm.material_code
+        ,mm.material_name
+        ,wdd.site_id
+        ,mms.site_name
+        ,wdd.prod_line_id
+        ,wdd.workcell_id
+        ,wdd.material_version
+        ,wdd.distribution_type
+        ,wdd.so_num
+        ,wdd.so_line_num
+        ,wdd.uom_id
+        ,uom.uom_code
+        ,wdd.distribution_basic_id
+        ,wdbd.proportion
+        ,wdbd.inventory_level
+        ,wdbd.one_qty
+        ,msa.ATTR_VALUE minPackage
+        FROM
+        wms_distribution_demand wdd
+        LEFT JOIN mt_material_site ms ON wdd.material_id = ms.MATERIAL_ID AND wdd.site_id = ms.SITE_ID
+        LEFT JOIN mt_material_site_attr msa ON msa.MATERIAL_SITE_ID = ms.MATERIAL_SITE_ID AND msa.ATTR_NAME =
+        'attribute8'
+        LEFT JOIN wms_distribution_basic_data wdbd ON wdbd.header_id = wdd.distribution_basic_id
+        INNER JOIN mt_material mm on wdd.material_id = mm.material_id AND mm.tenant_id = wdd.tenant_id
+        INNER JOIN mt_mod_site mms on wdd.site_id = mms.site_id
+        INNER JOIN mt_uom uom on uom.uom_id = wdd.uom_id and wdd.tenant_id = uom.tenant_id
+        INNER JOIN mt_calendar_shift mcs on wdd.calendar_shift_id = mcs.calendar_shift_id AND mcs.shift_date BETWEEN
+        #{dto.startDate} and #{dto.endDate}
+        WHERE wdd.TENANT_ID = #{tenantId}
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            AND wdd.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND wdd.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            AND wdd.PROD_LINE_ID = #{dto.prodLineId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND wdd.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.distributionType != null and dto.distributionType != ''">
+            AND wdd.distribution_type = #{dto.distributionType}
+        </if>
+        <if test="dto.mainMaterialId != null and dto.mainMaterialId != '' or dto.workOrderId != null and dto.workOrderId != ''">
+            AND exists (select 1
+            from wms_component_demand_record wcdr
+            ,mt_work_order mwo
+            where wcdr.dist_demand_id = wdd.dist_demand_id
+            and mwo.work_order_id = wcdr.work_order_id
+            <if test="dto.mainMaterialId != null and dto.mainMaterialId != ''">
+                and mwo.material_id = #{dto.mainMaterialId}
+            </if>
+            <if test="dto.workOrderId != null and dto.workOrderId != ''">
+                and mwo.work_order_id = #{dto.workOrderId}
+            </if>
+            )
+        </if>
+        <if test="dto.onlyDistributionFlag == 'Y'.toString()">
+            and wdd.status = 'NEW'
+        </if>) demand
+        INNER JOIN mt_mod_production_line mpl on demand.prod_line_id = mpl.prod_line_id and demand.tenant_id =
+        mpl.tenant_id
+        INNER JOIN mt_mod_workcell mmw on demand.workcell_id = mmw.workcell_id and demand.tenant_id = mmw.tenant_id
+
+    </select>
+
+    <select id="selectQtyByShift" resultType="com.ruike.wms.domain.vo.WmsDistributionDemandQtyVO">
+        select wdd.dist_demand_id
+             , mcs.CALENDAR_SHIFT_ID
+             , mcs.SHIFT_DATE
+             , mcs.SHIFT_CODE
+             , 1   editable_flag
+             , mcs.sequence
+             , ifnull(wdd.requirement_qty, 0) request_qty
+        from mt_calendar_shift mcs
+            left join wms_distribution_demand wdd on mcs.CALENDAR_SHIFT_ID = wdd.CALENDAR_SHIFT_ID
+            and wdd.tenant_Id = #{tenantId}
+            and wdd.material_id = #{vo.materialId}
+            and wdd.uom_id = #{vo.uomId}
+            and wdd.site_id = #{vo.siteId}
+            and wdd.prod_line_id = #{vo.prodLineId}
+            and wdd.workcell_id = #{vo.workcellId}
+            and ifnull(wdd.material_version, '') = ifnull(#{vo.materialVersion}, '')
+            and ifnull(wdd.distribution_type, '') = ifnull(#{vo.distributionType}, '')
+            and ifnull(wdd.so_num, '') = ifnull(#{vo.soNum}, '')
+            and ifnull(wdd.so_line_num, '') = ifnull(#{vo.soLineNum}, '')
+        where mcs.SHIFT_DATE between #{vo.startDate} and #{vo.endDate}
+          and mcs.calendar_id = #{vo.calendarId}
+        GROUP BY wdd.dist_demand_id,
+                 mcs.CALENDAR_SHIFT_ID,
+                 mcs.SHIFT_DATE,
+                 mcs.SHIFT_CODE,
+                 mcs.sequence,
+                 wdd.requirement_qty
+        order by mcs.SHIFT_DATE
+               , mcs.sequence
+    </select>
+
+    <select id="selectInStockByDemand" resultType="java.math.BigDecimal">
+        select ifnull(sum(ml.PRIMARY_UOM_QTY), 0) in_stock_qty
+        from mt_material_lot ml
+                 left join mt_material_lot_attr mml_ver on ml.material_lot_id = mml_ver.material_lot_id
+            and mml_ver.attr_name = 'MATERIAL_VERSION'
+                 left join mt_material_lot_attr mml_so on ml.material_lot_id = mml_so.material_lot_id
+            and mml_so.attr_name = 'SO_NUM'
+                 left join mt_material_lot_attr mml_soline on ml.material_lot_id = mml_soline.material_lot_id
+            and mml_soline.attr_name = 'SO_LINE_NUM'
+                 inner join mt_mod_locator_org_rel mlor on mlor.ORGANIZATION_TYPE = 'WORKCELL'
+            and mlor.LOCATOR_ID = ml.LOCATOR_ID
+            and mlor.ORGANIZATION_ID = #{vo.workcellId}
+        where ml.ENABLE_FLAG = 'Y'
+          and ml.QUALITY_STATUS = 'OK'
+          and ifnull(mml_ver.ATTR_VALUE, '') = ifnull(#{vo.materialVersion}, '')
+          and ifnull(mml_so.ATTR_VALUE, '') = ifnull(#{vo.soNum}, '')
+          and ifnull(mml_soline.ATTR_VALUE, '') = ifnull(#{vo.soLineNum}, '')
+          AND ml.MATERIAL_ID = #{vo.materialId}
+          AND ml.SITE_ID = #{vo.siteId}
+    </select>
+
+    <select id="selectInventoryQtyByDemand" resultType="java.math.BigDecimal">
+        select ifnull(sum(ml.PRIMARY_UOM_QTY), 0) in_stock_qty
+        from mt_material_lot ml
+                 left join mt_material_lot_attr mml_ver on ml.material_lot_id = mml_ver.material_lot_id and
+                                                           mml_ver.attr_name = 'MATERIAL_VERSION'
+                 left join mt_material_lot_attr mml_so on ml.material_lot_id = mml_so.material_lot_id
+            and mml_so.attr_name = 'SO_NUM'
+                 left join mt_material_lot_attr mml_soline on ml.material_lot_id = mml_soline.material_lot_id
+            and mml_soline.attr_name = 'SO_LINE_NUM'
+                 left join mt_material_lot_attr mml_status on ml.material_lot_id = mml_status.material_lot_id
+            and mml_status.attr_name = 'STATUS'
+                 inner join mt_mod_locator loc on ml.locator_id = loc.locator_id
+                 inner join mt_mod_locator wh on loc.parent_locator_id = wh.locator_id and wh.locator_type != '14'
+        where ml.ENABLE_FLAG = 'Y'
+          and ml.QUALITY_STATUS = 'OK'
+          and ifnull(mml_ver.ATTR_VALUE, '') = ifnull(#{vo.materialVersion}, '')
+          and ifnull(mml_so.ATTR_VALUE, '') = ifnull(#{vo.soNum}, '')
+          and ifnull(mml_soline.ATTR_VALUE, '') = ifnull(#{vo.soLineNum}, '')
+          and mml_status.ATTR_VALUE = 'INSTOCK'
+          AND ml.MATERIAL_ID = #{vo.materialId}
+          AND ml.SITE_ID = #{vo.siteId}
+
+    </select>
+
+    <select id="selectListByUniqueCondition" resultType="com.ruike.wms.domain.entity.WmsDistributionDemand">
+        select wdd.*
+        from wms_distribution_demand wdd
+        where wdd.material_id = #{materialId}
+          and wdd.site_id = #{siteId}
+          and wdd.uom_id = #{uomId}
+          and wdd.prod_line_id = #{prodLineId}
+          and wdd.workcell_id = #{workcellId}
+          and wdd.calendar_shift_id = #{calendarShiftId}
+          and ifnull(wdd.material_version, '') = ifnull(#{materialVersion}, '')
+          and ifnull(wdd.distribution_type, '') = ifnull(#{distributionType}, '')
+          and ifnull(wdd.so_num, '') = ifnull(#{soNum}, '')
+          and ifnull(wdd.so_line_num, '') = ifnull(#{soLineNum}, '')
+    </select>
+
+
+    <select id="selectWorkcellQtyBatch" resultType="com.ruike.wms.domain.vo.WmsDistributionQtyVO">
+        select ml.MATERIAL_ID
+        ,ml.SITE_ID
+        ,mlor.ORGANIZATION_ID workcell_id
+        ,ifnull(mml_ver.ATTR_VALUE,'') material_version
+        ,ifnull(mml_so.ATTR_VALUE,'') so_num
+        ,ifnull(mml_soline.ATTR_VALUE,'') so_line_num
+        ,ifnull(sum(ml.PRIMARY_UOM_QTY), 0) quantity
+        from mt_material_lot ml
+        left join mt_material_lot_attr mml_ver on ml.material_lot_id = mml_ver.material_lot_id
+        and mml_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_material_lot_attr mml_so on ml.material_lot_id = mml_so.material_lot_id
+        and mml_so.attr_name = 'SO_NUM'
+        left join mt_material_lot_attr mml_soline on ml.material_lot_id = mml_soline.material_lot_id
+        and mml_soline.attr_name = 'SO_LINE_NUM'
+        inner join mt_mod_locator_org_rel mlor on mlor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mlor.LOCATOR_ID = ml.LOCATOR_ID
+        where ml.ENABLE_FLAG = 'Y'
+        and ml.QUALITY_STATUS = 'OK'
+        and ml.TENANT_ID = #{tenantId}
+        and mlor.ORGANIZATION_ID in
+        <foreach collection="workcellIdList" item="workcellId" separator="," open="(" close=")">
+            #{workcellId}
+        </foreach>
+        AND ml.SITE_ID = #{siteId}
+        group by ml.MATERIAL_ID
+        ,ml.SITE_ID
+        ,mlor.ORGANIZATION_ID
+        ,mml_ver.ATTR_VALUE
+        ,mml_so.ATTR_VALUE
+        ,mml_soline.ATTR_VALUE
+    </select>
+
+    <select id="selectExportListByDateRange"
+            resultType="com.ruike.wms.domain.vo.WmsDistributionDemandExportVO">
+        select demand.material_id
+             , demand.material_code
+             , demand.material_name
+             , demand.material_version
+             , demand.so_num
+             , demand.so_line_num
+             , demand.shift_date
+             , ifnull(sum(demand.requirement_qty), 0) requirement_qty
+        from (select wdd.material_id
+                   , mm.material_code
+                   , mm.material_name
+                   , ifnull(wdd.material_version, '')    material_version
+                   , ifnull(wdd.so_num, '')              so_num
+                   , ifnull(wdd.so_line_num, '')         so_line_num
+                   , mcs.shift_date
+                    ,wdd.requirement_qty
+              from wms_distribution_demand wdd
+                 , mt_calendar_shift mcs
+                 , mt_material mm
+              where wdd.calendar_shift_id = mcs.calendar_shift_id
+                and wdd.material_id = mm.material_id
+                and mcs.tenant_id = wdd.tenant_id
+                and wdd.tenant_id = #{tenantId}
+                and mcs.shift_date >= DATE_FORMAT(#{startDate},'%Y-%m-%d')
+                and mcs.shift_date <![CDATA[<=]]> DATE_FORMAT(#{demandDate},'%Y-%m-%d')
+                <if test="dto.workcellId != null and dto.workcellId != ''">
+                    AND wdd.workcell_id = #{dto.workcellId}
+                </if>
+                <if test="dto.siteId != null and dto.siteId != ''">
+                    AND wdd.SITE_ID = #{dto.siteId}
+                </if>
+                <if test="dto.prodLineId != null and dto.prodLineId != ''">
+                    AND wdd.PROD_LINE_ID = #{dto.prodLineId}
+                </if>
+                <if test="dto.materialId != null and dto.materialId != ''">
+                    AND wdd.MATERIAL_ID = #{dto.materialId}
+                </if>
+                <if test="dto.distributionType != null and dto.distributionType != ''">
+                    AND wdd.distribution_type = #{dto.distributionType}
+                </if>
+                <if test="dto.onlyDistributionFlag == 'Y'.toString()">
+                    and wdd.status = 'NEW'
+                </if>
+                <if test="dto.workOrderId != null and dto.workOrderId != ''">
+                    AND exists (select 1
+                    from wms_component_demand_record wcdr
+                    ,mt_work_order mwo
+                    where wcdr.dist_demand_id = wdd.dist_demand_id
+                    and mwo.work_order_id = wcdr.work_order_id
+                    <if test="dto.workOrderId != null and dto.workOrderId != ''">
+                        and mwo.work_order_id = #{dto.workOrderId}
+                    </if>
+                    )
+                </if>
+            union all
+              select wcdr.material_id
+                   , mm.material_code
+                   , mm.material_name
+                   , ifnull(wcdr.material_version, '')    material_version
+                   , ifnull(wcdr.so_num, '')              so_num
+                   , ifnull(wcdr.so_line_num, '')         so_line_num
+                   , mcs.shift_date
+                   , wcdr.requirement_quantity requirement_qty
+              from wms_component_demand_record wcdr
+                 , mt_calendar_shift mcs
+                 , mt_material mm
+                 , mt_work_order mwo
+              where wcdr.calendar_shift_id = mcs.calendar_shift_id
+                and wcdr.material_id = mm.material_id
+                and mcs.tenant_id = wcdr.tenant_id
+                and wcdr.tenant_id = #{tenantId}
+                and mwo.work_order_id = wcdr.work_order_id
+                and mcs.shift_date > DATE_FORMAT(#{demandDate},'%Y-%m-%d')
+                and mcs.shift_date <![CDATA[<=]]> DATE_FORMAT(#{endDate},'%Y-%m-%d')
+                <if test="dto.workcellId != null and dto.workcellId != ''">
+                    AND wcdr.workcell_id = #{dto.workcellId}
+                </if>
+                <if test="dto.siteId != null and dto.siteId != ''">
+                    AND wcdr.SITE_ID = #{dto.siteId}
+                </if>
+                <if test="dto.prodLineId != null and dto.prodLineId != ''">
+                    AND wcdr.PROD_LINE_ID = #{dto.prodLineId}
+                </if>
+                <if test="dto.materialId != null and dto.materialId != ''">
+                    AND wcdr.MATERIAL_ID = #{dto.materialId}
+                </if>
+                <if test="dto.distributionType != null and dto.distributionType != ''">
+                    AND wcdr.distribution_type = #{dto.distributionType}
+                </if>
+                <if test="dto.workOrderId != null and dto.workOrderId != ''">
+                    and mwo.work_order_id = #{dto.workOrderId}
+                </if>) demand
+        group by demand.material_id
+               , demand.material_code
+               , demand.material_name
+               , demand.material_version
+               , demand.so_num
+               , demand.so_line_num
+               , demand.shift_date
+    </select>
+
+    <select id="selectBatchInventoryQty" resultType="com.ruike.wms.domain.vo.WmsDistributionQtyVO">
+        select ml.MATERIAL_ID
+             , ifnull(mml_ver.ATTR_VALUE, '')     material_version
+             , ifnull(mml_so.ATTR_VALUE, '')      so_num
+             , ifnull(mml_soline.ATTR_VALUE, '')  so_line_num
+             , ifnull(sum(ml.PRIMARY_UOM_QTY), 0) quantity
+        from mt_material_lot ml
+                 left join mt_material_lot_attr mml_ver on ml.material_lot_id = mml_ver.material_lot_id and
+                                                           mml_ver.attr_name = 'MATERIAL_VERSION'
+                 left join mt_material_lot_attr mml_so on ml.material_lot_id = mml_so.material_lot_id
+            and mml_so.attr_name = 'SO_NUM'
+                 left join mt_material_lot_attr mml_soline on ml.material_lot_id = mml_soline.material_lot_id
+            and mml_soline.attr_name = 'SO_LINE_NUM'
+                 left join mt_material_lot_attr mml_status on ml.material_lot_id = mml_status.material_lot_id
+            and mml_status.attr_name = 'STATUS'
+                 inner join mt_mod_locator loc on ml.locator_id = loc.locator_id
+                 inner join mt_mod_locator wh on loc.parent_locator_id = wh.locator_id and wh.locator_type != '14'
+        where ml.ENABLE_FLAG = 'Y'
+          and ml.QUALITY_STATUS = 'OK'
+          and mml_status.ATTR_VALUE = 'INSTOCK'
+          and ml.TENANT_ID = #{tenantId}
+          AND ml.SITE_ID = #{siteId}
+        group by ml.MATERIAL_ID
+               , ifnull(mml_ver.ATTR_VALUE, '')
+               , ifnull(mml_so.ATTR_VALUE, '')
+               , ifnull(mml_soline.ATTR_VALUE, '')
+    </select>
+
+    <select id="selectQtyByDemandId" resultType="com.ruike.wms.domain.vo.WmsDistributionDemandQtyVO">
+        SELECT
+           wdddd.dist_demand_id,
+           ifnull(sum(ins.QUANTITY), 0)  distribution_qty,
+           ifnull(sum(mia.ACTUAL_Qty), 0) delivered_qty
+        FROM
+        	wms_distribution_demand_detail wdddd
+        LEFT JOIN mt_instruction ins ON ins.INSTRUCTION_ID = wdddd.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_actual mia ON ins.INSTRUCTION_ID = mia.INSTRUCTION_ID
+        WHERE wdddd.TENANT_ID = #{tenantId}
+        AND wdddd.dist_demand_id IN
+        <foreach collection="demandIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        GROUP BY wdddd.dist_demand_id
+    </select>
+
+    <select id="summaryMaterialDispatchQty" resultType="com.ruike.wms.domain.vo.WmsDistributionQtyVO">
+        SELECT
+            wdd.material_id,
+        	IFNULL(SUM(wdd.requirement_quantity),0) quantity
+        FROM
+            wms_component_demand_record wdd,
+        	mt_calendar_shift mcs
+        WHERE (wdd.material_id, wdd.workcell_id)  IN
+        <foreach collection="docCreateSumVOS" item="item" index="index" open="(" close=")" separator=",">
+            (#{item.materialId}, #{item.workcellId})
+        </foreach>
+        AND wdd.TENANT_ID = #{tenantId}
+        AND mcs.CALENDAR_SHIFT_ID = wdd.CALENDAR_SHIFT_ID
+        AND mcs.SHIFT_DATE = DATE_FORMAT(NOW(), '%Y-%m-%d')
+        GROUP BY wdd.material_id
+    </select>
+
+    <select id="queryCurrentWkcShift" resultType="java.lang.String">
+        SELECT
+            mws.WKC_SHIFT_ID
+        FROM
+            mt_wkc_shift mws,
+            mt_calendar_shift mcs
+        WHERE
+         mcs.TENANT_ID = #{tenantId}
+        AND mcs.SHIFT_DATE = DATE_FORMAT(NOW(), '%Y-%m-%d')
+        AND mws.SHIFT_DATE = mcs.SHIFT_DATE
+    </select>
+
+    <select id="queryJobIdList" resultType="java.lang.String">
+        SELECT
+        	ejs.job_id
+        FROM
+        	hme_eo_job_sn ejs
+        WHERE
+        	ejs.TENANT_ID = #{tenantId}
+        AND ejs.shift_id IN
+        <foreach collection="wkcShiftIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ejs.WORK_ORDER_ID IN
+        <foreach collection="workOrderList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryReleaseQtyByMaterialAndJob" resultType="com.ruike.wms.domain.vo.WmsDistributionQtyVO">
+        SELECT
+        	IFNULL(SUM(jslm.release_qty),0) quantity,
+        	jslm.MATERIAL_ID
+        FROM
+        	hme_eo_job_sn_lot_material jslm
+        WHERE
+        jslm.tenant_id = #{tenantId}
+        AND jslm.job_id IN
+        <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND jslm.material_id IN
+        <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND jslm.release_qty > 0
+        GROUP BY
+        jslm.MATERIAL_ID
+        UNION All
+        SELECT
+        	IFNULL(SUM(ejm.release_qty), 0) quantity,
+        	ejm.MATERIAL_ID
+        FROM
+        	hme_eo_job_material ejm
+        WHERE
+            ejm.tenant_id = #{tenantId}
+        AND ejm.job_id IN
+        <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ejm.material_id IN
+        <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ejm.is_issued = 1
+        GROUP BY
+        ejm.MATERIAL_ID
+    </select>
+
+    <select id="queryWorkOrderIdByDemandList" resultType="java.lang.String">
+        SELECT
+            wdd.work_order_id
+        FROM
+        wms_distribution_demand_detail wdd
+        WHERE
+        wdd.tenant_id = #{tenantId}
+        AND (wdd.material_id, wdd.workcell_id)  IN
+        <foreach collection="docCreateSumVOS" item="item" index="index" open="(" close=")" separator=",">
+            (#{item.materialId}, #{item.workcellId})
+        </foreach>
+        GROUP BY wdd.work_order_id
+    </select>
+</mapper>

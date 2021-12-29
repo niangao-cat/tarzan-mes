@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsSummaryOfCosBarcodeProcessingMapper">
+
+    <select id="list" resultType="com.ruike.wms.domain.vo.WmsSummaryOfCosBarcodeProcessingVO">
+        SELECT
+            mt.*,
+            (SELECT hmll.ATTRIBUTE4 from hme_material_lot_load hmll WHERE mt.material_lot_id = hmll.MATERIAL_LOT_ID  GROUP BY hmll.ATTRIBUTE4 ) SINK_CODE,
+            (SELECT hmll.ATTRIBUTE7 from hme_material_lot_load hmll WHERE mt.material_lot_id = hmll.MATERIAL_LOT_ID  GROUP BY hmll.ATTRIBUTE7 ) GOLD_CODE
+        FROM
+            (
+            SELECT
+            hejs.work_order_id,
+            hejs.job_id,
+            mwo.WORK_ORDER_NUM,
+            mwo.QTY,
+            mmla.ATTR_VALUE WAFER_NUM,
+            mmlac.ATTR_VALUE COS_TYPE,
+            mml.MATERIAL_LOT_CODE,
+            hejs.material_lot_id,
+            hejs.created_by,
+            hejs.workcell_id,
+            substring(mml.MATERIAL_LOT_CODE, 8, 1) SINK_TYPE,
+            iu.real_name REAL_NAME,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME,
+            DATE_FORMAT(
+            hejs.creation_date,
+            '%Y-%m-%d'
+            ) CREATION_DATE,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            IFNULL(SUM(hejs.sn_qty), 0) SN_QTY
+            FROM
+            hme_eo_job_sn hejs
+            LEFT JOIN mt_work_order mwo ON hejs.work_order_id = mwo.WORK_ORDER_ID
+            LEFT JOIN mt_material_lot_attr mmla ON hejs.material_lot_id = mmla.MATERIAL_LOT_ID
+            AND mmla.ATTR_NAME = 'WAFER_NUM'
+            LEFT JOIN mt_material_lot_attr mmlac ON hejs.material_lot_id = mmlac.MATERIAL_LOT_ID
+            AND mmlac.ATTR_NAME = 'COS_TYPE'
+            LEFT JOIN mt_material_lot mml ON hejs.material_lot_id = mml.MATERIAL_LOT_ID
+            LEFT JOIN hzero_platform.iam_user iu ON hejs.created_by = iu.id
+            LEFT JOIN mt_mod_workcell mmw ON hejs.workcell_id = mmw.WORKCELL_ID
+            LEFT JOIN mt_material mm ON hejs.sn_material_id = mm.MATERIAL_ID
+            WHERE
+            1 = 1
+            AND hejs.TENANT_ID = #{tenantId}
+            <if test="dto.jobTypes != null and dto.jobTypes.size() > 0">
+                AND hejs.job_type IN
+                <foreach collection="dto.jobTypes" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.creationDateStart != null and dto.creationDateStart != ''">
+                AND DATE_FORMAT(hejs.creation_date,'%Y-%m-%d') >= #{dto.creationDateStart}
+            </if>
+            <if test="dto.creationDateEnd != null and dto.creationDateEnd != ''">
+                AND DATE_FORMAT(hejs.creation_date,'%Y-%m-%d') <![CDATA[ <= ]]>  #{dto.creationDateEnd}
+            </if>
+            <if test="dto.workcellId!=null">
+                AND mmw.WORKCELL_ID = #{dto.workcellId}
+            </if>
+            <if test="dto.workOrderNum!=null">
+                AND mwo.WORK_ORDER_NUM  like CONCAT('%',#{dto.workOrderNum},'%')
+            </if>
+            <if test="dto.cosType!=null">
+                AND mmlac.ATTR_VALUE  like CONCAT('%',#{dto.cosType},'%')
+            </if>
+            <if test="dto.waferNum!=null">
+                AND mmla.ATTR_VALUE  like CONCAT('%',#{dto.waferNum},'%')
+            </if>
+            <if test="dto.snMaterialId!=null">
+                AND hejs.sn_material_id = #{dto.snMaterialId}
+            </if>
+            <if test="dto.createdBy!=null">
+                AND hejs.created_by = #{dto.createdBy}
+            </if>
+            <if test="dto.materialLotCode!=null">
+                AND mml.MATERIAL_LOT_CODE like CONCAT('%',#{dto.materialLotCode},'%')
+            </if>
+            GROUP BY
+            mwo.WORK_ORDER_NUM,
+            mwo.QTY,
+            mmla.ATTR_VALUE,
+            mmlac.ATTR_VALUE,
+            mml.MATERIAL_LOT_CODE,
+            substring(mml.MATERIAL_LOT_CODE, 8, 1),
+            iu.real_name,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME,
+            DATE_FORMAT(
+            hejs.creation_date,
+            '%Y-%m-%d'
+            ),
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            hejs.material_lot_id,
+            hejs.created_by,
+            hejs.workcell_id,
+            hejs.job_id,
+            hejs.work_order_id
+            ) mt
+        WHERE 1=1
+        <if test="dto.sinkCode!=null">
+            AND EXISTS (
+            SELECT hmll.ATTRIBUTE4 from hme_material_lot_load hmll WHERE mt.material_lot_id = hmll.MATERIAL_LOT_ID
+            AND hmll.ATTRIBUTE4 like CONCAT('%',#{dto.sinkCode},'%')
+            )
+        </if>
+        <if test="dto.goldCode!=null">
+            AND EXISTS (
+            SELECT hmll.ATTRIBUTE4 from hme_material_lot_load hmll WHERE mt.material_lot_id = hmll.MATERIAL_LOT_ID
+            AND hmll.ATTRIBUTE7 like CONCAT('%',#{dto.goldCode},'%')
+            )
+        </if>
+    </select>
+
+    <select id="batchListQueryNg" resultType="com.ruike.wms.domain.vo.WmsSummaryOfCosBarcodeProcessingVO">
+        SELECT
+        hejs.work_order_id,
+        mmla.ATTR_VALUE WAFER_NUM,
+        hejs.MATERIAL_LOT_ID,
+        hejs.created_by,
+        hejs.WORKCELL_ID,
+        IFNULL(SUM(hcnr.defect_count),0) NG_QTY
+        FROM
+        hme_eo_job_sn hejs
+        LEFT JOIN mt_material_lot_attr mmla ON hejs.material_lot_id = mmla.MATERIAL_LOT_ID AND mmla.ATTR_NAME =
+        'WAFER_NUM'
+        LEFT JOIN hme_cos_nc_record hcnr ON hejs.job_id = hcnr.job_id
+        WHERE 1=1
+        AND hejs.TENANT_ID = #{tenantId}
+        <if test="workOrderIdList != null and workOrderIdList.size() > 0">
+            AND hejs.work_order_id IN
+            <foreach collection="workOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="waferNumList != null and waferNumList.size() > 0">
+            AND mmla.ATTR_VALUE IN
+            <foreach collection="waferNumList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="materialLotIdList != null and materialLotIdList.size() > 0">
+            AND hejs.MATERIAL_LOT_ID IN
+            <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="createByList != null and createByList.size() > 0">
+            AND hejs.created_by IN
+            <foreach collection="createByList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="workcellIdList != null and workcellIdList.size() > 0">
+            AND hejs.WORKCELL_ID IN
+            <foreach collection="workcellIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        hejs.work_order_id,
+        mmla.ATTR_VALUE,
+        hejs.MATERIAL_LOT_ID,
+        hejs.created_by,
+        hejs.WORKCELL_ID
+    </select>
+
+    <select id="batchListQueryAssetEncoding" resultType="com.ruike.wms.domain.vo.WmsSummaryOfCosBarcodeProcessingVO">
+        SELECT
+        heje.job_id,
+        GROUP_CONCAT(
+        DISTINCT (he.ASSET_ENCODING) SEPARATOR '/'
+        ) ASSET_ENCODING
+        FROM
+        hme_eo_job_equipment heje
+        LEFT JOIN hme_equipment he ON heje.equipment_id = he.EQUIPMENT_ID
+        WHERE
+        heje.tenant_id = #{tenantId}
+        <if test="jobIdList != null and jobIdList.size() > 0">
+            AND heje.job_id IN
+            <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        heje.job_id
+    </select>
+
+</mapper>

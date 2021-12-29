@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtAssembleControlMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtAssembleControl">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_CONTROL_ID" property="assembleControlId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE" property="objectType" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="REFERENCE_AREA" property="referenceArea" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByEnable" resultMap="BaseResultMap">
+        select * 
+          from mt_assemble_control 
+         where TENANT_ID = ${tenantId}
+           and ASSEMBLE_CONTROL_ID = #{assembleControlId}
+           and DATE_FROM &lt;= now()
+           and (DATE_TO is null or DATE_TO &gt; now())       
+    </select>
+
+    <select id="mySelectOne" resultMap="BaseResultMap">
+        select t.*
+          from mt_assemble_control t
+         where TENANT_ID = ${tenantId}
+           and t.OBJECT_TYPE = #{dto.objectType}
+           and t.OBJECT_ID = #{dto.objectId}
+           and t.ORGANIZATION_TYPE = #{dto.organizationType}
+           and t.ORGANIZATION_ID = #{dto.organizationId}
+           and t.REFERENCE_AREA = #{dto.referenceArea}
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.method.domain.vo.MtAssembleControlVO2">
+         select t.*
+          from mt_assemble_control t
+         where TENANT_ID = ${tenantId}
+        <if test="dto.objectType!=null">
+            and t.OBJECT_TYPE = #{dto.objectType}
+        </if>
+        <if test="dto.objectId!=null">
+            and t.OBJECT_ID = #{dto.objectId}
+        </if>
+        <if test="dto.organizationType!=null">
+            and t.EO_ROUORGANIZATION_TYPETER_ID = #{dto.organizationType}
+        </if>
+        <if test="dto.organizationType!=null">
+            and t.ORGANIZATION_TYPE = #{dto.organizationType}
+        </if>
+        <if test="dto.referenceArea!=null">
+            and t.REFERENCE_AREA = #{dto.referenceArea}
+        </if>
+        <if test="dto.assembleControlId!=null">
+            and t.ASSEMBLE_CONTROL_ID = #{dto.assembleControlId}
+        </if>
+        <if test="dto.dateFrom!=null">
+            AND t.DATE_FROM &gt;= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.dateTo!=null">
+            AND t.DATE_TO &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+
+    </select>
+</mapper>

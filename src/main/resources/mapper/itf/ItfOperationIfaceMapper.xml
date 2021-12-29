@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfOperationIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfOperationIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="DATE"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="DATE"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="OPERATION_STATUS" property="operationStatus" jdbcType="VARCHAR"/>
+        <result column="OPERATION_TYPE" property="operationType" jdbcType="VARCHAR"/>
+        <result column="SPECIAL_ROUTER_ID" property="specialRouterId" jdbcType="VARCHAR"/>
+        <result column="TOOL_TYPE" property="toolType" jdbcType="VARCHAR"/>
+        <result column="TOOL_ID" property="toolId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_TYPE" property="workcellType" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_NC_ID" property="defaultNcId" jdbcType="VARCHAR"/>
+        <result column="STANDARD_MAX_LOOP" property="standardMaxLoop" jdbcType="DECIMAL"/>
+        <result column="STANDARD_SPECIAL_INTRODUCTION" property="standardSpecialIntroduction" jdbcType="VARCHAR"/>
+        <result column="STANDARD_REQD_TIME_IN_PROCESS" property="standardReqdTimeInProcess" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_INCONFORMITY_FLAG" property="completeInconformityFlag" jdbcType="VARCHAR"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="BATCH_DATE" property="batchDate" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtEventObjectTypeRelMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtEventObjectTypeRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="REL_ID" property="relId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TYPE_ID" property="eventTypeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_ID" property="objectTypeId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="ViewResultMap1" type="tarzan.general.api.dto.MtEventObjectTypeRelDTO2">
+        <result column="OBJECT_TYPE_CODE" property="objectTypeCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectObjectTypeId" resultType="java.lang.String">
+        SELECT
+        obj.OBJECT_TYPE_ID
+        FROM
+        mt_event ev,
+        mt_event_object_type_rel rel,
+        mt_event_object_type obj
+        WHERE
+        1=1
+        AND ev.TENANT_ID = ${tenantId}
+        AND rel.TENANT_ID = ${tenantId}
+        AND obj.TENANT_ID = ${tenantId}
+        AND ev.EVENT_TYPE_ID = rel.EVENT_TYPE_ID
+        AND rel.ENABLE_FLAG = 'Y'
+        AND rel.OBJECT_TYPE_ID = obj.OBJECT_TYPE_ID
+        AND obj.ENABLE_FLAG = 'Y'
+        AND ev.EVENT_ID = #{eventId}
+    </select>
+
+    <select id="selectEventTypeId" resultMap="ViewResultMap1">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t.*, mt.OBJECT_TYPE_CODE,
+        mtl.DESCRIPTION
+        FROM
+            mt_event_object_type_rel t
+        JOIN mt_event_object_type mt ON t.OBJECT_TYPE_ID = mt.OBJECT_TYPE_ID
+        JOIN mt_event_object_type_tl mtl ON mt.OBJECT_TYPE_ID = mtl.OBJECT_TYPE_ID
+        AND mtl.LANG = #{locale}
+        WHERE
+            t.TENANT_ID = ${tenantId}
+        AND t.EVENT_TYPE_ID = #{eventTypeId}
+        AND mt.ENABLE_FLAG = 'Y'
+        ORDER BY t.CREATION_DATE DESC
+    </select>
+</mapper>

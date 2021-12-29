@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.mdm.infra.mapper.ModSiteMapper">
+
+    <select id="listByCondition" resultType="com.ruike.mdm.api.dto.representation.ModSiteRept">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select mms.site_id
+        ,mms.site_code
+        ,mmst.site_name
+        from mt_mod_site mms
+        ,mt_mod_site_tl mmst
+        where mms.site_id = mmst.site_id
+        and mms.enable_flag = 'Y'
+        and mmst.lang = #{lang}
+        and mms.tenant_id = #{qry.tenantId}
+        <if test="qry.siteCode != null">
+            and mms.site_code like concat('%',#{qry.siteCode},'%')
+        </if>
+        <if test="qry.siteName != null">
+            and mmst.site_name like concat('%',#{qry.siteName},'%')
+        </if>
+    </select>
+
+</mapper>

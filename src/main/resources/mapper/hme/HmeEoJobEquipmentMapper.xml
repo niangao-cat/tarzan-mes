@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobEquipmentMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEoJobEquipment">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="JOB_EQUIPMENT_ID" property="jobEquipmentId" jdbcType="VARCHAR"/>
+        <result column="JOB_ID" property="jobId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_ID" property="equipmentId" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_STATUS" property="equipmentStatus" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="batchInsert">
+        INSERT INTO hme_eo_job_equipment
+        (
+        tenant_id,
+        job_equipment_id,
+        job_id,
+        workcell_id,
+        equipment_id,
+        equipment_status,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.jobEquipmentId},
+            #{item.jobId},
+            #{item.workcellId},
+            #{item.equipmentId},
+            #{item.equipmentStatus},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5}
+            )
+        </foreach>
+    </insert>
+
+    <select id="binndHmeEoJobEquipment" resultType="com.ruike.hme.domain.entity.HmeEoJobEquipment">
+        SELECT
+            hewr.equipment_id,
+            he.equipment_status
+        FROM
+            hme_equipment_wkc_rel hewr,
+            hme_equipment he
+        WHERE
+            he.equipment_id = hewr.equipment_id
+        AND hewr.station_id =#{workcellId}
+        AND hewr.TENANT_ID=#{tenantId}
+        AND hewr.TENANT_ID=#{tenantId}
+    </select>
+
+    <select id="queryEquipmentListByWorkCellId" resultType="com.ruike.hme.domain.entity.HmeEquipment">
+        SELECT
+            he.equipment_id,
+            he.equipment_status,
+            he.asset_encoding
+        FROM
+            hme_equipment_wkc_rel hewr,
+            hme_equipment he
+        WHERE
+            he.equipment_id = hewr.equipment_id
+        AND hewr.station_id =#{workcellId}
+        AND hewr.TENANT_ID=#{tenantId}
+        AND hewr.TENANT_ID=#{tenantId}
+    </select>
+</mapper>

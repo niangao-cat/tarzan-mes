@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.calendar.infra.mapper.MtShiftMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.calendar.domain.entity.MtShift">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SHIFT_ID" property="shiftId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="SHIFT_TYPE" property="shiftType" jdbcType="VARCHAR"/>
+        <result column="SHIFT_START_TIME" property="shiftStartTime" jdbcType="VARCHAR"/>
+        <result column="SHIFT_END_TIME" property="shiftEndTime" jdbcType="VARCHAR"/>
+        <result column="REST_TIME" property="restTime" jdbcType="DECIMAL"/>
+        <result column="UTILIZATION_RATE" property="utilizationRate" jdbcType="DECIMAL"/>
+        <result column="BORROWING_ABILITY" property="borrowingAbility" jdbcType="DECIMAL"/>
+        <result column="CAPACITY_UNIT" property="capacityUnit" jdbcType="VARCHAR"/>
+        <result column="STANDARD_CAPACITY" property="standardCapacity" jdbcType="DECIMAL"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="typeLimitShiftTempletQuery" resultType="java.lang.String">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        sb.SHIFT_ID
+        FROM
+        mt_shift sb,
+        mt_shift_tl sl
+        WHERE
+        1 = 1
+        AND sb.TENANT_ID = ${tenantId}
+        AND sb.SHIFT_ID = sl.SHIFT_ID
+        AND sl.LANG = #{locale}
+        AND sb.SHIFT_TYPE = #{shiftType}
+        <if test="enableFlag != null">
+            AND sb.ENABLE_FLAG = #{enableFlag}
+        </if>
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.calendar.domain.vo.MtShiftVO1">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        sb.TENANT_ID,
+        sb.UTILIZATION_RATE,
+        sb.STANDARD_CAPACITY,
+        sb.SHIFT_TYPE,
+        sb.SHIFT_START_TIME,
+        sb.SHIFT_ID,
+        sb.SHIFT_END_TIME,
+        sb.SHIFT_CODE,
+        sb.SEQUENCE,
+        sb.REST_TIME,
+        sb.OBJECT_VERSION_NUMBER,
+        sb.LAST_UPDATE_DATE,
+        sb.LAST_UPDATED_BY,
+        sb.CREATION_DATE,
+        sb.CREATED_BY,
+        sb.CAPACITY_UNIT,
+        sb.BORROWING_ABILITY,
+        sl.DESCRIPTION
+        FROM
+        mt_shift sb,
+        mt_shift_tl sl
+        WHERE
+        1=1
+        AND
+        sb.TENANT_ID = ${tenantId}
+        AND sb.SHIFT_ID = sl.SHIFT_ID
+        AND
+        sl.LANG = #{locale}
+        <if test="dto.shiftId != null">
+            AND sb.SHIFT_ID = #{dto.shiftId}
+        </if>
+        <if test="dto.shiftCode != null">
+            AND sb.SHIFT_CODE = #{dto.shiftCode}
+        </if>
+        <if test="dto.sequence != null">
+            AND sb.SEQUENCE = #{dto.sequence}
+        </if>
+        <if test="dto.shiftType != null">
+            AND sb.SHIFT_TYPE = #{dto.shiftType}
+        </if>
+        <if test="dto.shiftStartTimeFrom != null">
+            AND sb.SHIFT_START_TIME &gt;= #{dto.shiftStartTimeFrom}
+        </if>
+        <if test="dto.shiftStartTimeTo != null">
+            AND sb.SHIFT_START_TIME &lt;= #{dto.shiftStartTimeTo}
+        </if>
+        <if test="dto.shiftEndTimeFrom != null">
+            AND sb.SHIFT_END_TIME  &gt;= #{dto.shiftEndTimeFrom}
+        </if>
+        <if test="dto.shiftEndTimeTo != null">
+            AND sb.SHIFT_END_TIME &lt;= #{dto.shiftEndTimeTo}
+        </if>
+        <if test="dto.description != null">
+            AND sl.DESCRIPTION like CONCAT('%',CONCAT(#{dto.description},'%'))
+        </if>
+        <if test="dto.enableFlag != null">
+            AND sb.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+    </select>
+
+    <select id="selectShiftTypes" resultType="tarzan.calendar.api.dto.MtShiftDTO1">
+        SELECT DISTINCT
+            b.SHIFT_TYPE,
+            b.SHIFT_TYPE SHIFT_TYPE_DESC
+        FROM
+            mt_shift b
+        WHERE
+            b.TENANT_ID = ${tenantId}
+        <if test="dto.shiftType != null">
+            AND b.SHIFT_TYPE = #{dto.shiftType}
+        </if>
+    </select>
+</mapper>

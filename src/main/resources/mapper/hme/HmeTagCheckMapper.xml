@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeTagCheckMapper">
+
+    <select id="queryTagCheckList" resultType="com.ruike.hme.domain.vo.HmeTagCheckVO2">
+        SELECT
+            mmw.WORKCELL_ID source_process_id,
+        	mmw.WORKCELL_CODE source_process_code,
+            mmw.WORKCELL_NAME source_process_name,
+            mt.TAG_ID,
+            mt.TAG_CODE,
+        	mt.TAG_DESCRIPTION,
+        	mu.UOM_NAME
+        FROM
+        	hme_tag_check_rule_header crh,
+        	hme_tag_check_rule_line crl,
+        	mt_tag mt
+        	LEFT JOIN mt_uom mu ON mu.uom_id = mt.unit,
+        	mt_mod_workcell mmw
+        WHERE crh.business_id = #{businessId}
+        AND crh.type = 'SN_DATA'
+        AND crh.workcell_id = #{processId}
+        AND crh.enable_flag = 'Y'
+        AND crh.tenant_id = #{tenantId}
+        AND crl.header_id = crh.header_id
+        AND crl.enable_flag = 'Y'
+        AND mt.TAG_ID = crl.tag_id
+        AND mmw.WORKCELL_ID = crl.source_workcell_id
+    </select>
+
+    <select id="queryEoJobList" resultType="com.ruike.hme.domain.vo.HmeTagCheckVO3">
+        SELECT
+        	ejs.job_id,
+        	ejs.site_out_date,
+        	mor.PARENT_ORGANIZATION_ID process_id
+        FROM
+        	hme_eo_job_sn ejs,
+        	mt_mod_organization_rel mor
+        WHERE ejs.material_lot_id = #{materialLotId}
+        AND ejs.tenant_id = #{tenantId}
+        AND ejs.site_out_date is NOT NULL
+        AND ejs.site_out_date != ''
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.PARENT_ORGANIZATION_ID IN
+        <foreach collection="processList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = ejs.workcell_id
+        AND mor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryJobDataRecordList" resultType="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        SELECT
+            jdr.job_id,
+            jdr.tag_id,
+            jdr.maximal_value,
+            jdr.minimum_value,
+            jdr.result
+        FROM
+         hme_eo_job_data_record jdr
+        WHERE jdr.job_id IN
+        <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND jdr.tag_id IN
+        <foreach collection="tagIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND jdr.tenant_id = #{tenantId}
+    </select>
+    
+    <select id="queryComponentMaterialTagCheckList" resultType="java.lang.String">
+        SELECT
+            mmb.MATERIAL_ID
+        FROM
+            hme_tag_check_rule_header crh,
+            wms_item_group wig,
+            mt_material_basic mmb,
+            mt_material_site mms
+        WHERE
+            crh.business_id = #{businessId}
+        AND crh.type = 'COMPONENT_DATA'
+        AND crh.workcell_id = #{processId}
+      	AND crh.enable_flag = 'Y'
+        AND crh.tenant_id = #{tenantId}
+        AND wig.item_group_id = crh.item_group_id
+        AND mmb.ITEM_GROUP = wig.item_group_code
+        AND mms.MATERIAL_SITE_ID = mmb.MATERIAL_SITE_ID
+		AND mms.SITE_ID = #{siteId}
+    </select>
+
+
+    <select id="queryCmbMaterialLotCodeList" resultType="com.ruike.hme.domain.vo.HmeTagCheckVO4">
+        SELECT
+        ejs.site_out_date,
+        ejs.material_lot_id,
+        mml.material_lot_code,
+        mm.material_code,
+        mm.material_name,
+
+        ejm.material_lot_id component_material_lot_id,
+        ejm.material_lot_code component_material_lot_code,
+        ejm.material_id component_material_id,
+        cmm.material_code component_material_code,
+        cmm.material_name component_material_name
+        FROM
+        hme_eo_job_sn ejs,
+        mt_material_lot mml,
+        mt_material mm,
+        hme_eo_job_material ejm
+        LEFT JOIN mt_material cmm ON cmm.material_id = ejm.material_id
+        WHERE ejs.tenant_id = #{tenantId}
+        AND mml.MATERIAL_LOT_ID = ejs.material_lot_id
+        AND mml.MATERIAL_LOT_CODE IN
+        <foreach collection="materialLotCodeList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND ejm.job_id = ejs.job_id
+        AND ejm.tenant_id = #{tenantId}
+        AND ejm.release_qty > 0
+        AND ejm.is_issued = 1
+        AND cmm.material_id IN
+        <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryCmbMaterialLotCodeJobList" resultType="com.ruike.hme.domain.vo.HmeTagCheckVO4">
+        SELECT
+        ejs.job_id,
+        ejs.site_out_date,
+        ejs.material_lot_id,
+        ejs.workcell_id,
+        mor.PARENT_ORGANIZATION_ID process_id
+        FROM
+        hme_eo_job_sn ejs,
+        mt_mod_organization_rel mor
+        WHERE ejs.tenant_id = #{tenantId}
+        AND ejs.site_out_date is NOT NULL
+        <if test="materialLotIdList != null and materialLotIdList.size() > 0">
+            AND ejs.material_lot_id IN
+            <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = ejs.workcell_id
+        AND mor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryComponentTagCheckList" resultType="com.ruike.hme.domain.vo.HmeTagCheckVO7">
+        SELECT
+            crh.item_group_id,
+            crl.source_workcell_id,
+            crl.tag_id,
+            mt.tag_code,
+            mt.tag_description,
+            mmw.workcell_code process_code,
+            mmw.workcell_name process_name
+        FROM
+            hme_tag_check_rule_header crh,
+            hme_tag_check_rule_line crl,
+            mt_mod_workcell mmw,
+            mt_tag mt
+        WHERE
+		    crh.business_id = #{businessId}
+        AND crh.type = #{ruleType}
+        AND crh.workcell_id = #{processId}
+      	AND crh.enable_flag = 'Y'
+        AND crh.tenant_id = #{tenantId}
+        AND crl.header_id = crh.header_id
+        AND crl.enable_flag = 'Y'
+        AND mmw.WORKCELL_ID = crl.source_workcell_id
+        AND mt.TAG_ID = crl.tag_id
+    </select>
+
+    <select id="queryRecordResult" resultType="com.ruike.hme.domain.vo.HmeTagCheckVO8">
+        SELECT
+        jdr.job_id,
+        jdr.tag_id,
+        jdr.result
+        FROM
+        hme_eo_job_data_record jdr
+        WHERE jdr.tenant_id = #{tenantId}
+        AND (jdr.job_id, jdr.tag_id) IN
+        <foreach collection="tagCheckVOList" item="item" index="index" open="(" close=")" separator=",">
+            (#{item.jobId}, #{item.tagId})
+        </foreach>
+    </select>
+
+    <select id="querySnMaterialLotCodeJobList" resultType="com.ruike.hme.domain.vo.HmeTagCheckVO4">
+        SELECT
+        ejs.job_id,
+        ejs.site_out_date,
+        ejs.material_lot_id,
+        ejs.workcell_id,
+        mor.PARENT_ORGANIZATION_ID process_id,
+        mml.MATERIAL_LOT_CODE,
+        mml.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME
+        FROM
+        hme_eo_job_sn ejs,
+        mt_mod_organization_rel mor,
+        mt_material_lot mml,
+        mt_material mm
+        WHERE ejs.tenant_id = #{tenantId}
+        AND ejs.site_out_date is NOT NULL
+        AND mml.MATERIAL_LOT_ID = ejs.material_lot_id
+        <if test="vo.snNumList != null and vo.snNumList.size() > 0">
+            AND mml.MATERIAL_LOT_CODE IN
+            <foreach collection="vo.snNumList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = ejs.workcell_id
+        AND mor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryTagCheckHeaderList" resultType="java.lang.String">
+        SELECT
+			crh.header_id
+        FROM
+        	hme_tag_check_rule_header crh
+        WHERE crh.business_id = #{areaId}
+        AND crh.type = 'SN_DATA'
+        AND crh.workcell_id = #{processId}
+        AND crh.enable_flag = 'Y'
+        AND crh.tenant_id = #{tenantId}
+    </select>
+</mapper>

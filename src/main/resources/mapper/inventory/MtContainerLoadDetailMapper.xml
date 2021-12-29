@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtContainerLoadDetailMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtContainerLoadDetail">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CONTAINER_LOAD_DETAIL_ID" property="containerLoadDetailId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ROW" property="locationRow" jdbcType="DECIMAL"/>
+        <result column="LOCATION_COLUMN" property="locationColumn" jdbcType="DECIMAL"/>
+        <result column="LOAD_OBJECT_TYPE" property="loadObjectType" jdbcType="VARCHAR"/>
+        <result column="LOAD_QTY" property="loadQty" jdbcType="DECIMAL"/>
+        <result column="LOAD_EO_STEP_ACTUAL_ID" property="loadEoStepActualId" jdbcType="VARCHAR"/>
+        <result column="LOAD_OBJECT_ID" property="loadObjectId" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="ResultMapView" type="tarzan.inventory.domain.vo.MtContLoadDtlVO15">
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="getMaxSequence" resultType="java.lang.Long">
+        select 
+        	max(t.LOAD_SEQUENCE) LOAD_SEQUENCE 
+        from 
+        	mt_container_load_detail t  
+        where 
+        	t.TENANT_ID = #{tenantId}
+        	and t.CONTAINER_ID=#{containerId}
+    </select>
+
+    <select id="selectDeleteUnique" resultMap="BaseResultMap">
+        select t.*
+        from mt_container_load_detail t
+        where t.TENANT_ID = #{tenantId}
+        and t.LOAD_OBJECT_ID = #{dto.loadObjectId}
+        and t.LOAD_OBJECT_TYPE = #{dto.loadObjectType}
+        and t.CONTAINER_ID = #{dto.containerId}
+        <choose>
+            <when test='dto.locationRow == null'>
+                AND t.LOCATION_ROW is null
+            </when>
+            <otherwise>
+                AND t.LOCATION_ROW = #{dto.locationRow}
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.locationColumn == null'>
+                AND t.LOCATION_COLUMN is null
+            </when>
+            <otherwise>
+                AND t.LOCATION_COLUMN = #{dto.locationColumn}
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectByLoadObject" resultMap="BaseResultMap">
+        select t.*
+        from mt_container_load_detail t
+        where 1=1
+        and t.TENANT_ID = #{tenantId}
+        and t.LOAD_OBJECT_TYPE = #{loadObjectType}
+        and t.LOAD_OBJECT_ID IN
+        <foreach collection="loadObjectIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectMaterialLotAndContainerByContainer" resultMap="BaseResultMap">
+        SELECT
+            t.*
+        FROM
+            mt_container_load_detail t
+        WHERE
+            1 = 1
+            and t.TENANT_ID = #{tenantId}
+            AND t.LOAD_OBJECT_TYPE IN ( "MATERIAL_LOT", "CONTAINER" )
+            AND t.CONTAINER_ID = #{containerId}
+        ORDER BY
+	        t.LOAD_SEQUENCE
+    </select>
+    <select id="getBatchMaxSequence" resultMap="ResultMapView">
+        select t.CONTAINER_ID,max(t.LOAD_SEQUENCE) LOAD_SEQUENCE from mt_container_load_detail t where t.TENANT_ID =
+        #{tenantId}
+        <if test="containerIds!=null and containerIds.size()>0">
+            and t. CONTAINER_ID IN
+            <foreach collection="containerIds" item="s" open="  (" separator="," close=")" index="index">
+                #{s}
+            </foreach>
+        </if>
+        <if test="containerIds==null or containerIds.size()==0">
+            and 1&lt;&gt;1
+        </if>
+        GROUP BY
+        t.CONTAINER_ID
+    </select>
+    <select id="selectContainerLoadDetailList" resultMap="BaseResultMap">
+        select t.*
+        from mt_container_load_detail t
+        where t.TENANT_ID = #{tenantId}
+        <if test="detailList!=null and detailList.size()>0">
+            <foreach collection="detailList" item="s" open=" and (" separator="or" close=")" index="index">
+                t.LOAD_OBJECT_ID=#{s.loadObjectId}
+                and t.LOAD_OBJECT_TYPE=#{s.loadObjectType}
+            </foreach>
+        </if>
+        <if test="detailList==null or detailList.size()==0">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+    <select id="batchGetContainerDetail" resultMap="BaseResultMap">
+        select t.*
+        from mt_container_load_detail t
+        where t.TENANT_ID=${tenantId}
+        <if test="loadObjectType != null">
+            and t.LOAD_OBJECT_TYPE=#{loadObjectType}
+        </if>
+        <if test="containerIds!=null and containerIds.size()>0">
+            and t.CONTAINER_ID IN
+            <foreach collection="containerIds" item="s" open=" (" separator="," close=")" index="index">
+                #{s}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectByMaterialLodIds" resultType="tarzan.inventory.domain.vo.MtContLoadDtlVO17">
+        select t.CONTAINER_ID containerId,
+        t.LOAD_OBJECT_ID loadObjectId
+        from mt_container_load_detail t
+        where t.TENANT_ID=${tenantId}
+        and t.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        <if test="sourceMaterialLotId!=null and sourceMaterialLotId.size()>0">
+            and t.LOAD_OBJECT_ID IN
+            <foreach collection="sourceMaterialLotId" item="s" open=" (" separator="," close=")" index="index">
+                #{s}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectByIdAndType" resultType="tarzan.inventory.domain.vo.MtContLoadDtlVO19">
+        SELECT
+        *
+        FROM
+        mt_container_load_detail
+        WHERE
+        TENANT_ID = #{tenantId}
+        and CONTAINER_ID = #{dto.containerId}
+        <if test="dto.loadObjectType!=null and dto.loadObjectType!=''">
+            and LOAD_OBJECT_TYPE = #{dto.loadObjectType}
+        </if>
+    </select>
+
+    <select id="selectByContainerId" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        mt_container_load_detail
+        WHERE
+        TENANT_ID = #{tenantId}
+        and CONTAINER_ID in
+        <foreach collection="containerIds" item="containerId" open="(" separator="," close=")">
+            #{containerId}
+        </foreach>
+    </select>
+</mapper>

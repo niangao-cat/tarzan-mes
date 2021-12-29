@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.calendar.infra.mapper.MtCalendarMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.calendar.domain.entity.MtCalendar">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CALENDAR_ID" property="calendarId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_CODE" property="calendarCode" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_TYPE" property="calendarType" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BatchBaseResultMap" type="tarzan.calendar.domain.vo.MtCalendarVO3">
+        <result column="CALENDAR_ID" property="calendarId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_CODE" property="calendarCode" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_TYPE" property="calendarType" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <collection property="calendarOrgRelList" ofType="tarzan.calendar.domain.vo.MtCalendarOrgRelVO"
+                    javaType="java.util.ArrayList" column="calendarId">
+            <result column="CALENDAR_ORG_REL_ID" property="calendarOrgRelId" jdbcType="VARCHAR"/>
+            <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+            <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+            <result column="ORG_ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="CalendarResultMap" type="tarzan.calendar.domain.vo.MtCalendarVO5">
+        <result column="CALENDAR_ID" property="calendarId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_CODE" property="calendarCode" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_TYPE" property="calendarType" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="typeLimitCalendarQuery" resultType="java.lang.String">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.CALENDAR_ID
+        FROM
+        mt_calendar b,
+        mt_calendar_tl l
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        AND b.CALENDAR_ID = l.CALENDAR_ID
+        AND l.LANG = #{locale}
+        AND b.CALENDAR_TYPE = #{calendarType}
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t.CALENDAR_ID,
+        t.CALENDAR_CODE,
+        t.CALENDAR_TYPE,
+        tl.DESCRIPTION,
+        t.ENABLE_FLAG,
+        t.CID,
+        t.CREATED_BY,
+        t.CREATION_DATE,
+        t.LAST_UPDATED_BY,
+        t.LAST_UPDATE_DATE,
+        t.OBJECT_VERSION_NUMBER
+        FROM
+        mt_calendar t
+        INNER JOIN mt_calendar_tl tl ON ( t.CALENDAR_ID = tl.CALENDAR_ID AND tl.LANG = #{locale})
+        WHERE t.TENANT_ID = ${tenantId}
+        AND t.CALENDAR_ID IN
+        <foreach collection="calendarIds" open="(" item="item" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="calendarBatchGet" resultMap="BatchBaseResultMap">
+        SELECT
+        mtc.ENABLE_FLAG,
+        mtc.DESCRIPTION,
+        mtc.CALENDAR_ID,
+        mtc.CALENDAR_CODE,
+        mtc.CALENDAR_TYPE,
+        mtcor.ORGANIZATION_TYPE,
+        mtcor.ORGANIZATION_ID,
+        mtcor.CALENDAR_ORG_REL_ID,
+        mtcor.ENABLE_FLAG ORG_ENABLE_FLAG
+        FROM
+        mt_calendar mtc
+        LEFT JOIN mt_calendar_org_rel mtcor ON mtc.CALENDAR_ID = mtcor.CALENDAR_ID
+        WHERE
+        mtc.TENANT_ID = ${tenantId}
+        AND mtc.CALENDAR_ID IN
+        <foreach collection="calendarIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="propertyLimitCalendarPropertyQuery" resultMap="CalendarResultMap">
+        select
+        t.ENABLE_FLAG,
+        t.DESCRIPTION,
+        t.CALENDAR_ID,
+        t.CALENDAR_CODE,
+        t.CALENDAR_TYPE
+        from mt_calendar t
+        where t.TENANT_ID=#{tenantId}
+        <if test="vo.calendarId != null">
+            and t.CALENDAR_ID=#{vo.calendarId}
+        </if>
+        <if test="vo.calendarType != null">
+            and t.CALENDAR_TYPE =#{vo.calendarType}
+        </if>
+        <if test="vo.enableFlag != null">
+            and t.ENABLE_FLAG=#{vo.enableFlag}
+        </if>
+    </select>
+
+    <select id="propertyOrgLimitQuery" resultMap="BaseResultMap">
+        <bind name="user" value="@io.choerodon.mybatis.helper.AuditHelper@audit()"/>
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        calendar.CALENDAR_ID,
+        calendar.CALENDAR_CODE,
+        calendar.CALENDAR_TYPE,
+        calendar.DESCRIPTION,
+        calendar.ENABLE_FLAG,
+        calendar.CID,
+        calendar.CREATED_BY,
+        calendar.CREATION_DATE,
+        calendar.LAST_UPDATED_BY,
+        calendar.LAST_UPDATE_DATE,
+        calendar.OBJECT_VERSION_NUMBER
+        FROM
+        mt_calendar calendar
+        INNER JOIN mt_calendar_tl tt ON tt.CALENDAR_ID = calendar.CALENDAR_ID
+        AND tt.LANG = #{locale}
+        WHERE calendar.TENANT_ID = ${tenantId}
+            <if test="dto.calendarId != null">
+                and calendar.CALENDAR_ID=#{dto.calendarId}
+            </if>
+            <if test="dto.calendarCode != null">
+                and calendar.CALENDAR_CODE Like CONCAT('%',CONCAT(#{dto.calendarCode},'%'))
+            </if>
+            <if test="dto.description != null">
+                and tt.DESCRIPTION Like CONCAT('%',CONCAT(#{dto.description},'%'))
+            </if>
+            <if test="dto.calendarType != null">
+                and calendar.CALENDAR_TYPE=#{dto.calendarType}
+            </if>
+            <if test="dto.enableFlag != null">
+                and calendar.ENABLE_FLAG =#{dto.enableFlag}
+            </if>
+        ORDER BY calendar.CREATION_DATE DESC
+    </select>
+    <select id="selectByIdsAndType" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t.CALENDAR_ID,
+        t.CALENDAR_CODE,
+        t.CALENDAR_TYPE,
+        tl.DESCRIPTION,
+        t.ENABLE_FLAG,
+        t.CID,
+        t.CREATED_BY,
+        t.CREATION_DATE,
+        t.LAST_UPDATED_BY,
+        t.LAST_UPDATE_DATE,
+        t.OBJECT_VERSION_NUMBER
+        FROM
+        mt_calendar t
+        INNER JOIN mt_calendar_tl tl ON ( t.CALENDAR_ID = tl.CALENDAR_ID AND tl.LANG = #{locale})
+        WHERE t.TENANT_ID = ${tenantId}
+        AND t.CALENDAR_TYPE=#{calendarType}
+        AND t.CALENDAR_ID IN
+        <foreach collection="calendarIds" open="(" item="item" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeAfterSalesRepairMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeAfterSalesRepair">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="after_sales_repair_id" property="afterSalesRepairId" jdbcType="VARCHAR"/>
+        <result column="logistics_info_id" property="logisticsInfoId" jdbcType="VARCHAR"/>
+        <result column="service_receive_id" property="serviceReceiveId" jdbcType="VARCHAR"/>
+        <result column="sn_num" property="snNum" jdbcType="VARCHAR"/>
+        <result column="area_code" property="areaCode" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="virtual_material_code" property="virtualMaterialCode" jdbcType="VARCHAR"/>
+        <result column="logistics_number" property="logisticsNumber" jdbcType="VARCHAR"/>
+        <result column="logistics_company" property="logisticsCompany" jdbcType="VARCHAR"/>
+        <result column="back_type" property="backType" jdbcType="VARCHAR"/>
+        <result column="stock_in_number" property="stockInNumber" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="locator_id" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="stock_out_number" property="stockOutNumber" jdbcType="VARCHAR"/>
+        <result column="virtual_material_desc" property="virtualMaterialDesc" jdbcType="VARCHAR"/>
+        <result column="item_group" property="itemGroup" jdbcType="VARCHAR"/>
+        <result column="customer_id" property="customerId" jdbcType="VARCHAR"/>
+        <result column="stock_in_status" property="stockInStatus" jdbcType="VARCHAR"/>
+        <result column="stock_out_status" property="stockOutStatus" jdbcType="VARCHAR"/>
+        <result column="stock_in_org" property="stockInOrg" jdbcType="VARCHAR"/>
+        <result column="stock_out_org" property="stockOutOrg" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+</mapper>

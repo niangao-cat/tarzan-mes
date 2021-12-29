@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosWireBondMapper">
+
+    <select id="siteOutDateNullQuery" resultType="com.ruike.hme.domain.vo.HmeCosWireBondVO">
+        SELECT
+            mml.MATERIAL_ID,
+            mt.MATERIAL_CODE,
+            mml.MATERIAL_LOT_CODE,
+            mml.MATERIAL_LOT_ID,
+            mml.PRIMARY_UOM_QTY,
+            mma1.ATTR_VALUE WAFER,
+            mwo.WORK_ORDER_ID,
+            mwo.WORK_ORDER_NUM,
+            mma3.ATTR_VALUE COS_TYPE,
+            mma4.ATTR_VALUE LOT_NO,
+            mma5.ATTR_VALUE AVG_WAVE_LENGTH,
+            mct.CONTAINER_TYPE_DESCRIPTION,
+	        hej.job_id
+        FROM
+            mt_material mt,
+            mt_material_lot mml
+            LEFT JOIN mt_material_lot_attr mma1 ON mml.MATERIAL_LOT_ID = mma1.MATERIAL_LOT_ID
+            AND mma1.ATTR_NAME = 'WAFER_NUM'
+            LEFT JOIN mt_material_lot_attr mma2 ON mml.MATERIAL_LOT_ID = mma2.MATERIAL_LOT_ID
+            AND mma2.ATTR_NAME = 'WORK_ORDER_ID'
+            LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = mma2.ATTR_VALUE
+            LEFT JOIN mt_material_lot_attr mma3 ON mml.MATERIAL_LOT_ID = mma3.MATERIAL_LOT_ID
+            AND mma3.ATTR_NAME = 'COS_TYPE'
+            LEFT JOIN mt_material_lot_attr mma4 ON mml.MATERIAL_LOT_ID = mma4.MATERIAL_LOT_ID
+            AND mma4.ATTR_NAME = 'LOTNO'
+            LEFT JOIN mt_material_lot_attr mma5 ON mml.MATERIAL_LOT_ID = mma5.MATERIAL_LOT_ID
+            AND mma5.ATTR_NAME = 'AVG_WAVE_LENGTH'
+            LEFT JOIN mt_material_lot_attr mma6 ON mml.MATERIAL_LOT_ID = mma6.MATERIAL_LOT_ID
+            AND mma6.ATTR_NAME = 'CONTAINER_TYPE'
+            LEFT JOIN mt_container_type mct ON mct.CONTAINER_TYPE_CODE = mma6.ATTR_VALUE,
+            hme_eo_job_sn hej
+        WHERE
+            mt.MATERIAL_ID = mml.MATERIAL_ID
+            AND mml.MATERIAL_LOT_ID = hej.material_lot_id
+            AND hej.tenant_id = #{tenantId}
+            AND hej.job_type = 'COS_WIRE_BOND'
+            AND hej.operation_id = #{operationId}
+            AND hej.workcell_id = #{workcellId}
+            AND ( hej.site_out_date IS NULL OR hej.site_out_date = '' )
+    </select>
+
+    <select id="siteOutDateNullQuery1" resultType="java.lang.String">
+        select hejs.job_id
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materialLotId}
+        and hejs.operation_id = #{operationId}
+        and hejs.job_type = 'COS_WIRE_BOND'
+        and ( hejs.site_out_date IS NULL OR hejs.site_out_date = '' )
+    </select>
+
+    <select id="recordQuery" resultType="com.ruike.hme.domain.entity.HmeCosOperationRecord">
+        select hcor.*
+        from hme_cos_operation_record hcor
+        where hcor.tenant_id = #{tenantId}
+        and hcor.workcell_id = #{workcellId}
+        and hcor.operation_id = #{operationId}
+        and hcor.work_order_id = #{workOrderId}
+        and hcor.wafer = #{waferNum}
+        and hcor.surplus_cos_num > 0
+        <if test="equipmentId != null and equipmentId != ''">
+            and hcor.equipment_id = #{equipmentId}
+        </if>
+        order by hcor.last_update_date desc
+        limit 1
+    </select>
+
+    <select id="recordQuery2" resultType="com.ruike.hme.domain.entity.HmeCosOperationRecord">
+        select hcor.*
+        from hme_cos_operation_record hcor
+        where hcor.tenant_id = #{tenantId}
+        and hcor.workcell_id = #{workcellId}
+        and hcor.operation_id = #{operationId}
+        and hcor.work_order_id = #{workOrderId}
+        and hcor.wafer = #{waferNum}
+        <if test="equipmentId != null and equipmentId != ''">
+            and hcor.equipment_id = #{equipmentId}
+        </if>
+        order by hcor.last_update_date desc
+        limit 1
+    </select>
+
+    <select id="queryRouterStepIdByWorkOrderIdAndOperationId" resultType="java.lang.String">
+        SELECT
+	        rs.ROUTER_STEP_ID
+        FROM
+	        mt_work_order wo
+        LEFT JOIN mt_router_step rs ON wo.ROUTER_ID = rs.ROUTER_ID
+        LEFT JOIN mt_router_operation ro ON ro.ROUTER_STEP_ID = rs.ROUTER_STEP_ID
+        WHERE
+            wo.TENANT_ID = #{tenantId}
+        AND ro.OPERATION_ID = #{operationId}
+        AND wo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+</mapper>

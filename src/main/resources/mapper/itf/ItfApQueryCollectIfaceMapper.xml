@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfApQueryCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+    <select id="selectMaterial" resultType="com.ruike.itf.api.dto.ApQueryCollectItfReturnDTO1">
+        SELECT
+            mml.MATERIAL_LOT_CODE,
+            mml.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME
+        FROM
+            mt_material_lot mml
+        LEFT JOIN mt_material mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+        WHERE
+            1 = 1
+        AND mml.MATERIAL_LOT_CODE IN
+        <foreach collection="materialLotCodes" index="index" item="materialLotCode" open="(" close=")" separator=",">
+            #{materialLotCode}
+        </foreach>
+    </select>
+    <select id="selectCurrent" resultType="com.ruike.itf.api.dto.ApQueryCollectItfReturnDTO2">
+        SELECT
+            hab.material_id,
+            hab.cos_model,
+            hab.chip_combination,
+            hab.current,
+            hab.duration
+        FROM
+            hme_aging_basic hab
+        WHERE
+            1 = 1
+        AND hab.material_id IN
+        <foreach collection="materialIds" index="index" item="materialId" open="(" close=")" separator=",">
+            #{materialId}
+        </foreach>
+    </select>
+
+</mapper>

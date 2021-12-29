@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfSrmMaterialWasteIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfSrmMaterialWasteIface">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="iface_id" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="vendor_code" property="vendorCode" jdbcType="VARCHAR"/>
+        <result column="item_code" property="itemCode" jdbcType="VARCHAR"/>
+        <result column="primay_change_qty" property="primayChangeQty" jdbcType="VARCHAR"/>
+        <result column="primary_uom_qty" property="primaryUomQty" jdbcType="VARCHAR"/>
+        <result column="primary_uom" property="primaryUom" jdbcType="VARCHAR"/>
+        <result column="ship_to_organization" property="shipToOrganization" jdbcType="VARCHAR"/>
+        <result column="ZFLAG" property="zflag" jdbcType="VARCHAR"/>
+        <result column="ZMESSAGE" property="zmessage" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="selectSrmMaterialWaste" resultType="com.ruike.itf.api.dto.ItfSrmMaterialWasteIfaceSyncDTO">
+        SELECT
+            ms.SUPPLIER_CODE AS vendorCode,
+            mm.MATERIAL_CODE AS itemCode,
+            IFNULL(mioq.ONHAND_QUANTITY,'0') AS primayChangeQty,
+            IFNULL(mioq3.ONHAND_QUANTITY,'0') AS primaryUomQty,
+            mu.UOM_CODE AS primaryUom,
+            mspr.PLANT_CODE AS shipToOrganization
+        FROM
+            mt_inv_onhand_quantity mioq
+            JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mioq.LOCATOR_ID
+            AND mml.LOCATOR_TYPE = '25'
+            JOIN mt_material mm ON mm.MATERIAL_ID = mioq.MATERIAL_ID
+            JOIN mt_site_plant_releation mspr ON mspr.SITE_ID = mioq.SITE_ID
+            JOIN mt_supplier ms ON ms.SUPPLIER_ID = mioq.OWNER_ID
+            JOIN mt_uom mu ON mu.UOM_ID = mm.PRIMARY_UOM_ID
+            LEFT JOIN (
+        SELECT
+            mioq2.SITE_ID,
+            mioq2.MATERIAL_ID,
+            mioq2.OWNER_ID,
+            mioq2.ONHAND_QUANTITY
+        FROM
+            mt_inv_onhand_quantity mioq2
+            JOIN mt_mod_locator mml2 ON mml2.LOCATOR_ID = mioq2.LOCATOR_ID
+        WHERE
+            mml2.LOCATOR_TYPE = '26'
+            ) AS mioq3 ON mioq3.SITE_ID = mspr.SITE_ID
+            AND mioq3.MATERIAL_ID = mm.MATERIAL_ID
+            AND mioq3.OWNER_ID = ms.SUPPLIER_ID
+        WHERE
+            mioq.TENANT_ID = #{tenantId}
+            UNION
+        SELECT
+            ms.SUPPLIER_CODE AS vendorCode,
+            mm.MATERIAL_CODE AS itemCode,
+            IFNULL(mioq3.ONHAND_QUANTITY,'0') AS primayChangeQty,
+            IFNULL(mioq.ONHAND_QUANTITY,'0') AS primaryUomQty,
+            mu.UOM_CODE AS primaryUom,
+            mspr.PLANT_CODE AS shipToOrganization
+        FROM
+            mt_inv_onhand_quantity mioq
+            JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mioq.LOCATOR_ID
+            AND mml.LOCATOR_TYPE = '26'
+            JOIN mt_material mm ON mm.MATERIAL_ID = mioq.MATERIAL_ID
+            JOIN mt_site_plant_releation mspr ON mspr.SITE_ID = mioq.SITE_ID
+            JOIN mt_supplier ms ON ms.SUPPLIER_ID = mioq.OWNER_ID
+            JOIN mt_uom mu ON mu.UOM_ID = mm.PRIMARY_UOM_ID
+            LEFT JOIN (
+        SELECT
+            mioq2.SITE_ID,
+            mioq2.MATERIAL_ID,
+            mioq2.OWNER_ID,
+            mioq2.ONHAND_QUANTITY
+        FROM
+            mt_inv_onhand_quantity mioq2
+            JOIN mt_mod_locator mml2 ON mml2.LOCATOR_ID = mioq2.LOCATOR_ID
+        WHERE
+            mml2.LOCATOR_TYPE = '25'
+            ) AS mioq3 ON mioq3.SITE_ID = mspr.SITE_ID
+            AND mioq3.MATERIAL_ID = mm.MATERIAL_ID
+            AND mioq3.OWNER_ID = ms.SUPPLIER_ID
+        WHERE
+            mioq.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="selectSrmMaterialWasteParam" resultType="com.ruike.itf.api.dto.ItfSrmMaterialWasteIfaceSyncDTO">
+        SELECT
+            ms.SUPPLIER_CODE AS vendorCode,
+            mm.MATERIAL_CODE AS itemCode,
+            mioq.ONHAND_QUANTITY AS primayChangeQty,
+            mioq3.ONHAND_QUANTITY AS primaryUomQty,
+            mu.UOM_CODE AS primaryUom,
+            mspr.PLANT_CODE AS shipToOrganization
+        FROM
+            mt_inv_onhand_quantity mioq
+            JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mioq.LOCATOR_ID
+            AND mml.LOCATOR_TYPE = '25'
+            JOIN mt_material mm ON mm.MATERIAL_ID = mioq.MATERIAL_ID
+            JOIN mt_site_plant_releation mspr ON mspr.SITE_ID = mioq.SITE_ID
+            JOIN mt_supplier ms ON ms.SUPPLIER_ID = mioq.OWNER_ID
+            JOIN mt_uom mu ON mu.UOM_ID = mm.PRIMARY_UOM_ID
+            JOIN (
+        SELECT
+            mioq2.SITE_ID,
+            mioq2.MATERIAL_ID,
+            mioq2.OWNER_ID,
+            mioq2.ONHAND_QUANTITY
+        FROM
+            mt_inv_onhand_quantity mioq2
+            JOIN mt_mod_locator mml2 ON mml2.LOCATOR_ID = mioq2.LOCATOR_ID
+        WHERE
+            mml2.LOCATOR_TYPE = '26'
+            ) AS mioq3 ON mioq3.SITE_ID = mspr.SITE_ID
+            AND mioq3.MATERIAL_ID = mm.MATERIAL_ID
+            AND mioq3.OWNER_ID = ms.SUPPLIER_ID
+        WHERE
+            mioq.TENANT_ID = #{tenantId}
+            AND mspr.TENANT_ID = #{tenantId}
+            AND mspr.SITE_ID = #{siteId}
+            AND mioq3.MATERIAL_ID = #{materialId}
+            AND mioq.OWNER_ID = #{ownerId}
+    </select>
+</mapper>

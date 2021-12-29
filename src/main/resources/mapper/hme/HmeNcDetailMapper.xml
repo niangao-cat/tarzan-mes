@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeNcDetailMapper">
+
+    <select id="queryHmeNcDetailStation" resultType="com.ruike.hme.domain.entity.HmeNcDetail"
+            parameterType="com.ruike.hme.api.dto.HmeNcDetailDTO">
+        SELECT
+        t.nc_record_id,
+        t.SITE_ID station_id,
+        r.WORKCELL_NAME station,
+        l.material_code,
+        l.MATERIAL_NAME,
+        k.WORK_ORDER_NUM,
+        m.material_lot_code AS material_lot_num,
+        m.material_lot_id,
+        l.material_id,
+        t.DATE_TIME time,
+        g.DESCRIPTION description_type,
+        t.CREATED_BY created_by,
+        t.WORKCELL_ID workcell_id,
+        t.CLOSED_USER_ID,
+        mor.production_line_id,
+        mor.process_id,
+        mor.line_workcell_id,
+        ncr.nc_code,
+        ncr.description AS nc_description,
+        ni.INCIDENT_NUMBER,
+        t.comments,
+        DATE_FORMAT(t.DATE_TIME,'%Y-%m-%d %H:%i:%S') AS DATE_TIME_STR,
+        DATE_FORMAT(t.CLOSED_DATE_TIME,'%Y-%m-%d %H:%i:%S') AS CLOSED_DATE_TIME_STR,
+        nra.attribute1 AS trans_materialId,
+        process.process_method,
+        t.ROOT_CAUSE_WORKCELL_ID AS root_cause_workcell,
+        k.production_version,
+        case when o.MATERIAL_ID != k.MATERIAL_ID then 'Y' else 'N' end transform_flag,
+        ni.nc_incident_status,
+        m.QUALITY_STATUS,
+        ifnull(m.freeze_flag,'') freeze_flag
+        FROM
+        mt_nc_record t
+        LEFT JOIN mt_nc_incident ni ON ni.NC_INCIDENT_ID = t.NC_INCIDENT_ID
+        LEFT JOIN mt_mod_workcell r ON r.WORKCELL_ID = t.WORKCELL_ID AND r.WORKCELL_TYPE = 'STATION'
+        LEFT JOIN mt_material l ON l.MATERIAL_ID = t.MATERIAL_ID
+        LEFT JOIN mt_material_lot m ON t.MATERIAL_LOT_ID = m.MATERIAL_LOT_ID
+        LEFT JOIN mt_nc_group g ON t.NC_CODE_ID = g.NC_GROUP_ID
+        LEFT JOIN mt_eo o ON t.EO_ID = o.EO_ID
+        LEFT JOIN mt_work_order k ON o.work_order_id = k.work_order_id
+        LEFT JOIN ( SELECT
+        process_method AS process_method,
+        parent_record_id
+        FROM
+        hme_nc_record_attr
+        WHERE
+        tenant_id = #{tenantId}
+        ) process ON process.parent_record_id = t.nc_record_id
+        LEFT JOIN hme_nc_record_attr nra ON nra.tenant_id = t.tenant_id AND nra.parent_record_id = t.nc_record_id
+        LEFT JOIN (
+        SELECT
+        nc.nc_code_id,
+        nc.nc_code,
+        nc.description,
+        nr.PARENT_NC_RECORD_ID
+        FROM
+        mt_nc_record nr
+        LEFT JOIN mt_nc_code nc ON nc.NC_CODE_ID = nr.NC_CODE_ID
+        WHERE
+        nr.TENANT_ID = #{tenantId}
+        ) ncr ON ncr.PARENT_NC_RECORD_ID = t.NC_RECORD_ID
+        LEFT JOIN
+        (SELECT
+        mor1.ORGANIZATION_ID AS workcell_id,
+        mor2.ORGANIZATION_ID AS process_id,
+        mor3.ORGANIZATION_ID AS line_workcell_id,
+        mor4.ORGANIZATION_ID AS production_line_id,
+        mor5.PARENT_ORGANIZATION_ID AS site_Id,
+        mor5.ORGANIZATION_ID AS workshop_Id
+        FROM
+        mt_mod_organization_rel mor1
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_organization_rel mor3 ON mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel mor4 ON mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+        AND mor4.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        LEFT JOIN mt_mod_organization_rel mor5 ON mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+        AND mor5.ORGANIZATION_TYPE = 'AREA'
+        WHERE
+        mor2.ORGANIZATION_ID is NOT NULL
+        AND mor3.ORGANIZATION_ID is NOT NULL
+        AND mor4.ORGANIZATION_ID is NOT NULL
+        AND mor5.ORGANIZATION_ID is NOT NULL) mor ON mor.workcell_id = r.WORKCELL_ID AND mor.production_line_id =
+        k.PRODUCTION_LINE_ID
+        join mt_mod_workcell wkc on wkc.workcell_id = t.ROOT_CAUSE_WORKCELL_ID
+        join mt_mod_workcell prc on prc.workcell_id = mor.process_id
+        join mt_mod_workcell line on line.workcell_id = mor.line_workcell_id
+        WHERE t.DATE_TIME between #{dto.beginTime} and #{dto.endTime}
+        and ( t.PARENT_NC_RECORD_ID = '' OR t.PARENT_NC_RECORD_ID IS NULL )
+        AND g.NC_GROUP_ID IS NOT NULL
+        AND t.TENANT_ID = #{tenantId}
+        AND mor.production_line_id is NOT NULL
+        <if test="dto.processMethod !=null and dto.processMethod !=''">
+            AND process.process_method = #{dto.processMethod}
+        </if>
+        <if test="dto.incidentNum !=null and dto.incidentNum !=''">
+            AND ni.INCIDENT_NUMBER LIKE CONCAT('%',#{dto.incidentNum},'%')
+        </if>
+        <if test="dto.ncGroupId !=null and dto.ncGroupId !=''">
+            AND g.NC_GROUP_ID = #{dto.ncGroupId}
+        </if>
+        <if test="dto.qualityStatus !=null and dto.qualityStatus !=''">
+            AND m.quality_status = #{dto.qualityStatus}
+        </if>
+        <if test="dto.freezeFlag != null and dto.freezeFlag == 'Y'.toString()">
+            and m.freeze_flag = #{dto.freezeFlag}
+        </if>
+        <if test="dto.freezeFlag != null and dto.freezeFlag == 'N'.toString()">
+            and (
+            m.freeze_flag = #{dto.freezeFlag}
+            or m.freeze_flag = ''
+            or m.freeze_flag = null
+            )
+        </if>
+        <if test="dto.submitUserId !=null">
+            AND t.CREATED_BY = #{dto.submitUserId}
+        </if>
+        <if test="dto.applyUserId !=null">
+            AND t.CLOSED_USER_ID = #{dto.applyUserId}
+        </if>
+        <if test="dto.productType !=null and dto.productType !=''">
+            AND substr(m.material_lot_code,3,4) like #{dto.productType}
+        </if>
+        <if test="dto.transformFlag != null and dto.transformFlag != ''">
+            <choose>
+                <when test='dto.transformFlag == "Y"'>
+                    and o.MATERIAL_ID != k.MATERIAL_ID
+                </when>
+                <when test='dto.transformFlag == "N"'>
+                    and o.MATERIAL_ID = k.MATERIAL_ID
+                </when>
+            </choose>
+        </if>
+        <if test="workCellIdList !=null and workCellIdList.size>0">
+            AND t.ROOT_CAUSE_WORKCELL_ID in
+            <foreach collection="workCellIdList" open="(" close=")" item="ids" separator=",">
+                #{ids}
+            </foreach>
+        </if>
+        <if test="dto.stationList!=null and dto.stationList.size() > 0">
+            AND r.workcell_code IN (
+            <foreach collection="dto.stationList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="dto.materialCodeList!=null and dto.materialCodeList.size() > 0">
+            AND l.material_code IN (
+            <foreach collection="dto.materialCodeList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="dto.workOrderNumList!=null and dto.workOrderNumList.size() > 0">
+            AND k.WORK_ORDER_NUM IN (
+            <foreach collection="dto.workOrderNumList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="dto.ncCodeList!=null and dto.ncCodeList.size() > 0">
+            AND ncr.nc_code IN (
+            <foreach collection="dto.ncCodeList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="dto.snList!=null and dto.snList.size() > 0">
+            AND m.material_lot_code IN (
+            <foreach collection="dto.snList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="dto.workcellCodeList!=null and dto.workcellCodeList.size() > 0">
+            AND wkc.workcell_code IN (
+            <foreach collection="dto.workcellCodeList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="dto.processCodeList!=null and dto.processCodeList.size() > 0">
+            AND prc.workcell_code IN (
+            <foreach collection="dto.processCodeList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="dto.lineCodeList!=null and dto.lineCodeList.size() > 0">
+            AND line.workcell_code IN (
+            <foreach collection="dto.lineCodeList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        <if test="dto.docStatusList!=null and dto.docStatusList.size() > 0">
+            AND ni.nc_incident_status IN (
+            <foreach collection="dto.docStatusList" item="id" separator="," index="index">
+                #{id}
+            </foreach>
+            )
+        </if>
+        ORDER BY workcell_id
+    </select>
+
+    <select id="queryNcInfo" resultType="tarzan.method.domain.entity.MtNcCode">
+        SELECT nc.nc_code AS ncCode,
+               nc.description
+        FROM mt_nc_record nr
+                 LEFT JOIN mt_nc_code nc ON nc.NC_CODE_ID = nr.NC_CODE_ID
+        WHERE nr.TENANT_ID = #{tenantId}
+          AND nr.PARENT_NC_RECORD_ID = #{ncRecordId}
+    </select>
+
+    <select id="queryProcessMethodByRecordId" resultType="com.ruike.hme.domain.entity.HmeNcRecordAttr">
+        SELECT process_method   AS processMethod,
+               parent_record_id AS parentRecordId
+        FROM hme_nc_record_attr ra
+        WHERE ra.tenant_id = #{tenantId}
+          AND ra.parent_record_id = #{ncRecordId}
+    </select>
+
+    <select id="querySubCommentsByRecordId" resultType="tarzan.actual.domain.entity.MtNcRecord">
+        SELECT COMMENTS,
+               NC_RECORD_ID AS ncCodeId
+        FROM mt_nc_record nr
+        WHERE nr.TENANT_ID = #{tenantId}
+          AND nr.PARENT_NC_RECORD_ID = #{ncRecordId}
+    </select>
+
+    <select id="querySubCommentsByRecordIds" resultType="tarzan.actual.domain.entity.MtNcRecord">
+        SELECT
+        nr.COMMENTS,
+        nr.NC_RECORD_ID
+        FROM
+        mt_nc_record nr
+        WHERE
+        nr.TENANT_ID = #{tenantId}
+        AND nr.PARENT_NC_RECORD_ID in
+        <foreach collection="ncRecordList" open="(" close=")" item="ids" separator=",">
+            #{ids}
+        </foreach>
+    </select>
+</mapper>

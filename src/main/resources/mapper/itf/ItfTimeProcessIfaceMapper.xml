@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfTimeProcessIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+
+	<select id="queryWoInfo" resultType="com.ruike.itf.domain.vo.ItfProcessReturnIfaceVO2">
+		SELECT
+			wo.WORK_ORDER_ID,
+		  	wo.QTY WO_QUANTITY,
+		  	wo.WORK_ORDER_TYPE,
+			mm.MATERIAL_CODE SAP_MATERIAL_CODE,
+		  	mm.MATERIAL_NAME SAP_MATERIAL_NAME
+		FROM
+			mt_work_order wo,
+			mt_material mm
+		WHERE wo.TENANT_ID = #{tenantId}
+		AND wo.WORK_ORDER_ID IN
+		<foreach collection="workOrderIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND mm.MATERIAL_ID = wo.MATERIAL_ID
+	</select>
+
+	<select id="queryEoByMaterialLotIds" resultType="com.ruike.itf.domain.vo.ItfProcessReturnIfaceVO3">
+		SELECT
+		    mml.MATERIAL_LOT_ID,
+			me.`STATUS` EO_STATUS,
+		    wo.WORK_ORDER_TYPE
+		FROM
+			mt_material_lot mml,
+			mt_eo me,
+			mt_work_order wo
+		WHERE mml.TENANT_ID = #{tenantId}
+		AND mml.MATERIAL_LOT_ID IN
+		<foreach collection="materialLotIds" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+		AND me.TENANT_ID = #{tenantId}
+		AND wo.WORK_ORDER_ID = me.WORK_ORDER_ID
+	</select>
+</mapper>

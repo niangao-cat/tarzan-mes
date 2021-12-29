@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfRoutingOperationIfaceMapper">
+
+    <insert id="batchInsertRoutingOperaIface" parameterType="com.ruike.itf.domain.entity.ItfRoutingOperationIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="operaIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.routerObjectType},
+            #{item.routerObjectCode},
+            #{item.plantCode},
+            #{item.routerDescription},
+            #{item.routerCode},
+            #{item.routerStartDate},
+            #{item.routerEndDate},
+            #{item.routerStatus},
+            #{item.enableFlag},
+            #{item.routingAlternate},
+            #{item.operationSeqNum},
+            #{item.standardOperationCode},
+            #{item.operationDescription},
+            #{item.operationStartDate},
+            #{item.operationEndDate},
+            #{item.erpCreationDate},
+            #{item.erpCreatedBy},
+            #{item.erpLastUpdatedBy},
+            #{item.erpLastUpdateDate},
+            #{item.batchId},
+            #{item.batchDate},
+            #{item.status},
+            #{item.message},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.headAttribute1},
+            #{item.headAttribute2},
+            #{item.headAttribute3},
+            #{item.headAttribute4},
+            #{item.headAttribute5},
+            #{item.headAttribute6},
+            #{item.headAttribute7},
+            #{item.headAttribute8},
+            #{item.headAttribute9},
+            #{item.headAttribute10},
+            #{item.headAttribute11},
+            #{item.headAttribute12},
+            #{item.headAttribute13},
+            #{item.headAttribute14},
+            #{item.headAttribute15},
+            #{item.lineAttribute1},
+            #{item.lineAttribute2},
+            #{item.lineAttribute3},
+            #{item.lineAttribute4},
+            #{item.lineAttribute5},
+            #{item.lineAttribute6},
+            #{item.lineAttribute7},
+            #{item.lineAttribute8},
+            #{item.lineAttribute9},
+            #{item.lineAttribute10},
+            #{item.lineAttribute11},
+            #{item.lineAttribute12},
+            #{item.lineAttribute13},
+            #{item.lineAttribute14},
+            #{item.lineAttribute15}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertRoutingOpera" parameterType="com.ruike.itf.domain.entity.ItfRoutingOperationIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="operaIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.routerObjectType},
+            #{item.routerObjectCode},
+            #{item.plantCode},
+            #{item.routerDescription},
+            #{item.routerCode},
+            #{item.routerStartDate},
+            #{item.routerEndDate},
+            #{item.routerStatus},
+            #{item.enableFlag},
+            #{item.routingAlternate},
+            #{item.operationSeqNum},
+            #{item.standardOperationCode},
+            #{item.operationDescription},
+            #{item.operationStartDate},
+            #{item.operationEndDate},
+            #{item.erpCreationDate},
+            #{item.erpCreatedBy},
+            #{item.erpLastUpdatedBy},
+            #{item.erpLastUpdateDate},
+            #{item.batchId},
+            #{item.status},
+            #{item.updateMethod},
+            #{item.processTime},
+            #{item.specialIntruction},
+            #{item.message},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.headAttribute1},
+            #{item.headAttribute2},
+            #{item.headAttribute3},
+            #{item.headAttribute4},
+            #{item.headAttribute5},
+            #{item.headAttribute6},
+            #{item.headAttribute7},
+            #{item.headAttribute8},
+            #{item.headAttribute9},
+            #{item.headAttribute10},
+            #{item.headAttribute11},
+            #{item.headAttribute12},
+            #{item.headAttribute13},
+            #{item.headAttribute14},
+            #{item.headAttribute15},
+            #{item.lineAttribute1},
+            #{item.lineAttribute2},
+            #{item.lineAttribute3},
+            #{item.lineAttribute4},
+            #{item.lineAttribute5},
+            #{item.lineAttribute6},
+            #{item.lineAttribute7},
+            #{item.lineAttribute8},
+            #{item.lineAttribute9},
+            #{item.lineAttribute10},
+            #{item.lineAttribute11},
+            #{item.lineAttribute12},
+            #{item.lineAttribute13},
+            #{item.lineAttribute14},
+            #{item.lineAttribute15}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteDataByTypeAndBatchDate">
+        delete from itf_routing_operation_iface where ROUTER_OBJECT_TYPE = #{type} and batch_date = #{batchDate}
+    </delete>
+
+    <select id="selectBatchId" resultType="java.lang.Long">
+        SELECT
+        	roi.BATCH_ID
+        FROM
+        	itf_routing_operation_iface roi
+        WHERE
+        	roi.TENANT_ID = #{tenantId}
+        	AND roi.`STATUS` = 'N'
+        GROUP BY
+        	roi.BATCH_ID
+        ORDER BY
+	        roi.BATCH_ID ASC
+    </select>
+
+    <select id="queryRoutingOperationIfaces" resultType="com.ruike.itf.domain.entity.ItfRoutingOperationIface">
+        SELECT
+			item.TENANT_ID,
+            item.iface_Id,
+            item.router_Object_Type,
+            item.router_Object_Code,
+            item.plant_Code,
+            item.router_Description,
+            item.router_Code,
+            item.router_Start_Date,
+            item.router_End_Date,
+            item.router_Status,
+            item.enable_Flag,
+            item.routing_Alternate,
+            item.operation_Seq_Num,
+            item.standard_Operation_Code,
+            item.operation_Description,
+            item.operation_Start_Date,
+            item.operation_End_Date,
+            item.erp_Creation_Date,
+            item.erp_Created_By,
+            item.erp_Last_Updated_By,
+            item.erp_Last_Update_Date,
+            item.batch_Id,
+            item.status,
+            item.message,
+            item.cid,
+            item.object_Version_Number,
+            item.created_By,
+            item.creation_Date,
+            item.last_Updated_By,
+            item.last_Update_Date,
+            item.head_Attribute1,
+            item.head_Attribute2,
+            item.head_Attribute3,
+            item.head_Attribute4,
+            item.head_Attribute5,
+            item.head_Attribute6,
+            item.head_Attribute7,
+            item.head_Attribute8,
+            item.head_Attribute9,
+            item.head_Attribute10,
+            item.head_Attribute11,
+            item.head_Attribute12,
+            item.head_Attribute13,
+            item.head_Attribute14,
+            item.head_Attribute15,
+            item.line_Attribute1,
+            item.line_Attribute2,
+            item.line_Attribute3,
+            item.line_Attribute4,
+            item.line_Attribute5,
+            item.line_Attribute6,
+            item.line_Attribute7,
+            item.line_Attribute8,
+            item.line_Attribute9,
+            item.line_Attribute10,
+            item.line_Attribute11,
+            item.line_Attribute12,
+            item.line_Attribute13,
+            item.line_Attribute14,
+            item.line_Attribute15
+        FROM
+        	itf_routing_operation_iface item
+        WHERE item.TENANT_ID = #{tenantId}
+        AND item.BATCH_ID = #{batchId}
+    </select>
+</mapper>

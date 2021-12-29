@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeNcDowngradeMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeNcDowngrade">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="DOWNGRADE_ID" property="downgradeId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="TRANSITION_MATERIAL_ID" property="transitionMaterialId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="pageQuery" resultType="com.ruike.hme.domain.vo.HmeNcDowngradeVO">
+        select hnd.DOWNGRADE_ID, hnd.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+        hnd.NC_CODE_ID, mnc.NC_CODE, mnc.DESCRIPTION, hnd.ENABLE_FLAG,
+        hnd.TRANSITION_MATERIAL_ID, mm2.MATERIAL_CODE as TRANSITION_MATERIAL_CODE,
+        mm2.MATERIAL_NAME as TRANSITION_MATERIAL_NAME
+        from hme_nc_downgrade hnd,
+        mt_material mm,
+        mt_nc_code mnc,
+        mt_material mm2
+        where hnd.TENANT_ID = #{tenantId}
+        and mm.MATERIAL_ID = hnd.MATERIAL_ID
+        and mnc.NC_CODE_ID = hnd.NC_CODE_ID
+        and mm2.MATERIAL_ID = hnd.TRANSITION_MATERIAL_ID
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hnd.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.ncCodeId != null and dto.ncCodeId != ''">
+            and hnd.NC_CODE_ID = #{dto.ncCodeId}
+        </if>
+        <if test="dto.transitionMaterialId != null and dto.transitionMaterialId != ''">
+            and hnd.TRANSITION_MATERIAL_ID = #{dto.transitionMaterialId}
+        </if>
+        <if test="dto.enableFlag != null and dto.enableFlag != ''">
+            and hnd.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        order by hnd.creation_date desc
+    </select>
+
+    <select id="hisPageQuery" resultType="com.ruike.hme.domain.vo.HmeNcDowngradeVO2">
+        select hndh.DOWNGRADE_HIS_ID, hndh.DOWNGRADE_ID, hndh.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               hndh.NC_CODE_ID, mnc.NC_CODE, mnc.DESCRIPTION, hndh.ENABLE_FLAG, hndh.creation_date, hndh.created_by,
+               hndh.TRANSITION_MATERIAL_ID, mm2.MATERIAL_CODE as TRANSITION_MATERIAL_CODE,
+               mm2.MATERIAL_NAME as TRANSITION_MATERIAL_NAME, iu.real_name as created_by_name
+        from hme_nc_downgrade_his hndh,
+             mt_material mm,
+             mt_nc_code mnc,
+             mt_material mm2,
+             hzero_platform.iam_user iu
+        where hndh.DOWNGRADE_ID = #{dto.downgradeId}
+        and hndh.TENANT_ID = #{tenantId}
+        and mm.MATERIAL_ID = hndh.MATERIAL_ID
+        and mnc.NC_CODE_ID = hndh.NC_CODE_ID
+        and mm2.MATERIAL_ID = hndh.TRANSITION_MATERIAL_ID
+        and iu.id = hndh.created_by
+        <if test="dto.creationDateFrom != null">
+            and hndh.creation_date >= DATE_FORMAT(#{dto.creationDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateTo != null">
+            and hndh.creation_date &lt;= DATE_FORMAT(#{dto.creationDateTo}, '%Y-%m-%d %T')
+        </if>
+        order by hndh.creation_date desc
+    </select>
+</mapper>

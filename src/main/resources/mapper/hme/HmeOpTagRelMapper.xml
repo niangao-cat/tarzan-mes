@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeOpTagRelMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeOpTagRel">
+        <result column="OP_TAG_REL_ID" property="opTagRelId" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryTagInfoByOperationId" resultType="com.ruike.hme.domain.vo.HmeOpTagRelVO">
+        select
+            otr.op_tag_rel_id,
+            otr.operation_id,
+            otr.tag_id,
+            mt.tag_code
+        from
+            hme_op_tag_rel otr,
+            mt_tag mt
+        where
+            mt.tag_id = otr.tag_id
+            and mt.tenant_id = otr.tenant_id
+            and otr.tenant_id = #{tenantId}
+            and otr.operation_id = #{operationId}
+    </select>
+
+    <select id="hmeOpTagRelQuery" resultType="com.ruike.hme.domain.vo.HmeOpTagRelVO2">
+        SELECT
+            OTR.OP_TAG_REL_ID,
+            OTR.OPERATION_ID,
+            OTR.TAG_ID,
+            MT.TAG_CODE,
+            MT.TAG_DESCRIPTION TAG_NAME
+        FROM
+            HME_OP_TAG_REL OTR,
+            MT_TAG MT
+        WHERE OTR.TAG_ID = MT.TAG_ID
+        AND MT.TENANT_ID = OTR.TENANT_ID
+        AND OTR.TENANT_ID = #{tenantId}
+        AND OTR.OPERATION_ID = #{operationId}
+    </select>
+</mapper>

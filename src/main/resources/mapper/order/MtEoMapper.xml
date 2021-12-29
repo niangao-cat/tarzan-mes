@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.order.infra.mapper.MtEoMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.order.domain.entity.MtEo">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="EO_NUM" property="eoNum" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="LAST_EO_STATUS" property="lastEoStatus" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_LINE_ID" property="productionLineId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="PLAN_START_TIME" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="PLAN_END_TIME" property="planEndTime" jdbcType="TIMESTAMP"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="EO_TYPE" property="eoType" jdbcType="VARCHAR"/>
+        <result column="VALIDATE_FLAG" property="validateFlag" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="ResultView" type="tarzan.order.api.dto.MtEoBomDTO">
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="bomComponentCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="bomComponentName" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_TYPE" property="bomComponentType" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_METHOD" property="assembleMethod" jdbcType="VARCHAR"/>
+        <result column="ISSUED_LOCATOR_ID" property="issuedLocatorId" jdbcType="VARCHAR"/>
+        <result column="KEY_MATERIAL_FLAG" property="keyMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="STEP_NAME" property="step" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="DESCRIPTION" property="stepDesc" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="COMPONENT_QTY" property="componentQty" jdbcType="DECIMAL"/>
+        <result column="COMPONENT_QTY" property="componentQty" jdbcType="DECIMAL"/>
+        <result column="STEP_NAME" property="step" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="DESCRIPTION" property="stepDesc" jdbcType="DECIMAL"/>
+    </resultMap>
+    <select id="selectEoByWoLimit" resultMap="BaseResultMap">
+        select * from mt_eo eo where 1=1
+        AND eo.TENANT_ID=${tenantId}
+        <if test="dtos.eoType!=null and dtos.eoType.size()>0">
+            and eo.EO_TYPE in (
+            <foreach collection="dtos.eoType" item="type" separator="," index="index">
+                #{type}
+            </foreach>
+            )
+        </if>
+        <if test="dtos.status!=null and dtos.status.size()>0">
+            and eo.STATUS in (
+            <foreach collection="dtos.status" item="status" separator="," index="index">
+                #{status}
+            </foreach>
+            )
+        </if>
+        <if test="dtos.workOrderId!=null">
+            and eo.WORK_ORDER_ID=#{dtos.workOrderId}
+        </if>
+    </select>
+
+    <select id="selectEoByRouterOrBom" resultMap="BaseResultMap">
+        SELECT
+        h.*
+        FROM
+        mt_eo h
+        LEFT JOIN mt_eo_bom b ON h.EO_ID = b.EO_ID AND b.TENANT_ID=${tenantId}
+        LEFT JOIN mt_eo_router r ON r.EO_ID = h.EO_ID AND r.TENANT_ID=${tenantId}
+        WHERE 1=1
+        AND h.TENANT_ID=${tenantId}
+        <if test="dto.bomId!=null">
+            and b.BOM_ID=#{dto.bomId}
+        </if>
+        <if test="dto.routerId!=null">
+            and r.ROUTER_ID=#{dto.routerId}
+        </if>
+        <if test="dto.productionLineId!=null">
+            and h.PRODUCTION_LINE_ID=#{dto.productionLineId}
+        </if>
+        <if test="dto.materialId!=null">
+            and h.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.status!=null">
+            and h.STATUS in (
+            <foreach collection="dto.status" item="s" separator="," index="index">
+                #{s}
+            </foreach>
+            )
+        </if>
+        <if test="dto.eoType!=null">
+            and h.EO_TYPE in (
+            <foreach collection="dto.eoType" item="s" separator="," index="index">
+                #{s}
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select * from mt_eo where
+        TENANT_ID=${tenantId}
+        <if test="eoIds!=null and eoIds!=''">
+            and ${eoIds}
+        </if>
+        <if test="eoIds==null || eoIds==''">
+            and 1=-1
+        </if>
+    </select>
+
+
+    <select id="selectByTime" resultMap="BaseResultMap">
+        select *
+        from mt_eo eo
+        where 1=1
+        AND eo.TENANT_ID=${tenantId}
+        and eo.PLAN_START_TIME between #{dto.planStartTimeFrom} and #{dto.planStartTimeTo}
+        and eo.PLAN_END_TIME between #{dto.planEndTimeFrom} and #{dto.planEndTimeTo}
+
+        <if test="dto.productionLineId!=null">
+            and eo.PRODUCTION_LINE_ID=#{dto.productionLineId}
+        </if>
+        <if test="dto.materialId!=null">
+            and eo.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.workcellId!=null">
+            and eo.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="dto.siteId!=null">
+            and eo.SITE_ID=#{dto.siteId}
+        </if>
+        <if test="dto.eoType!=null">
+            and eo.EO_TYPE=#{dto.eoType}
+        </if>
+        <if test="dto.status!=null">
+            and eo.STATUS=#{dto.status}
+        </if>
+    </select>
+    <select id="propertyLimitEoPropertyQuery" resultMap="BaseResultMap">
+        select
+        eo.*
+        from mt_eo eo
+        where 1=1
+        and eo.TENANT_ID=#{tenantId}
+        and eo.STATUS in ( 'RELEASED', 'WORKING', 'HOLD' )
+        <if test="dto.eoType != null">
+            and eo.EO_TYPE=#{dto.eoType}
+        </if>
+        <if test="dto.siteId != null">
+            and eo.SITE_ID=#{dto.siteId}
+        </if>
+        <if test="dto.productionLineId != null">
+            and eo.PRODUCTION_LINE_ID=#{dto.productionLineId}
+        </if>
+        <if test="dto.workcellId != null">
+            and eo.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="dto.materialId != null">
+            and eo.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.eoId != null">
+            and eo.EO_ID=#{dto.eoId}
+        </if>
+        <if test="dto.eoNum != null">
+            and eo.EO_NUM=#{dto.eoNum}
+        </if>
+        <if test="dto.identification != null">
+            and eo.IDENTIFICATION=#{dto.identification}
+        </if>
+        <if test="dto.validateFlag != null">
+            and eo.VALIDATE_FLAG=#{dto.validateFlag}
+        </if>
+        <if test="dto.planStartTimeFrom!=null">
+            and eo.PLAN_START_TIME &gt;= #{dto.planStartTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="dto.planStartTimeTo!=null">
+            and eo.PLAN_START_TIME &lt;= #{dto.planStartTimeTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="dto.planEndTimeFrom!=null">
+            and eo.PLAN_END_TIME &gt;= #{dto.planEndTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="dto.planEndTimeTo!=null">
+            and eo.PLAN_END_TIME &lt;= #{dto.planEndTimeTo,jdbcType=TIMESTAMP}
+        </if>
+        order by eo.EO_ID+0
+    </select>
+    <select id="selectByNumCustom" resultMap="BaseResultMap">
+        select * from mt_eo where
+        TENANT_ID=${tenantId}
+        AND EO_NUM IN
+        <foreach collection="eoNums" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectMinNumByEoIds" resultType="java.lang.String">
+        SELECT
+        MIN( t.EO_NUM )
+        FROM
+        mt_eo t
+        WHERE
+        t.TENANT_ID=${tenantId}
+        AND t.EO_ID IN
+        <foreach collection="eoIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="selectByWorkOrder" resultType="tarzan.order.domain.vo.MtWorkOrderVO51">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        me.EO_ID eoId,
+        me.EO_NUM eoNum,
+        me.STATUS status,
+        me.SITE_ID siteId,
+        me.MATERIAL_ID materialId,
+        mm.MATERIAL_CODE materialCode,
+        mtl.MATERIAL_NAME materialName,
+        me.QTY qty,
+        me.UOM_ID uomId,
+        me.EO_TYPE eoType,
+        me.PRODUCTION_LINE_ID productionLineId,
+        me.PLAN_START_TIME planStartTime,
+        me.PLAN_END_TIME planEndTime,
+        me.IDENTIFICATION eoIdentification,
+        me.CREATION_DATE creationDate
+        FROM
+        mt_eo me
+        LEFT JOIN mt_material mm ON me.MATERIAL_ID = mm.MATERIAL_ID AND mm.TENANT_ID = me.TENANT_ID
+        LEFT JOIN mt_material_tl mtl ON mm.MATERIAL_ID = mtl.MATERIAL_ID AND mtl.LANG = #{locale}
+        LEFT JOIN mt_eo_bom eb ON eb.EO_ID = me.EO_ID
+        LEFT JOIN mt_bom mb ON mb.BOM_ID = eb.BOM_ID
+        WHERE
+        me.WORK_ORDER_ID = #{dto.workOrderId}
+        AND me.TENANT_ID = #{tenantId}
+        <if test='dto.status != null'>
+            AND me.`STATUS` IN
+            <foreach collection="dto.status" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.eoType != null'>
+            AND me.EO_TYPE IN
+            <foreach collection="dto.eoType" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.eoNum != null and dto.eoNum !=""'>
+            <bind name="numLike" value="'%'+dto.eoNum+'%'"/>
+            AND me.EO_NUM LIKE #{numLike}
+        </if>
+        <if test='dto.eoIdentification != null and dto.eoIdentification !=""'>
+            <bind name="identificationLike" value="'%'+dto.eoIdentification+'%'"/>
+            AND me.IDENTIFICATION LIKE #{identificationLike}
+        </if>
+        <if test='dto.eoBomName != null and dto.eoBomName !=""'>
+            <bind name="bomLike" value="'%'+dto.eoBomName+'%'"/>
+            AND mb.BOM_NAME LIKE #{bomLike}
+        </if>
+        <if test='dto.materialCode != null and dto.materialCode !=""'>
+            <bind name="codeLike" value="'%'+dto.materialCode+'%'"/>
+            AND mm.MATERIAL_CODE LIKE #{codeLike}
+        </if>
+        <if test='dto.materialName != null and dto.materialName !=""'>
+            <bind name="nameLike" value="'%'+dto.materialName+'%'"/>
+            AND mtl.MATERIAL_NAME LIKE #{nameLike}
+        </if>
+        ORDER BY me.CREATION_DATE DESC,me.EO_NUM DESC
+    </select>
+
+    <select id="ncInfoFlagQuery" resultType="tarzan.order.domain.vo.MtWorkOrderVO51">
+        select
+        mnr.EO_ID,
+        count(mnr.NC_RECORD_ID) nc_record_count
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.EO_ID in
+        <foreach collection="eoList" item="eoId" index="index"  separator="," open="(" close=")">
+            #{eoId}
+        </foreach>
+        and (mnr.PARENT_NC_RECORD_ID IS NULL or mnr.PARENT_NC_RECORD_ID = '')
+        group by
+        mnr.EO_ID
+    </select>
+
+    <select id="eoListForUi" fetchSize="5000" resultType="tarzan.order.domain.entity.MtEo">
+        SELECT
+        me.*
+        <if test='dto.bindSnFlag != null and dto.bindSnFlag !=""'>
+            ,mea.ATTR_VALUE REPAIR_SN
+        </if>
+        FROM
+        mt_eo me
+        INNER JOIN mt_work_order wo ON me.WORK_ORDER_ID=wo.WORK_ORDER_ID AND wo.TENANT_ID = ${tenantId}
+        <if test='(dto.repairSn != null and dto.repairSn !="") || (dto.bindSnFlag != null and dto.bindSnFlag !="")'>
+            LEFT JOIN mt_eo_attr mea ON mea.eo_id = me.eo_id AND mea.attr_name = 'REWORK_MATERIAL_LOT' AND mea.TENANT_ID = ${tenantId}
+        </if>
+        WHERE
+        me.TENANT_ID = ${tenantId}
+        <if test='dto.status != null and dto.status.size()>0'>
+            AND me.`STATUS` IN
+            <foreach collection="dto.status" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.eoType != null and dto.eoType.size()>0'>
+            AND me.EO_TYPE IN
+            <foreach collection="dto.eoType" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.workOrderStatus != null and dto.workOrderStatus.size()>0'>
+            AND wo.`STATUS` IN
+            <foreach collection="dto.workOrderStatus" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.productionLineId != null and dto.productionLineId !=""'>
+            AND me.PRODUCTION_LINE_ID = #{dto.productionLineId}
+        </if>
+        <if test='dto.materialId != null and dto.materialId !=""'>
+            AND me.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test='dto.workOrderNumList != null and dto.workOrderNumList.size() > 0'>
+            AND wo.WORK_ORDER_NUM IN
+            <foreach collection="dto.workOrderNumList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.customerId != null and dto.customerId !=""'>
+            AND wo.CUSTOMER_ID = #{dto.customerId}
+        </if>
+        <if test='dto.eoNum != null and dto.eoNum !=""'>
+            <bind name="numLike" value="'%'+dto.eoNum+'%'"/>
+            AND me.EO_NUM LIKE #{numLike}
+        </if>
+
+        <if test="dto.startTimeFrom!=null">
+            and me.PLAN_START_TIME &gt;=DATE_FORMAT(#{dto.startTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.startTimeTo!=null">
+            and me.PLAN_START_TIME &lt;=DATE_FORMAT(#{dto.startTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.endTimeFrom!=null">
+            and me.PLAN_END_TIME &gt;= DATE_FORMAT(#{dto.endTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.endTimeTo!=null">
+            and me.PLAN_END_TIME &lt;= DATE_FORMAT(#{dto.endTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.eoIdentification !=null">
+            and me.identification LIKE CONCAT("%",#{dto.eoIdentification},"%")
+        </if>
+        <if test='dto.eoIdList != null and dto.eoIdList.size()>0'>
+            AND me.EO_ID IN
+            <foreach collection="dto.eoIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.repairSn != null and dto.repairSn !=""'>
+            AND FIND_IN_SET(mea.ATTR_VALUE, #{dto.repairSn})
+        </if>
+        <if test='dto.bindSnFlag != null and dto.bindSnFlag !=""'>
+            <choose>
+                <when test='dto.bindSnFlag == "Y"'>
+                    AND mea.ATTR_VALUE is NOT NULL
+                    AND mea.ATTR_VALUE != ''
+                </when>
+                <otherwise>
+                    AND (mea.ATTR_VALUE is NULL OR mea.ATTR_VALUE = '')
+                </otherwise>
+            </choose>
+        </if>
+        order by me.LAST_UPDATE_DATE desc
+    </select>
+    <select id="eoBomStepListForUi" fetchSize="5000" resultMap="ResultView">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        mb.BOM_ID,
+        mbc.BOM_COMPONENT_ID,
+        mbc.LINE_NUMBER,
+        mbc.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mtl.MATERIAL_NAME,
+        mbc.BOM_COMPONENT_TYPE,
+        mbc.ASSEMBLE_METHOD,
+        mbc.ISSUED_LOCATOR_ID,
+        mbc.KEY_MATERIAL_FLAG,
+        CASE
+        mpf.OPERATION_ASSEMBLE_FLAG
+        WHEN 'Y' THEN
+        mrs.STEP_NAME ELSE NULL
+        END STEP_NAME,
+        CASE
+        mpf.OPERATION_ASSEMBLE_FLAG
+        WHEN 'Y' THEN
+        any_value (mrs.SEQUENCE) ELSE NULL
+        END SEQUENCE,
+        CASE
+        mpf.OPERATION_ASSEMBLE_FLAG
+        WHEN 'Y' THEN
+        mrsl.DESCRIPTION ELSE NULL
+        END DESCRIPTION
+        FROM
+        mt_eo me
+        INNER JOIN mt_eo_bom meb ON me.EO_ID = meb.EO_ID
+        INNER JOIN mt_eo_router mer ON me.EO_ID = mer.EO_ID
+        INNER JOIN mt_bom mb ON meb.BOM_ID = mb.BOM_ID
+        INNER JOIN mt_material_site mms ON me.MATERIAL_ID = mms.MATERIAL_ID AND me.SITE_ID = mms.SITE_ID AND
+        mms.ENABLE_FLAG = 'Y'
+        LEFT JOIN mt_pfep_manufacturing mpf ON mms.MATERIAL_SITE_ID = mpf.MATERIAL_SITE_ID AND mpf.ORGANIZATION_TYPE =
+        'PRODUCTIONLINE' AND mpf.ORGANIZATION_ID = ME.PRODUCTION_LINE_ID AND mpf.TENANT_ID = ${tenantId}
+        INNER JOIN mt_bom_component mbc ON mb.BOM_ID = mbc.BOM_ID
+        Left JOIN mt_router_operation_component mroc ON mbc.BOM_COMPONENT_ID = mroc.BOM_COMPONENT_ID and mroc.TENANT_ID
+        = ${tenantId}
+        LEFT JOIN mt_router_operation mro ON mroc.ROUTER_OPERATION_ID = mro.ROUTER_OPERATION_ID and mro.TENANT_ID =
+        ${tenantId}
+        LEFT JOIN mt_router_step mrs ON mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID AND mer.ROUTER_ID = mrs.ROUTER_ID and
+        mrs.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_router_step_tl mrsl ON mrs.ROUTER_STEP_ID = mrsl.ROUTER_STEP_ID AND mrsl.LANG = #{locale}
+        INNER JOIN mt_material mm ON mbc.MATERIAL_ID = mm.MATERIAL_ID
+        INNER JOIN mt_material_tl mtl ON mtl.MATERIAL_ID = mm.MATERIAL_ID AND mtl.LANG =#{locale}
+        WHERE
+        me.TENANT_ID = ${tenantId}
+        and meb.TENANT_ID = ${tenantId}
+        and mer.TENANT_ID = ${tenantId}
+        and mb.TENANT_ID = ${tenantId}
+        and mms.TENANT_ID = ${tenantId}
+        and mbc.TENANT_ID = ${tenantId}
+        and me.EO_ID=#{dto.eoId}
+        <if test='dto.bomComponentCode != null and dto.bomComponentCode != ""'>
+            <bind name="materialCodeLike" value="'%'+dto.bomComponentCode+'%'"/>
+            AND mm.MATERIAL_CODE LIKE #{materialCodeLike}
+        </if>
+        <if test='dto.bomComponentName != null and dto.bomComponentName != ""'>
+            <bind name="materialNameLike" value="'%'+dto.bomComponentName+'%'"/>
+            AND mtl.MATERIAL_NAME LIKE #{materialNameLike}
+        </if>
+        <if test='dto.step != null and dto.step != ""'>
+            <bind name="stepLike" value="'%'+dto.step+'%'"/>
+            AND mrs.STEP_NAME LIKE #{stepLike}
+        </if>
+        <if test='dto.stepDesc != null and dto.stepDesc != ""'>
+            <bind name="stepDescLike" value="'%'+dto.stepDesc+'%'"/>
+            AND mrsl.DESCRIPTION LIKE #{stepDescLike}
+        </if>
+        GROUP BY
+        mb.BOM_ID,
+        mbc.BOM_COMPONENT_ID,
+        mbc.LINE_NUMBER,
+        mbc.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mtl.MATERIAL_NAME,
+        mbc.BOM_COMPONENT_TYPE,
+        mbc.ASSEMBLE_METHOD,
+        mbc.ISSUED_LOCATOR_ID,
+        mbc.KEY_MATERIAL_FLAG,
+        mpf.OPERATION_ASSEMBLE_FLAG,
+        mrs.STEP_NAME,
+        mrsl.DESCRIPTION
+        ORDER BY mbc.LINE_NUMBER ${dto.sortDirection}
+    </select>
+
+    <select id="queryWoEoCount" resultType="tarzan.order.domain.vo.MtEoVO48">
+        SELECT
+            t.WORK_ORDER_ID,
+            COUNT( 1 )
+        FROM
+            mt_eo t
+        WHERE
+            t.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+          AND ${workOrderIdsInSql}
+        GROUP BY
+            t.WORK_ORDER_ID
+    </select>
+
+    <select id="queryBomComponentActualForUi" resultMap="ResultView">
+        select
+            sum(meca.assemble_qty) assemble_qty,
+            meca.substitute_flag,
+            meca.router_step_id
+        from
+            mt_eo_component_actual meca
+        where
+            meca.eo_id = #{eoId}
+          and meca.bom_component_id = #{bomComponentId}
+          and meca.tenant_id = #{tenantId}
+          and meca.component_type = #{bomComponentType}
+          and meca.material_id = #{materialId}
+          and meca.bom_id = #{bomId}
+        group by meca.substitute_flag,
+                 meca.router_step_id
+    </select>
+
+
+    <select id="checkSubstitute" resultType="java.lang.String">
+        SELECT
+            mbc.BOM_COMPONENT_ID
+        FROM
+            mt_bom_component mbc,
+            mt_bom_substitute_group mbsg,
+            mt_bom_substitute mbs
+        WHERE
+            mbs.BOM_SUBSTITUTE_GROUP_ID = mbsg.BOM_SUBSTITUTE_GROUP_ID
+          AND mbs.MATERIAL_ID = #{materialId}
+          AND mbsg.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+          AND mbc.BOM_ID =  #{bomId}
+          AND mbc.TENANT_ID = #{tenantId}
+          AND mbsg.TENANT_ID = #{tenantId}
+          AND mbs.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryBomComponentActualForSubstitute" resultType="tarzan.order.api.dto.MtEoBomDTO">
+        select
+            sum(meca.assemble_qty) assemble_qty,
+            meca.substitute_flag,
+            meca.router_step_id
+        from
+            mt_eo_component_actual meca
+        where
+            meca.eo_id = #{eoId}
+          and meca.tenant_id = #{tenantId}
+          and meca.material_id = #{materialId}
+          and meca.bom_id = #{bomId}
+        group by meca.substitute_flag,
+                 meca.router_step_id
+            limit 1
+    </select>
+
+    <select id="eoRepairSnQuery" resultType="com.ruike.hme.domain.vo.HmeEoRepairSnVO">
+        SELECT ea.eo_id, ea.ATTR_VALUE as repair_sn
+        from mt_eo_attr ea
+        where ea.TENANT_ID = #{tenantId}
+        and ea.eo_id in
+        <foreach collection="eoIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and ea.attr_name = 'REWORK_MATERIAL_LOT'
+        and ea.ATTR_VALUE is not null
+        and ea.ATTR_VALUE != ''
+    </select>
+</mapper>

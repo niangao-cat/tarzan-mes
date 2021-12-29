@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtTagGroupObjectMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtTagGroupObject">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_GROUP_OBJECT_ID" property="tagGroupObjectId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_VERSION" property="productionVersion" jdbcType="VARCHAR"/>
+        <result column="ITEM_TYPE" property="itemType" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.general.api.dto.MtTagGroupObjectDTO2">
+        <result column="TAG_GROUP_OBJECT_ID" property="tagGroupObjectId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="OPERATION_DESC" property="operationDesc" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_DESC" property="routerDesc" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_NAME" property="routerStepName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_DESC" property="routerStepDesc" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CODE" property="workcellCode" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_DESC" property="workcellDesc" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_NAME" property="workcellName" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="EO_NUM" property="eoNum" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="NC_CODE" property="ncCode" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_DESC" property="ncCodeDesc" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+        <result column="BOM_DESC" property="bomDesc" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_MATERIAL_CODE" property="bomComponentMaterialCode" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_VERSION" property="productionVersion" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ITEM_TYPE" property="itemType" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectByIdList" resultMap="BaseResultMap">
+        select
+        *
+        from
+        mt_tag_group_object
+        where
+        TENANT_ID = ${tenantId}
+        AND TAG_GROUP_OBJECT_ID IN
+        <foreach collection="tagGroupObjectIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectBytagGroupIdList" resultMap="BaseResultMap">
+        select
+        *
+        from
+        mt_tag_group_object
+        where
+        TENANT_ID = ${tenantId}
+        <if test="tagGroupId!=null and tagGroupId.size()>0">
+            AND TAG_GROUP_ID IN
+            <foreach collection="tagGroupId" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="tagGroupId==null or tagGroupId.size()==0">
+            AND 1&lt;&gt;1
+        </if>
+
+    </select>
+
+    <select id="propertyLimitTagGroupObjectBatchQuery" resultMap="BaseResultMap">
+        select * from mt_tag_group_object where TENANT_ID = ${tenantId}
+        <if test="tagGroupIdList != null and tagGroupIdList.size>0">
+            AND TAG_GROUP_ID in
+            <foreach collection="tagGroupIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="tagGroupObject.eoId != null">
+            and EO_ID = #{tagGroupObject.eoId}
+        </if>
+        <if test="tagGroupObject.workOrderId != null">
+            and WORK_ORDER_ID = #{tagGroupObject.workOrderId}
+        </if>
+        <if test="tagGroupObject.routerStepId != null">
+            and ROUTER_STEP_ID = #{tagGroupObject.routerStepId}
+        </if>
+        <if test="tagGroupObject.routerId != null">
+            and ROUTER_ID = #{tagGroupObject.routerId}
+        </if>
+        <if test="tagGroupObject.materialId != null">
+            and MATERIAL_ID = #{tagGroupObject.materialId}
+        </if>
+        <if test="tagGroupObject.ncCodeId != null">
+            and NC_CODE_ID = #{tagGroupObject.ncCodeId}
+        </if>
+        <if test="tagGroupObject.bomId != null">
+            and BOM_ID = #{tagGroupObject.bomId}
+        </if>
+        <if test="tagGroupObject.bomComponentId != null">
+            and BOM_COMPONENT_ID = #{tagGroupObject.bomComponentId}
+        </if>
+    </select>
+
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        select t.* from mt_tag_group_object t where 1=1
+        AND t.TENANT_ID = ${tenantId}
+        <if test='dto.tagGroupId != null and dto.tagGroupId != ""'>
+            and t.TAG_GROUP_ID =#{dto.tagGroupId}
+        </if>
+        <choose>
+            <when test='dto.materialId != null and dto.materialId!=""'>
+                and t.MATERIAL_ID = #{dto.materialId}
+            </when>
+            <otherwise>
+                and t.MATERIAL_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.operationId != null and dto.operationId!=""'>
+                and t.OPERATION_ID = #{dto.operationId}
+            </when>
+            <otherwise>
+                and t.OPERATION_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.routerId != null and dto.routerId!=""'>
+                and t.ROUTER_ID = #{dto.routerId}
+            </when>
+            <otherwise>
+                and t.ROUTER_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.routerStepId != null and dto.routerStepId!=""'>
+                and t.ROUTER_STEP_ID = #{dto.routerStepId}
+            </when>
+            <otherwise>
+                and t.ROUTER_STEP_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.workcellId != null and dto.workcellId!=""'>
+                and t.WORKCELL_ID = #{dto.workcellId}
+            </when>
+            <otherwise>
+                and t.WORKCELL_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.workOrderId != null and dto.workOrderId!=""'>
+                and t.WORK_ORDER_ID = #{dto.workOrderId}
+            </when>
+            <otherwise>
+                and t.WORK_ORDER_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.eoId != null and dto.eoId!=""'>
+                and t.EO_ID = #{dto.eoId}
+            </when>
+            <otherwise>
+                and t.EO_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.ncCodeId != null and dto.ncCodeId!=""'>
+                and t.NC_CODE_ID = #{dto.ncCodeId}
+            </when>
+            <otherwise>
+                and t.NC_CODE_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.bomId != null and dto.bomId!=""'>
+                and t.BOM_ID = #{dto.bomId}
+            </when>
+            <otherwise>
+                and t.BOM_ID=''
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.bomComponentId != null and dto.bomComponentId!=""'>
+                and t.BOM_COMPONENT_ID = #{dto.bomComponentId}
+            </when>
+            <otherwise>
+                and t.BOM_COMPONENT_ID=''
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryTagGroupObjectForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mtgo.TENANT_ID,
+        mtgo.TAG_GROUP_OBJECT_ID,
+        mtgo.TAG_GROUP_ID,
+        mtgo.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mtgo.OPERATION_ID,
+        mo.OPERATION_NAME,
+        mot.DESCRIPTION OPERATION_DESC,
+        mtgo.ROUTER_ID,
+        mr.ROUTER_NAME,
+        mrt.DESCRIPTION ROUTER_DESC,
+        mtgo.ROUTER_STEP_ID,
+        mrs.STEP_NAME ROUTER_STEP_NAME,
+        mrst.DESCRIPTION ROUTER_STEP_DESC,
+        mtgo.WORKCELL_ID,
+        mmw.WORKCELL_CODE,
+        mmwt.DESCRIPTION WORKCELL_DESC,
+        mmwt.WORKCELL_NAME,
+        mtgo.WORK_ORDER_ID,
+        mwo.WORK_ORDER_NUM,
+        mtgo.EO_ID,
+        me.EO_NUM,
+        mtgo.NC_CODE_ID,
+        mnc.NC_CODE,
+        mnct.DESCRIPTION NC_CODE_DESC,
+        mtgo.BOM_ID,
+        mb.BOM_NAME,
+        mbt.DESCRIPTION BOM_DESC,
+        mtgo.BOM_COMPONENT_ID,
+        mm2.MATERIAL_CODE BOM_COMPONENT_MATERIAL_CODE,
+        mmt2.MATERIAL_NAME BOM_COMPONENT_MATERIAL_NAME,
+        mtgo.PRODUCTION_VERSION,
+        mtgo.PRODUCTION_VERSION as DESCRIPTION,
+        mtgo.ITEM_TYPE
+        from mt_tag_group_object mtgo
+        left join mt_material mm on mtgo.MATERIAL_ID = mm.MATERIAL_ID and mm.TENANT_ID = ${tenantId}
+        left join mt_material_tl mmt on mm.MATERIAL_ID = mmt.MATERIAL_ID and mmt.LANG = #{locale}
+        left join mt_operation mo on mtgo.OPERATION_ID = mo.OPERATION_ID and mo.TENANT_ID = ${tenantId}
+        left join mt_operation_tl mot on mo.OPERATION_ID = mot.OPERATION_ID and mot.LANG = #{locale}
+        left join mt_router mr on mtgo.ROUTER_ID = mr.ROUTER_ID and mr.TENANT_ID = ${tenantId}
+        left join mt_router_tl mrt on mr.ROUTER_ID = mrt.ROUTER_ID and mrt.LANG = #{locale}
+        left join mt_router_step mrs on mtgo.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID and mrs.TENANT_ID = ${tenantId}
+        left join mt_router_step_tl mrst on mrs.ROUTER_STEP_ID = mrst.ROUTER_STEP_ID and mrst.LANG = #{locale}
+        left join mt_mod_workcell mmw on mtgo.WORKCELL_ID = mmw.WORKCELL_ID and mmw.TENANT_ID = ${tenantId}
+        left join mt_mod_workcell_tl mmwt on mmw.WORKCELL_ID = mmwt.WORKCELL_ID and mmwt.LANG = #{locale}
+        left join mt_work_order mwo on mtgo.WORK_ORDER_ID = mwo.WORK_ORDER_ID and mwo.TENANT_ID = ${tenantId}
+        left join mt_eo me on mtgo.EO_ID = me.EO_ID and me.TENANT_ID = ${tenantId}
+        left join mt_nc_code mnc on mtgo.NC_CODE_ID = mnc.NC_CODE_ID and mnc.TENANT_ID = ${tenantId}
+        left join mt_nc_code_tl mnct on mnc.NC_CODE_ID = mnct.NC_CODE_ID and mnct.LANG = #{locale}
+        left join mt_bom mb on mtgo.BOM_ID = mb.BOM_ID and mb.TENANT_ID = ${tenantId}
+        left join mt_bom_tl mbt on mb.BOM_ID = mbt.BOM_ID and mbt.LANG = #{locale}
+        left join mt_bom_component mbc on mtgo.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID and mbc.TENANT_ID = ${tenantId}
+        left join mt_material mm2 on mbc.MATERIAL_ID = mm2.MATERIAL_ID and mm2.TENANT_ID = ${tenantId}
+        left join mt_material_tl mmt2 on mm2.MATERIAL_ID = mmt2.MATERIAL_ID and mmt2.LANG = #{locale}
+        where
+        mtgo.TENANT_ID = ${tenantId}
+        and mtgo.TAG_GROUP_ID = #{tagGroupId}
+    </select>
+
+    <select id="objectLimitTagGroupQuery" resultType="java.lang.String">
+        select t.TAG_GROUP_ID
+        from mt_tag_group_object t
+        where TENANT_ID = ${tenantId}
+        <if test="tagGroupObject.materialId != null">
+            and t.MATERIAL_ID = #{tagGroupObject.materialId}
+        </if>
+        <if test="tagGroupObject.operationId != null">
+            and t.OPERATION_ID = #{tagGroupObject.operationId}
+        </if>
+        <if test="tagGroupObject.routerId != null">
+            and t.ROUTER_ID = #{tagGroupObject.routerId}
+        </if>
+        <if test="tagGroupObject.routerStepId != null">
+            and t.ROUTER_STEP_ID = #{tagGroupObject.routerStepId}
+        </if>
+        <if test="tagGroupObject.workcellId != null">
+            and t.WORKCELL_ID = #{tagGroupObject.workcellId}
+        </if>
+        <if test="tagGroupObject.workOrderId != null">
+            and t.WORK_ORDER_ID = #{tagGroupObject.workOrderId}
+        </if>
+        <if test="tagGroupObject.eoId != null">
+            and t.EO_ID = #{tagGroupObject.eoId}
+        </if>
+        <if test="tagGroupObject.ncCodeId != null">
+            and t.NC_CODE_ID = #{tagGroupObject.ncCodeId}
+        </if>
+        <if test="tagGroupObject.bomId != null">
+            and t.BOM_ID = #{tagGroupObject.bomId}
+        </if>
+        <if test="tagGroupObject.bomComponentId != null">
+            and t.BOM_COMPONENT_ID = #{tagGroupObject.bomComponentId}
+        </if>
+        <if test="tagGroupObject.materialLotId != null">
+            and t.MATERIAL_LOT_ID = #{tagGroupObject.materialLotId}
+        </if>
+    </select>
+
+    <select id="productionVersionQuery" resultType="tarzan.general.api.dto.MtTagGroupObjectDTO3">
+        select hpv.PRODUCTION_VERSION, hpv.DESCRIPTION
+        from mt_material_site mms
+        left join hme_production_version hpv
+        on hpv.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and hpv.tenant_id = mms.TENANT_ID
+        and hpv.LOCK_FLAG != '1'
+        and IFNULL(hpv.DATE_FROM,CURRENT_TIMESTAMP) &lt;= CURRENT_TIMESTAMP
+        and IFNULL(hpv.DATE_TO,CURRENT_TIMESTAMP) >= CURRENT_TIMESTAMP
+        where mms.TENANT_ID = #{tenantId}
+        and hpv.PRODUCTION_VERSION is not null
+        and mms.MATERIAL_ID = #{dto.materialId}
+        and mms.SITE_ID = #{dto.siteId}
+        and mms.ENABLE_FLAG = 'Y'
+        <if test="dto.productionVersion != null and dto.productionVersion != ''">
+            AND hpv.PRODUCTION_VERSION LIKE CONCAT('%',#{dto.productionVersion},'%')
+        </if>
+        <if test="dto.description != null and dto.description != ''">
+            AND hpv.DESCRIPTION LIKE CONCAT('%',#{dto.description},'%')
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsPurchaseOrderReceiptInspectionMapper">
+
+    <select id="queryList" resultType="com.ruike.wms.domain.vo.WmsPurchaseOrderReceiptInspectionVO">
+        SELECT
+            mms.SITE_ID,
+            mms.SITE_CODE,
+            mid.INSTRUCTION_DOC_ID,
+            mid.INSTRUCTION_DOC_NUM,
+            ms.SUPPLIER_ID,
+            ms.SUPPLIER_CODE,
+            ms.SUPPLIER_NAME,
+            mi.INSTRUCTION_ID,
+            mia1.ATTR_VALUE instructionLineNum,
+            mm.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            STR_TO_DATE(mi.DEMAND_TIME,'%Y-%m-%d') demandTime,
+            mid1.INSTRUCTION_DOC_ID deliveryInstructionDocId,
+            mid1.INSTRUCTION_DOC_NUM deliveryInstructionDocNum,
+            mid1.INSTRUCTION_DOC_STATUS deliveryInstructionDocStatus,
+            mia.ATTR_VALUE deliveryInstructionLineNum,
+            IFNULL(wpdr.received_qty,0) receivedQty,
+            STR_TO_DATE(mia2.ATTR_VALUE,'%Y-%m-%d') actualReceivedDate,
+            IFNULL(wpdr.po_stock_in_qty,0) poStockInQty,
+            CASE
+            WHEN STR_TO_DATE(mia2.ATTR_VALUE,'%Y-%m-%d') &lt;= STR_TO_DATE(mi.DEMAND_TIME,'%Y-%m-%d') THEN
+            '是' ELSE '否'
+        END receivedFlag
+        FROM
+            wms_po_delivery_rel wpdr
+            LEFT JOIN mt_instruction_attr mia ON wpdr.delivery_doc_line_id = mia.instruction_id and mia.attr_name = 'INSTRUCTION_LINE_NUM'
+            LEFT JOIN mt_instruction_attr mia2 ON wpdr.delivery_doc_line_id = mia2.instruction_id and mia2.attr_name = 'ACTUAL_RECEIVED_DATE',
+            mt_instruction_doc mid,
+            mt_supplier ms,
+            mt_instruction mi
+            LEFT JOIN mt_instruction_attr mia1 ON mi.instruction_id = mia1.instruction_id and mia1.ATTR_NAME = 'INSTRUCTION_LINE_NUM',
+            mt_material mm,
+            mt_instruction_doc mid1,
+            mt_mod_site mms
+        WHERE
+          wpdr.tenant_id = #{tenantId}
+            and wpdr.po_id = mid.INSTRUCTION_DOC_ID
+            and wpdr.PO_LINE_ID = mi.INSTRUCTION_ID
+            and wpdr.delivery_doc_id = mid1.INSTRUCTION_DOC_ID
+            and mid.SUPPLIER_ID = ms.SUPPLIER_ID
+            and mi.MATERIAL_ID = mm.MATERIAL_ID
+            and mid.site_id = mms.site_id
+            <if test="dto.siteId != null and dto.siteId != ''">
+                AND mms.SITE_ID = #{dto.siteId}
+            </if>
+            <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+                AND mid.INSTRUCTION_DOC_NUM like CONCAT('%',CONCAT(#{dto.instructionDocNum},'%'))
+            </if>
+            <if test="dto.deliveryInstructionDocNum != null and dto.deliveryInstructionDocNum != ''">
+                AND mid1.INSTRUCTION_DOC_NUM like CONCAT('%',CONCAT(#{dto.deliveryInstructionDocNum},'%'))
+            </if>
+            <if test="dto.materialId != null and dto.materialId != ''">
+                and mm.MATERIAL_ID in
+                <foreach collection="dto.materialIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.supplierId != null and dto.supplierId != ''">
+                AND ms.SUPPLIER_ID in
+                <foreach collection="dto.supplierIdList" item="index" separator="," open="(" close=")">
+                    #{index}
+                </foreach>
+            </if>
+            <if test="dto.actualReceivedDateFrom != null and dto.actualReceivedDateFrom != ''">
+                AND mia2.ATTR_VALUE >= #{dto.actualReceivedDateFrom}
+            </if>
+            <if test="dto.actualReceivedDateTo != null and dto.actualReceivedDateTo != ''">
+                AND mia2.ATTR_VALUE &lt;= #{dto.actualReceivedDateTo}
+            </if>
+            <if test="dto.demandTimeFrom != null and dto.demandTimeFrom != ''">
+                AND mi.DEMAND_TIME >= #{dto.demandTimeFrom}
+            </if>
+            <if test="dto.demandTimeTo != null and dto.demandTimeTo != ''">
+                AND mi.DEMAND_TIME &lt;= #{dto.demandTimeTo}
+            </if>
+    </select>
+</mapper>

@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeNcCheckMapper">
+    <select id="ncGroupQuery" resultType="com.ruike.hme.domain.vo.HmeNcCheckVO">
+        SELECT
+        mng.NC_GROUP_ID,
+        mng.NC_GROUP_CODE,
+        mng.DESCRIPTION
+        FROM
+        mt_nc_group mng
+        WHERE
+        mng.TENANT_ID = #{tenantId}
+        AND mng.COMPONENT_REQUIRED = 'Y'
+        AND mng.ENABLE_FLAG = 'Y'
+        <if test="dto.ncGroupCode != null">
+            AND mng.NC_GROUP_CODE LIKE concat(concat('%',#{dto.ncGroupCode}),'%')
+        </if>
+        <if test="dto.description != null">
+            AND mng.DESCRIPTION LIKE concat(concat('%',#{dto.description}),'%')
+        </if>
+    </select>
+
+    <select id="ncGroupQueryByOperation" resultType="com.ruike.hme.domain.vo.HmeNcCheckVO">
+        SELECT
+        mng.NC_GROUP_ID,
+        mng.NC_GROUP_CODE,
+        mng.DESCRIPTION
+        FROM
+        mt_nc_valid_oper mnvo
+        LEFT JOIN mt_nc_group mng ON mng.NC_GROUP_ID = mnvo.NC_OBJECT_ID
+        AND mng.ENABLE_FLAG = 'Y'
+        WHERE
+        mnvo.TENANT_ID = #{tenantId}
+        AND mnvo.ENABLE_FLAG = 'Y'
+        AND mnvo.NC_OBJECT_TYPE = 'NC_GROUP'
+        AND mnvo.OPERATION_ID = #{dto.rootCauseOperationId}
+        AND (mng.NC_GROUP_ID IS NOT NULL OR mng.NC_GROUP_ID = '')
+        <if test="dto.ncGroupCode != null">
+            AND mng.NC_GROUP_CODE LIKE concat(concat('%',#{dto.ncGroupCode}),'%')
+        </if>
+        <if test="dto.description != null">
+            AND mng.DESCRIPTION LIKE concat(concat('%',#{dto.description}),'%')
+        </if>
+    </select>
+
+    <select id="childNcRecordIdQuery" resultType="com.ruike.hme.domain.vo.HmeNcCheckVO2">
+        select mnr.NC_RECORD_ID, mnr.NC_CODE_ID
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.PARENT_NC_RECORD_ID = #{ncRecordId}
+    </select>
+
+    <select id="childNcRecordQuery" resultType="tarzan.actual.domain.entity.MtNcRecord">
+        select mnr.*
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.PARENT_NC_RECORD_ID = #{parentNcRecordId}
+        and mnr.NC_STATUS != 'CANCEL'
+    </select>
+
+    <select id="childNcCodeQuery" resultType="com.ruike.hme.domain.vo.HmeNcCheckVO5">
+        SELECT
+            mnr.NC_RECORD_ID,
+            mnc.NC_CODE_ID,
+            mnc.NC_CODE,
+            mnc.DESCRIPTION
+        FROM
+            mt_nc_record mnr,
+            mt_nc_code mnc
+        WHERE
+            mnc.NC_CODE_ID = mnr.NC_CODE_ID
+          AND mnr.TENANT_ID = #{tenantId}
+          AND mnr.PARENT_NC_RECORD_ID IN
+        <foreach collection="parentNcRecordIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+          AND mnr.NC_STATUS != 'CANCEL'
+    </select>
+
+    <select id="commentsQuery" resultType="com.ruike.hme.api.dto.HmeNcDisposePlatformDTO26">
+        select mnr.COMMENTS
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.MATERIAL_ID = #{materialId}
+        and mnr.NC_CODE_ID = #{ncCodeId}
+        <if test="rootCauseOperationId != null and rootCauseOperationId != ''">
+            and mnr.ROOT_CAUSE_OPERATION_ID = #{rootCauseOperationId}
+        </if>
+        <if test="eoStepActualId != null and eoStepActualId != ''">
+            and mnr.EO_STEP_ACTUAL_ID = #{eoStepActualId}
+        </if>
+        and mnr.COMMENTS != ''
+        and mnr.PARENT_NC_RECORD_ID != ''
+        order by mnr.CREATION_DATE desc
+        limit 1
+    </select>
+
+    <select id="getJobIdByEo" resultType="java.lang.String">
+        select hejs.job_id
+        from mt_eo me
+        left join hme_eo_job_sn hejs
+        on hejs.work_order_id = me.WORK_ORDER_ID
+        and hejs.tenant_id = me.TENANT_ID
+        where me.EO_ID = #{eoId}
+    </select>
+
+    <select id="eoBomComponentQuery" resultType="tarzan.method.domain.entity.MtBomComponent">
+        select mbc.BOM_COMPONENT_ID, mbc.MATERIAL_ID
+        from mt_eo_bom meb
+        left join mt_bom_component mbc
+        on mbc.BOM_ID = meb.BOM_ID
+        where meb.TENANT_ID = #{tenantId}
+        and meb.EO_ID = #{eoId}
+    </select>
+
+    <select id="getRouterStepId" resultType="java.lang.String">
+        select mrs.ROUTER_STEP_ID
+        from mt_eo_router mer
+        left join mt_router_step mrs
+        on mrs.ROUTER_ID = mer.ROUTER_ID
+        and mrs.TENANT_ID = mer.TENANT_ID
+        left join mt_router_operation mro
+        on mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        and mro.OPERATION_ID = #{operationId}
+        and mro.TENANT_ID = mer.TENANT_ID
+        where mer.TENANT_ID =  #{tenantId}
+        and mer.EO_ID = #{eoId}
+        and mro.ROUTER_STEP_ID is not null
+        limit 1
+    </select>
+
+    <select id="judgeFeedByMaterialLot" resultType="java.lang.Integer">
+        SELECT
+	        COUNT(1)
+        FROM
+	        hme_eo_job_sn ejs
+        WHERE
+            ejs.tenant_id = #{tenantId}
+            AND ejs.eo_id = #{eoId}
+        AND ( EXISTS (
+		SELECT 1 FROM hme_eo_job_material
+		WHERE job_id = ejs.job_id
+		AND material_lot_id = #{materialLotId}
+		AND release_qty > 0
+		AND is_issued = '1'
+        ) OR EXISTS(
+		SELECT 1 FROM hme_eo_job_sn_lot_material
+		WHERE job_id = ejs.job_id
+		AND material_lot_id = #{materialLotId}
+		AND release_qty > 0
+        ) )
+    </select>
+
+    <select id="queryWorkQtyByBomComponentId" resultType="java.math.BigDecimal">
+        SELECT
+            bca.ATTR_VALUE
+        FROM
+		    mt_bom_component_attr bca
+        WHERE
+            bca.TENANT_ID = #{tenantId}
+        AND bca.BOM_COMPONENT_ID = #{bomComponentId}
+        AND bca.ATTR_NAME = 'lineAttribute5'
+    </select>
+
+    <select id="queryAssembleQtyByBomComponentId" resultType="com.ruike.hme.domain.vo.HmeNcCheckVO3">
+        SELECT
+	        IFNULL(sum(ASSEMBLE_QTY),0) ASSEMBLE_QTY,
+            IFNULL(sum(SCRAPPED_QTY), 0) SCRAPPED_QTY
+        FROM
+	        mt_work_order_component_actual ca
+        WHERE
+            ca.TENANT_ID = #{tenantId}
+        AND ca.BOM_COMPONENT_ID = #{bomComponentId}
+    </select>
+
+    <select id="queryProLineByWorkcellId" resultType="java.lang.String">
+        SELECT
+	        mor3.PARENT_ORGANIZATION_ID
+        FROM
+	        mt_mod_organization_rel mor1,
+	        mt_mod_organization_rel mor2,
+	        mt_mod_organization_rel mor3
+	    WHERE mor1.PARENT_ORGANIZATION_ID = mor2.ORGANIZATION_ID
+	    AND mor1.ORGANIZATION_TYPE = 'WORKCELL'
+	    AND mor1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+	    AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+	    AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+	    AND mor2.PARENT_ORGANIZATION_ID = mor3.ORGANIZATION_ID
+	    AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+	    AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+	    AND mor1.TENANT_ID = #{tenantId}
+	    AND mor1.ORGANIZATION_ID = #{workcellId}
+    </select>
+
+    <select id="queryOperationAssembleFlag" resultType="java.lang.String">
+        SELECT
+	        OPERATION_ASSEMBLE_FLAG
+        FROM
+	        mt_material_site mms,
+	        mt_pfep_manufacturing mp
+        WHERE
+            mms.tenant_id = #{tenantId}
+	    AND mms.MATERIAL_ID = #{materialId}
+	    AND mms.SITE_ID = #{siteId}
+    	AND mms.MATERIAL_SITE_ID = mp.MATERIAL_SITE_ID
+	    AND mp.ORGANIZATION_TYPE = 'PRODUCTIONLINE'
+	    AND mp.ORGANIZATION_ID = #{proLineId}
+    </select>
+
+    <select id="queryMtEoComponentActual" resultType="tarzan.actual.domain.entity.MtEoComponentActual">
+        SELECT
+            EO_COMPONENT_ACTUAL_ID,
+	        OPERATION_ID,
+	        ROUTER_STEP_ID,
+	        BOM_ID
+        FROM
+	        mt_eo_component_actual
+        WHERE
+            TENANT_ID = #{tenantId}
+        AND MATERIAL_ID = #{materialId}
+        AND EO_ID = #{eoId}
+    </select>
+
+    <select id="queryCurrentBomComponentId" resultType="java.lang.String">
+        SELECT
+	        bc.BOM_COMPONENT_ID
+        FROM
+	        mt_router_operation mor
+        LEFT JOIN mt_operation_wkc_dispatch_rel wdr ON mor.OPERATION_ID = wdr.OPERATION_ID
+        LEFT JOIN MT_ROUTER_STEP rs ON mor.ROUTER_STEP_ID = rs.ROUTER_STEP_ID
+        LEFT JOIN MT_EO_ROUTER er ON rs.ROUTER_ID = er.ROUTER_ID
+        LEFT JOIN mt_router_operation_component oc ON mor.ROUTER_OPERATION_ID = oc.ROUTER_OPERATION_ID
+        LEFT JOIN mt_bom_component bc ON oc.BOM_COMPONENT_ID = bc.BOM_COMPONENT_ID
+        WHERE
+            mor.TENANT_ID = #{tenantId}
+        AND er.EO_ID = #{eoId}
+        AND wdr.WORKCELL_ID = #{processId}
+        AND bc.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="queryPrimaryMaterial" resultType="java.lang.String">
+        SELECT
+            bc.MATERIAL_ID
+        FROM
+            mt_bom_component bc,
+            mt_bom_substitute_group sg,
+            mt_bom_substitute bs
+        WHERE bc.BOM_COMPONENT_ID = sg.BOM_COMPONENT_ID
+        AND sg.BOM_SUBSTITUTE_GROUP_ID = bs.BOM_SUBSTITUTE_GROUP_ID
+        AND bc.TENANT_ID = #{tenantId}
+        AND bc.BOM_ID = #{bomId}
+        AND bs.MATERIAL_ID = #{materialId}
+        AND bc.QTY <![CDATA[<>]]> 0
+    </select>
+
+    <select id="getRouterStepByEoId" resultType="tarzan.method.domain.entity.MtRouterOperation">
+         SELECT
+	        ro.ROUTER_OPERATION_ID,
+	        ro.ROUTER_STEP_ID
+        FROM
+	        mt_eo_router er,
+	        mt_router_step rs,
+	        mt_router_operation ro
+        WHERE er.ROUTER_ID = rs.ROUTER_ID
+        AND rs.ROUTER_STEP_ID = ro.ROUTER_STEP_ID
+        AND er.TENANT_ID = #{tenantId}
+        AND er.EO_ID = #{eoId}
+        AND ro.OPERATION_ID = #{operationId}
+    </select>
+
+    <select id="queryRouterOperationListByEoId" resultType="tarzan.method.domain.entity.MtRouterOperation">
+        SELECT
+	        ro.ROUTER_OPERATION_ID,
+			ro.OPERATION_ID,
+	        ro.ROUTER_STEP_ID
+        FROM
+	        mt_eo_router er,
+	        mt_router_step rs,
+	        mt_router_operation ro
+        WHERE er.ROUTER_ID = rs.ROUTER_ID
+        AND rs.ROUTER_STEP_ID = ro.ROUTER_STEP_ID
+        AND er.TENANT_ID = #{tenantId}
+        AND er.EO_ID = #{eoId}
+    </select>
+
+    <select id="queryWoRouterOperationListByRouterId" resultType="tarzan.method.domain.entity.MtRouterOperation">
+        SELECT
+	        ro.ROUTER_STEP_ID,
+            ro.ROUTER_OPERATION_ID,
+            ro.OPERATION_ID
+        FROM
+	        mt_router_step rs,
+	        mt_router_operation ro
+        WHERE rs.ROUTER_STEP_ID = ro.ROUTER_STEP_ID
+        AND rs.TENANT_ID = #{tenantId}
+        AND rs.ROUTER_ID = #{routerId}
+    </select>
+
+    <select id="queryLocatorIdByWorkcellId" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT
+	         ml.LOCATOR_ID,
+			 ml.PARENT_LOCATOR_ID
+        FROM
+		    mt_mod_locator_org_rel lor LEFT JOIN mt_mod_locator ml ON ml.LOCATOR_ID = lor.LOCATOR_ID,
+	    (
+	    SELECT
+		    mor2.ORGANIZATION_ID
+	    FROM
+		    mt_mod_organization_rel mor
+		    LEFT JOIN mt_mod_organization_rel mor1 ON mor1.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+		    AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+		    LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+		    AND mor1.ORGANIZATION_TYPE = 'WORKCELL'
+		    AND mor2.PARENT_ORGANIZATION_TYPE = "PROD_LINE"
+	    WHERE
+		    mor.ORGANIZATION_ID = #{workcellId}
+		AND mor2.ORGANIZATION_ID IS NOT NULL
+		AND mor1.ORGANIZATION_ID IS NOT NULL
+	    ) org
+        WHERE
+	        lor.TENANT_ID = #{tenantId}
+	    AND lor.ORGANIZATION_TYPE = 'WORKCELL'
+	    AND lor.ORGANIZATION_ID = org.ORGANIZATION_ID
+	    AND ml.LOCATOR_TYPE = 'DEFAULT_STORAGE'
+		AND ml.LOCATOR_CATEGORY = 'INVENTORY'
+    </select>
+
+    <select id="queryReworkFlagByEoId" resultType="java.lang.String">
+        SELECT
+	        attr.ATTR_VALUE
+        FROM
+	        mt_eo me,
+	        mt_material_lot mml
+	    LEFT JOIN mt_material_lot_attr attr ON mml.MATERIAL_LOT_ID = attr.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'REWORK_FLAG'
+        WHERE me.TENANT_ID = #{tenantId}
+        AND me.TENANT_ID = mml.TENANT_ID
+        AND me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        AND me.EO_ID = #{eoId}
+    </select>
+
+    <select id="queryNcStorageLocator" resultType="java.lang.String">
+        SELECT
+	        ml.LOCATOR_ID
+        FROM
+	        mt_material_lot mml,
+	        mt_mod_locator ll,
+	        mt_mod_locator wl,
+	        mt_mod_locator ml
+        WHERE
+		    mml.TENANT_ID = #{tenantId}
+        AND ll.TENANT_ID = mml.TENANT_ID
+        AND wl.TENANT_ID = ll.TENANT_ID
+        AND mml.MATERIAL_LOT_ID = #{materialLotId}
+        AND mml.LOCATOR_ID = ll.LOCATOR_ID
+        AND ll.PARENT_LOCATOR_ID = wl.LOCATOR_ID
+        AND wl.LOCATOR_ID = ml.PARENT_LOCATOR_ID
+        AND ml.LOCATOR_TYPE = 'NC_STORAGE'
+    </select>
+
+    <update id="batchUpdateNcCodeId">
+        UPDATE mt_nc_record
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            nc_code_id =
+            <foreach collection="ncRecordList" item="item" index="index"
+                     separator=" " open="case nc_record_id" close="end">
+                when #{item.ncRecordId} then #{item.ncCodeId}
+            </foreach>
+        </set>
+        <where>
+            nc_record_id in
+            <foreach collection="ncRecordList" item="item"
+                     separator="," open="(" close=")">
+                #{item.ncRecordId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="batchQueryReworkFlagByEoId" resultType="com.ruike.hme.domain.vo.HmeBatchNcCheckVO">
+        SELECT
+        attr.ATTR_VALUE rework_flag,
+        me.EO_ID
+        FROM
+        mt_eo me,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr attr ON mml.MATERIAL_LOT_ID = attr.MATERIAL_LOT_ID AND attr.ATTR_NAME =
+        'REWORK_FLAG'
+        WHERE me.TENANT_ID = #{tenantId}
+        AND me.TENANT_ID = mml.TENANT_ID
+        AND me.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+        AND me.EO_ID in
+        <foreach collection="eoIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQueryLineWorkcellByWorkcell" resultType="com.ruike.hme.domain.vo.HmeBatchNcCheckVO2">
+        SELECT
+        mor2.PARENT_ORGANIZATION_ID LINE_WORKCELL_ID,
+        mor.ORGANIZATION_ID WORKCELL_ID
+        FROM
+        mt_mod_organization_rel mor,
+        mt_mod_organization_rel mor2,
+        mt_mod_workcell mmw
+        WHERE mor.ORGANIZATION_ID IN
+        <foreach collection="workcellIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor.TOP_SITE_ID = #{siteId}
+        AND mor2.TOP_SITE_ID = mor.TOP_SITE_ID
+        AND mor.PARENT_ORGANIZATION_ID = mor2.ORGANIZATION_ID
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmw.WORKCELL_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mmw.WORKCELL_TYPE = 'LINE'
+    </select>
+
+    <select id="queryEoIdByLoadSequence" resultType="java.lang.String">
+        SELECT
+            vn.EO_ID
+        FROM
+            hme_selection_details sd,
+            hme_virtual_num vn
+        WHERE
+            sd.tenant_id = #{tenantId}
+        AND sd.load_sequence = #{loadSequence}
+        AND sd.virtual_num = vn.VIRTUAL_NUM
+    </select>
+
+    <select id="queryProLineByEoId" resultType="java.lang.String">
+        SELECT
+        	wo.PRODUCTION_LINE_ID
+        FROM
+        	mt_eo me,
+        	mt_work_order wo
+        WHERE me.TENANT_ID = #{tenantId}
+        AND me.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND me.EO_ID = #{eoId}
+    </select>
+
+    <select id="queryRouteIdByNcCode" resultType="java.lang.String">
+        SELECT
+        cr.ROUTER_ID
+        FROM
+        hme_nc_code_router_rel cr
+        WHERE cr.TENANT_ID = #{tenantId}
+        AND cr.NC_GROUP_ID = #{ncGroupId}
+        AND cr.NC_CODE_ID IN
+        <foreach collection="ncCodeIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND cr.PROD_LINE_ID = #{prodLineId}
+        AND cr.ENABLE_FLAG = 'Y'
+        <choose>
+            <when test="deviceType != null">
+                AND cr.DEVICE_TYPE = #{deviceType}
+            </when>
+            <otherwise>
+                AND (cr.DEVICE_TYPE IS NULL OR cr.DEVICE_TYPE = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="chipType != null">
+                AND cr.CHIP_TYPE = #{chipType}
+            </when>
+            <otherwise>
+                AND (cr.CHIP_TYPE IS NULL OR cr.CHIP_TYPE = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="operationId != null">
+                AND cr.ATTRIBUTE1 = #{operationId}
+            </when>
+            <otherwise>
+                AND (cr.ATTRIBUTE1 IS NULL OR cr.ATTRIBUTE1 = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <delete id="batchDeleteLoadByIds">
+        delete from hme_material_lot_nc_load
+        where tenant_id = #{tenantId}
+        and nc_load_id in
+        <foreach collection="ncLoadList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="queryNcStorageLocatorByProdLine" resultType="java.lang.String">
+        SELECT
+        	mml.LOCATOR_ID
+        FROM
+        	mt_mod_locator_org_rel lor,
+        	mt_mod_locator wl,
+        	mt_mod_locator mml
+        WHERE
+        lor.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND lor.ORGANIZATION_ID = #{prodLineId}
+        AND lor.TENANT_ID = #{tenantId}
+        AND wl.LOCATOR_ID = lor.LOCATOR_ID
+        AND mml.TENANT_ID = wl.TENANT_ID
+        AND mml.PARENT_LOCATOR_ID = wl.LOCATOR_ID
+        AND mml.LOCATOR_TYPE = 'NC_STORAGE'
+        AND mml.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="queryLastNonReworkOperationId" resultType="java.lang.String">
+        SELECT
+        	ejs.operation_id
+        FROM
+        	hme_eo_job_sn ejs
+        WHERE ejs.eo_id = #{eoId}
+        AND ejs.rework_flag = 'N'
+        AND ejs.tenant_id = #{tenantId}
+        ORDER BY ejs.site_in_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryWorkOrderByEoId" resultType="tarzan.order.domain.entity.MtWorkOrder">
+        SELECT
+            wo.WORK_ORDER_ID,
+            wo.WORK_ORDER_NUM,
+            wo.ROUTER_ID,
+            wo.BOM_ID,
+            wo.SITE_ID
+        FROM
+        	mt_eo me,
+            mt_work_order wo
+        WHERE me.EO_ID = #{eoId}
+        AND wo.WORK_ORDER_ID = me.WORK_ORDER_ID
+    </select>
+
+    <update id="updateRouterNameByRouterIdList">
+        UPDATE mt_router
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            router_name = CONCAT(#{routerName}, '-', cid)
+        </set>
+        <where>
+            router_id in
+            <foreach collection="routerIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="queryOperationIdAndStepName" resultType="com.ruike.hme.domain.vo.HmeNcCheckVO4">
+        SELECT
+            mrs.STEP_NAME,
+        	mro.ROUTER_OPERATION_ID,
+        	mro.OPERATION_ID,
+        	mo.OPERATION_NAME
+        FROM
+            mt_router_step mrs,
+            mt_router_operation mro,
+            mt_operation mo
+        WHERE mrs.TENANT_ID = #{tenantId}
+        AND mrs.ROUTER_ID = #{routerId}
+        AND mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        AND mro.TENANT_ID = mrs.TENANT_ID
+        AND mo.OPERATION_ID = mro.OPERATION_ID
+    </select>
+
+    <select id="queryRouterOperationComponent" resultType="com.ruike.hme.domain.vo.HmeNcCheckVO4">
+        SELECT
+            roc.ROUTER_OPERATION_ID,
+            roc.BOM_COMPONENT_ID,
+            roc.SEQUENCE,
+            roc.ENABLE_FLAG,
+            mo.OPERATION_NAME
+        FROM
+            mt_router_step mrs,
+            mt_router_operation mro,
+            mt_operation mo,
+            mt_router_operation_component roc
+        WHERE
+            mrs.TENANT_ID = #{tenantId}
+        AND mrs.ROUTER_ID = #{routerId}
+        AND mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        AND mro.TENANT_ID = #{tenantId}
+        AND mo.OPERATION_ID = mro.OPERATION_ID
+        AND mo.OPERATION_NAME IN
+        <foreach collection="operationNameList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND roc.ROUTER_OPERATION_ID = mro.ROUTER_OPERATION_ID
+    </select>
+</mapper>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtNumrangeRuleHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtNumrangeRuleHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NUMRANGE_RULE_HIS_ID" property="numrangeRuleHisId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_RULE_ID" property="numrangeRuleId" jdbcType="VARCHAR"/>
+        <result column="NUM_RULE" property="numRule" jdbcType="VARCHAR"/>
+        <result column="FIX_INPUT" property="fixInput" jdbcType="VARCHAR"/>
+        <result column="NUM_LEVEL" property="numLevel" jdbcType="VARCHAR"/>
+        <result column="NUM_CONNECT_INPUT_BOX" property="numConnectInputBox" jdbcType="DECIMAL"/>
+        <result column="NUM_LOWER_LIMIT" property="numLowerLimit" jdbcType="VARCHAR"/>
+        <result column="NUM_UPPER_LIMIT" property="numUpperLimit" jdbcType="VARCHAR"/>
+        <result column="NUM_ALERT" property="numAlert" jdbcType="VARCHAR"/>
+        <result column="NUM_ALERT_TYPE" property="numAlertType" jdbcType="VARCHAR"/>
+        <result column="NUM_RADIX" property="numRadix" jdbcType="DECIMAL"/>
+        <result column="NUM_INCREMENT" property="numIncrement" jdbcType="VARCHAR"/>
+        <result column="NUM_CURRENT" property="numCurrent" jdbcType="VARCHAR"/>
+        <result column="NUM_RESET_TYPE" property="numResetType" jdbcType="VARCHAR"/>
+        <result column="NUM_RESET_PERIOD" property="numResetPeriod" jdbcType="DECIMAL"/>
+        <result column="NUM_RESET_LASTDATE" property="numResetLastdate" jdbcType="VARCHAR"/>
+        <result column="DATE_FORMAT" property="dateFormat" jdbcType="VARCHAR"/>
+        <result column="TIME_FORMAT" property="timeFormat" jdbcType="VARCHAR"/>
+        <result column="CALL_STANDARD_OBJECT" property="callStandardObject" jdbcType="VARCHAR"/>
+        <result column="INCOME_VALUE_LENGTH" property="incomeValueLength" jdbcType="DECIMAL"/>
+        <result column="INCOME_VALUE_LENGTH_LIMIT" property="incomeValueLengthLimit" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VoMap" type="io.tarzan.common.domain.vo.MtNumrangeRuleHisVO" extends="BaseResultMap">
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL" />
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="NUM_LEVEL_DESC" property="numLevelDesc" jdbcType="VARCHAR"/>
+        <result column="NUM_ALERT_TYPE_DESC" property="numAlertTypeDesc" jdbcType="VARCHAR"/>
+        <result column="NUM_RADIX_DESC" property="numRadixDesc" jdbcType="VARCHAR"/>
+        <result column="NUM_RESET_TYPE_DESC" property="numResetTypeDesc" jdbcType="VARCHAR"/>
+        <result column="DATE_FORMAT_DESC" property="dateFormatDesc" jdbcType="VARCHAR"/>
+        <result column="TIME_FORMAT_DESC" property="timeFormatDesc" jdbcType="VARCHAR"/>
+        <result column="CALL_STANDARD_OBJECT_CODE" property="callStandardObjectCode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="numrangeRuleHisQuery" resultMap="VoMap">
+        select
+        t.TENANT_ID,
+        t.NUMRANGE_RULE_HIS_ID,
+        t.NUMRANGE_RULE_ID,
+        t.NUM_RULE,
+        t.FIX_INPUT,
+        t.NUM_LEVEL,
+        t.NUM_CONNECT_INPUT_BOX,
+        t.NUM_LOWER_LIMIT,
+        t.NUM_UPPER_LIMIT,
+        t.NUM_ALERT,
+        t.NUM_ALERT_TYPE,
+        t.NUM_RADIX,
+        t.NUM_INCREMENT,
+        t.NUM_CURRENT,
+        t.NUM_RESET_TYPE,
+        t.NUM_RESET_PERIOD,
+        t.NUM_RESET_LASTDATE,
+        t.DATE_FORMAT,
+        t.TIME_FORMAT,
+        t.CALL_STANDARD_OBJECT,
+        t.INCOME_VALUE_LENGTH,
+        t.EVENT_ID,
+        t.CID,
+        t.OBJECT_VERSION_NUMBER,
+        t.CREATED_BY,
+        t.CREATION_DATE,
+        t.LAST_UPDATED_BY,
+        t.LAST_UPDATE_DATE,
+        e.EVENT_BY,
+        e.EVENT_TIME,
+        g1.DESCRIPTION as NUM_LEVEL_DESC,
+        g2.DESCRIPTION as NUM_ALERT_TYPE_DESC,
+        g3.DESCRIPTION as NUM_RADIX_DESC,
+        g4.DESCRIPTION as NUM_RESET_TYPE_DESC,
+        g5.DESCRIPTION as DATE_FORMAT_DESC,
+        g6.DESCRIPTION as TIME_FORMAT_DESC,
+        m.OBJECT_COLUMN_CODE as CALL_STANDARD_OBJECT_CODE
+        from
+        mt_numrange_rule_his t
+        join mt_event e on
+        t.EVENT_ID = e.EVENT_ID
+        and t.tenant_id = e.tenant_id
+        left join mt_gen_type g1 on
+        g1.TYPE_GROUP = 'NUMRANGE_NUM_LEVEL'
+        and g1.TYPE_CODE = t.NUM_LEVEL
+        left join mt_gen_type g2 on
+        g2.TYPE_GROUP = 'NUMRANGE_ALERT_TYPE'
+        and g2.TYPE_CODE = t.NUM_ALERT_TYPE
+        left join mt_gen_type g3 on
+        g3.TYPE_GROUP = 'NUMRANGE_RADIX_TYPE'
+        and g3.TYPE_CODE = t.NUM_RADIX
+        left join mt_gen_type g4 on
+        g4.TYPE_GROUP = 'NUMRANGE_RESET_TYPE'
+        and g4.TYPE_CODE = t.NUM_RESET_TYPE
+        left join mt_gen_type g5 on
+        g5.TYPE_GROUP = 'NUMRANGE_DATE_FORMAT'
+        and g5.TYPE_CODE = t.DATE_FORMAT
+        left join mt_gen_type g6 on
+        g6.TYPE_GROUP = 'NUMRANGE_TIME_FORMAT'
+        and g6.TYPE_CODE = t.TIME_FORMAT
+        left join mt_numrange_object_column m on
+        m.OBJECT_COLUMN_ID = t.CALL_STANDARD_OBJECT
+        and t.tenant_id = m.tenant_id
+        where
+        t.tenant_id = #{tenantId}
+        <if test="eventId!=null">
+            and t.EVENT_ID=#{eventId}
+        </if>
+        ORDER BY t.CREATION_DATE DESC
+    </select>
+</mapper>

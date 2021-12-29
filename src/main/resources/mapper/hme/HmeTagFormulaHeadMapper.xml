@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeTagFormulaHeadMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeTagFormulaHead">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_FORMULA_HEAD_ID" property="tagFormulaHeadId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="FORMULA_TYPE" property="formulaType" jdbcType="VARCHAR"/>
+        <result column="FORMULA" property="formula" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <!--获取头信息-->
+    <select id="getTagHeadList" resultType="com.ruike.hme.domain.vo.HmeTagFormulaHeadVO">
+        SELECT
+        htfh.tenant_id,
+        htfh.tag_formula_head_id,
+        htfh.operation_id,
+        mo.OPERATION_NAME OPERATION_CODE,
+        mo.DESCRIPTION OPERATION_DESC,
+        mtg.TAG_GROUP_ID,
+        mtg.TAG_GROUP_CODE,
+        mtg.TAG_GROUP_DESCRIPTION TAG_GROUP_DESC,
+        mt.TAG_ID,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION TAG_DESC,
+        htfh.formula_type,
+        htfh.formula
+        FROM
+        hme_tag_formula_head htfh
+        LEFT JOIN mt_operation mo ON htfh.operation_id = mo.OPERATION_ID
+        LEFT JOIN mt_tag_group mtg ON htfh.tag_group_id = mtg.tag_group_id
+        LEFT JOIN mt_tag mt ON htfh.tag_id = mt.TAG_ID
+        WHERE
+        1 = 1
+        AND htfh.tenant_id = #{tenantId}
+        <if test="operationId != null">
+            AND htfh.operation_id = #{operationId}
+        </if>
+        <if test="tagGroupId != null">
+            AND htfh.tag_group_id = #{tagGroupId}
+        </if>
+        <if test="tagId != null">
+            AND htfh.tag_id = #{tagId}
+        </if>
+    </select>
+
+    <select id="selectHeadForCalculation" resultMap="BaseResultMap" parameterType="com.ruike.hme.domain.entity.HmeTagFormulaHead">
+         select tag_formula_head_id,
+                operation_id,
+                tag_group_id,
+                tag_id,
+                formula_type,
+                formula
+           from hme_tag_formula_head
+          where tag_id = #{tagId}
+            and tenant_id = #{tenantId}
+        <choose>
+            <when test="operationId !=null and operationId != ''">
+                and operation_id = #{operationId}
+            </when>
+            <otherwise>
+                and (operation_id is null or operation_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="tagGroupId !=null and tagGroupId != ''">
+                and tag_group_id = #{tagGroupId}
+            </when>
+            <otherwise>
+                and (tag_group_id is null or tag_group_id = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryHmeTagFormulaHead" resultType="com.ruike.hme.domain.entity.HmeTagFormulaHead">
+        SELECT
+            htfh.tenant_id,
+            htfh.tag_formula_head_id,
+            htfh.operation_id,
+            htfh.formula_type,
+            htfh.formula,
+            htfh.operation_id,
+            htfh.tag_group_id,
+            htfh.tag_id
+        FROM
+            hme_tag_formula_head htfh
+        WHERE
+            htfh.tenant_id = #{tenantId}
+        <choose>
+            <when test="operationId !=null and operationId != ''">
+                and htfh.operation_id = #{operationId}
+            </when>
+            <otherwise>
+                and (htfh.operation_id  is null or htfh.operation_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="tagGroupId !=null and tagGroupId != ''">
+                and htfh.tag_group_id = #{tagGroupId}
+            </when>
+            <otherwise>
+                and (htfh.tag_group_id is null or htfh.tag_group_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="tagId !=null and tagId != ''">
+                and  htfh.tag_id  = #{tagId}
+            </when>
+            <otherwise>
+                and ( htfh.tag_id is null or  htfh.tag_id = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryTagFormulaLineList" resultType="com.ruike.hme.domain.vo.HmeTagFormulaLineVO2">
+        SELECT
+            mth.TAG_ID HEADER_TAG_ID,
+            mth.TAG_CODE HEADER_TAG_CODE,
+            mtl.TAG_ID,
+            mtl.TAG_CODE,
+            tfl.parameter_code
+        FROM
+            hme_tag_formula_head tfh,
+        	hme_tag_formula_line tfl,
+        	mt_tag mth,
+        	mt_tag mtl
+        WHERE tfh.tenant_id = #{tenantId}
+        AND tfh.tag_id IN
+        <foreach collection="headTagList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND tfh.tag_group_id = #{tagGroupId}
+        AND tfl.tag_formula_head_id = tfh.tag_formula_head_id
+        AND mth.TAG_ID = tfh.tag_id
+        AND mtl.TAG_ID = tfl.tag_id
+    </select>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEquipmentHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEquipmentHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EQUIPMENT_HIS_ID" property="equipmentHisId" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_ID" property="equipmentId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="ASSET_NAME" property="assetName" jdbcType="VARCHAR"/>
+        <result column="ASSET_CLASS" property="assetClass" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTIONS" property="descriptions" jdbcType="VARCHAR"/>
+        <result column="SAP_NUM" property="sapNum" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_BODY_NUM" property="equipmentBodyNum" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_CONFIG" property="equipmentConfig" jdbcType="VARCHAR"/>
+        <result column="OA_CHECK_NUM" property="oaCheckNum" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_TYPE" property="equipmentType" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_CATEGORY" property="equipmentCategory" jdbcType="VARCHAR"/>
+        <result column="APPLY_TYPE" property="applyType" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_STATUS" property="equipmentStatus" jdbcType="VARCHAR"/>
+        <result column="DEAL_NUM" property="dealNum" jdbcType="VARCHAR"/>
+        <result column="DEAL_REASON" property="dealReason" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_ID" property="businessId" jdbcType="VARCHAR"/>
+        <result column="USER" property="user" jdbcType="VARCHAR"/>
+        <result column="PRESERVER" property="preserver" jdbcType="VARCHAR"/>
+        <result column="LOCATION" property="location" jdbcType="VARCHAR"/>
+        <result column="MEASURE_FLAG" property="measureFlag" jdbcType="VARCHAR"/>
+        <result column="FREQUENCY" property="frequency" jdbcType="VARCHAR"/>
+        <result column="BELONG_TO" property="belongTo" jdbcType="VARCHAR"/>
+        <result column="POSTING_DATE" property="postingDate" jdbcType="DATE"/>
+        <result column="SUPPLIER" property="supplier" jdbcType="VARCHAR"/>
+        <result column="BRAND" property="brand" jdbcType="VARCHAR"/>
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="AMOUNT" property="amount" jdbcType="DECIMAL"/>
+        <result column="CURRENCY" property="currency" jdbcType="VARCHAR"/>
+        <result column="CONTRACT_NUM" property="contractNum" jdbcType="VARCHAR"/>
+        <result column="RECRUITEMENT" property="recruitement" jdbcType="VARCHAR"/>
+        <result column="RECRUITEMENT_NUM" property="recruitementNum" jdbcType="VARCHAR"/>
+        <result column="WARRANTY_DATE" property="warrantyDate" jdbcType="DATE"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+</mapper>

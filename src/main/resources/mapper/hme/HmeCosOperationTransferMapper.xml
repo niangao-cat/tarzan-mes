@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosOperationTransferMapper">
+
+    <select id="queryRouterStepIdByRouteAndOperation" resultType="java.lang.String">
+        SELECT
+	        mrs.ROUTER_STEP_ID
+        FROM
+	        mt_router_step mrs,
+	        mt_router_operation mro
+        WHERE mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+        AND mrs.TENANT_ID = #{tenantId}
+        AND mrs.TENANT_ID = mro.TENANT_ID
+        AND mrs.ROUTER_ID = #{routerId}
+        AND mro.OPERATION_ID = #{operationId}
+    </select>
+
+</mapper>

@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobTimeMaterialMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="job_material_id" property="jobMaterialId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="work_date" property="workDate" jdbcType="DATE"/>
+        <result column="shift_id" property="shiftId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="release_qty" property="releaseQty" jdbcType="DECIMAL"/>
+        <result column="available_time" property="availableTime" jdbcType="VARCHAR"/>
+        <result column="dead_line_date" property="deadLineDate" jdbcType="VARCHAR"/>
+        <result column="byd_material_id" property="bydMaterialId" jdbcType="VARCHAR"/>
+        <result column="locator_id" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="lot_code" property="lotCode" jdbcType="VARCHAR"/>
+        <result column="production_version" property="productionVersion" jdbcType="VARCHAR"/>
+        <result column="virtual_flag" property="virtualFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="attribute1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="attribute2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="attribute3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="attribute4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="attribute5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="attribute6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="attribute7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="attribute8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="attribute9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="attribute10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="attribute11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="attribute12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="attribute13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="attribute14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="attribute15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="selectIssuedLocator" resultType="java.lang.String">
+        select plm.ISSUED_LOCATOR_ID
+        from mt_work_order mwo
+        left join mt_mod_prod_line_manufacturing plm
+        on plm.PROD_LINE_ID = mwo.PRODUCTION_LINE_ID
+        and plm.TENANT_ID = #{tenantId}
+        where mwo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+    <select id="queryEoJobTimeMaterial" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+        SELECT
+        hejlm.*
+    FROM
+        hme_eo_job_time_material hejlm
+    WHERE
+        hejlm.tenant_id = #{tenantId}
+        AND hejlm.release_qty > 0
+
+        <if test="dto.materialId != null">
+            AND hejlm.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialLotId != null">
+            AND hejlm.material_lot_id = #{dto.materialLotId}
+        </if>
+
+        AND hejlm.workcell_id = #{dto.workcellId}
+       ORDER BY
+	hejlm.workcell_id,
+	hejlm.material_id,
+	hejlm.last_update_date ASC
+    </select>
+
+    <select id="queryEoJobTimeMaterialOfNotNullMaterialLot" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+        SELECT
+        hejlm.*
+    FROM
+        hme_eo_job_time_material hejlm
+    WHERE
+        hejlm.tenant_id = #{tenantId}
+        AND hejlm.release_qty > 0
+        AND hejlm.material_lot_id IS NOT NULL
+        AND hejlm.material_lot_id != ''
+        AND hejlm.workcell_id = #{dto.workcellId}
+       ORDER BY
+	hejlm.workcell_id,
+	hejlm.material_id,
+	hejlm.last_update_date ASC
+    </select>
+
+    <select id="qqueryEoJobTimeMaterial2" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+        SELECT
+        hejlm.*
+    FROM
+        hme_eo_job_time_material hejlm
+    WHERE
+    tenant_id = #{tenantId}
+    AND workcell_id = #{workcellId}
+    AND material_id = #{materialId}
+    AND ( material_lot_id IS NULL OR material_lot_id = '' )
+    </select>
+
+    <select id="queryTimeMaterialOfNoVirtualRelease" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+        SELECT
+        tenant_id,
+        job_material_id,
+        workcell_id,
+        work_date,
+        shift_id,
+        material_id,
+        material_lot_id,
+        release_qty,
+        IFNULL( cost_qty, 0 ) AS cost_qty,
+        available_time,
+        dead_line_date,
+        byd_material_id,
+        is_released,
+        locator_id,
+        lot_code,
+        production_version,
+        virtual_flag,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10,
+        attribute11,
+        attribute12,
+        attribute13,
+        attribute14,
+        attribute15
+    FROM
+        hme_eo_job_time_material
+    WHERE
+        tenant_id = #{tenantId}
+        AND workcell_id = #{workcellId}
+        AND is_released = 1
+        AND material_lot_id IS NOT NULL
+        AND material_lot_id != ''
+        AND (virtual_flag = 'N' OR virtual_flag IS NULL OR virtual_flag = '')
+        AND job_material_id IN
+        <foreach collection="jobMaterialIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+    ORDER BY
+        creation_date ASC
+    </select>
+
+    <select id="queryTimeMaterialOfVirtualRelease" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+        SELECT
+        tenant_id,
+        job_material_id,
+        workcell_id,
+        work_date,
+        shift_id,
+        material_id,
+        material_lot_id,
+        release_qty,
+        IFNULL( cost_qty, 0 ) AS cost_qty,
+        available_time,
+        dead_line_date,
+        byd_material_id,
+        is_released,
+        locator_id,
+        lot_code,
+        production_version,
+        virtual_flag,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10,
+        attribute11,
+        attribute12,
+        attribute13,
+        attribute14,
+        attribute15
+    FROM
+        hme_eo_job_time_material
+    WHERE
+        tenant_id = #{tenantId}
+        AND workcell_id = #{workcellId}
+        AND is_released = 1
+        AND material_lot_id IS NOT NULL
+        AND material_lot_id != ''
+        AND virtual_flag = 'X'
+        AND job_material_id IN
+        <foreach collection="jobMaterialIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+    ORDER BY
+        creation_date ASC
+    </select>
+
+    <select id="queryEoJobTimeMaterial3" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+        SELECT
+        hejlm.*
+        FROM
+        hme_eo_job_time_material hejlm
+        WHERE
+        hejlm.tenant_id = #{tenantId}
+        <if test="productionVersion != null and productionVersion.length() != 0">
+            AND hejlm.production_version = #{productionVersion}
+        </if>
+        <if test="productionVersion == null">
+            AND ( hejlm.production_version = '' OR hejlm.production_version IS NULL )
+        </if>
+        AND hejlm.material_id = #{materialId}
+        AND hejlm.workcell_id = #{workcellId}
+    </select>
+
+    <select id="queryHaveBindWorkcell" resultType="java.lang.String">
+        SELECT
+    mmw.WORKCELL_CODE
+    FROM
+    hme_eo_job_time_material hejlm,
+    mt_mod_workcell mmw
+    WHERE
+    hejlm.tenant_id = #{tenantId}
+    AND mmw.TENANT_ID = #{tenantId}
+    AND mmw.WORKCELL_ID = hejlm.workcell_id
+    AND hejlm.workcell_id != #{workcellId}
+    AND hejlm.material_lot_id = #{materialLotId}
+    </select>
+
+    <select id="queryHaveBindWorkcell2" resultType="com.ruike.hme.domain.vo.HmeEoJobSnBatchVO10">
+        SELECT
+        hejlm.job_material_id,
+        hejlm.workcell_id,
+        mmw.WORKCELL_CODE,
+        hejlm.creation_date
+        FROM
+        hme_eo_job_time_material hejlm,
+        mt_mod_workcell mmw
+        WHERE
+        hejlm.tenant_id = mmw.TENANT_ID
+        AND mmw.TENANT_ID = #{tenantId}
+        AND mmw.WORKCELL_ID = hejlm.workcell_id
+        AND hejlm.material_lot_id = #{materialLotId}
+    </select>
+
+    <update id="batchUpdateTimeMaterial" parameterType="com.ruike.hme.domain.vo.HmeEoJobTimeMaterialVO">
+        update hme_eo_job_time_material
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            release_qty =
+            <foreach collection="hmeEoJobTimeMaterialVOList" item="item" index="index"
+                     separator=" " open="case job_material_id" close="end,">
+                when #{item.jobMaterialId} then #{item.releaseQty}
+            </foreach>
+        </set>
+        <where>
+            job_material_id in
+            <foreach collection="hmeEoJobTimeMaterialVOList" item="item"
+                     separator="," open="(" close=")">
+                #{item.jobMaterialId}
+            </foreach>
+        </where>
+    </update>
+
+    <update id="batchUpdateIsReleased" parameterType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+        update hme_eo_job_time_material
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            is_released =
+            <foreach collection="hmeEoJobTimeMaterialList" item="item" index="index"
+                     separator=" " open="case job_material_id" close="end,">
+                when #{item.jobMaterialId} then #{item.isReleased}
+            </foreach>
+        </set>
+        <where>
+            job_material_id in
+            <foreach collection="hmeEoJobTimeMaterialList" item="item"
+                     separator="," open="(" close=")">
+                #{item.jobMaterialId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="selectNotReleaseTimeMaterial" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+    SELECT
+        hejlm.job_material_id,
+        hejlm.material_id,
+		hejlm.workcell_id,
+		hejlm.production_version,
+		hejlm.material_lot_id,
+		hejlm.release_qty,
+		mml.ENABLE_FLAG
+    FROM
+        hme_eo_job_time_material hejlm
+	LEFT JOIN mt_material_lot mml ON mml.material_lot_id = hejlm.material_lot_id
+    WHERE
+        hejlm.tenant_id = #{tenantId}
+        AND NOT EXISTS (
+        SELECT
+            1
+        FROM
+            hme_eo_job_sn_lot_material hejslm
+        WHERE
+            hejslm.tenant_id = hejlm.tenant_id
+            AND hejslm.time_material_id = hejlm.job_material_id
+            AND hejslm.release_qty > 0
+            AND hejslm.workcell_id = hejlm.workcell_id
+            AND hejslm.job_id = #{jobId}
+        )
+        AND hejlm.workcell_id = #{workcellId}
+    </select>
+
+    <select id="selectReleaseTimeMaterial" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+    SELECT
+        hejlm.job_material_id,
+        hejlm.material_id,
+		hejlm.workcell_id,
+		hejlm.production_version,
+		hejlm.material_lot_id,
+		hejlm.release_qty,
+		mml.ENABLE_FLAG
+    FROM
+        hme_eo_job_time_material hejlm
+	LEFT JOIN mt_material_lot mml ON mml.material_lot_id = hejlm.material_lot_id
+    WHERE
+        hejlm.tenant_id = #{tenantId}
+        AND EXISTS (
+        SELECT
+            1
+        FROM
+            hme_eo_job_sn_lot_material hejslm
+        WHERE
+            hejslm.tenant_id = hejlm.tenant_id
+            AND hejslm.time_material_id = hejlm.job_material_id
+            AND hejslm.release_qty > 0
+            AND hejslm.workcell_id = hejlm.workcell_id
+            AND hejslm.job_id = #{jobId}
+        )
+        AND hejlm.workcell_id = #{workcellId}
+    </select>
+
+    <delete id="batchDeleteByPrimary" parameterType="java.lang.String">
+        DELETE FROM hme_eo_job_time_material WHERE job_material_id IN
+        <foreach collection="jobMaterialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getEoJobTimeMaterialCount" resultType="java.lang.Integer">
+        SELECT
+        count(1)
+        FROM
+        hme_eo_job_time_material hejlm
+        WHERE
+        hejlm.tenant_id = #{tenantId}
+        <if test="productionVersion != null and productionVersion.length() != 0">
+            AND hejlm.production_version = #{productionVersion}
+        </if>
+        <if test="productionVersion == null">
+            AND ( hejlm.production_version = '' OR hejlm.production_version IS NULL )
+        </if>
+        AND hejlm.material_id = #{materialId}
+        AND hejlm.workcell_id = #{workcellId}
+    </select>
+
+    <update id="batchUpdateJobTimeMaterial">
+        <bind name="temp" value="@io.choerodon.mybatis.helper.AuditHelper@audit()"/>
+        update hme_eo_job_time_material
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{temp.user},
+            last_update_date = CURRENT_TIMESTAMP,
+            material_lot_id = null,
+            locator_id = null,
+            lot_code = null,
+            available_time = null,
+            dead_line_date = null,
+            virtual_flag = null,
+            production_version = null,
+            is_released = 0
+        </set>
+        <where>
+            job_material_id in
+            <foreach collection="jobMaterialIds" item="jobMaterialId" open="(" separator="," close=")">
+                #{jobMaterialId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="selectNotBindJobMaterial" resultType="com.ruike.hme.domain.entity.HmeEoJobTimeMaterial">
+            SELECT
+        hejlm.job_material_id,
+        hejlm.creation_date
+    FROM
+        hme_eo_job_time_material hejlm
+    WHERE
+        hejlm.tenant_id = #{tenantId}
+        AND ( hejlm.material_lot_id = '' OR hejlm.material_lot_id IS NULL )
+        AND hejlm.material_id = #{materialId}
+        AND hejlm.workcell_id = #{workcellId}
+        LIMIT 1
+    </select>
+
+    <select id="selectWkcBindJobMaterial" resultType="com.ruike.hme.domain.vo.HmeEoJobSnSingleVO5">
+        SELECT
+        hejlm.job_material_id,
+        ( CASE WHEN mmsa.ATTR_VALUE IS NULL OR mmsa.ATTR_VALUE = '' THEN "LOT" ELSE mmsa.ATTR_VALUE END ) AS production_type,
+        mmsat.ATTR_VALUE AS backflush_flag,
+        hejlm.material_id,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mu.UOM_ID,
+        mu.UOM_CODE,
+        mu.UOM_NAME,
+        hejlm.material_lot_id,
+        mml.MATERIAL_LOT_CODE,
+	    mmla.ATTR_NAME AS supplier_lot,
+	    mml.PRIMARY_UOM_QTY,
+	    hejlm.dead_line_date,
+	    mml.ENABLE_FLAG,
+	    mml.FREEZE_FLAG,
+	    mml.STOCKTAKE_FLAG,
+	    mml.LOT,
+	    ml.LOCATOR_ID,
+	    ml.LOCATOR_CODE
+    FROM
+        hme_eo_job_time_material hejlm,
+        mt_material mm
+        LEFT JOIN mt_uom mu ON mu.ENABLE_FLAG = 'Y'
+        AND mu.UOM_ID = mm.PRIMARY_UOM_ID,
+        mt_material_site mms
+        LEFT JOIN mt_material_site_attr mmsa ON mmsa.material_site_id = mms.material_site_id
+        AND mmsa.ATTR_NAME = 'attribute14'
+        AND mmsa.TENANT_ID = mms.TENANT_ID
+        LEFT JOIN mt_material_site_attr mmsat ON mmsat.material_site_id = mms.material_site_id
+        AND mmsat.ATTR_NAME = 'attribute1'
+        AND mmsat.TENANT_ID = mms.TENANT_ID,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr mmla ON mmla.TENANT_ID = mml.TENANT_ID
+        AND mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'SUPPLIER_LOT'
+        LEFT JOIN mt_mod_locator ml ON ml.locator_id = mml.locator_id
+    WHERE
+        mml.ENABLE_FLAG = 'Y'
+        AND mml.MATERIAL_LOT_ID = hejlm.material_lot_id
+        AND mms.ENABLE_FLAG = 'Y'
+        AND mms.MATERIAL_ID = mm.MATERIAL_ID
+        AND mms.SITE_ID = #{siteId}
+        AND mms.TENANT_ID = mm.TENANT_ID
+        AND mm.ENABLE_FLAG = 'Y'
+        AND mm.MATERIAL_ID = hejlm.material_id
+        AND hejlm.tenant_id = #{tenantId}
+        AND hejlm.material_lot_id IS NOT NULL
+        AND hejlm.material_lot_id != ''
+        AND hejlm.workcell_id = #{workcellId}
+    ORDER BY
+        hejlm.material_id,
+        hejlm.last_update_date ASC
+    </select>
+</mapper>

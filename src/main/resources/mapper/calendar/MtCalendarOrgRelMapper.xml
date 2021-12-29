@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.calendar.infra.mapper.MtCalendarOrgRelMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.calendar.domain.entity.MtCalendarOrgRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CALENDAR_ORG_REL_ID" property="calendarOrgRelId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_ID" property="calendarId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="UiResultMap" type="tarzan.calendar.api.dto.MtCalendarOrgRelDTO">
+        <result column="CALENDAR_ORG_REL_ID" property="calendarOrgRelId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_ID" property="calendarId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_CODE" property="calendarCode" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_DESC" property="calendarDesc" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_TYPE" property="calendarType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_CODE" property="organizationCode" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_DESC" property="organizationDesc" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="organizationLimitCalendarQuery" resultType="java.lang.String">
+        SELECT
+        b.CALENDAR_ID
+        FROM
+        mt_calendar_org_rel b
+        WHERE
+        b.TENANT_ID = ${tenantId}
+        AND b.ORGANIZATION_TYPE = #{organizationType}
+        <if test="organizationId != null and organizationId != ''">
+            AND b.ORGANIZATION_ID = #{organizationId}
+        </if>
+    </select>
+
+    <select id="queryCalendarOrgRelForUi" resultMap="UiResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+            *
+        FROM
+            (
+        SELECT
+            cor.CALENDAR_ORG_REL_ID,
+            cor.CALENDAR_ID,
+            mc.CALENDAR_CODE,
+            mc.CALENDAR_TYPE,
+            mcl.DESCRIPTION CALENDAR_DESC,
+            cor.ORGANIZATION_TYPE,
+            cor.ORGANIZATION_ID,
+            me.ENTERPRISE_CODE ORGANIZATION_CODE,
+            mel.ENTERPRISE_NAME ORGANIZATION_DESC,
+            cor.ENABLE_FLAG
+        FROM
+            mt_calendar_org_rel cor
+            JOIN mt_calendar mc ON cor.CALENDAR_ID = mc.CALENDAR_ID
+            JOIN mt_calendar_tl mcl ON mcl.CALENDAR_ID = mc.CALENDAR_ID
+            AND mcl.LANG = #{locale}
+            JOIN mt_mod_enterprise me ON cor.ORGANIZATION_ID = me.ENTERPRISE_ID
+            JOIN mt_mod_enterprise_tl mel ON me.ENTERPRISE_ID = mel.ENTERPRISE_ID
+            AND mel.LANG = #{locale}
+        WHERE
+            cor.TENANT_ID = ${tenantId}
+            AND mc.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND cor.ORGANIZATION_TYPE = 'ENTERPRISE' UNION ALL
+        SELECT
+            cor.CALENDAR_ORG_REL_ID,
+            cor.CALENDAR_ID,
+            mc.CALENDAR_CODE,
+            mc.CALENDAR_TYPE,
+            mcl.DESCRIPTION CALENDAR_DESC,
+            cor.ORGANIZATION_TYPE,
+            cor.ORGANIZATION_ID,
+            me.SITE_CODE ORGANIZATION_CODE,
+            mel.SITE_NAME ORGANIZATION_DESC,
+            cor.ENABLE_FLAG
+        FROM
+            mt_calendar_org_rel cor
+            JOIN mt_calendar mc ON cor.CALENDAR_ID = mc.CALENDAR_ID
+            JOIN mt_calendar_tl mcl ON mcl.CALENDAR_ID = mc.CALENDAR_ID
+            AND mcl.LANG = #{locale}
+            JOIN mt_mod_site me ON cor.ORGANIZATION_ID = me.SITE_ID
+            JOIN mt_mod_site_tl mel ON me.SITE_ID = mel.SITE_ID
+            AND mel.LANG = #{locale}
+        WHERE
+            cor.TENANT_ID = ${tenantId}
+            AND mc.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND cor.ORGANIZATION_TYPE = 'SITE' UNION ALL
+        SELECT
+            cor.CALENDAR_ORG_REL_ID,
+            cor.CALENDAR_ID,
+            mc.CALENDAR_CODE,
+            mc.CALENDAR_TYPE,
+            mcl.DESCRIPTION CALENDAR_DESC,
+            cor.ORGANIZATION_TYPE,
+            cor.ORGANIZATION_ID,
+            me.AREA_CODE ORGANIZATION_CODE,
+            mel.DESCRIPTION ORGANIZATION_DESC,
+            cor.ENABLE_FLAG
+        FROM
+            mt_calendar_org_rel cor
+            JOIN mt_calendar mc ON cor.CALENDAR_ID = mc.CALENDAR_ID
+            JOIN mt_calendar_tl mcl ON mcl.CALENDAR_ID = mc.CALENDAR_ID
+            AND mcl.LANG = #{locale}
+            JOIN mt_mod_area me ON cor.ORGANIZATION_ID = me.AREA_ID
+            JOIN mt_mod_area_tl mel ON me.AREA_ID = mel.AREA_ID
+            AND mel.LANG = #{locale}
+        WHERE
+            cor.TENANT_ID = ${tenantId}
+            AND mc.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND cor.ORGANIZATION_TYPE = 'AREA' UNION ALL
+        SELECT
+            cor.CALENDAR_ORG_REL_ID,
+            cor.CALENDAR_ID,
+            mc.CALENDAR_CODE,
+            mc.CALENDAR_TYPE,
+            mcl.DESCRIPTION CALENDAR_DESC,
+            cor.ORGANIZATION_TYPE,
+            cor.ORGANIZATION_ID,
+            me.PROD_LINE_CODE ORGANIZATION_CODE,
+            mel.PROD_LINE_NAME ORGANIZATION_DESC,
+            cor.ENABLE_FLAG
+        FROM
+            mt_calendar_org_rel cor
+            JOIN mt_calendar mc ON cor.CALENDAR_ID = mc.CALENDAR_ID
+            JOIN mt_calendar_tl mcl ON mcl.CALENDAR_ID = mc.CALENDAR_ID
+            AND mcl.LANG = #{locale}
+            JOIN mt_mod_production_line me ON cor.ORGANIZATION_ID = me.PROD_LINE_ID
+            JOIN mt_mod_production_line_tl mel ON me.PROD_LINE_ID = mel.PROD_LINE_ID
+            AND mel.LANG = #{locale}
+        WHERE
+            cor.TENANT_ID = ${tenantId}
+            AND mc.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND cor.ORGANIZATION_TYPE = 'PROD_LINE' UNION ALL
+        SELECT
+            cor.CALENDAR_ORG_REL_ID,
+            cor.CALENDAR_ID,
+            mc.CALENDAR_CODE,
+            mc.CALENDAR_TYPE,
+            mcl.DESCRIPTION CALENDAR_DESC,
+            cor.ORGANIZATION_TYPE,
+            cor.ORGANIZATION_ID,
+            me.WORKCELL_CODE ORGANIZATION_CODE,
+            mel.WORKCELL_NAME ORGANIZATION_DESC,
+            cor.ENABLE_FLAG
+        FROM
+            mt_calendar_org_rel cor
+            JOIN mt_calendar mc ON cor.CALENDAR_ID = mc.CALENDAR_ID
+            JOIN mt_calendar_tl mcl ON mcl.CALENDAR_ID = mc.CALENDAR_ID
+            AND mcl.LANG = #{locale}
+            JOIN mt_mod_workcell me ON cor.ORGANIZATION_ID = me.WORKCELL_ID
+            JOIN mt_mod_workcell_tl mel ON me.WORKCELL_ID = mel.WORKCELL_ID
+            AND mel.LANG = #{locale}
+        WHERE
+            cor.TENANT_ID = ${tenantId}
+            AND mc.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND cor.ORGANIZATION_TYPE = 'WORKCELL' UNION ALL
+        SELECT
+            cor.CALENDAR_ORG_REL_ID,
+            cor.CALENDAR_ID,
+            mc.CALENDAR_CODE,
+            mc.CALENDAR_TYPE,
+            mcl.DESCRIPTION CALENDAR_DESC,
+            cor.ORGANIZATION_TYPE,
+            cor.ORGANIZATION_ID,
+            me.LOCATOR_CODE ORGANIZATION_CODE,
+            mel.LOCATOR_NAME ORGANIZATION_DESC,
+            cor.ENABLE_FLAG
+        FROM
+            mt_calendar_org_rel cor
+            JOIN mt_calendar mc ON cor.CALENDAR_ID = mc.CALENDAR_ID
+            JOIN mt_calendar_tl mcl ON mcl.CALENDAR_ID = mc.CALENDAR_ID
+            AND mcl.LANG = #{locale}
+            JOIN mt_mod_locator me ON cor.ORGANIZATION_ID = me.LOCATOR_ID
+            JOIN mt_mod_locator_tl mel ON me.LOCATOR_ID = mel.LOCATOR_ID
+            AND mel.LANG = #{locale}
+        WHERE
+            cor.TENANT_ID = ${tenantId}
+            AND mc.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND cor.ORGANIZATION_TYPE = 'LOCATOR'
+            ) all_info
+        WHERE
+            1 =1
+        <if test="dto.calendarId != null">
+            AND all_info.CALENDAR_ID = #{dto.calendarId}
+        </if>
+        <if test="dto.calendarOrganizationId != null">
+            AND all_info.ORGANIZATION_ID = #{dto.calendarOrganizationId}
+        </if>
+        <if test="dto.organizationType != null">
+            AND all_info.ORGANIZATION_TYPE = #{dto.organizationType}
+        </if>
+        <if test="dto.enableFlag != null">
+            AND all_info.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.topSiteId != null">
+            AND EXISTS (
+                SELECT
+                    rel.ORGANIZATION_ID
+                FROM
+                    mt_mod_organization_rel rel
+                WHERE
+                    rel.ORGANIZATION_ID = all_info.ORGANIZATION_ID
+                AND rel.ORGANIZATION_TYPE = all_info.ORGANIZATION_TYPE
+                AND rel.TENANT_ID = ${tenantId}
+                AND rel.TOP_SITE_ID = #{dto.topSiteId}
+            )
+        </if>
+    </select>
+
+    <select id="organizationCalendarLimitBatchQuery" resultType="java.lang.String">
+        SELECT
+            b.ORGANIZATION_ID
+        FROM
+            mt_calendar_org_rel b
+        WHERE
+            b.TENANT_ID = ${tenantId}
+        AND b.CALENDAR_ID = #{calendarId}
+        AND b.ORGANIZATION_TYPE = #{organizationType}
+        AND b.ENABLE_FLAG = 'Y'
+        AND b.ORGANIZATION_ID IN
+        <foreach collection="organizationIds" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="organizationLimitBatchQuery" resultMap="BaseResultMap">
+        SELECT
+            b.CALENDAR_ORG_REL_ID,
+            b.CALENDAR_ID,
+            b.ORGANIZATION_ID,
+            b.ORGANIZATION_TYPE,
+            b.ENABLE_FLAG
+        FROM
+            mt_calendar_org_rel b
+        WHERE
+            b.TENANT_ID = ${tenantId}
+        <foreach collection="organizations" open="AND (" separator="OR" close=")" item="item">
+            ( b.ORGANIZATION_TYPE = #{item.organizationType} AND b.ORGANIZATION_ID = #{item.organizationId})
+        </foreach>
+    </select>
+
+    <select id="calendarTypeLimitIdBesides" resultMap="BaseResultMap">
+        SELECT
+            b.CALENDAR_ORG_REL_ID,
+            b.CALENDAR_ID,
+            b.ORGANIZATION_ID,
+            b.ORGANIZATION_TYPE,
+            b.ENABLE_FLAG
+        FROM
+            mt_calendar_org_rel b
+            INNER JOIN mt_calendar c ON b.CALENDAR_ID = c.CALENDAR_ID
+        WHERE
+            b.TENANT_ID = c.TENANT_ID
+            AND b.TENANT_ID = ${tenantId}
+            AND b.ENABLE_FLAG = 'Y'
+            AND c.CALENDAR_TYPE = #{calendarType}
+            AND c.CALENDAR_ID &lt;&gt; #{calendarId}
+    </select>
+</mapper>

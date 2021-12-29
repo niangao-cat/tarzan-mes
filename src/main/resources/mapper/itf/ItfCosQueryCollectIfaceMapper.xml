@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfCosQueryCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+
+    <select id="selectMaterialLotByCode" resultType="com.ruike.itf.api.dto.CosQueryCollectItfReturnDTO2">
+        SELECT
+            mml.material_lot_id,
+            mml.primary_uom_qty,
+            mm.material_code,
+            mm.material_name,
+            mmw.work_order_num,
+            mmw.qty,
+            mmla2.attr_value as cos_type,
+            mmla3.attr_value as wafer
+        FROM
+            mt_material_lot mml
+        LEFT JOIN mt_material mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_material_lot_attr mmla ON mmla.material_lot_id = mml.material_lot_id
+        AND mmla.attr_name = 'WORK_ORDER_ID'
+        LEFT JOIN mt_work_order mmw ON mmw.work_order_id = mmla.attr_value
+        LEFT JOIN mt_material_lot_attr mmla2 ON mmla2.material_lot_id = mml.material_lot_id
+        AND mmla2.attr_name = 'COS_TYPE'
+        LEFT JOIN mt_material_lot_attr mmla3 ON mmla3.material_lot_id = mml.material_lot_id
+        AND mmla3.attr_name = 'WAFER_NUM'
+        WHERE
+            mml.MATERIAL_LOT_CODE = #{materialLotCode}
+    </select>
+
+    <select id="cosDegreeTestActualQuery" resultType="com.ruike.itf.api.dto.CosQueryCollectItfReturnDTO4">
+        select hcdta.test_object, hcdta.test_qty, hcdta.target_qty, hcdta.degree_test_id
+        from hme_cos_degree_test_actual hcdta
+        where hcdta.cos_type = #{cosType}
+        and hcdta.wafer = #{wafer}
+        and hcdta.tenant_id = #{tenantId}
+    </select>
+
+    <select id="tagPassRateHeaderQuery" resultType="com.ruike.itf.api.dto.CosQueryCollectItfReturnDTO4">
+        select htprh.test_object, htprh.test_qty, htprh.test_type
+        from hme_tag_pass_rate_header htprh
+        where htprh.cos_type = #{cosType}
+        and htprh.test_object = #{testObject}
+        and htprh.tenant_id = #{tenantId}
+    </select>
+
+    <insert id="batchInsertHmeCosDegreeTestActual">
+        insert into hme_cos_degree_test_actual(tenant_id
+        , degree_test_id
+        , cos_type
+        , wafer
+        , test_object
+        , test_qty
+        , target_qty
+        , test_rate
+        , priority
+        , test_status
+        , cid
+        , object_version_number
+        , creation_date
+        , created_by
+        , last_updated_by
+        , last_update_date
+        )
+        values
+        <foreach collection="insertList" index="index" item="item" separator=",">
+            (#{item.tenantId},
+            #{item.degreeTestId},
+            #{item.cosType},
+            #{item.wafer},
+            #{item.testObject},
+            #{item.testQty},
+            #{item.targetQty},
+            #{item.testRate},
+            #{item.priority},
+            #{item.testStatus},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertHmeCosDegreeTestActualHis">
+        insert into hme_cos_degree_test_actual_his(tenant_id
+        , degree_test_his_id
+        , degree_test_id
+        , cos_type
+        , wafer
+        , test_object
+        , test_qty
+        , target_qty
+        , test_rate
+        , priority
+        , test_status
+        , cid
+        , object_version_number
+        , creation_date
+        , created_by
+        , last_updated_by
+        , last_update_date
+        )
+        values
+        <foreach collection="insertList" index="index" item="item" separator=",">
+            (#{item.tenantId},
+            #{item.degreeTestHisId},
+            #{item.degreeTestId},
+            #{item.cosType},
+            #{item.wafer},
+            #{item.testObject},
+            #{item.testQty},
+            #{item.targetQty},
+            #{item.testRate},
+            #{item.priority},
+            #{item.testStatus},
+            #{item.hisCid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <select id="materialLotLoadQuery" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.*
+        from hme_material_lot_load hmll
+        where hmll.material_lot_id = #{materialLotId}
+        and hmll.tenant_id = #{tenantId}
+        order by hmll.last_update_date desc
+        limit #{testQty}
+    </select>
+
+    <select id="countAttribute17Y" resultType="java.lang.Long">
+        select count(1)
+        from hme_material_lot_load hmll
+        where hmll.ATTRIBUTE2 = #{wafer}
+        and hmll.ATTRIBUTE1 = #{cosType}
+        and hmll.ATTRIBUTE17 = 'Y'
+        and hmll.tenant_id = #{tenantId}
+    </select>
+
+    <select id="countAttribute18Y" resultType="java.lang.Long">
+        select count(1)
+        from hme_material_lot_load hmll
+        where hmll.ATTRIBUTE2 = #{wafer}
+        and hmll.ATTRIBUTE1 = #{cosType}
+        and hmll.ATTRIBUTE18 = 'Y'
+        and hmll.tenant_id = #{tenantId}
+    </select>
+
+    <update id="updateTargetQty">
+        UPDATE hme_cos_degree_test_actual
+        <set>
+            target_qty = #{targetQty},
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP
+        </set>
+        <where>
+            degree_test_id = #{degreeTestId}
+        </where>
+    </update>
+
+    <select id="hmeCosDegreeTestActualQuery" resultType="com.ruike.itf.api.dto.CosQueryCollectItfReturnDTO5">
+        select t.*
+        from hme_cos_degree_test_actual t
+        where t.degree_test_id = #{degreeTestId}
+    </select>
+</mapper>

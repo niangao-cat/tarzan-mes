@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.order.infra.mapper.MtWorkOrderMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.order.domain.entity.MtWorkOrder">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_TYPE" property="workOrderType" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_LINE_ID" property="productionLineId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="MAKE_ORDER_ID" property="makeOrderId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_VERSION" property="productionVersion" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="LAST_WO_STATUS" property="lastWoStatus" jdbcType="VARCHAR"/>
+        <result column="PLAN_START_TIME" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="PLAN_END_TIME" property="planEndTime" jdbcType="TIMESTAMP"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="VALIDATE_FLAG" property="validateFlag" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="OPPORTUNITY_ID" property="opportunityId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_CONTROL_TYPE" property="completeControlType" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_CONTROL_QTY" property="completeControlQty" jdbcType="DECIMAL"/>
+        <result column="SOURCE_IDENTIFICATION_ID" property="sourceIdentificationId" jdbcType="DECIMAL"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="limitWoQuery" resultType="java.lang.String">
+        SELECT
+        wo.WORK_ORDER_ID
+        FROM
+        `mt_work_order` wo
+        where
+        wo.TENANT_ID = #{tenantId}
+        <if test="dto.workOrderNum != null">
+            and wo.WORK_ORDER_NUM = #{dto.workOrderNum}
+        </if>
+        <if test="dto.workOrderType != null">
+            and wo.WORK_ORDER_TYPE = #{dto.workOrderType}
+        </if>
+        <if test="dto.status != null">
+            and wo.STATUS = #{dto.status}
+        </if>
+        <if test="dto.siteId != null">
+            and wo.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.productionLineId != null">
+            and wo.PRODUCTION_LINE_ID = #{dto.productionLineId}
+        </if>
+        <if test="dto.materialId != null">
+            and wo.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.customerId != null">
+            and wo.CUSTOMER_ID = #{dto.customerId}
+        </if>
+        <if test="dto.bomId != null">
+            and wo.BOM_ID = #{dto.bomId}
+        </if>
+        <if test="dto.routerId != null">
+            and wo.ROUTER_ID = #{dto.routerId}
+        </if>
+        <if test="dto.planStartTimeFrom != null">
+            and wo.PLAN_START_TIME &gt;= DATE_FORMAT(#{dto.planStartTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planStartTimeTo != null">
+            and wo.PLAN_START_TIME &lt;= DATE_FORMAT(#{dto.planStartTimeTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planEndTimeFrom != null">
+            and wo.PLAN_END_TIME &gt;= DATE_FORMAT(#{dto.planEndTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planEndTimeTo != null">
+            and wo.PLAN_END_TIME &lt;= DATE_FORMAT(#{dto.planEndTimeTo}, '%Y-%m-%d %T')
+        </if>
+    </select>
+
+    <select id="numberLimitWoGet" resultType="java.lang.String">
+        SELECT
+            wo.WORK_ORDER_ID
+        FROM
+            `mt_work_order` wo
+        WHERE 
+	        wo.TENANT_ID = #{tenantId}
+	        and wo.WORK_ORDER_NUM = #{workOrderNum}
+    </select>
+
+    <delete id="batchDelete">
+        delete from mt_work_order
+        where
+        TENANT_ID = #{tenantId}
+        and work_order_id in (
+        <foreach collection="orderids" item="id" separator="," index="index">
+            #{id}
+        </foreach>
+        )
+    </delete>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select * from mt_work_order
+        where
+        TENANT_ID = #{tenantId}
+        and work_order_id IN
+        <foreach collection="woIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="woNextNumberGet" resultType="java.lang.String">
+        SELECT
+            CONCAT(
+                date_format(now(), '%y%m%d'),
+                (
+                    LPAD(
+                        ifnull(
+                            max(
+                                CAST(
+                                    SUBSTR(work_order_num FROM 7) AS UNSIGNED
+                                )
+                            ),
+                            0
+                        ) + 1,
+                        4,
+                        '0'
+                    )
+                )
+            ) seq
+        FROM
+            MT_WORK_ORDER a
+        WHERE 
+        	  a.TENANT_ID = #{tenantId}
+              and SUBSTR(work_order_num FROM 1 FOR 6) = date_format(now(), '%y%m%d')
+    </select>
+    <select id="propertyLimitWoPropertyQuery" resultMap="BaseResultMap">
+        SELECT
+        wo.*
+        FROM
+        `mt_work_order` wo
+        where
+        wo.TENANT_ID = #{tenantId}
+        <if test="dto.workOrderId != null">
+            and wo.WORK_ORDER_ID=#{dto.workOrderId}
+        </if>
+        <if test="dto.workOrderNum != null">
+            and wo.WORK_ORDER_NUM = #{dto.workOrderNum}
+        </if>
+        <if test="dto.workOrderType != null">
+            and wo.WORK_ORDER_TYPE = #{dto.workOrderType}
+        </if>
+        <if test="dto.status != null">
+            and wo.STATUS = #{dto.status}
+        </if>
+        <if test="dto.siteId != null">
+            and wo.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.productionLineId != null">
+            and wo.PRODUCTION_LINE_ID = #{dto.productionLineId}
+        </if>
+        <if test="dto.materialId != null">
+            and wo.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.customerId != null">
+            and wo.CUSTOMER_ID = #{dto.customerId}
+        </if>
+        <if test="dto.bomId != null">
+            and wo.BOM_ID = #{dto.bomId}
+        </if>
+        <if test="dto.routerId != null">
+            and wo.ROUTER_ID = #{dto.routerId}
+        </if>
+        <if test="dto.locatorId != null">
+            and wo.LOCATOR_ID=#{dto.locatorId}
+        </if>
+        <if test="dto.opportunityId != null">
+            and wo.OPPORTUNITY_ID=#{dto.opportunityId}
+        </if>
+        <if test="dto.validateFlag != null">
+            and wo.VALIDATE_FLAG=#{dto.validateFlag}
+        </if>
+        <if test="dto.remark != null">
+            and wo.REMARK=#{dto.remark}
+        </if>
+        <if test="dto.planStartTimeFrom != null">
+            and wo.PLAN_START_TIME &gt;= DATE_FORMAT(#{dto.planStartTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planStartTimeTo != null">
+            and wo.PLAN_START_TIME &lt;= DATE_FORMAT(#{dto.planStartTimeTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planEndTimeFrom != null">
+            and wo.PLAN_END_TIME &gt;= DATE_FORMAT(#{dto.planEndTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planEndTimeTo != null">
+            and wo.PLAN_END_TIME &lt;= DATE_FORMAT(#{dto.planEndTimeTo}, '%Y-%m-%d %T')
+        </if>
+    </select>
+
+    <select id="selectByPriority" resultType="string">
+        SELECT
+        t.WORK_ORDER_ID
+        FROM
+        `mt_work_order` t
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        AND t.`STATUS` IN
+        <foreach collection="status" item="item" open="(" close=")" separator="," index="index">
+            #{item}
+        </foreach>
+        <if test="priority != null">
+            and t.PRIORITY &gt; #{priority}
+        </if>
+        ORDER BY
+        t.PRIORITY
+        LIMIT 1
+    </select>
+    <select id="selectByWipEntityId" resultMap="BaseResultMap">
+        select * from mt_work_order
+        where
+        TENANT_ID = #{tenantId}
+        <if test="wipEntityIds!=null">
+            and  ${wipEntityIds}
+        </if>
+        <if test="wipEntityIds==null">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+    <select id="selectByWorkOrderNum" resultMap="BaseResultMap" fetchSize="5000">
+        select * from mt_work_order
+        where
+        TENANT_ID = #{tenantId}
+        <if test="workOrderNum!=null">
+            and ${workOrderNum}
+        </if>
+        <if test="workOrderNum==null">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+
+    <select id="selectForUi" resultType="tarzan.order.domain.vo.MtWorkOrderVO39">
+        select
+        wo.WORK_ORDER_ID workOrderId,
+        wo.WORK_ORDER_NUM workOrderNum,
+        wo.SITE_ID siteId,
+        wo.MATERIAL_ID materialId,
+        wo.WORK_ORDER_TYPE workOrderType,
+        wo.STATUS status,
+        wo.PRODUCTION_LINE_ID productionLineId,
+        wo.PLAN_END_TIME planEndTime,
+        wo.PLAN_START_TIME planStartTime,
+        wo.QTY qty
+        from
+        mt_work_order wo
+        where
+        TENANT_ID = #{tenantId}
+        AND wo.SITE_ID IN
+        <foreach collection="siteIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test='dto.status != null and dto.status.size() > 0'>
+            AND wo.STATUS IN
+            <foreach collection="dto.status" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.workOrderType != null and dto.workOrderType.size() > 0'>
+            AND wo.WORK_ORDER_TYPE IN
+            <foreach collection="dto.workOrderType" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.workOrderNum != null and dto.workOrderNum != ""'>
+            <bind name='numLike' value="'%'+dto.workOrderNum+'%'"/>
+            and wo.WORK_ORDER_NUM LIKE #{numLike}
+        </if>
+        <if test='dto.siteId != null and dto.siteId !=""'>
+            and wo.SITE_ID = #{dto.siteId}
+        </if>
+        <if test='dto.productionLineId != null and dto.productionLineId !=""'>
+            and wo.PRODUCTION_LINE_ID = #{dto.productionLineId}
+        </if>
+        <if test='dto.materialId != null and dto.materialId !=""'>
+            and wo.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test='dto.customerId != null and dto.customerId !=""'>
+            and wo.CUSTOMER_ID = #{dto.customerId}
+        </if>
+        <if test="dto.planStartTimeFrom != null">
+            and wo.PLAN_START_TIME &gt;= DATE_FORMAT(#{dto.planStartTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planStartTimeTo != null">
+            and wo.PLAN_START_TIME &lt;= DATE_FORMAT(#{dto.planStartTimeTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planEndTimeFrom != null">
+            and wo.PLAN_END_TIME &gt;= DATE_FORMAT(#{dto.planEndTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.planEndTimeTo != null">
+            and wo.PLAN_END_TIME &lt;= DATE_FORMAT(#{dto.planEndTimeTo}, '%Y-%m-%d %T')
+        </if>
+    </select>
+
+    <resultMap id="ResultView" type="tarzan.order.domain.vo.MtWorkOrderVO42">
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_TYPE" property="bomComponentType" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_METHOD" property="assembleMethod" jdbcType="VARCHAR"/>
+        <result column="ISSUED_LOCATOR_ID" property="issuedLocatorId" jdbcType="VARCHAR"/>
+        <result column="KEY_MATERIAL_FLAG" property="keyMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="STEP_NAME" property="step" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="DESCRIPTION" property="stepDesc" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_EXCESS_FLAG" property="assembleExcessFlag" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE10" property="lineAttribute10" jdbcType="VARCHAR"/>
+        <result column="BOM_VERSION" property="bomVersion" jdbcType="VARCHAR"/>
+        <result column="RECOIL_FLAG" property="recoilFlag" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_TYPE" property="productionType" jdbcType="VARCHAR"/>
+        <result column="UPGRADE_FLAG" property="upgradeFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectBomComponent" resultMap="ResultView">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        bc.BOM_COMPONENT_ID,
+        bc.LINE_NUMBER,
+        bc.LINE_NUMBER AS LINE_NUMBER_SORT,
+        bc.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mtl.MATERIAL_NAME,
+        bc.BOM_COMPONENT_TYPE,
+        bc.ASSEMBLE_METHOD,
+        bc.ISSUED_LOCATOR_ID,
+        bc.KEY_MATERIAL_FLAG,
+        bc.QTY,
+        mbca.attr_value lossd_qty,
+        IF('Y' = mp.OPERATION_ASSEMBLE_FLAG,rs.STEP_NAME,null) STEP_NAME,
+        IF('Y' = mp.OPERATION_ASSEMBLE_FLAG,rs.SEQUENCE,null) SEQUENCE,
+        IF('Y' = mp.OPERATION_ASSEMBLE_FLAG,rsl.DESCRIPTION,null) DESCRIPTION,
+        null ASSEMBLE_QTY,
+        null SCRAPPED_QTY,
+        'N' ASSEMBLE_EXCESS_FLAG
+        FROM
+        mt_bom_component bc
+        JOIN mt_work_order wo ON bc.BOM_ID = wo.BOM_ID
+        JOIN mt_bom mb ON mb.BOM_ID = wo.BOM_ID
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = bc.MATERIAL_ID
+        LEFT JOIN mt_bom_component_attr mbca on mbca.BOM_COMPONENT_ID=bc.BOM_COMPONENT_ID AND  mbca.attr_name='lineAttribute6'
+        LEFT JOIN mt_gen_type mgt ON mgt.TYPE_CODE = bc.ASSEMBLE_METHOD AND mgt.MODULE = 'MATERIAL' AND mgt.TYPE_GROUP = 'ASSY_METHOD'
+        LEFT JOIN mt_material_tl mtl ON mtl.MATERIAL_ID = mm.MATERIAL_ID AND mtl.LANG = #{lang}
+        JOIN mt_material_site ms ON ms.MATERIAL_ID = mm.MATERIAL_ID AND ms.SITE_ID = wo.SITE_ID AND ms.ENABLE_FLAG = 'Y'
+        LEFT JOIN mt_pfep_manufacturing mp ON mp.MATERIAL_SITE_ID = ms.MATERIAL_SITE_ID
+        AND mp.ORGANIZATION_TYPE = '' AND mp.ORGANIZATION_ID = '' AND mp.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_router_operation_component mr ON mr.BOM_COMPONENT_ID = bc.BOM_COMPONENT_ID AND mr.TENANT_ID =
+        ${tenantId}
+        LEFT JOIN mt_router_operation mo ON mo.ROUTER_OPERATION_ID = mr.ROUTER_OPERATION_ID AND mo.TENANT_ID =
+        ${tenantId}
+        JOIN mt_router_step rs ON rs.ROUTER_STEP_ID = mo.ROUTER_STEP_ID AND rs.ROUTER_ID = wo.ROUTER_ID AND
+        rs.TENANT_ID = ${tenantId}
+        JOIN mt_router_step_tl rsl ON rsl.ROUTER_STEP_ID = rs.ROUTER_STEP_ID AND rsl.LANG = #{lang}
+        WHERE
+        bc.TENANT_ID = ${tenantId}
+        AND wo.TENANT_ID = ${tenantId}
+        AND mm.TENANT_ID = ${tenantId}
+        AND mb.TENANT_ID = ${tenantId}
+        AND ms.TENANT_ID = ${tenantId}
+        AND wo.WORK_ORDER_ID = #{dto.workOrderId}
+        <if test='dto.assembleMethodDesc != null and dto.assembleMethodDesc != ""'>
+            <bind name="amssembleMethodLike" value="'%'+dto.assembleMethodDesc+'%'"/>
+            AND mgt.DESCRIPTION  LIKE #{amssembleMethodLike}
+        </if>
+        <if test='dto.materialCode != null and dto.materialCode != ""'>
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            AND mm.MATERIAL_CODE LIKE #{materialCodeLike}
+        </if>
+        <if test='dto.materialName != null and dto.materialName != ""'>
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            AND mtl.MATERIAL_NAME LIKE #{materialNameLike}
+        </if>
+        <if test='dto.step != null and dto.step != ""'>
+            <bind name="stepLike" value="'%'+dto.step+'%'"/>
+            AND rs.STEP_NAME LIKE #{stepLike}
+        </if>
+        <if test='dto.stepDesc != null and dto.stepDesc != ""'>
+            <bind name="stepDescLike" value="'%'+dto.stepDesc+'%'"/>
+            AND rsl.DESCRIPTION LIKE #{stepDescLike}
+        </if>
+        UNION ALL
+        SELECT
+        ma.BOM_COMPONENT_ID,
+        '' LINE_NUMBER,
+        NULL LINE_NUMBER_SORT,
+        ma.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mtl.MATERIAL_NAME,
+        ma.COMPONENT_TYPE,
+        null ASSEMBLE_METHOD,
+        '' ISSUED_LOCATOR_ID,
+        '' KEY_MATERIAL_FLAG,
+        0 QTY,
+        '' lossd_qty,
+        '' STEP_NAME,
+        '' SEQUENCE,
+        '' DESCRIPTION ,
+        ma.ASSEMBLE_QTY,
+        ma.SCRAPPED_QTY,
+        'Y' ASSEMBLE_EXCESS_FLAG
+        FROM
+        mt_work_order_component_actual ma
+        JOIN mt_material mm ON mm.MATERIAL_ID = ma.MATERIAL_ID
+        LEFT JOIN mt_material_tl mtl ON mtl.MATERIAL_ID = mm.MATERIAL_ID AND mtl.LANG = #{lang}
+        WHERE
+        ma.TENANT_ID = ${tenantId}
+        AND mm.TENANT_ID = ${tenantId}
+        AND ma.WORK_ORDER_ID = #{dto.workOrderId}
+        AND ma.ASSEMBLE_EXCESS_FLAG = 'Y'
+        <if test='dto.assembleMethodDesc != null and dto.assembleMethodDesc != ""'>
+            AND 1 = 2
+        </if>
+        <if test='dto.materialCode != null and dto.materialCode != ""'>
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            AND mm.MATERIAL_CODE LIKE #{materialCodeLike}
+        </if>
+        <if test='dto.materialName != null and dto.materialName != ""'>
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            AND mtl.MATERIAL_NAME LIKE #{materialNameLike}
+        </if>
+        <if test='dto.step != null and dto.step != ""'>
+            AND 1 = 2
+        </if>
+        <if test='dto.stepDesc != null and dto.stepDesc != ""'>
+            AND 1 = 2
+        </if>
+        ORDER BY LINE_NUMBER_SORT ASC, SEQUENCE
+        <if test='dto.sortDirection != null and dto.sortDirection != ""'>
+            ${dto.sortDirection}
+        </if>
+    </select>
+
+    <select id="selectRKBomComponent" resultMap="ResultView">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        bc.BOM_COMPONENT_ID,
+        bc.LINE_NUMBER,
+        bc.LINE_NUMBER AS LINE_NUMBER_SORT,
+        bc.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mtl.MATERIAL_NAME,
+        bc.BOM_COMPONENT_TYPE,
+        bc.ASSEMBLE_METHOD,
+        bc.ISSUED_LOCATOR_ID,
+        bc.KEY_MATERIAL_FLAG,
+        IFNULL(bc.QTY, 0) QTY,
+        IFNULL(bc.ATTRITION_CHANCE, 0) ATTRITION_CHANCE,
+        mbca5.ATTR_VALUE total_component_qty,
+        mbca.attr_value lossd_qty,
+        mbca10.ATTR_VALUE AS LINE_ATTRIBUTE10,
+        mbca7.ATTR_VALUE AS BOM_VERSION,
+        rs.STEP_NAME STEP_NAME,
+        rs.SEQUENCE SEQUENCE,
+        rsl.DESCRIPTION DESCRIPTION,
+        null ASSEMBLE_QTY,
+        null SCRAPPED_QTY,
+        'N' ASSEMBLE_EXCESS_FLAG,
+        msa1.ATTR_VALUE recoil_flag,
+        msa14.ATTR_VALUE production_type,
+        msa17.ATTR_VALUE upgrade_flag
+        FROM
+        mt_bom_component bc
+        JOIN mt_work_order wo ON bc.BOM_ID = wo.BOM_ID
+        JOIN mt_bom mb ON mb.BOM_ID = wo.BOM_ID
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = bc.MATERIAL_ID
+        LEFT JOIN mt_material_site mms ON mms.MATERIAL_ID = mm.MATERIAL_ID AND mms.SITE_ID = wo.SITE_ID
+        LEFT JOIN mt_material_site_attr msa1 ON msa1.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND msa1.ATTR_NAME = 'attribute1'
+        LEFT JOIN mt_material_site_attr msa14 ON msa14.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND msa14.ATTR_NAME = 'attribute14'
+        LEFT JOIN mt_material_site_attr msa17 ON msa17.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND msa17.ATTR_NAME = 'attribute17'
+        LEFT JOIN mt_bom_component_attr mbca on mbca.BOM_COMPONENT_ID=bc.BOM_COMPONENT_ID AND  mbca.attr_name='lineAttribute6'
+        LEFT JOIN mt_bom_component_attr mbca10 ON mbca10.BOM_COMPONENT_ID = bc.BOM_COMPONENT_ID AND mbca10.attr_name = 'lineAttribute10'
+        LEFT JOIN mt_bom_component_attr mbca7 ON mbca7.BOM_COMPONENT_ID = bc.BOM_COMPONENT_ID AND mbca7.attr_name = 'lineAttribute7'
+        LEFT JOIN mt_bom_component_attr mbca5 ON mbca5.BOM_COMPONENT_ID = bc.BOM_COMPONENT_ID AND mbca5.attr_name = 'lineAttribute5'
+        LEFT JOIN mt_gen_type mgt ON mgt.TYPE_CODE = bc.ASSEMBLE_METHOD AND mgt.MODULE = 'MATERIAL' AND mgt.TYPE_GROUP = 'ASSY_METHOD'
+        LEFT JOIN mt_material_tl mtl ON mtl.MATERIAL_ID = mm.MATERIAL_ID AND mtl.LANG = #{lang}
+        JOIN mt_material_site ms ON ms.MATERIAL_ID = mm.MATERIAL_ID AND ms.SITE_ID = wo.SITE_ID AND ms.ENABLE_FLAG = 'Y'
+        LEFT JOIN mt_pfep_manufacturing mp ON mp.MATERIAL_SITE_ID = ms.MATERIAL_SITE_ID
+        AND mp.ORGANIZATION_TYPE = '' AND mp.ORGANIZATION_ID = '' AND mp.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_router_operation_component mr ON mr.BOM_COMPONENT_ID = bc.BOM_COMPONENT_ID AND mr.TENANT_ID =
+        ${tenantId}
+        LEFT JOIN mt_router_operation mo ON mo.ROUTER_OPERATION_ID = mr.ROUTER_OPERATION_ID AND mo.TENANT_ID =
+        ${tenantId}
+        JOIN mt_router_step rs ON rs.ROUTER_STEP_ID = mo.ROUTER_STEP_ID AND rs.ROUTER_ID = wo.ROUTER_ID AND
+        rs.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_router_step_tl rsl ON rsl.ROUTER_STEP_ID = rs.ROUTER_STEP_ID AND rsl.LANG = #{lang}
+        WHERE
+        bc.TENANT_ID = ${tenantId}
+        AND wo.TENANT_ID = ${tenantId}
+        AND mm.TENANT_ID = ${tenantId}
+        AND mb.TENANT_ID = ${tenantId}
+        AND ms.TENANT_ID = ${tenantId}
+        AND wo.WORK_ORDER_ID = #{dto.workOrderId}
+        <if test='dto.assembleMethodDesc != null and dto.assembleMethodDesc != ""'>
+            <bind name="amssembleMethodLike" value="'%'+dto.assembleMethodDesc+'%'"/>
+            AND mgt.DESCRIPTION  LIKE #{amssembleMethodLike}
+        </if>
+        <if test='dto.materialCode != null and dto.materialCode != ""'>
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            AND mm.MATERIAL_CODE LIKE #{materialCodeLike}
+        </if>
+        <if test='dto.materialName != null and dto.materialName != ""'>
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            AND mtl.MATERIAL_NAME LIKE #{materialNameLike}
+        </if>
+        <if test='dto.step != null and dto.step != ""'>
+            <bind name="stepLike" value="'%'+dto.step+'%'"/>
+            AND rs.STEP_NAME LIKE #{stepLike}
+        </if>
+        <if test='dto.stepDesc != null and dto.stepDesc != ""'>
+            <bind name="stepDescLike" value="'%'+dto.stepDesc+'%'"/>
+            AND rsl.DESCRIPTION LIKE #{stepDescLike}
+        </if>
+        GROUP BY
+        bc.BOM_COMPONENT_ID,
+        bc.LINE_NUMBER,
+        bc.LINE_NUMBER,
+        bc.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mtl.MATERIAL_NAME,
+        bc.BOM_COMPONENT_TYPE,
+        bc.ASSEMBLE_METHOD,
+        bc.ISSUED_LOCATOR_ID,
+        bc.KEY_MATERIAL_FLAG,
+        bc.QTY,
+        mbca.attr_value,
+        mbca10.ATTR_VALUE,
+        mbca7.ATTR_VALUE,
+        rs.STEP_NAME,
+        rs.STEP_NAME,
+        rs.SEQUENCE,
+        rsl.DESCRIPTION,
+        ASSEMBLE_QTY,
+        SCRAPPED_QTY,
+        ASSEMBLE_EXCESS_FLAG,
+        msa1.ATTR_VALUE,
+        msa14.ATTR_VALUE,
+        msa17.ATTR_VALUE,
+        bc.ATTRITION_CHANCE,
+        mbca5.ATTR_VALUE
+        ORDER BY LINE_NUMBER_SORT ASC, SEQUENCE
+        <if test='dto.sortDirection != null and dto.sortDirection != ""'>
+            ${dto.sortDirection}
+        </if>
+    </select>
+</mapper>

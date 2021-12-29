@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfSoDeliveryChanOrPostIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfSoDeliveryChanOrPostIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="HEADER_ID" property="headerId" jdbcType="VARCHAR"/>
+        <result column="DOC_NUM" property="docNum" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="H_RETURN_STATUS" property="hReturnStatus" jdbcType="VARCHAR"/>
+        <result column="TYPE" property="type" jdbcType="VARCHAR"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="instructionDocPropertyBatchGet" resultType="com.ruike.itf.api.dto.ItfSoDeliveryChanOrPostDTO2">
+        SELECT
+            mid.INSTRUCTION_DOC_ID,
+            mid.INSTRUCTION_DOC_NUM,
+            mms.SITE_ID,
+            mms.SITE_CODE
+        FROM
+            mt_instruction_doc mid,
+            mt_mod_site mms
+        WHERE mid.INSTRUCTION_DOC_ID IN
+        <foreach collection="instructionDocIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mms.SITE_ID = mid.SITE_ID
+    </select>
+
+    <select id="instructionPropertyBatchGet" resultType="com.ruike.itf.api.dto.ItfSoDeliveryChanOrPostDTO3">
+        SELECT
+        	mi.INSTRUCTION_ID,
+        	attr.ATTR_VALUE INSTRUCTION_LINE_NUM,
+            mm.MATERIAL_ID,
+        	mm.MATERIAL_CODE,
+        	mu.UOM_CODE,
+        	mi.QUANTITY,
+            mml.LOCATOR_CODE,
+            IFNULL(attr2.ATTR_VALUE, '') LOT_FLAG,
+            mml1.LOCATOR_CODE toLocatorCode
+        FROM
+        	mt_instruction mi
+            LEFT JOIN mt_instruction_attr attr2 ON attr2.INSTRUCTION_ID = mi.INSTRUCTION_ID AND attr2.ATTR_NAME = 'LOT_FLAG'
+            LEFT JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mi.FROM_LOCATOR_ID
+            LEFT JOIN mt_mod_locator mml1 ON mml1.LOCATOR_ID = mi.TO_LOCATOR_ID,
+        	mt_instruction_attr attr,
+        	mt_material mm,
+        	mt_uom mu
+        WHERE mi.INSTRUCTION_ID IN
+        <foreach collection="instructionIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND attr.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        AND attr.ATTR_NAME  = 'INSTRUCTION_LINE_NUM'
+        AND mm.MATERIAL_ID = mi.MATERIAL_ID
+        AND mu.UOM_ID = mi.UOM_ID
+    </select>
+
+    <select id="queryMaterialTypeByMaterialIdsAndSiteId" resultType="com.ruike.itf.domain.vo.ItfSoDeliveryChanOrPostVO">
+        SELECT
+            mms.MATERIAL_ID,
+        	mmb.ITEM_TYPE
+        FROM
+        	mt_material_site mms,
+        	mt_material_basic mmb
+        WHERE mms.SITE_ID = #{siteId}
+        AND mms.MATERIAL_ID IN
+        <foreach collection="materialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mms.TENANT_ID = #{tenantId}
+        AND mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mmb.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="instructionActualDetailQuery" resultType="com.ruike.itf.domain.vo.ItfSoDeliveryChanOrPostVO3">
+        SELECT
+        	mia.INSTRUCTION_ID,
+        	iad.ACTUAL_QTY,
+        	mml.MATERIAL_LOT_CODE,
+        	mml.MATERIAL_LOT_ID,
+        	mml.LOT
+        FROM
+        	mt_instruction_actual mia,
+        	mt_instruction_actual_detail iad,
+        	mt_material_lot mml
+        WHERE mia.TENANT_ID = #{tenantId}
+        AND mia.INSTRUCTION_ID = #{instructionId}
+        AND iad.ACTUAL_ID = mia.ACTUAL_ID
+        AND iad.TENANT_ID = mia.TENANT_ID
+        AND mml.MATERIAL_LOT_ID = iad.MATERIAL_LOT_ID
+    </select>
+
+    <select id="instructionActualQtyBatchGet" resultType="com.ruike.itf.domain.vo.ItfSoDeliveryChanOrPostVO3">
+        SELECT
+        	mia.INSTRUCTION_ID,
+        	SUM(mia.ACTUAL_QTY) ACTUAL_QTY
+        FROM
+        	mt_instruction_actual mia
+        WHERE mia.TENANT_ID = #{tenantId}
+        AND mia.INSTRUCTION_ID IN
+        <foreach collection="instructionIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        GROUP BY
+        mia.INSTRUCTION_ID
+    </select>
+
+    <resultMap id="PostSoDeliveryMap" type="com.ruike.itf.domain.vo.ItfSoDeliveryChanOrPostVO5">
+        <result column="header_id" property="headerId" ></result>
+        <result column="doc_num" property="docNum" ></result>
+        <result column="site_code" property="siteCode" ></result>
+        <result column="type" property="type" ></result>
+        <collection property="lineList" ofType="com.ruike.itf.domain.entity.ItfSoDeliveryLineChanIface">
+            <result column="line_id" property="lineId"></result>
+            <result column="l_doc_Num" property="docNum"></result>
+            <result column="doc_line_num" property="docLineNum"></result>
+            <result column="site_code" property="siteCode"></result>
+            <result column="material_code" property="materialCode"></result>
+            <result column="warehouse_code" property="warehouseCode"></result>
+            <result column="change_quantity" property="changeQuantity"></result>
+            <result column="quantity" property="quantity"></result>
+            <result column="uom_code" property="uomCode"></result>
+        </collection>
+        <collection property="snDetailIfaceList" ofType="com.ruike.itf.domain.entity.ItfSoDeliveryChanSnDetailIface">
+            <result column="line_sn_detail_id" property="lineSnDetailId"></result>
+            <result column="d_doc_num" property="docNum"></result>
+            <result column="d_doc_line_num" property="docLineNum"></result>
+            <result column="sn" property="sn"></result>
+        </collection>
+        <collection property="lotDetailIfaceList" ofType="com.ruike.itf.domain.entity.ItfSoDeliveryChanLotDetailIface">
+            <result column="line_lot_detail_id" property="lineLotDetailId"></result>
+            <result column="ld_doc_num" property="docNum"></result>
+            <result column="ld_doc_line_num" property="docLineNum"></result>
+            <result column="lot" property="lot"></result>
+            <result column="ld_quantity" property="quantity"></result>
+            <result column="ATTRIBUTE1" property="attribute1"></result>
+        </collection>
+    </resultMap>
+
+    <select id="queryPostSoDeliveryList" resultMap="PostSoDeliveryMap">
+        SELECT
+        	hcpi.header_id,
+        	hcpi.doc_num,
+        	hcpi.site_code,
+        	hcpi.type,
+
+        	lci.line_id,
+        	lci.doc_num l_doc_Num,
+        	lci.doc_line_num,
+        	lci.site_code,
+        	lci.material_code,
+        	lci.warehouse_code,
+        	lci.change_quantity,
+        	lci.quantity,
+        	lci.uom_code,
+
+        	sdi.line_sn_detail_id,
+        	sdi.doc_num d_doc_num,
+        	sdi.doc_line_num d_doc_line_num,
+        	sdi.sn,
+
+        	ldi.line_lot_detail_id,
+        	ldi.doc_num ld_doc_num,
+        	ldi.doc_line_num ld_doc_line_num,
+        	ldi.quantity ld_quantity,
+        	ldi.lot,
+        	ldi.ATTRIBUTE1
+        FROM
+        	itf_so_delivery_chan_or_post_iface hcpi
+        	,itf_so_delivery_line_chan_iface lci
+        	LEFT JOIN itf_so_delivery_chan_sn_detail_iface sdi ON sdi.line_id = lci.line_id AND sdi.tenant_id = lci.tenant_id
+        	LEFT JOIN itf_so_delivery_chan_lot_detail_iface ldi ON ldi.line_id = lci.line_id AND ldi.tenant_id = lci.tenant_id
+        WHERE hcpi.type = 'POST'
+        AND hcpi.process_status = 'N'
+        AND hcpi.tenant_id = #{tenantId}
+        AND lci.header_id = hcpi.header_id
+        AND lci.tenant_id = hcpi.tenant_id
+    </select>
+</mapper>

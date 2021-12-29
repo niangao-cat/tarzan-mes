@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModOrganizationRelMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModOrganizationRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ORGANIZATION_REL_ID" property="organizationRelId" jdbcType="VARCHAR"/>
+        <result column="TOP_SITE_ID" property="topSiteId" jdbcType="VARCHAR"/>
+        <result column="PARENT_ORGANIZATION_TYPE" property="parentOrganizationType" jdbcType="VARCHAR"/>
+        <result column="PARENT_ORGANIZATION_ID" property="parentOrganizationId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="UiMap" type="tarzan.modeling.api.dto.MtModOrganizationDTO4">
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_CODE" property="organizationCode" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_NAME" property="organizationName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="UiMap2" type="tarzan.modeling.api.dto.MtModOrganizationDTO6">
+        <result column="REL_ID" property="relId" jdbcType="VARCHAR"/>
+        <result column="REL_TYPE" property="relType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <resultMap id="LovResultMap" type="tarzan.modeling.api.dto.MtModOrganizationRelDTO8">
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationCode" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_DESC" property="organizationDesc" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="selectByRelIds" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_mod_organization_rel t
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        AND ORGANIZATION_REL_ID IN
+        <foreach collection="relIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <delete id="deleteBatch">
+        delete from mt_mod_organization_rel
+        WHERE
+        TENANT_ID = #{tenantId}
+        and ORGANIZATION_REL_ID IN(
+        <foreach collection="ids" item="id" separator=",">
+            #{id}
+        </foreach>
+        )
+    </delete>
+
+    <select id="notExistLocatorGroupByLocator" resultMap="UiMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t.LOCATOR_GROUP_ID ORGANIZATION_ID,
+        t.LOCATOR_GROUP_CODE ORGANIZATION_CODE,
+        tl.LOCATOR_GROUP_NAME ORGANIZATION_NAME
+        FROM
+        mt_mod_locator_group t,
+        mt_mod_locator_group_tl tl
+        WHERE
+        t.LOCATOR_GROUP_ID = tl.LOCATOR_GROUP_ID
+        AND tl.LANG = #{locale}
+        AND t.TENANT_ID = #{tenantId}
+        AND t.ENABLE_FLAG = 'Y'
+        AND t.LOCATOR_GROUP_ID NOT IN (
+        SELECT
+        l.LOCATOR_GROUP_ID
+        FROM
+        mt_mod_locator l,
+        mt_mod_locator_tl ll
+        WHERE
+        l.LOCATOR_ID = ll.LOCATOR_ID
+        AND ll.LANG = #{locale}
+        AND l.TENANT_ID = #{tenantId}
+        AND l.PARENT_LOCATOR_ID = #{dto.parentOrganizationId}
+        )
+        <if test='dto.organizationCode !=null and dto.organizationCode !=""'>
+            <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode + '%'"/>
+            and t.LOCATOR_GROUP_CODE like #{tmpOrganizationCode}
+        </if>
+        <if test='dto.organizationName !=null and dto.organizationName !=""'>
+            <bind name="tmpOrganizationName" value="'%' + dto.organizationName + '%'"/>
+            and tl.LOCATOR_GROUP_NAME like #{tmpOrganizationName}
+        </if>
+    </select>
+
+    <select id="notExistLocatorGroupByOrganization" resultMap="UiMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t.LOCATOR_GROUP_ID ORGANIZATION_ID,
+        t.LOCATOR_GROUP_CODE ORGANIZATION_CODE,
+        tl.LOCATOR_GROUP_NAME ORGANIZATION_NAME
+        FROM
+        mt_mod_locator_group t,
+        mt_mod_locator_group_tl tl
+        WHERE
+        t.LOCATOR_GROUP_ID = tl.LOCATOR_GROUP_ID
+        AND tl.LANG = #{locale}
+        AND t.TENANT_ID = #{tenantId}
+        AND t.ENABLE_FLAG = 'Y'
+        AND t.LOCATOR_GROUP_ID NOT IN (
+        SELECT
+        l.LOCATOR_GROUP_ID
+        FROM
+        mt_mod_locator_org_rel r,
+        mt_mod_locator l,
+        mt_mod_locator_tl ll
+        WHERE
+        l.LOCATOR_ID = ll.LOCATOR_ID
+        AND ll.LANG = #{locale}
+        AND l.LOCATOR_ID = r.LOCATOR_ID
+        AND r.TENANT_ID = #{tenantId}
+        AND l.TENANT_ID = #{tenantId}
+        AND r.ORGANIZATION_TYPE = #{dto.parentOrganizationType}
+        AND r.ORGANIZATION_ID = #{dto.parentOrganizationId}
+        )
+        <if test='dto.organizationCode !=null and dto.organizationCode !=""'>
+            <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode + '%'"/>
+            and t.LOCATOR_GROUP_CODE like #{tmpOrganizationCode}
+        </if>
+        <if test='dto.organizationName !=null and dto.organizationName !=""'>
+            <bind name="tmpOrganizationName" value="'%' + dto.organizationName + '%'"/>
+            and tl.LOCATOR_GROUP_NAME like #{tmpOrganizationName}
+        </if>
+    </select>
+
+    <select id="notExistLocatorByLocator" resultMap="UiMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t.LOCATOR_ID ORGANIZATION_ID,
+        t.LOCATOR_CODE ORGANIZATION_CODE,
+        tl.LOCATOR_NAME ORGANIZATION_NAME
+        FROM
+        mt_mod_locator t,
+        mt_mod_locator_tl tl
+        WHERE
+        t.LOCATOR_ID = tl.LOCATOR_ID
+        AND tl.LANG = #{locale}
+        AND t.TENANT_ID = #{tenantId}
+        AND t.ENABLE_FLAG = 'Y'
+        AND t.PARENT_LOCATOR_ID &lt;&gt; #{dto.parentOrganizationId}
+        AND t.LOCATOR_ID &lt;&gt; #{dto.parentOrganizationId}
+        <if test='dto.organizationCode !=null and dto.organizationCode !=""'>
+            <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode + '%'"/>
+            and t.LOCATOR_CODE like #{tmpOrganizationCode}
+        </if>
+        <if test='dto.organizationName !=null and dto.organizationName !=""'>
+            <bind name="tmpOrganizationName" value="'%' + dto.organizationName + '%'"/>
+            and tl.LOCATOR_NAME like #{tmpOrganizationName}
+        </if>
+    </select>
+
+    <select id="notExistLocatorByOrganization" resultMap="UiMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t.LOCATOR_ID ORGANIZATION_ID,
+        t.LOCATOR_CODE ORGANIZATION_CODE,
+        tl.LOCATOR_NAME ORGANIZATION_NAME
+        FROM
+        mt_mod_locator t,
+        mt_mod_locator_tl tl
+        WHERE
+        t.LOCATOR_ID = tl.LOCATOR_ID
+        AND tl.LANG = #{locale}
+        AND t.TENANT_ID = #{tenantId}
+        AND t.ENABLE_FLAG = 'Y'
+        AND t.LOCATOR_ID NOT IN (
+        SELECT
+        r.LOCATOR_ID
+        FROM
+        mt_mod_locator_org_rel r
+        WHERE
+        r.TENANT_ID = #{tenantId}
+        AND r.ORGANIZATION_TYPE = #{dto.parentOrganizationType}
+        AND r.ORGANIZATION_ID = #{dto.parentOrganizationId}
+        )
+        <if test='dto.organizationCode !=null and dto.organizationCode !=""'>
+            <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode + '%'"/>
+            and t.LOCATOR_CODE like #{tmpOrganizationCode}
+        </if>
+        <if test='dto.organizationName !=null and dto.organizationName !=""'>
+            <bind name="tmpOrganizationName" value="'%' + dto.organizationName + '%'"/>
+            and tl.LOCATOR_NAME like #{tmpOrganizationName}
+        </if>
+    </select>
+
+    <select id="notExistOrganizationByOrganization" resultMap="UiMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        <if test='dto.organizationType=="WORKCELL"'>
+            SELECT
+            t.WORKCELL_ID ORGANIZATION_ID,
+            t.WORKCELL_CODE ORGANIZATION_CODE,
+            tl.WORKCELL_NAME ORGANIZATION_NAME
+            FROM
+            mt_mod_workcell t,
+            mt_mod_workcell_tl tl
+            WHERE
+            t.WORKCELL_ID = tl.WORKCELL_ID
+            AND tl.LANG = #{locale}
+            AND t.TENANT_ID = #{tenantId}
+            AND t.ENABLE_FLAG = 'Y'
+            AND NOT EXISTS (
+            SELECT
+                r.ORGANIZATION_ID
+            FROM
+                mt_mod_organization_rel r
+            WHERE
+                r.TENANT_ID = #{tenantId}
+            AND r.ORGANIZATION_ID = t.WORKCELL_ID
+            AND r.ORGANIZATION_TYPE = #{dto.organizationType}
+            )
+            <if test='dto.organizationCode !=null and dto.organizationCode !=""'>
+                <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode + '%'"/>
+                AND t.WORKCELL_CODE like #{tmpOrganizationCode}
+            </if>
+            <if test='dto.organizationName !=null and dto.organizationName !=""'>
+                <bind name="tmpOrganizationName" value="'%' + dto.organizationName + '%'"/>
+                AND tl.WORKCELL_NAME like #{tmpOrganizationName}
+            </if>
+        </if>
+
+        <if test='dto.organizationType=="AREA"'>
+            SELECT
+            t.AREA_ID ORGANIZATION_ID,
+            t.AREA_CODE ORGANIZATION_CODE,
+            tl.AREA_NAME ORGANIZATION_NAME
+            FROM
+            mt_mod_area t,
+            mt_mod_area_tl tl
+            WHERE
+            t.AREA_ID = tl.AREA_ID
+            AND tl.LANG = #{locale}
+            AND t.TENANT_ID = #{tenantId}
+            AND t.ENABLE_FLAG = 'Y'
+            AND t.AREA_ID NOT IN (
+            SELECT
+            r.ORGANIZATION_ID
+            FROM
+            mt_mod_organization_rel r
+            WHERE
+            r.TENANT_ID = #{tenantId}
+            AND r.ORGANIZATION_TYPE = #{dto.organizationType}
+            )
+            <if test='dto.organizationCode !=null and dto.organizationCode !=""'>
+                <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode + '%'"/>
+                and t.AREA_CODE like #{tmpOrganizationCode}
+            </if>
+            <if test='dto.organizationName !=null and dto.organizationName !=""'>
+                <bind name="tmpOrganizationName" value="'%' + dto.organizationName + '%'"/>
+                and tl.AREA_NAME like #{tmpOrganizationName}
+            </if>
+            <if test='dto.parentOrganizationType !=null and dto.parentOrganizationType =="AREA"'>
+                and t.AREA_ID &lt;&gt; #{dto.parentOrganizationId}
+            </if>
+        </if>
+
+        <if test='dto.organizationType=="PROD_LINE"'>
+            SELECT
+            t.PROD_LINE_ID ORGANIZATION_ID,
+            t.PROD_LINE_CODE ORGANIZATION_CODE,
+            tl.PROD_LINE_NAME ORGANIZATION_NAME
+            FROM
+            mt_mod_production_line t,
+            mt_mod_production_line_tl tl
+            WHERE
+            t.PROD_LINE_ID = tl.PROD_LINE_ID
+            AND tl.LANG = #{locale}
+            AND t.TENANT_ID = #{tenantId}
+            AND t.ENABLE_FLAG = 'Y'
+            AND t.PROD_LINE_ID NOT IN (
+            SELECT
+            r.ORGANIZATION_ID
+            FROM
+            mt_mod_organization_rel r
+            WHERE
+            r.TENANT_ID = #{tenantId}
+            AND r.ORGANIZATION_TYPE = #{dto.organizationType}
+            )
+            <if test='dto.organizationCode !=null and dto.organizationCode !=""'>
+                <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode + '%'"/>
+                and t.PROD_LINE_CODE like #{tmpOrganizationCode}
+            </if>
+            <if test='dto.organizationName !=null and dto.organizationName !=""'>
+                <bind name="tmpOrganizationName" value="'%' + dto.organizationName + '%'"/>
+                and tl.PROD_LINE_NAME like #{tmpOrganizationName}
+            </if>
+        </if>
+
+        <if test='dto.organizationType=="SITE"'>
+            SELECT
+            t.SITE_ID ORGANIZATION_ID,
+            t.SITE_CODE ORGANIZATION_CODE,
+            tl.SITE_NAME ORGANIZATION_NAME
+            FROM
+            mt_mod_site t,
+            mt_mod_site_tl tl
+            WHERE
+            t.SITE_ID = tl.SITE_ID
+            AND tl.LANG = #{locale}
+            AND t.TENANT_ID = #{tenantId}
+            AND t.ENABLE_FLAG = 'Y'
+            AND t.SITE_ID NOT IN (
+            SELECT
+            r.ORGANIZATION_ID
+            FROM
+            mt_mod_organization_rel r
+            WHERE
+            r.TENANT_ID = #{tenantId}
+            AND r.ORGANIZATION_TYPE = #{dto.organizationType}
+            )
+            <if test='dto.organizationCode !=null and dto.organizationCode !=""'>
+                <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode + '%'"/>
+                and t.SITE_CODE like #{tmpOrganizationCode}
+            </if>
+            <if test='dto.organizationName !=null and dto.organizationName !=""'>
+                <bind name="tmpOrganizationName" value="'%' + dto.organizationName + '%'"/>
+                and tl.SITE_NAME like #{tmpOrganizationName}
+            </if>
+        </if>
+    </select>
+
+    <select id="currentNodeOrder" resultMap="UiMap2">
+        select * from (
+        (
+        SELECT
+        r.ORGANIZATION_REL_ID REL_ID,
+        'ORG_ORG' REL_TYPE,
+        r.ORGANIZATION_TYPE,
+        r.ORGANIZATION_ID,
+        r.SEQUENCE
+        FROM
+        mt_mod_organization_rel r
+        WHERE
+        r.TENANT_ID = #{tenantId}
+        AND r.PARENT_ORGANIZATION_ID = #{dto.parentOrganizationId}
+        AND r.PARENT_ORGANIZATION_TYPE = #{dto.parentOrganizationType}
+        <if test='dto.topSiteId !=null and dto.topSiteId !=""'>
+            AND r.TOP_SITE_ID = #{dto.topSiteId}
+        </if>
+        )
+        UNION ALL
+        (
+        SELECT
+        r.LOCATOR_ORGANIZATION_REL_ID REL_ID,
+        'ORG_LOC' REL_TYPE,
+        'LOCATOR' ORGANIZATION_TYPE,
+        r.LOCATOR_ID,
+        r.SEQUENCE
+        FROM
+        mt_mod_locator_org_rel r
+        WHERE
+        r.TENANT_ID = #{tenantId}
+        AND r.ORGANIZATION_TYPE = #{dto.parentOrganizationType}
+        AND r.ORGANIZATION_ID = #{dto.parentOrganizationId}
+        )
+        ) temp
+        order by temp.SEQUENCE
+    </select>
+
+    <select id="selectChildrenCount" resultMap="BaseResultMap">
+        SELECT
+            t.*
+        FROM
+            mt_mod_organization_rel t
+        WHERE
+        t.TENANT_ID = ${tenantId}
+        AND t.PARENT_ORGANIZATION_TYPE = #{rel.parentOrganizationType}
+        AND t.PARENT_ORGANIZATION_ID = #{rel.parentOrganizationId}
+        AND t.TOP_SITE_ID = #{rel.topSiteId}
+        limit 1
+    </select>
+
+    <select id="selectByParentOrganizationIds" resultType="java.lang.String">
+        SELECT distinct
+        PARENT_ORGANIZATION_ID
+        FROM
+        mt_mod_organization_rel
+        where
+        TENANT_ID = ${tenantId}
+        and PARENT_ORGANIZATION_TYPE = #{parentOrganizationType}
+        <if test="topSiteId != null">
+            and TOP_SITE_ID = #{topSiteId}
+        </if>
+        and ${parentOrganizationIds}
+    </select>
+
+    <select id="topSiteLimitOrganizaitonQuery" resultMap="LovResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        <if test='dto.organizationType == "AREA"'>
+            SELECT DISTINCT
+            rel.ORGANIZATION_ID,
+            me.AREA_CODE ORGANIZATION_CODE,
+            mel.DESCRIPTION ORGANIZATION_DESC
+            FROM
+            mt_mod_organization_rel rel
+            JOIN mt_mod_area me ON rel.ORGANIZATION_ID = me.AREA_ID
+            JOIN mt_mod_area_tl mel ON me.AREA_ID = mel.AREA_ID
+            AND mel.LANG = #{locale}
+            WHERE
+            rel.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND rel.ORGANIZATION_TYPE = 'AREA'
+            AND rel.TOP_SITE_ID = #{dto.topSiteId}
+            <if test="dto.organizationCode != null and dto.organizationCode != ''">
+                <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode+ '%'"/>
+                AND me.AREA_CODE LIKE #{tmpOrganizationCode}
+            </if>
+            <if test="dto.organizationDesc!= null and dto.organizationDesc!= ''">
+                <bind name="tmpOrganizationDesc" value="'%' + dto.organizationDesc+ '%'"/>
+                AND mel.DESCRIPTION LIKE #{tmpOrganizationDesc}
+            </if>
+            ORDER BY
+            me.AREA_CODE
+        </if>
+        <if test='dto.organizationType == "PROD_LINE"'>
+            SELECT DISTINCT
+            rel.ORGANIZATION_ID,
+            me.PROD_LINE_CODE ORGANIZATION_CODE,
+            mel.PROD_LINE_NAME ORGANIZATION_DESC
+            FROM
+            mt_mod_organization_rel rel
+            JOIN mt_mod_production_line me ON rel.ORGANIZATION_ID = me.PROD_LINE_ID
+            JOIN mt_mod_production_line_tl mel ON me.PROD_LINE_ID = mel.PROD_LINE_ID
+            AND mel.LANG = #{locale}
+            WHERE
+            rel.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND rel.ORGANIZATION_TYPE = 'PROD_LINE'
+            AND rel.TOP_SITE_ID = #{dto.topSiteId}
+            <if test="dto.organizationCode != null and dto.organizationCode != ''">
+                <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode+ '%'"/>
+                AND me.PROD_LINE_CODE LIKE #{tmpOrganizationCode}
+            </if>
+            <if test="dto.organizationDesc!= null and dto.organizationDesc!= ''">
+                <bind name="tmpOrganizationDesc" value="'%' + dto.organizationDesc+ '%'"/>
+                AND mel.PROD_LINE_NAME LIKE #{tmpOrganizationDesc}
+            </if>
+            ORDER BY
+            me.PROD_LINE_CODE
+        </if>
+        <if test='dto.organizationType == "WORKCELL"'>
+            SELECT DISTINCT
+            rel.ORGANIZATION_ID,
+            me.WORKCELL_CODE ORGANIZATION_CODE,
+            mel.WORKCELL_NAME ORGANIZATION_DESC
+            FROM
+            mt_mod_organization_rel rel
+            JOIN mt_mod_workcell me ON rel.ORGANIZATION_ID = me.WORKCELL_ID
+            JOIN mt_mod_workcell_tl mel ON me.WORKCELL_ID = mel.WORKCELL_ID
+            AND mel.LANG = #{locale}
+            WHERE
+            rel.TENANT_ID = ${tenantId}
+            AND me.TENANT_ID = ${tenantId}
+            AND rel.ORGANIZATION_TYPE = 'WORKCELL'
+            AND rel.TOP_SITE_ID = #{dto.topSiteId}
+            <if test="dto.organizationCode != null and dto.organizationCode != ''">
+                <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode+ '%'"/>
+                AND me.WORKCELL_CODE LIKE #{tmpOrganizationCode}
+            </if>
+            <if test="dto.organizationDesc!= null and dto.organizationDesc!= ''">
+                <bind name="tmpOrganizationDesc" value="'%' + dto.organizationDesc+ '%'"/>
+                AND mel.WORKCELL_NAME LIKE #{tmpOrganizationDesc}
+            </if>
+            ORDER BY
+            me.WORKCELL_CODE
+        </if>
+        <if test='dto.organizationType == "LOCATOR"'>
+            SELECT DISTINCT
+            mmlor.LOCATOR_ID ORGANIZATION_ID,
+            mml.LOCATOR_CODE ORGANIZATION_CODE,
+            mml.LOCATOR_NAME ORGANIZATION_DESC
+            FROM
+            mt_mod_organization_rel rel
+            JOIN mt_mod_locator_org_rel mmlor ON mmlor.ORGANIZATION_ID = rel.ORGANIZATION_ID
+            AND mmlor.ORGANIZATION_TYPE = rel.ORGANIZATION_TYPE
+            JOIN mt_mod_locator_tl mot ON mot.LOCATOR_ID = mmlor.LOCATOR_ID
+            JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mmlor.LOCATOR_ID
+            WHERE
+            rel.TENANT_ID = #{tenantId}
+            AND mmlor.TENANT_ID = #{tenantId}
+            AND mot.LANG = #{locale}
+            AND rel.TOP_SITE_ID = #{dto.topSiteId}
+            <if test="dto.organizationCode != null and dto.organizationCode != ''">
+                <bind name="tmpOrganizationCode" value="'%' + dto.organizationCode+ '%'"/>
+                AND mml.LOCATOR_CODE LIKE #{tmpOrganizationCode}
+            </if>
+            <if test="dto.organizationDesc!= null and dto.organizationDesc!= ''">
+                <bind name="tmpOrganizationDesc" value="'%' + dto.organizationDesc+ '%'"/>
+                AND mml.LOCATOR_NAME LIKE #{tmpOrganizationDesc}
+            </if>
+        </if>
+    </select>
+
+    <select id="childLocatorQuery" resultType="tarzan.modeling.api.dto.MtModOrganizationRelDTO8">
+        SELECT
+            mml.LOCATOR_ID ORGANIZATION_ID,
+            mml.LOCATOR_CODE ORGANIZATION_CODE,
+            mml.LOCATOR_NAME ORGANIZATION_DESC
+        FROM
+            mt_mod_locator mml
+        WHERE
+            mml.TENANT_ID = #{tenantId}
+        AND mml.PARENT_LOCATOR_ID = #{locatorId}
+    </select>
+</mapper>

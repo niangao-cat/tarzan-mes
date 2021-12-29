@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCompleteRateMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCompleteRate">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="complete_rate_id" property="completeRateId" jdbcType="VARCHAR"/>
+        <result column="area_id" property="areaId" jdbcType="VARCHAR"/>
+        <result column="area_code" property="areaCode" jdbcType="VARCHAR"/>
+        <result column="area_name" property="areaName" jdbcType="VARCHAR"/>
+        <result column="prod_line_id" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="prod_line_code" property="prodLineCode" jdbcType="VARCHAR"/>
+        <result column="prod_line_name" property="prodLineName" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_code" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="material_name" property="materialName" jdbcType="VARCHAR"/>
+        <result column="plan_qty" property="planQty" jdbcType="DECIMAL"/>
+        <result column="complete_qty" property="completeQty" jdbcType="DECIMAL"/>
+        <result column="instock_qty" property="instockQty" jdbcType="DECIMAL"/>
+        <result column="complete_rate" property="completeRate" jdbcType="VARCHAR"/>
+        <result column="complete_date" property="completeDate" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="monthlyPlanQuery" resultType="com.ruike.hme.domain.vo.HmeMonthlyPlanVO">
+        SELECT
+        mmpl.PROD_LINE_ID,
+        mmpl.prod_line_code,
+        mmpl.prod_line_name,
+        mm.material_id,
+        mm.material_code,
+        mm.material_name,
+        IFNULL(sum(eo.qty), 0) qty,
+        IFNULL(sum(miad.actual_qty), 0) actual_qty,
+        mma.AREA_ID,
+        mma.AREA_CODE,
+        mma.AREA_NAME
+        FROM
+        mt_eo eo
+        LEFT JOIN mt_material_lot mml ON mml.material_lot_code = eo.identification
+        LEFT JOIN mt_instruction_actual_detail miad ON miad.material_lot_id = mml.material_lot_id,
+        mt_material mm,
+        mt_mod_production_line mmpl
+        LEFT JOIN mt_mod_organization_rel mor ON mor.PARENT_ORGANIZATION_TYPE = 'AREA' AND mor.ORGANIZATION_TYPE = 'PROD_LINE' AND mor.ORGANIZATION_ID = mmpl.PROD_LINE_ID AND mor.TENANT_ID = mmpl.TENANT_ID
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.PARENT_ORGANIZATION_TYPE = 'AREA' AND mor2.ORGANIZATION_TYPE = 'AREA' AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID AND mor2.TENANT_ID = mor.TENANT_ID
+        LEFT JOIN mt_mod_area mma ON mma.area_id = mor2.PARENT_ORGANIZATION_ID AND mma.AREA_CATEGORY = 'SYB'
+        WHERE
+        mmpl.prod_line_id = eo.production_line_id
+        AND mm.material_id = eo.material_id
+        AND eo.`STATUS` = 'COMPLETED'
+        <if test="dto.materialCodeList != null and dto.materialCodeList.size() > 0">
+            AND mm.material_code IN
+            <foreach collection="dto.materialCodeList" index="index" item="materialCode" open="(" separator="," close=")">
+                #{materialCode}
+            </foreach>
+        </if>
+        <if test="dto.queryMonthFrom != null and dto.queryMonthFrom != ''">
+            AND eo.LAST_UPDATE_DATE >= #{dto.queryMonthFrom}
+        </if>
+        <if test="dto.queryMonthTo != null and dto.queryMonthTo != ''">
+            AND eo.LAST_UPDATE_DATE &lt;= #{dto.queryMonthTo}
+        </if>
+        <if test="dto.prodLineIdList != null and dto.prodLineIdList.size() > 0">
+            AND eo.production_line_id IN
+            <foreach collection="dto.prodLineIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.areaId != null and dto.areaId != ''">
+            AND mma.AREA_ID = #{dto.areaId}
+        </if>
+        GROUP BY
+        mmpl.PROD_LINE_ID,
+        mm.material_id,
+        mma.AREA_ID
+    </select>
+
+    <select id="queryMonthPlanByAreaId" resultType="com.ruike.hme.domain.vo.HmeMonthlyPlanVO2">
+        SELECT
+        hmp.QUANTITY,
+        hmp.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        hmp.BUSINESS_ID,
+        mma.AREA_CODE BUSINESS_CODE,
+        mma.AREA_NAME BUSINESS_NAME,
+        hmp.site_id,
+        hmp.MONTH,
+        msa.ATTR_VALUE MATERIAL_TYPE
+        FROM
+        hme_monthly_plan hmp,
+        mt_material_site mms,
+        mt_material_site_attr msa,
+        mt_material mm,
+        mt_mod_area mma
+        WHERE
+        hmp.SITE_ID = #{dto.siteId}
+        AND hmp.`MONTH` = #{dto.yearMonth}
+        AND hmp.TENANT_ID = #{tenantId}
+        AND mms.MATERIAL_ID = hmp.MATERIAL_ID
+        AND mms.SITE_ID = hmp.SITE_ID
+        AND mms.TENANT_ID = hmp.TENANT_ID
+        AND msa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND msa.ATTR_NAME = 'attribute13'
+        AND msa.TENANT_ID = mms.TENANT_ID
+        AND mm.MATERIAL_ID = hmp.MATERIAL_ID
+        AND mma.AREA_ID = hmp.BUSINESS_ID
+        <if test="dto.materialCodeList != null and dto.materialCodeList.size() > 0">
+            AND mm.material_code IN
+            <foreach collection="dto.materialCodeList" index="index" item="materialCode" open="(" separator="," close=")">
+                #{materialCode}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryFinishQtyByCosMaterialIds" resultType="com.ruike.hme.domain.vo.HmeMonthlyPlanVO">
+        SELECT
+        ejs.sn_material_id MATERIAL_ID,
+        IFNULL(SUM(ejs.sn_qty),0) qty
+        FROM
+        hme_eo_job_sn ejs
+        WHERE ejs.tenant_id = #{tenantId}
+        AND ejs.sn_material_id IN
+        <foreach collection="cosMaterialIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND ejs.job_type IN (
+        'COS_MJ_COMPLETED', 'COS_COMPLETED'
+        )
+        AND ejs.site_out_date >= #{dto.queryMonthFrom}
+        AND ejs.site_out_date &lt;= #{dto.queryMonthTo}
+        GROUP BY ejs.sn_material_id
+    </select>
+
+    <delete id="batchDelateCompleteRate">
+        delete
+        from hme_complete_rate
+        where complete_date = #{month}
+        and tenant_id = #{tenantId}
+    </delete>
+</mapper>

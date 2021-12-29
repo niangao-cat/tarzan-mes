@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsIqcExamineReportMapper">
+
+    <select id="iqcExamineReportQuery" resultType="com.ruike.qms.domain.vo.QmsIqcExamineReportVO">
+        select qih.IQC_HEADER_ID, qih.IQC_NUMBER, qih.SUPPLIER_ID, ms.SUPPLIER_NAME, qmtgr.tag_group_id, mtg.TAG_GROUP_CODE,
+               qih.INSPECTION_RESULT, qih.last_updated_by, qih.REMARK, qih.INSPECTION_FINISH_DATE
+        from qms_iqc_header qih
+        left join mt_supplier ms
+        on ms.SUPPLIER_ID = qih.SUPPLIER_ID
+        left join qms_material_insp_scheme qmis
+        on qmis.material_id = qih.MATERIAL_ID
+        left join qms_material_tag_group_rel qmtgr
+        on qmtgr.scheme_id = qmis.inspection_scheme_id
+        left join mt_tag_group mtg
+        on mtg.TAG_GROUP_ID = qmtgr.tag_group_id
+        where qih.TENANT_ID = #{tenantId}
+        and qih.INSPECTION_STATUS = 'COMPLETED'
+        <if test='dto.iqcNumber != null and dto.iqcNumber != ""'>
+            and qih.IQC_NUMBER like CONCAT('%',#{dto.iqcNumber},'%')
+        </if>
+        <if test='dto.supplierId != null and dto.supplierId != ""'>
+            and qih.SUPPLIER_ID = #{dto.supplierId}
+        </if>
+        <if test='dto.tagGroupId != null and dto.tagGroupId != ""'>
+            and qmtgr.tag_group_id = #{dto.tagGroupId}
+        </if>
+        <if test='dto.lastUpdatedBy != null and dto.lastUpdatedBy != ""'>
+            and qih.last_updated_by = #{dto.lastUpdatedBy}
+        </if>
+        <if test='dto.inspectionResult != null and dto.inspectionResult != ""'>
+            and qih.INSPECTION_RESULT = #{dto.inspectionResult}
+        </if>
+        <if test='dto.inspectionFinishDateFrom != null'>
+            and qih.INSPECTION_FINISH_DATE >= DATE_FORMAT(#{dto.inspectionFinishDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test='dto.inspectionFinishDateTo!= null'>
+            and qih.INSPECTION_FINISH_DATE &lt;= DATE_FORMAT(#{dto.inspectionFinishDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+    <select id="totalNumQuery" resultType="java.math.BigDecimal">
+        select count(1)
+        from qms_iqc_header qih
+        left join mt_supplier ms
+        on ms.SUPPLIER_ID = qih.SUPPLIER_ID
+        left join qms_material_insp_scheme qmis
+        on qmis.material_id = qih.MATERIAL_ID
+        left join qms_material_tag_group_rel qmtgr
+        on qmtgr.scheme_id = qmis.inspection_scheme_id
+        left join mt_tag_group mtg
+        on mtg.TAG_GROUP_ID = qmtgr.tag_group_id
+        where qih.TENANT_ID = #{tenantId}
+        and qih.INSPECTION_STATUS = 'COMPLETED'
+        <if test='dto.iqcNumber != null and dto.iqcNumber != ""'>
+            and qih.IQC_NUMBER like CONCAT('%',#{dto.iqcNumber},'%')
+        </if>
+        <if test='dto.supplierId != null and dto.supplierId != ""'>
+            and qih.SUPPLIER_ID = #{dto.supplierId}
+        </if>
+        <if test='dto.tagGroupId != null and dto.tagGroupId != ""'>
+            and qmtgr.tag_group_id = #{dto.tagGroupId}
+        </if>
+        <if test='dto.lastUpdatedBy != null and dto.lastUpdatedBy != ""'>
+            and qih.last_updated_by = #{dto.lastUpdatedBy}
+        </if>
+        <if test='dto.inspectionResult != null and dto.inspectionResult != ""'>
+            and qih.INSPECTION_RESULT = #{dto.inspectionResult}
+        </if>
+        <if test='dto.inspectionFinishDateFrom != null'>
+            and qih.INSPECTION_FINISH_DATE >= DATE_FORMAT(#{dto.inspectionFinishDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test='dto.inspectionFinishDateTo!= null'>
+            and qih.INSPECTION_FINISH_DATE &lt;= DATE_FORMAT(#{dto.inspectionFinishDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+    <select id="okNumQuery" resultType="java.math.BigDecimal">
+        select count(1)
+        from qms_iqc_header qih
+        left join mt_supplier ms
+        on ms.SUPPLIER_ID = qih.SUPPLIER_ID
+        left join qms_material_insp_scheme qmis
+        on qmis.material_id = qih.MATERIAL_ID
+        left join qms_material_tag_group_rel qmtgr
+        on qmtgr.scheme_id = qmis.inspection_scheme_id
+        left join mt_tag_group mtg
+        on mtg.TAG_GROUP_ID = qmtgr.tag_group_id
+        where qih.TENANT_ID = #{tenantId}
+        and qih.INSPECTION_STATUS = 'COMPLETED'
+        and qih.INSPECTION_RESULT = 'OK'
+        <if test='dto.iqcNumber != null and dto.iqcNumber != ""'>
+            and qih.IQC_NUMBER like CONCAT('%',#{dto.iqcNumber},'%')
+        </if>
+        <if test='dto.supplierId != null and dto.supplierId != ""'>
+            and qih.SUPPLIER_ID = #{dto.supplierId}
+        </if>
+        <if test='dto.tagGroupId != null and dto.tagGroupId != ""'>
+            and qmtgr.tag_group_id = #{dto.tagGroupId}
+        </if>
+        <if test='dto.lastUpdatedBy != null and dto.lastUpdatedBy != ""'>
+            and qih.last_updated_by = #{dto.lastUpdatedBy}
+        </if>
+        <if test='dto.inspectionFinishDateFrom != null'>
+            and qih.INSPECTION_FINISH_DATE >= DATE_FORMAT(#{dto.inspectionFinishDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test='dto.inspectionFinishDateTo!= null'>
+            and qih.INSPECTION_FINISH_DATE &lt;= DATE_FORMAT(#{dto.inspectionFinishDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+    <select id="ngNumQuery" resultType="java.math.BigDecimal">
+        select count(1)
+        from qms_iqc_header qih
+        left join mt_supplier ms
+        on ms.SUPPLIER_ID = qih.SUPPLIER_ID
+        left join qms_material_insp_scheme qmis
+        on qmis.material_id = qih.MATERIAL_ID
+        left join qms_material_tag_group_rel qmtgr
+        on qmtgr.scheme_id = qmis.inspection_scheme_id
+        left join mt_tag_group mtg
+        on mtg.TAG_GROUP_ID = qmtgr.tag_group_id
+        where qih.TENANT_ID = #{tenantId}
+        and qih.INSPECTION_STATUS = 'COMPLETED'
+        and qih.INSPECTION_RESULT = 'NG'
+        <if test='dto.iqcNumber != null and dto.iqcNumber != ""'>
+            and qih.IQC_NUMBER like CONCAT('%',#{dto.iqcNumber},'%')
+        </if>
+        <if test='dto.supplierId != null and dto.supplierId != ""'>
+            and qih.SUPPLIER_ID = #{dto.supplierId}
+        </if>
+        <if test='dto.tagGroupId != null and dto.tagGroupId != ""'>
+            and qmtgr.tag_group_id = #{dto.tagGroupId}
+        </if>
+        <if test='dto.lastUpdatedBy != null and dto.lastUpdatedBy != ""'>
+            and qih.last_updated_by = #{dto.lastUpdatedBy}
+        </if>
+        <if test='dto.inspectionFinishDateFrom != null'>
+            and qih.INSPECTION_FINISH_DATE >= DATE_FORMAT(#{dto.inspectionFinishDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test='dto.inspectionFinishDateTo!= null'>
+            and qih.INSPECTION_FINISH_DATE &lt;= DATE_FORMAT(#{dto.inspectionFinishDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+</mapper>

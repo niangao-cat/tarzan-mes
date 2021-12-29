@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtPfepDistributionCategoryMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtPfepDistributionCategory">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_DISTRIBUTION_CATEGORY_ID" property="pfepDistributionCategoryId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_SITE_ID" property="materialCategorySiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CAPACITY" property="locatorCapacity" jdbcType="DECIMAL"/>
+        <result column="FROM_SCHEDULE_RATE_FLAG" property="fromScheduleRateFlag" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CONSUME_RATE_UOM_ID" property="materialConsumeRateUomId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CONSUME_RATE" property="materialConsumeRate" jdbcType="DECIMAL"/>
+        <result column="BUFFER_INVENTORY" property="bufferInventory" jdbcType="DECIMAL"/>
+        <result column="BUFFER_PERIOD" property="bufferPeriod" jdbcType="DECIMAL"/>
+        <result column="MIN_INVENTORY" property="minInventory" jdbcType="DECIMAL"/>
+        <result column="MAX_INVENTORY" property="maxInventory" jdbcType="DECIMAL"/>
+        <result column="PACK_QTY" property="packQty" jdbcType="DECIMAL"/>
+        <result column="MULTIPLES_OF_PACK_FLAG" property="multiplesOfPackFlag" jdbcType="VARCHAR"/>
+        <result column="AREA_LOCATOR_ID" property="areaLocatorId" jdbcType="VARCHAR"/>
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="materialCategoryDistributionPfepQuery" resultMap="BaseResultMap">
+        select t.*
+        from mt_pfep_distribution_category t
+        where t.TENANT_ID=${tenantId}
+        <if test="dto.materialCategorySiteId != null">
+            and t.MATERIAL_CATEGORY_SITE_ID = #{dto.materialCategorySiteId}
+        </if>
+        <if test="dto.organizationType != null">
+            and t.ORGANIZATION_TYPE = #{dto.organizationType}
+        </if>
+        <if test="dto.organizationId != null">
+            and t.ORGANIZATION_ID = #{dto.organizationId}
+        </if>
+        <if test="dto.areaId != null">
+            and t.AREA_ID = #{dto.areaId}
+        </if>
+    </select>
+
+    <select id="materialCategoryDistributionPfepQueryByUnique" resultMap="BaseResultMap">
+        select t.*
+        from mt_pfep_distribution_category t
+        where t.TENANT_ID=${tenantId}
+        <if test="dto.materialCategorySiteId != null and dto.materialCategorySiteId.length() != 0">
+            and t.MATERIAL_CATEGORY_SITE_ID = #{dto.materialCategorySiteId}
+        </if>
+        <if test="dto.materialCategorySiteId == null or dto.materialCategorySiteId.length() == 0">
+            and (t.MATERIAL_CATEGORY_SITE_ID IS NULL or length(t.MATERIAL_CATEGORY_SITE_ID) = 0)
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId.length() != 0">
+            and t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.locatorId == null or dto.locatorId.length() == 0">
+            and (t.LOCATOR_ID IS NULL or length(t.LOCATOR_ID) = 0)
+        </if>
+        <if test="dto.organizationId != null  and dto.organizationId.length() != 0">
+            and t.ORGANIZATION_ID = #{dto.organizationId}
+        </if>
+        <if test="dto.organizationId == null  or dto.organizationId.length() == 0">
+            and (t.ORGANIZATION_ID IS NULL or length(t.ORGANIZATION_ID) = 0)
+        </if>
+        <if test="dto.organizationType != null and dto.organizationType.length() != 0">
+            and t.ORGANIZATION_TYPE = #{dto.organizationType}
+        </if>
+        <if test="dto.organizationType == null or dto.organizationType.length() == 0">
+            and (t.ORGANIZATION_TYPE IS NULL or length(t.ORGANIZATION_TYPE) = 0)
+        </if>
+    </select>
+
+    <select id="materialCategoryDistributionPfepQueryByCopy" resultMap="BaseResultMap">
+        select t.*
+        from mt_pfep_distribution_category t
+        where t.TENANT_ID=${tenantId}
+        <if test="dto.materialCategorySiteId != null and dto.materialCategorySiteId.length() != 0">
+            and t.MATERIAL_CATEGORY_SITE_ID = #{dto.materialCategorySiteId}
+        </if>
+        <if test="dto.materialCategorySiteId == null or dto.materialCategorySiteId.length() == 0">
+            and (t.MATERIAL_CATEGORY_SITE_ID IS NULL or length(t.MATERIAL_CATEGORY_SITE_ID) = 0)
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId.length() != 0">
+            and t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.locatorId == null or dto.locatorId.length() == 0">
+            and (t.LOCATOR_ID IS NULL or length(t.LOCATOR_ID) = 0)
+        </if>
+        <if test="dto.organizationId != null  and dto.organizationId.length() != 0">
+            and t.ORGANIZATION_ID = #{dto.organizationId}
+        </if>
+        <if test="dto.organizationId == null  or dto.organizationId.length() == 0">
+            and (t.ORGANIZATION_ID IS NULL or length(t.ORGANIZATION_ID) = 0)
+        </if>
+        <if test="dto.areaId != null and dto.areaId.length() != 0">
+            and t.AREA_ID = #{dto.areaId}
+        </if>
+        <if test="dto.areaId == null or dto.areaId.length() == 0">
+            and (t.AREA_ID IS NULL or length(t.AREA_ID) = 0)
+        </if>
+    </select>
+
+
+</mapper>

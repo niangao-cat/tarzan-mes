@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsStockTransferMapper">
+
+
+    <select id="selectInstruction"  resultType="tarzan.instruction.domain.vo.MtInstructionVO">
+        select i.INSTRUCTION_ID,i.SITE_ID,i.QUANTITY from mt_instruction_doc d
+                  left join mt_instruction i on d.INSTRUCTION_DOC_ID = i.SOURCE_DOC_ID
+        where d.INSTRUCTION_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="selectMtInstructionDocIds" resultType="java.lang.String">
+        select
+        t.INSTRUCTION_DOC_ID
+        from
+        mt_instruction_doc t
+        where
+        t.TENANT_ID= #{tenantId}
+
+        <if test="property.instructionDocId != null">
+            and t.instruction_doc_id = #{property.instructionDocId}
+        </if>
+        <if test="property.instructionDocNum != null">
+            and t.INSTRUCTION_DOC_NUM = #{property.instructionDocNum}
+        </if>
+
+        <choose>
+            <when test='property.instructionDocType !=null and property.instructionDocType != ""'>
+                and t.INSTRUCTION_DOC_TYPE = #{property.instructionDocType}
+            </when>
+            <when test='property.instructionDocType==null'>
+                AND t.INSTRUCTION_DOC_TYPE in ('SEND_EXECUTE','RECEIVE_EXECUTE','SEND_RECEIVE_EXECUTE')
+            </when>
+        </choose>
+        <if test="property.instructionDocType != null">
+        </if>
+        <if test="property.instructionDocStatus != null">
+            and t.INSTRUCTION_DOC_STATUS = #{property.instructionDocStatus}
+        </if>
+        <if test="property.siteId != null">
+            and t.SITE_ID = #{property.siteId}
+        </if>
+        <if test="property.supplierId != null">
+            and t.SUPPLIER_ID = #{property.supplierId}
+        </if>
+        <if test="property.supplierSiteId != null">
+            and t.SUPPLIER_SITE_ID = #{property.supplierSiteId}
+        </if>
+        <if test="property.customerId != null">
+            and t.CUSTOMER_ID = #{property.customerId}
+        </if>
+        <if test="property.customerSiteId != null">
+            and t.CUSTOMER_SITE_ID = #{property.customerSiteId}
+        </if>
+        <if test="property.sourceOrderType != null">
+            and t.SOURCE_ORDER_TYPE = #{property.sourceOrderType}
+        </if>
+        <if test="property.sourceOrderId != null">
+            and t.SOURCE_ORDER_ID = #{property.sourceOrderId}
+        </if>
+        <if test="property.costCenterId != null">
+            and t.COST_CENTER_ID = #{property.costCenterId}
+        </if>
+        <if test="property.personId != null">
+            and t.PERSON_ID = #{property.personId}
+        </if>
+        <if test="property.identification != null">
+            and t.IDENTIFICATION = #{property.identification}
+        </if>
+        <if test="property.remark != null">
+            and t.REMARK = #{property.remark}
+        </if>
+        <if test="property.reason != null">
+            and t.REASON = #{property.reason}
+        </if>
+
+        <if test="property.creationDateFrom != null">
+            and t.CREATION_DATE &gt;= #{property.creationDateFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="property.creationDateTo != null">
+            and t.CREATION_DATE &lt;= #{property.creationDateTo,jdbcType=TIMESTAMP}
+        </if>
+    </select>
+
+    <!--通过头ID查询行信息  modified by Dengxu-->
+    <select id="selectInstructionLine" resultType="com.ruike.wms.api.dto.WmsStockTransferLineDTO">
+        SELECT
+            MI.INSTRUCTION_ID,
+            MI.INSTRUCTION_NUM,
+            CAST(MIA.ATTR_VALUE AS SIGNED) INSTRUCTION_LINE_NUM,
+            MI.MATERIAL_ID,
+            MM.MATERIAL_CODE,
+            MM.MATERIAL_NAME,
+            MIA3.ATTR_VALUE MATERIAL_VERSION,
+            MU.UOM_ID,
+            MU.UOM_CODE,
+            MU.UOM_NAME,
+            MI.QUANTITY,
+--             MIA2.ACTUAL_QTY EXECUTE_QTY,
+            ( SELECT SUM( MIA2.ACTUAL_QTY ) FROM MT_INSTRUCTION_ACTUAL MIA2 WHERE MIA2.INSTRUCTION_ID = MI.INSTRUCTION_ID ) EXECUTE_QTY,
+            MI.INSTRUCTION_STATUS,
+            MI.FROM_SITE_ID,
+            MMS.SITE_CODE FROM_SITE_CODE,
+            MI.TO_SITE_ID,
+            MMS2.SITE_CODE TO_SITE_CODE,
+            MI.FROM_LOCATOR_ID FROM_WAREHOUSE_ID,
+            MML.LOCATOR_CODE FROM_WAREHOUSE_CODE,
+            MI.TO_LOCATOR_ID TO_WAREHOUSE_ID,
+            MML2.LOCATOR_CODE TO_WAREHOUSE_CODE,
+            MIA4.ATTR_VALUE FROM_LOCATOR_ID,
+            MML3.LOCATOR_CODE FROM_LOCATOR_CODE,
+            MIA5.ATTR_VALUE TO_LOCATOR_ID,
+            MML4.LOCATOR_CODE TO_LOCATOR_CODE,
+            MI.LAST_UPDATED_BY,
+            IU.REAL_NAME LAST_UPDATED_BY_NAME,
+            MI.LAST_UPDATE_DATE,
+            MI.REMARK,
+            MIA6.ATTR_VALUE EXCESS_SETTING,
+            MIA7.ATTR_VALUE EXCESS_VALUE
+        FROM
+            MT_INSTRUCTION_DOC MID
+            LEFT JOIN MT_INSTRUCTION MI ON MID.INSTRUCTION_DOC_ID = MI.SOURCE_DOC_ID
+            LEFT JOIN MT_UOM MU ON MI.UOM_ID = MU.UOM_ID
+            LEFT JOIN IAM_USER IU ON MI.LAST_UPDATED_BY = IU.ID
+            LEFT JOIN MT_MATERIAL MM ON MI.MATERIAL_ID = MM.MATERIAL_ID
+            LEFT JOIN MT_MOD_SITE MMS ON MI.FROM_SITE_ID = MMS.SITE_ID
+            LEFT JOIN MT_MOD_SITE MMS2 ON MI.TO_SITE_ID = MMS2.SITE_ID
+            LEFT JOIN MT_MOD_LOCATOR MML ON MI.FROM_LOCATOR_ID = MML.LOCATOR_ID
+            LEFT JOIN MT_MOD_LOCATOR MML2 ON MI.TO_LOCATOR_ID = MML2.LOCATOR_ID
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA ON MI.INSTRUCTION_ID = MIA.INSTRUCTION_ID
+            AND MIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA3 ON MI.INSTRUCTION_ID = MIA3.INSTRUCTION_ID
+            AND MIA3.ATTR_NAME = 'MATERIAL_VERSION'
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA4 ON MI.INSTRUCTION_ID = MIA4.INSTRUCTION_ID
+            AND MIA4.ATTR_NAME = 'FROM_LOCATOR_ID'
+            LEFT JOIN MT_MOD_LOCATOR MML3 ON MIA4.ATTR_VALUE = MML3.LOCATOR_ID
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA5 ON MI.INSTRUCTION_ID = MIA5.INSTRUCTION_ID
+            AND MIA5.ATTR_NAME = 'TO_LOCATOR_ID'
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA6 ON MI.INSTRUCTION_ID = MIA6.INSTRUCTION_ID
+            AND MIA6.ATTR_NAME = 'EXCESS_SETTING'
+            LEFT JOIN MT_INSTRUCTION_ATTR MIA7 ON MI.INSTRUCTION_ID = MIA7.INSTRUCTION_ID
+            AND MIA7.ATTR_NAME = 'EXCESS_VALUE'
+            LEFT JOIN MT_MOD_LOCATOR MML4 ON MIA5.ATTR_VALUE = MML4.LOCATOR_ID
+--             LEFT JOIN (
+--                 SELECT
+--                     MIA2.INSTRUCTION_ID,
+--                     SUM( MIA2.ACTUAL_QTY ) ACTUAL_QTY
+--                 FROM MT_INSTRUCTION_ACTUAL MIA2
+--                 GROUP BY MIA2.INSTRUCTION_ID
+--             ) MIA2 ON MI.INSTRUCTION_ID = MIA2.INSTRUCTION_ID
+        WHERE
+            1 = 1
+            AND MID.TENANT_ID = #{tenantId}
+            AND MID.INSTRUCTION_DOC_ID = #{instructionDocId}
+        ORDER BY INSTRUCTION_LINE_NUM ASC
+    </select>
+
+    <select id="verifyData" resultType="java.lang.Integer">
+        select count(1) from mt_instruction t1
+        LEFT JOIN mt_instruction_attr ia ON t1.INSTRUCTION_ID = ia.INSTRUCTION_ID AND ia.ATTR_NAME = 'MATERIAL_VERSION'
+        where t1.FROM_LOCATOR_ID = #{property.fromLocatorId}
+        and t1.MATERIAL_ID = #{property.materialId}
+        and t1.SOURCE_DOC_ID = #{property.sourceDocId}
+        <choose>
+            <when test='property.materialVersion != null'>
+                and ia.ATTR_VALUE = #{property.materialVersion}
+            </when>
+            <otherwise>
+                and  (ia.ATTR_VALUE is NULL OR  ia.ATTR_VALUE = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectStockTransferData" resultType="com.ruike.wms.api.dto.WmsStockTransferHeadDTO">
+        SELECT
+        t.INSTRUCTION_DOC_ID,
+        t.INSTRUCTION_DOC_NUM,
+        t.SITE_ID,
+        mms.SITE_CODE,
+        mms.SITE_NAME,
+        t.INSTRUCTION_DOC_STATUS,
+        t.INSTRUCTION_DOC_TYPE,
+        t.CREATED_BY,
+        t.CREATION_DATE,
+        t.REMARK,
+        iu.real_name CREATED_USER_NAME,
+        mida.ATTR_VALUE PRINT_FLAG
+        FROM
+        mt_instruction_doc t
+        LEFT JOIN mt_mod_site mms ON t.SITE_ID = mms.SITE_ID
+        LEFT JOIN iam_user iu ON iu.id = t.CREATED_BY
+        LEFT JOIN mt_instruction_doc_attr mida on t.INSTRUCTION_DOC_ID = mida.INSTRUCTION_DOC_ID and mida.ATTR_NAME = 'PRINT_FLAG'
+        WHERE
+        t.TENANT_ID = 0
+        <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+            AND t.INSTRUCTION_DOC_NUM LIKE CONCAT( '%', #{dto.instructionDocNum}, '%' )
+        </if>
+        <if test="dto.instructionStatus != null and dto.instructionStatus != ''">
+            AND t.INSTRUCTION_DOC_STATUS in
+            <foreach collection="dto.instructionStatusList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <choose>
+            <when test="dto.instructionDocType != null and dto.instructionDocType != ''">
+                AND t.INSTRUCTION_DOC_TYPE = #{dto.instructionDocType}
+            </when>
+            <when test="dto.instructionDocType == null || dto.instructionDocType == ''">
+                AND t.INSTRUCTION_DOC_TYPE in ('SEND_EXECUTE','RECEIVE_EXECUTE','SEND_RECEIVE_EXECUTE')
+            </when>
+        </choose>
+
+        <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+            AND t.CREATION_DATE >= #{dto.creationDateFrom}
+        </if>
+        <if test="dto.creationDateTo != null and dto.creationDateTo != ''">
+            AND t.CREATION_DATE &lt;= #{dto.creationDateTo}
+        </if>
+        <if test="dto.createdBy != null and dto.createdBy != ''">
+            AND  t.CREATED_BY = #{dto.createdBy}
+        </if>
+        <if test="(dto.materialId != null and dto.materialId != '')
+                    or (dto.fromSiteId != null and dto.fromSiteId != '')
+                    or (dto.toSiteId != null and dto.toSiteId != '')
+                    or (dto.fromLocatorId != null and dto.fromLocatorId != '')
+                    or (dto.toLocatorId != null and dto.toLocatorId != '')
+                    or (dto.materialVersion != null and dto.materialVersion != '')
+                    or (dto.fromWarehouseId != null and dto.fromWarehouseId != '')
+                    or (dto.toWarehouseId != null and dto.toWarehouseId != '')">
+            AND t.INSTRUCTION_DOC_ID IN (
+                SELECT
+                mi.SOURCE_DOC_ID
+                FROM
+                mt_instruction mi
+                left join mt_instruction_attr mia on mi.INSTRUCTION_ID = mia.INSTRUCTION_ID and mia.ATTR_NAME = 'MATERIAL_VERSION'
+                left join mt_instruction_attr mia2 on mi.INSTRUCTION_ID = mia2.INSTRUCTION_ID and mia2.ATTR_NAME = 'FROM_LOCATOR_ID'
+                left join mt_instruction_attr mia3 on mi.INSTRUCTION_ID = mia3.INSTRUCTION_ID and mia3.ATTR_NAME = 'TO_LOCATOR_ID'
+                WHERE
+                  1 = 1
+                <if test="dto.materialId != null and dto.materialId != ''">
+                    AND mi.MATERIAL_ID = #{dto.materialId}
+                </if>
+                <if test="dto.fromSiteId != null and dto.fromSiteId != ''">
+                    AND mi.FROM_SITE_ID = #{dto.fromSiteId}
+                </if>
+                <if test="dto.toSiteId != null and dto.toSiteId != ''">
+                    AND mi.TO_SITE_ID = #{dto.toSiteId}
+                </if>
+                <if test="dto.fromLocatorId != null and dto.fromLocatorId != ''">
+                    AND mia2.ATTR_VALUE = #{dto.fromLocatorId}
+                </if>
+                <if test="dto.toLocatorId != null and dto.toLocatorId != ''">
+                    AND mia3.ATTR_VALUE = #{dto.toLocatorId}
+                </if>
+                <if test="dto.materialVersion != null and dto.materialVersion != ''">
+                    AND mia.ATTR_VALUE = #{dto.materialVersion}
+                </if>
+                <if test="dto.fromWarehouseId != null and dto.fromWarehouseId != ''">
+                    AND mi.FROM_LOCATOR_ID = #{dto.fromWarehouseId}
+                </if>
+                <if test="dto.toWarehouseId != null and dto.toWarehouseId != ''">
+                    AND mi.TO_LOCATOR_ID = #{dto.toWarehouseId}
+                </if>
+            )
+        </if>
+        ORDER BY t.CREATION_DATE DESC
+    </select>
+
+    <!--库存调拨-通过行ID查询条码信息-->
+    <select id="listMaterialLotForUi" resultType="com.ruike.wms.domain.vo.WmsStockTransferVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        MI.INSTRUCTION_ID,
+        MTAD.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MMLA.ATTR_VALUE LOT_STATUS,
+        MTAD.ACTUAL_QTY,
+        MML.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MMT.MATERIAL_NAME,
+        MML.LOT,
+        LOCATOR.PARENT_LOCATOR_ID,
+        LOCATOR2.LOCATOR_CODE PARENT_LOCATOR_CODE,
+        MML.LOCATOR_ID,
+        LOCATOR.LOCATOR_CODE,
+        MML.ENABLE_FLAG
+        FROM
+            MT_INSTRUCTION MI
+        LEFT JOIN MT_INSTRUCTION_ACTUAL MTA ON MI.INSTRUCTION_ID = MTA.INSTRUCTION_ID
+        LEFT JOIN MT_INSTRUCTION_ACTUAL_DETAIL MTAD ON MTA.ACTUAL_ID = MTAD.ACTUAL_ID
+        LEFT JOIN MT_MATERIAL_LOT MML ON MTAD.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN MT_MATERIAL_LOT_ATTR MMLA ON MML.MATERIAL_LOT_ID = MMLA.MATERIAL_LOT_ID
+            AND MMLA.ATTR_NAME = 'STATUS'
+        LEFT JOIN MT_MATERIAL MM ON MML.MATERIAL_ID = MM.MATERIAL_ID
+        LEFT JOIN MT_MATERIAL_TL MMT ON MM.MATERIAL_ID = MMT.MATERIAL_ID
+            AND MMT.LANG = #{lang}
+        LEFT JOIN MT_MOD_LOCATOR LOCATOR ON MML.LOCATOR_ID = LOCATOR.LOCATOR_ID
+        LEFT JOIN MT_MOD_LOCATOR LOCATOR2 ON LOCATOR.PARENT_LOCATOR_ID = LOCATOR2.LOCATOR_ID
+        WHERE 1=1
+            AND MTAD.ACTUAL_DETAIL_ID IS NOT NULL
+            AND MI.INSTRUCTION_ID = #{instructionId}
+    </select>
+
+    <select id="printHeadDataQuery" resultType="com.ruike.wms.api.dto.WmsStockTransferDTO2">
+        select mid.INSTRUCTION_DOC_NUM, mms.SITE_NAME, ms.SUPPLIER_CODE, ms.SUPPLIER_NAME, mid.INSTRUCTION_DOC_TYPE
+        from mt_instruction_doc mid
+        left join mt_mod_site mms
+        on mms.SITE_ID = mid.SITE_ID
+        left join mt_supplier ms
+        on ms.SUPPLIER_ID = mid.SUPPLIER_ID
+        where mid.TENANT_ID = #{tenantId}
+        and mid.INSTRUCTION_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="printLineDataQuery" resultType="com.ruike.wms.api.dto.WmsStockTransferDTO3">
+        select mia.ATTR_VALUE as line_num, mm.MATERIAL_CODE as item_code, mm.MATERIAL_NAME as item_desc, mi.QUANTITY as qty, mia2.ATTR_VALUE as version,
+               mu.UOM_CODE as uom, mml.LOCATOR_NAME, mmb.OLD_ITEM_CODE, mi.REMARK, mml2.LOCATOR_NAME as from_locator_name
+        from mt_instruction mi
+        left join mt_instruction_attr mia
+        on mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        and mia.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        left join mt_material mm
+        on mm.MATERIAL_ID = mi.MATERIAL_ID
+        left join mt_instruction_attr mia2
+        on mia2.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        and mia2.ATTR_NAME = 'MATERIAL_VERSION'
+        left join mt_uom mu
+        on mu.UOM_ID = mi.UOM_ID
+        left join mt_mod_locator mml
+        on mml.LOCATOR_ID = mi.TO_LOCATOR_ID
+        left join mt_mod_locator mml2
+        on mml2.LOCATOR_ID = mi.FROM_LOCATOR_ID
+        LEFT JOIN mt_material_site mms
+        ON mms.MATERIAL_ID = mi.MATERIAL_ID
+        AND mms.site_id = mi.site_id
+        LEFT JOIN mt_material_basic mmb
+        ON mi.MATERIAL_ID = mmb.MATERIAL_ID
+        AND mmb.MATERIAL_site_id = mms.MATERIAL_site_id
+        where mi.TENANT_ID = #{tenantId}
+        and mi.SOURCE_DOC_ID = #{instructionDocId}
+    </select>
+
+</mapper>

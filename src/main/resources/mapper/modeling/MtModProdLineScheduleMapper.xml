@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModProdLineScheduleMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModProdLineSchedule">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PROD_LINE_SCHEDULE_ID" property="prodLineScheduleId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="RATE_TYPE" property="rateType" jdbcType="VARCHAR"/>
+        <result column="RATE" property="rate" jdbcType="DECIMAL"/>
+        <result column="ACTIVITY" property="activity" jdbcType="DECIMAL"/>
+        <result column="DEMAND_TIME_FENCE" property="demandTimeFence" jdbcType="DECIMAL"/>
+        <result column="FIX_TIME_FENCE" property="fixTimeFence" jdbcType="DECIMAL"/>
+        <result column="FROZEN_TIME_FENCE" property="frozenTimeFence" jdbcType="DECIMAL"/>
+        <result column="FORWARD_PLANNING_TIME_FENCE" property="forwardPlanningTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="ORDER_TIME_FENCE" property="orderTimeFence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select * from mt_mod_prod_line_schedule
+        where
+        TENANT_ID = #{tenantId}
+        and PROD_LINE_ID IN
+        <foreach collection="prodLineIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

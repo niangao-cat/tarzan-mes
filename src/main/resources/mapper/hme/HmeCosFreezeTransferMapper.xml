@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosFreezeTransferMapper">
+
+    <select id="queryFreezeMaterialLotLoad" resultType="java.lang.Integer">
+        SELECT
+            COUNT(1)
+        FROM
+            hme_material_lot_load
+        WHERE
+            tenant_id = #{tenantId}
+        AND material_lot_id = #{materialLotId}
+        AND ATTRIBUTE14 = 'Y'
+    </select>
+</mapper>

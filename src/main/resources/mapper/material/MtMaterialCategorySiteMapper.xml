@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtMaterialCategorySiteMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtMaterialCategorySite">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_CATEGORY_SITE_ID" property="materialCategorySiteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_ID" property="materialCategoryId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="UiResultMap" type="tarzan.material.domain.vo.MtMaterialCategorySiteVO">
+        <result column="MATERIAL_CATEGORY_SITE_ID" property="materialCategorySiteId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="SITE_TYPE" property="siteType" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="SiteResultMap" type="tarzan.material.domain.vo.MtMaterialCategorySiteVO2">
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="SITE_TYPE" property="siteType" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+    <select id="selectPfepItem" resultMap="BaseResultMap">
+        SELECT
+        b.TENANT_ID,
+        b.MATERIAL_CATEGORY_SITE_ID,
+        b.MATERIAL_CATEGORY_ID,
+        b.SITE_ID,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        FROM
+        mt_material_category_site b
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        AND (
+        EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_distribution_category f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_CATEGORY_SITE_ID = f.MATERIAL_CATEGORY_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_inventory_category f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_CATEGORY_SITE_ID = f.MATERIAL_CATEGORY_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_manufacturing_category f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_CATEGORY_SITE_ID = f.MATERIAL_CATEGORY_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_purchase_category f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_CATEGORY_SITE_ID = f.MATERIAL_CATEGORY_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_schedule_category f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_CATEGORY_SITE_ID = f.MATERIAL_CATEGORY_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_purchase_supplier_catg f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_CATEGORY_SITE_ID = f.MATERIAL_CATEGORY_SITE_ID
+        )
+        OR EXISTS (
+        SELECT
+        1
+        FROM
+        mt_pfep_shipping_category f
+        WHERE
+        f.TENANT_ID = ${tenantId}
+        AND b.MATERIAL_CATEGORY_SITE_ID = f.MATERIAL_CATEGORY_SITE_ID
+        )
+        )
+        <if test="dto.materialCategoryId!=null">
+            and b.MATERIAL_CATEGORY_ID = #{dto.materialCategoryId}
+        </if>
+        <if test="dto.siteId!=null">
+            and b.SITE_ID = #{dto.siteId}
+        </if>
+    </select>
+
+    <select id="selectMaterialCategorySiteByIdForUi" resultMap="UiResultMap">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        mcs.MATERIAL_CATEGORY_SITE_ID,
+        ms.SITE_ID,
+        ms.SITE_CODE,
+        ms.SITE_TYPE,
+        mst.SITE_NAME,
+        ms.ENABLE_FLAG
+        FROM
+        mt_material_category_site mcs
+        JOIN mt_mod_site ms ON mcs.SITE_ID = ms.SITE_ID
+        LEFT JOIN mt_mod_site_tl mst ON ms.SITE_ID = mst.SITE_ID
+        AND mst.LANG = #{lang}
+        WHERE
+        mcs.TENANT_ID = ${tenantId}
+        AND ms.TENANT_ID = ${tenantId}
+        AND mcs.MATERIAL_CATEGORY_ID = #{categoryId}
+        ORDER BY mcs.CREATION_DATE DESC
+    </select>
+
+    <select id="materialCategorySiteNotExistForLov" resultMap="SiteResultMap">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        si.SITE_ID,
+        si.SITE_CODE,
+        sil.SITE_NAME,
+        si.SITE_TYPE,
+        gl.DESCRIPTION SITE_TYPE_DESC,
+        si.ENABLE_FLAG
+        FROM
+        mt_mod_site si
+        LEFT JOIN mt_mod_site_tl sil ON si.SITE_ID = sil.SITE_ID
+        AND sil.LANG = #{lang}
+        INNER JOIN mt_gen_type g ON si.SITE_TYPE = g.TYPE_CODE
+        AND g.MODULE = 'MODELING' AND g.TYPE_GROUP = 'ORGANIZATION_REL_TYPE'
+        LEFT JOIN mt_gen_type_tl gl ON gl.GEN_TYPE_ID = g.GEN_TYPE_ID
+        AND gl.LANG = #{lang}
+        WHERE
+        si.TENANT_ID = ${tenantId}
+        AND g.TENANT_ID = ${tenantId}
+        AND si.ENABLE_FLAG = 'Y'
+        <if test='condition.siteCode != null'>
+            AND si.SITE_CODE LIKE CONCAT('%',condition.siteCode,'%')
+        </if>
+        <if test='condition.siteName != null'>
+            AND sil.SITE_NAME LIKE CONCAT('%',condition.siteName,'%')
+        </if>
+        <if test='condition.siteTypeDesc != null'>
+            AND gl.DESCRIPTION LIKE CONCAT('%',condition.siteTypeDesc,'%')
+        </if>
+        AND si.SITE_ID NOT IN (
+        SELECT
+        SITE_ID
+        FROM
+        mt_material_category_site
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND MATERIAL_CATEGORY_ID = #{condition.materialCategoryId}
+        )
+        AND si.SITE_TYPE IN (
+        SELECT
+        'MANUFACTURING'
+        FROM
+        mt_material_category_set mcs,
+        mt_material_category mc
+        WHERE
+        mcs.TENANT_ID = #{tenantId}
+        AND mc.TENANT_ID = #{tenantId}
+        AND mcs.MATERIAL_CATEGORY_SET_ID = mc.MATERIAL_CATEGORY_SET_ID
+        AND mcs.DEFAULT_MANUFACTURING_FLAG = 'Y'
+        AND mc.MATERIAL_CATEGORY_ID = #{condition.materialCategoryId}
+        UNION
+        SELECT
+        'PURCHASE'
+        FROM
+        mt_material_category_set mcs,
+        mt_material_category mc
+        WHERE
+        mcs.TENANT_ID = #{tenantId}
+        AND mc.TENANT_ID = #{tenantId}
+        AND mcs.MATERIAL_CATEGORY_SET_ID = mc.MATERIAL_CATEGORY_SET_ID
+        AND mcs.DEFAULT_PURCHASE_FLAG = 'Y'
+        AND mc.MATERIAL_CATEGORY_ID = #{condition.materialCategoryId}
+        UNION
+        SELECT
+        'SCHEDULE'
+        FROM
+        mt_material_category_set mcs,
+        mt_material_category mc
+        WHERE
+        mcs.TENANT_ID = #{tenantId}
+        AND mc.TENANT_ID = #{tenantId}
+        AND mcs.MATERIAL_CATEGORY_SET_ID = mc.MATERIAL_CATEGORY_SET_ID
+        AND mcs.DEFAULT_SCHEDULE_FLAG = 'Y'
+        AND mc.MATERIAL_CATEGORY_ID = #{condition.materialCategoryId}
+        )
+        ORDER BY si.CREATION_DATE DESC
+    </select>
+    <select id="selectByMaterialCategorySiteIds" resultMap="BaseResultMap">
+        select t.*
+        from mt_material_category_site t
+        where t.TENANT_ID =${tenantId}
+        <if test="materialCategorySiteIds != null and materialCategorySiteIds.size() != 0">
+            and t.MATERIAL_CATEGORY_SITE_ID IN
+            <foreach collection="materialCategorySiteIds" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+    <select id="selectByMaterialCategoryIds" resultMap="BaseResultMap" fetchSize="5000">
+        select t.*
+        from mt_material_category_site t
+        where t.TENANT_ID =${tenantId}
+        and ${materialCategoryIds}
+    </select>
+</mapper>

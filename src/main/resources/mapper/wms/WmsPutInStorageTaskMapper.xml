@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsPutInStorageTaskMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsPutInStorageTask">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="task_id" property="taskId" jdbcType="VARCHAR"/>
+        <result column="task_type" property="taskType" jdbcType="VARCHAR"/>
+        <result column="instruction_doc_id" property="instructionDocId" jdbcType="VARCHAR"/>
+        <result column="instruction_id" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="task_status" property="taskStatus" jdbcType="VARCHAR"/>
+        <result column="instruction_doc_type" property="instructionDocType" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="task_qty" property="taskQty" jdbcType="DECIMAL"/>
+        <result column="execute_qty" property="executeQty" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="getInstructionIdByMaterialLotId" resultType="java.lang.String">
+        SELECT
+        MI.INSTRUCTION_ID
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_material_lot_attr MMLA ON MMLA.ATTR_NAME = 'INSTRUCTION_ID'
+        AND MML.MATERIAL_LOT_ID = MMLA.MATERIAL_LOT_ID
+        LEFT JOIN mt_instruction MI ON MI.INSTRUCTION_ID = MMLA.ATTR_VALUE
+        WHERE
+        MML.MATERIAL_LOT_ID = #{materialLotId}
+    </select>
+
+    <select id="queryDetailByMaterialLotIds"
+            resultType="com.ruike.wms.api.dto.WmsMaterialLotLineDetailDTO">
+        SELECT
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MML.PRIMARY_UOM_QTY,
+        MU.UOM_ID,
+        MU.UOM_CODE,
+        MGS.DESCRIPTION AS STATUS,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MML.LOT,
+        doc.SUPPLIER_ID,
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        MML.LOCATOR_ID MATERIAL_LOT_LOCATOR_ID,
+        LOC.LOCATOR_CODE MATERIAL_LOT_LOCATOR_CODE,
+        LOC.LOCATOR_NAME MATERIAL_LOT_LOCATOR_NAME,
+        LOC2.LOCATOR_CODE WAREHOUSE_CODE,
+        MML.QUALITY_STATUS,
+        ATTR.ATTR_VALUE MATERIAL_LOT_STATUS,
+        ATTR2.ATTR_VALUE INSPECT_SCRAP_QTY
+        FROM
+        mt_material_lot MML
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR ON MML.MATERIAL_LOT_ID = ATTR.MATERIAL_LOT_ID AND ATTR.ATTR_NAME = 'STATUS'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR2 ON MML.MATERIAL_LOT_ID = ATTR2.MATERIAL_LOT_ID AND ATTR2.ATTR_NAME = 'INSPECT_SCRAP_QTY'
+        LEFT JOIN mt_material_lot_attr MMLASTATUS ON MMLASTATUS.ATTR_NAME = 'STATUS'
+        AND MMLASTATUS.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+        LEFT JOIN mt_gen_status MGS ON MGS.STATUS_GROUP = 'MATERIAL_LOT_STATUS'
+        AND MGS.STATUS_CODE = MMLASTATUS.ATTR_VALUE
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID,
+        mt_supplier ms,
+        MT_MOD_LOCATOR LOC,
+        MT_MOD_LOCATOR LOC2,
+        MT_INSTRUCTION_DOC doc,
+        mt_instruction ins,
+        wms_material_lot_doc_rel rel,
+        wms_put_in_storage_task task
+        <where>
+            and MML.material_lot_id = rel.material_lot_id
+            and rel.instruction_id =ins.INSTRUCTION_ID
+            and rel.instruction_doc_id = doc.INSTRUCTION_DOC_ID
+            and doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+            and doc.SUPPLIER_ID = ms.SUPPLIER_ID
+            and MML.LOCATOR_ID = LOC.LOCATOR_ID
+            and LOC.PARENT_LOCATOR_ID = LOC2.LOCATOR_ID
+            and rel.instruction_id = task.INSTRUCTION_ID
+            and rel.instruction_doc_id = task.INSTRUCTION_DOC_ID
+            and task.instruction_doc_type = 'DELIVERY_DOC'
+            and ATTR.ATTR_VALUE = 'INSTOCK'
+            <if test="list != null and list.size() != 0">
+                AND MML.MATERIAL_LOT_ID IN
+                <foreach collection="list" item="materialLotId" index="index" open="(" close=")" separator=",">
+                    #{materialLotId}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY STATUS DESC
+    </select>
+
+    <select id="queryInstruction" resultType="java.lang.String">
+        SELECT DISTINCT
+        rel.MATERIAL_LOT_ID
+        FROM
+        wms_material_lot_doc_rel rel
+        LEFT JOIN mt_instruction ins ON ins.INSTRUCTION_ID = REL.INSTRUCTION_ID and REL.instruction_doc_type = 'DELIVERY_DOC'
+        WHERE ins.tenant_id = #{tenantId}
+        and ins.INSTRUCTION_NUM = #{instructionNum}
+    </select>
+
+    <select id="countNum" resultType="java.util.HashMap">
+        SELECT
+        COUNT( MML.MATERIAL_LOT_ID ) AS SUM_COUNT,
+        COUNT( ATTR.MATERIAL_LOT_ID ) AS SUM_STOCK_IN_COUNT
+        FROM
+        mt_material_lot MML
+        LEFT JOIN wms_material_lot_doc_rel REL on MML.MATERIAL_LOT_ID = REL.MATERIAL_LOT_ID and REL.instruction_doc_type = 'DELIVERY_DOC'
+        LEFT JOIN mt_instruction MI ON MI.INSTRUCTION_ID = REL.INSTRUCTION_ID
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR ON MML.MATERIAL_LOT_ID = ATTR.MATERIAL_LOT_ID AND ATTR.ATTR_NAME = 'STATUS' AND ATTR.ATTR_VALUE = 'INSTOCK'
+        WHERE
+        MI.INSTRUCTION_NUM = #{instructionNum}
+    </select>
+
+    <select id="queryInstructionDocLov" resultType="java.util.Map">
+        SELECT
+        doc.INSTRUCTION_DOC_ID instructionDocId,
+        doc.INSTRUCTION_DOC_NUM instructionDocNum,
+        doc.CREATION_DATE creationDate
+        FROM
+        mt_instruction_doc doc
+        WHERE
+        doc.INSTRUCTION_DOC_STATUS = 'RELEASED'
+        AND doc.INSTRUCTION_DOC_TYPE = 'RAW_MATERIAL_RECEIPT'
+        AND doc.TENANT_ID = #{tenantId}
+        <if test="siteId != null and siteId != ''">
+            AND doc.SITE_ID = #{siteId}
+        </if>
+        <if test="creationDateFrom != null and creationDateFrom != ''">
+            AND STR_TO_DATE(DOC.CREATION_DATE,'%Y-%m-%d') &gt;= STR_TO_DATE(#{creationDateFrom},'%Y-%m-%d')
+        </if>
+        <if test="creationDateTo != null and creationDateTo != ''">
+            AND STR_TO_DATE(DOC.CREATION_DATE,'%Y-%m-%d') &lt;= STR_TO_DATE(#{creationDateTo},'%Y-%m-%d')
+        </if>
+        <if test="instructionDocNum != null and instructionDocNum != ''">
+            AND doc.INSTRUCTION_DOC_NUM LIKE CONCAT('%',CONCAT(#{instructionDocNum},'%'))
+        </if>
+        ORDER BY doc.CREATION_DATE DESC
+    </select>
+
+    <select id="queryMaterialLotLineByLotIds"
+            resultType="com.ruike.wms.domain.vo.WmsInstructionLineVO">
+        SELECT
+        LOT.LOT,
+        LOT.MATERIAL_LOT_ID,
+        LOT.MATERIAL_LOT_CODE,
+        LOT.ENABLE_FLAG,
+        UOM.UOM_ID,
+        UOM.UOM_CODE,
+        UOM.UOM_NAME,
+        LOT.PRIMARY_UOM_QTY QUANTITY,
+        LOT.MATERIAL_ID,
+        MA.MATERIAL_CODE,
+        MA.MATERIAL_NAME,
+        LOT.LOCATOR_ID MATERIAL_LOT_LOCATOR_ID,
+        LOC.LOCATOR_CODE MATERIAL_LOT_LOCATOR_CODE,
+        LOC.LOCATOR_NAME MATERIAL_LOT_LOCATOR_NAME,
+        LOC2.LOCATOR_ID WAREHOUSE_ID,
+        LOC2.LOCATOR_CODE WAREHOUSE_CODE,
+        LOT.QUALITY_STATUS,
+        ATTR.ATTR_VALUE MATERIAL_LOT_STATUS,
+        ATTR2.ATTR_VALUE INSPECT_SCRAP_QTY,
+        DOC.INSTRUCTION_DOC_ID,
+        DOC.INSTRUCTION_DOC_NUM,
+        doc.INSTRUCTION_DOC_TYPE,
+        DOC.INSTRUCTION_DOC_STATUS,
+        DOC.REMARK,
+        DOC.SITE_ID,
+        SITE.SITE_CODE,
+        SITE.SITE_NAME,
+        doc.SUPPLIER_ID,
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        INS.INSTRUCTION_ID,
+        INS.INSTRUCTION_NUM,
+        INS.INSTRUCTION_TYPE,
+        INS.INSTRUCTION_STATUS
+        FROM
+        MT_MATERIAL_LOT LOT
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR ON LOT.MATERIAL_LOT_ID = ATTR.MATERIAL_LOT_ID AND ATTR.ATTR_NAME = 'STATUS'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR2 ON LOT.MATERIAL_LOT_ID = ATTR2.MATERIAL_LOT_ID AND ATTR2.ATTR_NAME = 'INSPECT_SCRAP_QTY',
+        MT_UOM UOM,
+        MT_MATERIAL ma,
+        mt_supplier ms,
+        MT_MOD_LOCATOR LOC,
+        MT_MOD_LOCATOR LOC2,
+        MT_MOD_SITE SITE,
+        MT_INSTRUCTION_DOC doc,
+        mt_instruction ins,
+        wms_material_lot_doc_rel rel
+        where lot.material_lot_id = rel.material_lot_id
+        and   rel.instruction_id =ins.INSTRUCTION_ID
+        and   rel.instruction_doc_id = doc.INSTRUCTION_DOC_ID
+        and   doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        and   doc.SUPPLIER_ID = ms.SUPPLIER_ID
+        and   DOC.SITE_ID = SITE.SITE_ID
+        and   LOT.PRIMARY_UOM_ID = UOM.UOM_ID
+        and   LOT.MATERIAL_ID = MA.MATERIAL_ID
+        and   LOT.LOCATOR_ID = LOC.LOCATOR_ID
+        and   LOC.PARENT_LOCATOR_ID = LOC2.LOCATOR_ID
+        and   LOT.tenant_id = #{tenantId}
+        and   rel.instruction_doc_type = 'DELIVERY_DOC'
+        and   DOC.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+        and   LOT.MATERIAL_LOT_ID IN
+        <foreach collection="list" separator="," open="(" close=")" item="materialLotId">
+            #{materialLotId}
+        </foreach>
+    </select>
+
+    <select id="queryInstructionLine"
+            resultType="com.ruike.wms.domain.vo.WmsInstructionLineVO">
+        SELECT DOC.INSTRUCTION_DOC_ID,
+        DOC.INSTRUCTION_DOC_NUM,
+        doc.INSTRUCTION_DOC_TYPE,
+        DOC.INSTRUCTION_DOC_STATUS,
+        INS.INSTRUCTION_ID,
+        INS.INSTRUCTION_STATUS,
+        UOM.UOM_ID,
+        UOM.UOM_CODE,
+        UOM.UOM_NAME,
+        ins.INSTRUCTION_NUM,
+        ins.MATERIAL_ID,
+        MA.MATERIAL_CODE,
+        MA.MATERIAL_NAME,
+        attr2.ATTR_VALUE ACTUAL_RECEIVE_QTY,
+        attr.ATTR_VALUE STOCK_IN_QTY,
+		attr.ATTR_VALUE SUM_STOCK_IN_QTY
+        FROM
+        MT_UOM UOM,
+        MT_MATERIAL ma,
+        MT_INSTRUCTION_DOC doc,
+        mt_instruction ins
+        left join mt_instruction_attr attr on ins.INSTRUCTION_ID = attr.INSTRUCTION_ID and attr.ATTR_NAME = 'STOCK_IN_QTY'
+        left join mt_instruction_attr attr2 on ins.INSTRUCTION_ID = attr2.INSTRUCTION_ID and attr2.ATTR_NAME = 'ACTUAL_RECEIVE_QTY'
+        where doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        and   ins.UOM_ID = uom.uom_id
+        and   ins.MATERIAL_ID = ma.MATERIAL_ID
+        and   DOC.tenant_id = #{tenantId}
+        and   DOC.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+        <if test="dto.instructionDocId != null and dto.instructionDocId != ''">
+            AND DOC.INSTRUCTION_DOC_ID = #{dto.instructionDocId}
+        </if>
+        <if test="dto.instructionId != null and dto.instructionId != ''">
+            AND INS.INSTRUCTION_ID = #{dto.instructionId}
+        </if>
+    </select>
+
+    <select id="queryPoLinesByInstructionId"
+            resultType="com.ruike.wms.domain.vo.WmsPutInStorageVO">
+        SELECT rel.po_id,
+               rel.po_line_id,
+               po_doc.INSTRUCTION_DOC_NUM,
+               po_doc_line.INSTRUCTION_NUM,
+               po_doc.instruction_doc_type,
+               rel.quantity,
+               rel.po_stock_in_qty,
+               rel.po_delivery_rel_id
+        FROM MT_INSTRUCTION_DOC po_doc,
+             mt_instruction po_doc_line,
+             wms_po_delivery_rel rel,
+             mt_instruction ins
+        where rel.po_id = po_doc.INSTRUCTION_DOC_ID
+          and rel.po_line_id = po_doc_line.INSTRUCTION_ID
+          and rel.delivery_doc_id = ins.SOURCE_DOC_ID
+          and rel.delivery_doc_line_id = ins.INSTRUCTION_ID
+          and ins.SOURCE_DOC_ID = #{instructionDocId}
+          and ins.INSTRUCTION_ID = #{instructionId}
+          and ins.tenant_id = #{tenantId}
+        order by po_doc.EXPECTED_ARRIVAL_TIME
+    </select>
+
+    <select id="queryExchangeInstruction"
+            resultType="com.ruike.wms.domain.vo.WmsExchangeLineVO">
+        select doc.INSTRUCTION_DOC_ID,
+               doc.INSTRUCTION_DOC_NUM,
+               ins.INSTRUCTION_ID,
+               ins.INSTRUCTION_NUM,
+               doc.INSTRUCTION_DOC_TYPE,
+               ins.quantity,
+               IFNULL(ATTR3.ATTR_VALUE,0) EXECUTE_QTY,
+               ATTR2.ATTR_VALUE LOCATOR_ID,
+                (
+                    select IfNull(sum(ACTUAL_QTY), 0) FROM mt_instruction_actual WHERE INSTRUCTION_ID = ins.INSTRUCTION_ID
+                )  ACTUAL_QTY
+        from   MT_INSTRUCTION_DOC doc,
+               mt_instruction ins
+        left join mt_instruction_attr ATTR on ins.INSTRUCTION_ID = ATTR.INSTRUCTION_ID and ATTR.ATTR_NAME = 'MATERIAL_VERSION'
+        left join mt_instruction_attr ATTR2 on ins.INSTRUCTION_ID = ATTR2.INSTRUCTION_ID and ATTR2.ATTR_NAME = 'TO_LOCATOR_ID'
+        left join mt_instruction_attr ATTR3 on ins.INSTRUCTION_ID = ATTR3.INSTRUCTION_ID and ATTR3.ATTR_NAME = 'EXECUTE_QTY'
+        where  doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        and    doc.SUPPLIER_ID = #{supplierId}
+        and    ins.MATERIAL_ID = #{materialId}
+        and    ins.tenant_id = #{tenantId}
+        and    doc.INSTRUCTION_DOC_TYPE = 'SUPPLIER_EXCHANGE_DOC'
+        and    ins.INSTRUCTION_STATUS &lt;&gt; 'COMPLETED'
+
+        <choose>
+            <when test="materialVersion !=null and materialVersion != ''">
+                and ATTR.ATTR_VALUE = #{materialVersion}
+            </when>
+            <otherwise>
+                and (ATTR.ATTR_VALUE is null or ATTR.ATTR_VALUE='')
+            </otherwise>
+        </choose>
+
+        order by doc.creation_date
+    </select>
+
+    <select id="executeInstructionCount" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM
+        MT_INSTRUCTION_DOC doc,
+        mt_instruction ins
+        where doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        and   ins.INSTRUCTION_STATUS &lt;&gt; 'STOCK_IN_COMPLETE'
+        and   DOC.tenant_id = #{tenantId}
+        and   DOC.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+        AND   DOC.INSTRUCTION_DOC_ID = #{instructionDocId}
+    </select>
+    <select id="queryExchangeInstructionWithSite" resultType="com.ruike.wms.domain.vo.WmsExchangeLineVO">
+        select doc.INSTRUCTION_DOC_ID,
+        doc.INSTRUCTION_DOC_NUM,
+        ins.INSTRUCTION_ID,
+        ins.INSTRUCTION_NUM,
+        doc.INSTRUCTION_DOC_TYPE,
+        ins.quantity,
+        IFNULL(ATTR3.ATTR_VALUE,0) EXECUTE_QTY,
+        ATTR2.ATTR_VALUE LOCATOR_ID,
+        (
+        select IfNull(sum(ACTUAL_QTY), 0) FROM mt_instruction_actual WHERE INSTRUCTION_ID = ins.INSTRUCTION_ID
+        )  ACTUAL_QTY
+        from   MT_INSTRUCTION_DOC doc,
+        mt_instruction ins
+        left join mt_instruction_attr ATTR on ins.INSTRUCTION_ID = ATTR.INSTRUCTION_ID and ATTR.ATTR_NAME = 'MATERIAL_VERSION'
+        left join mt_instruction_attr ATTR2 on ins.INSTRUCTION_ID = ATTR2.INSTRUCTION_ID and ATTR2.ATTR_NAME = 'TO_LOCATOR_ID'
+        left join mt_instruction_attr ATTR3 on ins.INSTRUCTION_ID = ATTR3.INSTRUCTION_ID and ATTR3.ATTR_NAME = 'EXECUTE_QTY'
+        where  doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        and    doc.SUPPLIER_ID = #{supplierId}
+        and    ins.MATERIAL_ID = #{materialId}
+        and    ins.tenant_id = #{tenantId}
+        and    doc.INSTRUCTION_DOC_TYPE = 'SUPPLIER_EXCHANGE_DOC'
+        and    ins.INSTRUCTION_STATUS &lt;&gt; 'COMPLETED'
+        and    doc.SITE_ID = #{siteId}
+        <choose>
+            <when test="materialVersion !=null and materialVersion != ''">
+                and ATTR.ATTR_VALUE = #{materialVersion}
+            </when>
+            <otherwise>
+                and (ATTR.ATTR_VALUE is null or ATTR.ATTR_VALUE='')
+            </otherwise>
+        </choose>
+
+        order by doc.creation_date
+    </select>
+    <select id="queryLocatorWithSite" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT
+            l.LOCATOR_ID,
+            l.PARENT_LOCATOR_ID
+        FROM
+            mt_mod_locator l,
+            mt_mod_locator_org_rel r
+        WHERE
+            l.PARENT_LOCATOR_ID = r.LOCATOR_ID
+          AND r.ORGANIZATION_Type = 'SITE'
+          AND l.LOCATOR_TYPE = #{locatorType}
+          AND r.ORGANIZATION_ID = #{siteId}
+          AND r.TENANT_ID = #{tenantId}
+    </select>
+</mapper>

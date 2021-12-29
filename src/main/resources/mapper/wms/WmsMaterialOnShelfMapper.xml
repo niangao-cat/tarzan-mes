@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialOnShelfMapper">
+
+    <select id="selectMaterialLotCondition" resultType="com.ruike.wms.api.dto.WmsMaterialOnShelfBarCodeDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mml.SITE_ID,
+        mml.ENABLE_FLAG,
+        mml.QUALITY_STATUS,
+        mml.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mml.PRIMARY_UOM_ID,
+        uom.UOM_CODE AS PRIMARY_UOM_CODE,
+        uom_tl.UOM_NAME AS PRIMARY_UOM_NAME,
+        mml.PRIMARY_UOM_QTY,
+        mml.CURRENT_CONTAINER_ID,
+        mml.TOP_CONTAINER_ID,
+        mml.LOT,
+        mml.LOCATOR_ID,
+        loc.LOCATOR_CODE,
+        loc_tl.LOCATOR_NAME,
+        mml.FREEZE_FLAG,
+        mml.STOCKTAKE_FLAG,
+        max( ( CASE WHEN ( `arv`.`ATTR_NAME` = 'MATERIAL_VERSION' ) THEN `arv`.`ATTR_VALUE` END ) ) AS `MATERIAL_VERSION`,
+        max( ( CASE WHEN ( `arv`.`ATTR_NAME` = 'STATUS' ) THEN `arv`.`ATTR_VALUE` END ) ) AS `MATERIAL_LOT_STATUS`,
+        max( ( CASE WHEN ( `arv`.`ATTR_NAME` = 'ACTUAL_LOCATOR' ) THEN `arv`.`ATTR_VALUE` END ) ) AS `ACTUAL_LOCATOR`,
+        max( ( CASE WHEN ( `arv`.`ATTR_NAME` = 'MF_FLAG' ) THEN `arv`.`ATTR_VALUE` END ) ) AS `MF_FLAG`
+        FROM
+        mt_material_lot mml
+        JOIN mt_uom uom ON uom.UOM_ID = mml.PRIMARY_UOM_ID
+        JOIN mt_uom_tl uom_tl ON uom_tl.UOM_ID = uom.UOM_ID
+        AND uom_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator loc ON loc.LOCATOR_ID = mml.LOCATOR_ID
+        LEFT JOIN mt_mod_locator_tl loc_tl ON loc_tl.LOCATOR_ID = loc.LOCATOR_ID
+        AND loc_tl.LANG =#{lang}
+        JOIN mt_material mm ON mm.MATERIAL_ID = mml.MATERIAL_ID
+        JOIN mt_material_tl mmt ON mmt.MATERIAL_ID = mm.MATERIAL_ID
+        AND mmt.LANG = #{lang}
+        LEFT JOIN mt_material_lot_attr arv ON arv.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        WHERE
+        mml.TENANT_ID =#{tenantId}
+        <if test="materialLotIds != null">
+            AND mml.MATERIAL_LOT_ID in
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mml.SITE_ID,
+        mml.ENABLE_FLAG,
+        mml.QUALITY_STATUS,
+        mml.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mmt.MATERIAL_NAME,
+        mml.PRIMARY_UOM_ID,
+        uom.UOM_CODE,
+        uom_tl.UOM_NAME,
+        mml.PRIMARY_UOM_QTY,
+        mml.CURRENT_CONTAINER_ID,
+        mml.TOP_CONTAINER_ID,
+        mml.LOT,
+        mml.LOCATOR_ID,
+        loc.LOCATOR_CODE,
+        loc_tl.LOCATOR_NAME,
+        mml.FREEZE_FLAG,
+        mml.STOCKTAKE_FLAG
+    </select>
+
+    <select id="selectDocCondition" resultType="com.ruike.wms.api.dto.WmsMaterialOnShelfDocLineDTO">
+        SELECT
+          mid.INSTRUCTION_DOC_ID,
+          mid.INSTRUCTION_DOC_NUM,
+          mi.INSTRUCTION_ID,
+          mi.INSTRUCTION_NUM,
+          mi.MATERIAL_ID,
+          mm.MATERIAL_CODE,
+          mm.MATERIAL_NAME,
+          mi.UOM_ID,
+          mu.UOM_CODE,
+          mu.UOM_NAME,
+          mi.TO_LOCATOR_ID,
+          mia.ACTUAL_ID,
+          mi.INSTRUCTION_STATUS,
+          miad.MATERIAL_LOT_ID,
+          miat.ATTR_VALUE AS MATERIAL_VERSION
+        FROM
+          mt_instruction_actual_detail miad
+        JOIN mt_instruction_actual mia ON miad.ACTUAL_ID = mia.ACTUAL_ID
+        JOIN mt_instruction mi ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        JOIN mt_instruction_doc mid ON mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_uom mu ON mi.UOM_ID = mu.UOM_ID
+        LEFT JOIN mt_material mm ON mi.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_instruction_attr miat ON mi.INSTRUCTION_ID = miat.INSTRUCTION_ID
+          AND miat.ATTR_NAME = 'MATERIAL_VERSION' AND mi.TENANT_ID = miat.TENANT_ID
+        WHERE miad.TENANT_ID = #{tenantId}
+        AND mi.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        AND mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        AND mid.INSTRUCTION_DOC_TYPE IN ('DELIVERY_DOC','OUTSOURCING_DELIVERY_DOC','SRM_SUPP_EXCH_DOC')
+        <if test="materialLotIds != null">
+            AND miad.MATERIAL_LOT_ID in
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectInDocCondition" resultType="com.ruike.wms.api.dto.WmsMaterialOnShelfDocLineDTO">
+        SELECT
+        mid.INSTRUCTION_DOC_ID,
+        mid.INSTRUCTION_DOC_NUM,
+        mi.INSTRUCTION_ID,
+        mi.INSTRUCTION_NUM,
+        mi.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mi.UOM_ID,
+        mu.UOM_CODE,
+        mu.UOM_NAME,
+        mi.TO_LOCATOR_ID,
+        mi.INSTRUCTION_STATUS,
+        mi.QUANTITY,
+        mide.MATERIAL_LOT_ID,
+        miat.ATTR_VALUE AS MATERIAL_VERSION
+        FROM
+        mt_instruction_detail mide
+        JOIN mt_instruction mi ON mide.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        JOIN mt_instruction_doc mid ON mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_uom mu ON mi.UOM_ID = mu.UOM_ID
+        LEFT JOIN mt_material mm ON mi.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_instruction_attr miat ON mi.INSTRUCTION_ID = miat.INSTRUCTION_ID
+          AND miat.ATTR_NAME = 'MATERIAL_VERSION' AND mi.TENANT_ID = miat.TENANT_ID
+        WHERE mide.TENANT_ID = #{tenantId}
+        AND mid.INSTRUCTION_DOC_TYPE = 'PRODUCT_RECEIPT'
+        AND mi.INSTRUCTION_STATUS IN ('RELEASED','COMPLETE_CANCEL')
+        <if test="materialLotIds != null">
+            AND mide.MATERIAL_LOT_ID in
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="executeQtyQuery" resultType="com.ruike.wms.api.dto.WmsMaterialOnShelfInsActualDTO">
+        SELECT
+        mia.INSTRUCTION_ID,
+        SUM(
+          CASE
+            WHEN miaa.ATTR_VALUE IS NULL OR miaa.ATTR_VALUE = '' THEN
+              mia.ACTUAL_QTY
+            ELSE
+              miaa.ATTR_VALUE + mia.ACTUAL_QTY
+            END) AS execute_qty,
+        SUM(mia.ACTUAL_QTY) ACTUAL_QTY
+        FROM
+        mt_instruction_actual mia
+        LEFT JOIN mt_instruction_actual_attr miaa ON mia.ACTUAL_ID = miaa.ACTUAL_ID
+        AND miaa.ATTR_NAME = 'EXCHANGED_QTY'
+        AND mia.TENANT_ID = miaa.TENANT_ID
+        WHERE mia.TENANT_ID = #{tenantId}
+        <if test="instructionIds != null and instructionIds.size() > 0 ">
+            AND mia.INSTRUCTION_ID in
+            <foreach collection="instructionIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY mia.INSTRUCTION_ID
+    </select>
+
+    <select id="materialLotQuery" resultType="com.ruike.wms.api.dto.WmsMaterialOnShelfMatLotDTO">
+        SELECT
+          mia.INSTRUCTION_ID,
+          mml.MATERIAL_LOT_ID,
+          mml.PRIMARY_UOM_QTY,
+          mmla.ATTR_VALUE AS STATUS
+        FROM
+          mt_instruction_actual mia,
+          mt_instruction_actual_detail miad,
+          mt_material_lot mml
+          LEFT JOIN mt_material_lot_attr mmla ON mml.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+            AND mmla.ATTR_NAME = 'STATUS' AND mml.TENANT_ID = mmla.TENANT_ID
+        WHERE mia.ACTUAL_ID = miad.ACTUAL_ID
+        AND miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mia.TENANT_ID = #{tenantId}
+        <if test="instructionIds != null and instructionIds.size() > 0 ">
+            AND mia.INSTRUCTION_ID in
+            <foreach collection="instructionIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+</mapper>

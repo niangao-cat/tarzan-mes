@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtWorkOrderComponentActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtWorkOrderComponentActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_COMPONENT_ACTUAL_ID" property="workOrderComponentActualId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="COMPONENT_TYPE" property="componentType" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_EXCESS_FLAG" property="assembleExcessFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_ROUTER_TYPE" property="assembleRouterType" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_FIRST_TIME" property="actualFirstTime" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_LAST_TIME" property="actualLastTime" jdbcType="TIMESTAMP"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMapV4" type="tarzan.actual.domain.vo.MtWoComponentActualVO4">
+        <result column="WORK_ORDER_COMPONENT_ACTUAL_ID" property="workOrderComponentActualId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="COMPONENT_TYPE" property="componentType" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_EXCESS_FLAG" property="assembleExcessFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_ROUTER_TYPE" property="assembleRouterType" jdbcType="VARCHAR"/>
+        <result column="SUBSTITUTE_FLAG" property="substituteFlag" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_FIRST_TIME" property="actualFirstTime" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_LAST_TIME" property="actualLastTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMapResultV" type="tarzan.actual.domain.vo.MtWoComponentActualVO26">
+        <result column="minActualFirstTime" property="minActualFirstTime" jdbcType="TIMESTAMP"/>
+        <result column="maxActualLastTime" property="maxActualLastTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="woComponentAssemblePeriodGet" resultMap="BaseResultMapResultV">
+        SELECT
+        min(ACTUAL_FIRST_TIME) minActualFirstTime,max(ACTUAL_LAST_TIME) maxActualLastTime
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL
+        WHERE TENANT_ID = #{tenantId}
+        <if test="cvo.workOrderComponentActualId != null">
+            AND WORK_ORDER_COMPONENT_ACTUAL_ID =#{cvo.workOrderComponentActualId}
+        </if>
+        <if test="cvo.workOrderId != null">
+            AND WORK_ORDER_ID = #{cvo.workOrderId}
+        </if>
+        <if test="cvo.materialId != null">
+            AND MATERIAL_ID = #{cvo.materialId}
+        </if>
+        <if test="cvo.operationId != null">
+            AND OPERATION_ID = #{cvo.operationId}
+        </if>
+    </select>
+
+
+    <select id="materialLimitWoComponentScrapActualQuery" resultMap="BaseResultMapV4">
+        SELECT
+        *
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND WORK_ORDER_ID = #{cvo.workOrderId}
+        AND IFNULL(SCRAPPED_QTY,0) &lt;&gt; 0
+        <if test="cvo.materialId != null">
+            AND MATERIAL_ID =#{cvo.materialId}
+        </if>
+        <if test="cvo.componentType != null">
+            AND COMPONENT_TYPE =#{cvo.componentType}
+        </if>
+        <if test="cvo.operationId != null">
+            AND OPERATION_ID =#{cvo.operationId}
+        </if>
+        <if test="cvo.bomId != null">
+            AND BOM_ID =#{cvo.bomId}
+        </if>
+        order by BOM_COMPONENT_ID+0,
+        OPERATION_ID+0,
+        MATERIAL_ID+0
+    </select>
+
+    <select id="componentLimitWoComponentScrapActualQuery" resultMap="BaseResultMapV4">
+        SELECT
+        *
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND WORK_ORDER_ID = #{cvo.workOrderId}
+        AND IFNULL(ASSEMBLE_EXCESS_FLAG,'N') &lt;&gt;'Y'
+        AND IFNULL(SCRAPPED_QTY,0) &lt;&gt;0
+        <if test="cvo.bomComponentId != null">
+            AND BOM_COMPONENT_ID=#{cvo.bomComponentId}
+        </if>
+        <if test="cvo.bomComponentId == null">
+            AND BOM_COMPONENT_ID is not null
+            AND BOM_COMPONENT_ID &lt;&gt;''
+        </if>
+        <if test="cvo.materialId != null">
+            AND MATERIAL_ID =#{cvo.materialId}
+        </if>
+        <if test="cvo.componentType != null">
+            AND COMPONENT_TYPE =#{cvo.componentType}
+        </if>
+        <if test="cvo.routerStepId != null">
+            AND ROUTER_STEP_ID =#{cvo.routerStepId}
+        </if>
+
+        <if test="cvo.operationId != null">
+            AND OPERATION_ID =#{cvo.operationId}
+        </if>
+
+        <if test='"N"==cvo.substituteIncludedFlag'>
+            AND IFNULL(SUBSTITUTE_FLAG,'N') &lt;&gt;'Y'
+        </if>
+        <if test="cvo.bomId != null">
+            AND BOM_ID =#{cvo.bomId}
+        </if>
+        order by BOM_COMPONENT_ID+0,
+        OPERATION_ID+0,
+        MATERIAL_ID+0
+    </select>
+
+    <resultMap id="BaseResultMapV10" type="tarzan.actual.domain.vo.MtWoComponentActualVO10">
+        <result column="WORK_ORDER_COMPONENT_ACTUAL_ID" property="workOrderComponentActualId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="TIMESTAMP"/>
+        <result column="ASSEMBLE_QTY" property="assembleQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_ROUTER_TYPE" property="assembleRouterType" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_FIRST_TIME" property="actualFirstTime" jdbcType="TIMESTAMP"/>
+        <result column="ACTUAL_LAST_TIME" property="actualLastTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="woAssembledExcessMaterialQuery" resultMap="BaseResultMapV10">
+        SELECT
+        WORK_ORDER_COMPONENT_ACTUAL_ID,
+        WORK_ORDER_ID,
+        MATERIAL_ID,
+        OPERATION_ID,
+        ASSEMBLE_QTY,
+        SCRAPPED_QTY,
+        BOM_ID,
+        ASSEMBLE_ROUTER_TYPE,
+        ACTUAL_FIRST_TIME,
+        ACTUAL_LAST_TIME
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND WORK_ORDER_ID = #{cvo.workOrderId}
+        AND ASSEMBLE_EXCESS_FLAG = 'Y'
+        <if test="cvo.materialId != null">
+            AND MATERIAL_ID =#{cvo.materialId}
+        </if>
+        <if test="cvo.operationId != null">
+            AND OPERATION_ID =#{cvo.operationId}
+        </if>
+        <if test="cvo.bomId != null">
+            AND BOM_ID =#{cvo.bomId}
+        </if>
+    </select>
+
+
+    <select id="queryWoComponentActual" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND WORK_ORDER_ID = #{cvo.workOrderId}
+        <if test="cvo.bomComponentId != null">
+            AND BOM_COMPONENT_ID =#{cvo.bomComponentId}
+        </if>
+        <if test="cvo.routerStepId != null">
+            AND ROUTER_STEP_ID =#{cvo.routerStepId}
+        </if>
+        <if test="cvo.materialId != null">
+            AND MATERIAL_ID =#{cvo.materialId}
+        </if>
+        <if test="cvo.componentType != null">
+            AND COMPONENT_TYPE =#{cvo.componentType}
+        </if>
+        <if test="cvo.operationId != null">
+            AND OPERATION_ID =#{cvo.operationId}
+        </if>
+        <if test="cvo.bomId != null">
+            AND BOM_ID =#{cvo.bomId}
+        </if>
+    </select>
+
+    <select id="woAssembledSubstituteMaterialQuery" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND WORK_ORDER_ID = #{cvo.workOrderId}
+        AND SUBSTITUTE_FLAG = 'Y'
+        <if test="cvo.bomComponentId != null">
+            AND BOM_COMPONENT_ID=#{cvo.bomComponentId}
+        </if>
+        <if test="cvo.bomComponentId == null">
+            AND BOM_COMPONENT_ID is not null
+            AND BOM_COMPONENT_ID &lt;&gt;''
+        </if>
+        <if test="cvo.routerStepId != null">
+            AND ROUTER_STEP_ID =#{cvo.routerStepId}
+        </if>
+        <if test="cvo.bomId != null">
+            AND BOM_ID =#{cvo.bomId}
+        </if>
+    </select>
+    <select id="componentLimitWoComponentAssembleActualQuery" resultMap="BaseResultMap">
+        SELECT
+        *
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL
+        WHERE
+        TENANT_ID = #{tenantId}
+        AND WORK_ORDER_ID = #{cvo.workOrderId}
+        AND ASSEMBLE_EXCESS_FLAG &lt;&gt; 'Y'
+        <if test="cvo.bomComponentId != null">
+            AND BOM_COMPONENT_ID=#{cvo.bomComponentId}
+        </if>
+        <if test="cvo.bomComponentId == null">
+            AND BOM_COMPONENT_ID is not null
+            AND BOM_COMPONENT_ID &lt;&gt; ''
+        </if>
+        <if test="cvo.routerStepId != null">
+            AND ROUTER_STEP_ID =#{cvo.routerStepId}
+        </if>
+        <if test="cvo.materialId != null">
+            AND MATERIAL_ID =#{cvo.materialId}
+        </if>
+        <if test="cvo.componentType != null">
+            AND COMPONENT_TYPE =#{cvo.componentType}
+        </if>
+        <if test="cvo.operationId != null">
+            AND OPERATION_ID =#{cvo.operationId}
+        </if>
+        <if test="cvo.bomId != null">
+            AND BOM_ID =#{cvo.bomId}
+        </if>
+        <if test='"N"==cvo.substituteIncludedFlag'>
+            AND SUBSTITUTE_FLAG &lt;&gt; 'Y'
+        </if>
+    </select>
+
+    <select id="propertyLimitWoComponentAssembleActualQuery" resultType="java.lang.String">
+        SELECT
+        WORK_ORDER_COMPONENT_ACTUAL_ID
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL
+        WHERE
+        TENANT_ID = #{tenantId}
+        <if test="cvo.workOrderComponentActualId != null">
+            AND WORK_ORDER_COMPONENT_ACTUAL_ID = #{cvo.workOrderComponentActualId}
+        </if>
+        <if test="cvo.workOrderId != null">
+            AND WORK_ORDER_ID = #{cvo.workOrderId}
+        </if>
+        <if test="cvo.materialId != null">
+            AND MATERIAL_ID = #{cvo.materialId}
+        </if>
+        <if test="cvo.operationId != null">
+            AND OPERATION_ID = #{cvo.operationId}
+        </if>
+        <if test="cvo.componentType != null">
+            AND COMPONENT_TYPE = #{cvo.componentType}
+        </if>
+        <if test="cvo.bomComponentId != null">
+            AND BOM_COMPONENT_ID= #{cvo.bomComponentId}
+        </if>
+        <if test="cvo.bomId != null">
+            AND BOM_ID = #{cvo.bomId}
+        </if>
+        <if test="cvo.routerStepId != null">
+            AND ROUTER_STEP_ID = #{cvo.routerStepId}
+        </if>
+        <if test="cvo.assembleExcessFlag!=null">
+            AND ASSEMBLE_EXCESS_FLAG = #{cvo.assembleExcessFlag}
+        </if>
+        <if test="cvo.assembleRouterType!=null">
+            AND ASSEMBLE_ROUTER_TYPE = #{cvo.assembleRouterType}
+        </if>
+        <if test="cvo.substituteFlag!=null">
+            AND SUBSTITUTE_FLAG = #{cvo.substituteFlag}
+        </if>
+        <if test="cvo.actualFirstTimeFrom!=null">
+            AND ACTUAL_FIRST_TIME &gt;= DATE_FORMAT(#{cvo.actualFirstTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="cvo.actualFirstTimeTo!=null">
+            AND ACTUAL_FIRST_TIME &lt;= DATE_FORMAT(#{cvo.actualFirstTimeTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="cvo.actualLastTimeFrom!=null">
+            AND ACTUAL_LAST_TIME &gt;= DATE_FORMAT(#{cvo.actualLastTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="cvo.actualLastTimeTo!=null">
+            AND ACTUAL_LAST_TIME &lt;= DATE_FORMAT(#{cvo.actualLastTimeTo}, '%Y-%m-%d %T')
+        </if>
+    </select>
+
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        select
+        t.*
+        from
+        MT_WORK_ORDER_COMPONENT_ACTUAL t
+        where
+        TENANT_ID = #{tenantId}
+        <if test="dto.workOrderComponentActualId">
+            and t.WORK_ORDER_COMPONENT_ACTUAL_ID=#{dto.workOrderComponentActualId}
+        </if>
+        <if test="dto.workOrderId">
+            and t.WORK_ORDER_ID=#{dto.workOrderId}
+        </if>
+        <if test="dto.materialId">
+            and t.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.operationId">
+            and t.OPERATION_ID=#{dto.operationId}
+        </if>
+        <if test="dto.assembleQty">
+            and t.ASSEMBLE_QTY=#{dto.assembleQty}
+        </if>
+        <if test="dto.scrappedQty">
+            and t.SCRAPPED_QTY=#{dto.scrappedQty}
+        </if>
+        <if test="dto.componentType">
+            and t.COMPONENT_TYPE=#{dto.componentType}
+        </if>
+        <if test="dto.bomComponentId">
+            and t.BOM_COMPONENT_ID=#{dto.bomComponentId}
+        </if>
+        <if test="dto.bomId">
+            and t.BOM_ID=#{dto.bomId}
+        </if>
+        <if test="dto.routerStepId">
+            and t.ROUTER_STEP_ID=#{dto.routerStepId}
+        </if>
+        <if test="dto.assembleExcessFlag">
+            and t.ASSEMBLE_EXCESS_FLAG=#{dto.assembleExcessFlag}
+        </if>
+        <if test="dto.assembleRouterType">
+            and t.ASSEMBLE_ROUTER_TYPE=#{dto.assembleRouterType}
+        </if>
+        <if test="dto.substituteFlag">
+            and t.SUBSTITUTE_FLAG=#{dto.substituteFlag}
+        </if>
+        <if test="dto.actualFirstTime">
+            and t.ACTUAL_FIRST_TIME= DATE_FORMAT(#{dto.actualFirstTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.actualLastTime">
+            and t.ACTUAL_LAST_TIME=DATE_FORMAT(#{dto.actualLastTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+
+    </select>
+
+    <select id="propertyLimitWoComponentActualPropertyQuery" resultMap="BaseResultMap">
+        SELECT
+        T.*
+        FROM
+        MT_WORK_ORDER_COMPONENT_ACTUAL T
+        WHERE
+        TENANT_ID = #{tenantId}
+        <if test="dto.workOrderComponentActualId != null">
+            AND T.WORK_ORDER_COMPONENT_ACTUAL_ID = #{dto.workOrderComponentActualId}
+        </if>
+        <if test="dto.workOrderId != null">
+            AND T.WORK_ORDER_ID = #{dto.workOrderId}
+        </if>
+        <if test="dto.materialId != null">
+            AND T.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.operationId != null">
+            AND T.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.componentType != null">
+            AND T.COMPONENT_TYPE = #{dto.componentType}
+        </if>
+        <if test="dto.bomComponentId != null">
+            AND T.BOM_COMPONENT_ID= #{dto.bomComponentId}
+        </if>
+        <if test="dto.bomId != null">
+            AND T.BOM_ID = #{dto.bomId}
+        </if>
+        <if test="dto.routerStepId != null">
+            AND T.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.assembleExcessFlag!=null">
+            AND T.ASSEMBLE_EXCESS_FLAG = #{dto.assembleExcessFlag}
+        </if>
+        <if test="dto.assembleRouterType!=null">
+            AND T.ASSEMBLE_ROUTER_TYPE = #{dto.assembleRouterType}
+        </if>
+        <if test="dto.substituteFlag!=null">
+            AND T.SUBSTITUTE_FLAG = #{dto.substituteFlag}
+        </if>
+        <if test="dto.actualFirstTimeFrom!=null">
+            AND T.ACTUAL_FIRST_TIME &gt;= DATE_FORMAT(#{dto.actualFirstTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.actualFirstTimeTo!=null">
+            AND T.ACTUAL_FIRST_TIME &lt;= DATE_FORMAT(#{dto.actualFirstTimeTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.actualLastTimeFrom!=null">
+            AND T.ACTUAL_LAST_TIME &gt;= DATE_FORMAT(#{dto.actualLastTimeFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.actualLastTimeTo!=null">
+            AND T.ACTUAL_LAST_TIME &lt;= DATE_FORMAT(#{dto.actualLastTimeTo}, '%Y-%m-%d %T')
+        </if>
+    </select>
+</mapper>

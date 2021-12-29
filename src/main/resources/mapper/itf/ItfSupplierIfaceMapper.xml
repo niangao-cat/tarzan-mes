@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfSupplierIfaceMapper">
+
+    <insert id="batchInsertItemIface" parameterType="com.ruike.itf.domain.entity.ItfSupplierIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="itfSupplierIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.supplierId},
+            #{item.supplierCode},
+            #{item.supplierName},
+            #{item.supplierNameAlt},
+            #{item.supplierDateFrom},
+            #{item.supplierDateTo},
+            #{item.supplierType},
+            #{item.supplierSiteId},
+            #{item.supplierSiteCode},
+            #{item.supplierSiteAddress},
+            #{item.country},
+            #{item.province},
+            #{item.city},
+            #{item.contactPhoneNumber},
+            #{item.contactPerson},
+            #{item.siteDateFrom},
+            #{item.siteDateTo},
+            #{item.erpCreationDate},
+            #{item.erpCreatedBy},
+            #{item.erpLastUpdatedBy},
+            #{item.erpLastUpdateDate},
+            #{item.batchId},
+            #{item.batchDate},
+            #{item.status},
+            #{item.message},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+    <insert id="batchInsertItem" parameterType="com.ruike.itf.domain.entity.ItfMaterialSubstituteRelIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="itfSupplierIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.supplierId},
+            #{item.supplierCode},
+            #{item.supplierName},
+            #{item.supplierNameAlt},
+            #{item.supplierDateFrom},
+            #{item.supplierDateTo},
+            #{item.supplierType},
+            #{item.supplierSiteId},
+            #{item.supplierSiteCode},
+            #{item.supplierSiteAddress},
+            #{item.country},
+            #{item.province},
+            #{item.city},
+            #{item.contactPhoneNumber},
+            #{item.contactPerson},
+            #{item.siteDateFrom},
+            #{item.siteDateTo},
+            #{item.erpCreationDate},
+            #{item.erpCreatedBy},
+            #{item.erpLastUpdatedBy},
+            #{item.erpLastUpdateDate},
+            #{item.batchId},
+            #{item.status},
+            #{item.message},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+</mapper>

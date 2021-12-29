@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.instruction.infra.mapper.MtInstructionDetailMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.instruction.domain.entity.MtInstructionDetail">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="INSTRUCTION_DETAIL_ID" property="instructionDetailId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectCondition" resultType="tarzan.instruction.domain.vo.MtInstructionDetailVO1">
+        SELECT * FROM mt_instruction_detail tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.instructionDetailId != null">
+            AND tb.INSTRUCTION_DETAIL_ID = #{dto.instructionDetailId}
+        </if>
+        <if test="dto.instructionId != null">
+            AND tb.INSTRUCTION_ID = #{dto.instructionId}
+        </if>
+        <if test="dto.materialLotId != null">
+            AND tb.MATERIAL_LOT_ID = #{dto.materialLotId}
+        </if>
+    </select>
+
+    <select id="selectByMaterialLods" resultMap="BaseResultMap">
+        select t.*
+        from mt_instruction_detail t
+        where t.TENANT_ID=${tenantId}
+        and t.INSTRUCTION_ID=#{dto.instructionId}
+        and t.MATERIAL_LOT_ID
+        in
+        <foreach collection="dto.materialLotIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByMyCondition" resultType="tarzan.instruction.domain.vo.MtInstructionDetailVO4">
+        select INSTRUCTION_DETAIL_ID,INSTRUCTION_ID,MATERIAL_LOT_ID
+        from mt_instruction_detail where TENANT_ID=${tenantId}
+        <if test="dto.instructionDetailId != null">
+            AND INSTRUCTION_DETAIL_ID = #{dto.instructionDetailId}
+        </if>
+        <if test="dto.instructionId != null">
+            AND INSTRUCTION_ID = #{dto.instructionId}
+        </if>
+        <if test="dto.materialLotId != null">
+            AND MATERIAL_LOT_ID = #{dto.materialLotId}
+        </if>
+    </select>
+</mapper>

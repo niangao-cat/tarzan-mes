@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEmployeeOutputSummaryMapper">
+	<select id="selectDataOfSignIn" resultType="com.ruike.hme.domain.entity.HmeEmployeeOutputSummary">
+        SELECT
+        hejs.tenant_id,
+        hejs.site_in_date AS job_time,
+        hejs.site_in_by AS user_id,
+        iu.real_name,
+        iu.login_name,
+        mmw.WORKCELL_ID AS process_id,
+        mmw.WORKCELL_CODE AS process_code,
+        mmw.WORKCELL_NAME AS process_name,
+        mm.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        IFNULL( mwo.PRODUCTION_VERSION, '' ) AS production_version
+        FROM
+        hme_eo_job_sn hejs FORCE INDEX ( hme_eo_job_sn_n19 )
+        LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = hejs.work_order_id
+        LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = hejs.workcell_id
+        AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = hejs.sn_material_id,
+        iam_user iu
+        WHERE
+        iu.id = hejs.site_in_by
+        AND hejs.tenant_id = #{tenantId}
+        AND hejs.job_type IN ( 'SINGLE_PROCESS', 'BATCH_PROCESS', 'TIME_PROCESS', 'PREPARE_PROCESS', 'PACKAGE_PROCESS_PDA', 'REPAIR_PROCESS' )
+        AND ( hejs.site_out_date IS NULL OR hejs.site_out_date = '' )
+        AND hejs.site_in_date &gt;= STR_TO_DATE( #{startTime}, '%Y-%m-%d %H:%i:%S' )
+        AND hejs.site_in_date &lt;= STR_TO_DATE( #{endTime}, '%Y-%m-%d %H:%i:%S' )
+        AND mmw.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="selectDataOfSignOut" resultType="com.ruike.hme.domain.entity.HmeEmployeeOutputSummary">
+        SELECT
+        hejs.tenant_id,
+        hejs.site_out_date AS job_time,
+        hejs.site_out_by AS user_id,
+        iu.real_name,
+        iu.login_name,
+        mmw.WORKCELL_ID AS process_id,
+        mmw.WORKCELL_CODE AS process_code,
+        mmw.WORKCELL_NAME AS process_name,
+        mm.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        IFNULL( mwo.PRODUCTION_VERSION, '' ) AS PRODUCTION_VERSION
+        FROM
+        hme_eo_job_sn hejs
+        LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = hejs.work_order_id
+        LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = hejs.workcell_id
+        AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = hejs.sn_material_id,
+        hzero_platform.iam_user iu
+        WHERE
+        iu.id = hejs.site_out_by
+        AND hejs.tenant_id = #{tenantId}
+        AND hejs.job_type IN ( 'SINGLE_PROCESS', 'BATCH_PROCESS', 'TIME_PROCESS', 'PREPARE_PROCESS', 'PACKAGE_PROCESS_PDA', 'REPAIR_PROCESS' )
+        AND hejs.site_out_date &gt;= STR_TO_DATE( #{startTime}, '%Y-%m-%d %H:%i:%S' )
+        AND hejs.site_out_date &lt;= STR_TO_DATE( #{endTime}, '%Y-%m-%d %H:%i:%S' )
+        AND mmw.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="queryOrganizationByProcessIds" resultType="com.ruike.hme.domain.vo.HmeOrganizationVO">
+        SELECT
+        mor1.ORGANIZATION_ID WORKCELL_ID,
+        mor2.ORGANIZATION_ID PROCESS_ID,
+        prc.WORKCELL_NAME PROCESS_NAME,
+        mor3.ORGANIZATION_ID LINE_WORKCELL_ID,
+        lwc.WORKCELL_CODE LINE_WORKCELL_CODE,
+        lwc.WORKCELL_NAME LINE_WORKCELL_NAME,
+        mor3.PARENT_ORGANIZATION_ID PROD_LINE_ID,
+        mpl.PROD_LINE_CODE,
+        mpl.PROD_LINE_NAME PROD_LINE_NAME
+        FROM
+        mt_mod_organization_rel mor1,
+        mt_mod_organization_rel mor2,
+        mt_mod_organization_rel mor3,
+        mt_mod_workcell prc,
+        mt_mod_workcell lwc,
+        mt_mod_production_line mpl
+        WHERE
+        mor1.TOP_SITE_ID = #{siteId}
+        AND mor1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor1.PARENT_ORGANIZATION_ID IN
+        <foreach collection="processIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor1.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor1.TENANT_ID = #{tenantId}
+        AND mor2.TOP_SITE_ID = mor1.TOP_SITE_ID
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.TENANT_ID = mor1.TENANT_ID
+        AND mor3.TOP_SITE_ID = mor2.TOP_SITE_ID
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.TENANT_ID = mor2.TENANT_ID
+        AND prc.WORKCELL_ID = mor2.ORGANIZATION_ID
+        AND prc.WORKCELL_TYPE = 'PROCESS'
+        AND lwc.WORKCELL_ID = mor3.ORGANIZATION_ID
+        AND lwc.WORKCELL_TYPE = 'LINE'
+        AND mpl.PROD_LINE_ID = mor3.PARENT_ORGANIZATION_ID
+    </select>
+
+    <select id="querySummarys" resultType="com.ruike.hme.domain.vo.HmeEmployeeOutputSummaryVO">
+        SELECT
+        me.eo_id,
+        me.QTY qty,
+        hejs.site_in_date,
+        IFNULL(UNIX_TIMESTAMP( hejs.site_out_date ) - UNIX_TIMESTAMP( hejs.site_in_date ), 0 ) total_production_time,
+        hejs.site_out_by AS site_in_by,
+        hejs.sn_material_id,
+        mwo.PRODUCTION_VERSION,
+        mmor.PARENT_ORGANIZATION_ID PROCESS_ID,
+        CASE
+        hejs.rework_flag
+        WHEN 'Y' THEN
+        'Y' ELSE 'N'
+        END rework_flag,
+        hejs.site_out_date AS job_time
+        FROM
+        hme_eo_job_sn hejs
+        LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = hejs.workcell_id
+        AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_eo me ON me.EO_ID = hejs.eo_id
+        LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = hejs.work_order_id
+        WHERE
+        hejs.tenant_id = #{tenantId}
+        AND ( hejs.site_out_by, hejs.sn_material_id, mwo.PRODUCTION_VERSION, mmor.PARENT_ORGANIZATION_ID ) IN
+        <foreach collection="dtoList" item="item" index="index" open="(" close=")" separator=",">
+            (#{item.userId},#{item.materialId},#{item.productionVersion},#{item.processId})
+        </foreach>
+        AND hejs.job_type IN ( 'SINGLE_PROCESS', 'BATCH_PROCESS', 'TIME_PROCESS', 'PREPARE_PROCESS', 'PACKAGE_PROCESS_PDA', 'REPAIR_PROCESS' )
+        AND hejs.site_out_date &gt;= STR_TO_DATE( #{startTime}, '%Y-%m-%d %H:%i:%S' )
+        AND hejs.site_out_date &lt;= STR_TO_DATE( #{endTime}, '%Y-%m-%d %H:%i:%S' )
+    </select>
+
+    <select id="queryNcQtys" resultType="com.ruike.hme.domain.vo.HmeEmployeeOutputSummaryVO">
+        SELECT
+        mmor.PARENT_ORGANIZATION_ID AS PROCESS_ID,
+        mnr.USER_ID AS site_in_by,
+        wo.MATERIAL_ID AS SN_MATERIAL_ID,
+        wo.PRODUCTION_VERSION,
+        mnr.CREATION_DATE AS job_time,
+        IFNULL(attr.attribute6, 'N') REWORK_RECORD_FLAG,
+        eo.EO_ID
+        FROM
+        mt_nc_record mnr
+        LEFT JOIN hme_nc_record_attr attr ON attr.parent_record_id = mnr.NC_RECORD_ID,
+        mt_eo eo,
+        mt_work_order wo,
+        mt_mod_organization_rel mmor
+        WHERE
+        wo.WORK_ORDER_ID = eo.WORK_ORDER_ID
+        AND eo.EO_ID = mnr.EO_ID
+        AND mmor.ORGANIZATION_ID = mnr.ROOT_CAUSE_WORKCELL_ID
+        AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mnr.TENANT_ID = #{tenantId}
+        AND mnr.PARENT_NC_RECORD_ID = ''
+        AND mnr.COMPONENT_MATERIAL_ID = ''
+        AND ( mmor.PARENT_ORGANIZATION_ID, mnr.USER_ID, wo.MATERIAL_ID, wo.PRODUCTION_VERSION ) IN
+        <foreach collection="dtoList" item="item" index="index" open="(" close=")" separator=",">
+            (#{item.processId},#{item.siteInBy},#{item.snMaterialId},#{item.productionVersion})
+        </foreach>
+        AND mnr.CREATION_DATE  &gt;= STR_TO_DATE(#{startTime},'%Y-%m-%d %H:%i:%S')
+        AND mnr.CREATION_DATE  &lt;= STR_TO_DATE(#{endTime},'%Y-%m-%d %H:%i:%S')
+    </select>
+
+    <insert id="batchInsert" parameterType="com.ruike.hme.domain.entity.HmeEmployeeOutputSummary">
+        INSERT INTO hme_employee_output_summary
+        (
+        tenant_id,
+        output_summary_id,
+        job_time,
+        user_id,
+        real_name,
+        login_name,
+        prod_line_id,
+        prod_line_code,
+        prod_line_name,
+        line_id,
+        line_code,
+        line_name,
+        process_id,
+        process_code,
+        process_name,
+        material_id,
+        material_code,
+        material_name,
+        production_version,
+        actual_output_qty,
+        output_qty,
+        nc_qty,
+        rework_qty,
+        total_duration,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.outputSummaryId},
+            #{item.jobTime},
+            #{item.userId},
+            #{item.realName},
+            #{item.loginName},
+            #{item.prodLineId},
+            #{item.prodLineCode},
+            #{item.prodLineName},
+            #{item.lineId},
+            #{item.lineCode},
+            #{item.lineName},
+            #{item.processId},
+            #{item.processCode},
+            #{item.processName},
+            #{item.materialId},
+            #{item.materialCode},
+            #{item.materialName},
+            #{item.productionVersion},
+            #{item.actualOutputQty},
+            #{item.outputQty},
+            #{item.ncQty},
+            #{item.reworkQty},
+            #{item.totalDuration},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectEmployeeOutSummary" resultType="java.lang.String">
+        SELECT
+        heos.output_summary_id
+        FROM
+        hme_employee_output_summary heos
+        WHERE
+        heos.tenant_id = #{tenantId}
+        AND heos.job_time &gt;= STR_TO_DATE( #{startTime}, '%Y-%m-%d %H:%i:%s' )
+        AND heos.job_time &lt;= STR_TO_DATE( #{endTime}, '%Y-%m-%d %H:%i:%s' )
+    </select>
+
+    <delete id="batchDelete">
+        delete from hme_employee_output_summary
+        where
+        output_summary_id in
+        <foreach collection="outSummaryIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+</mapper>

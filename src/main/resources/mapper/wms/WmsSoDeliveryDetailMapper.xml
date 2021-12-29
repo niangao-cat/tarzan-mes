@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsSoDeliveryDetailMapper">
+    <select id="selectListByCondition" resultType="com.ruike.wms.domain.vo.WmsSoDeliveryDetailVO">
+        select ins.instruction_id
+        ,ins.SOURCE_DOC_ID as instruction_doc_id
+        ,mml.material_lot_code
+        ,mml.ENABLE_FLAG
+        ,mmla_st.attr_value material_lot_status
+        ,mml.quality_status
+        ,miad.container_id
+        ,miad.ACTUAL_ID
+        ,miad.ACTUAL_DETAIL_ID
+        ,mc.container_code
+        ,mml.material_id
+        ,mml.MATERIAL_LOT_ID
+        ,mm.material_code
+        ,mm.material_name
+        ,mmla_ver.attr_value material_version
+        ,miad.actual_qty
+        ,miad.uom_id
+        ,uom.uom_code
+        ,mmla_so.attr_value so_num
+        ,mmla_sol.attr_value so_line_num
+        ,mml.lot
+        ,eo.work_order_id
+        ,wo.work_order_num
+        ,mml.locator_id
+        ,loc.locator_code
+        ,wh.locator_id warehouse_id
+        ,wh.locator_code warehouse_code
+        ,miad.last_updated_by
+        ,miad.last_update_date delivery_date
+        ,luu.real_name last_updated_by_name
+        from mt_instruction ins
+        ,mt_instruction_actual mia
+        ,mt_instruction_actual_detail miad
+        left join mt_container mc on mc.CONTAINER_ID = miad.CONTAINER_ID
+        ,mt_material_lot mml
+        left join mt_material_lot_attr mmla_st on mmla_st.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla_st.ATTR_NAME = 'STATUS'
+        left join mt_material_lot_attr mmla_ver on mmla_ver.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla_ver.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr mmla_so ON mml.MATERIAL_LOT_ID = mmla_so.MATERIAL_LOT_ID
+        AND mmla_so.ATTR_NAME = 'SO_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr mmla_sol ON mml.MATERIAL_LOT_ID = mmla_sol.MATERIAL_LOT_ID
+        AND mmla_sol.ATTR_NAME = 'SO_LINE_NUM'
+        left join MT_EO EO ON eo.EO_ID = mml.EO_ID
+        left join mt_work_order wo on wo.WORK_ORDER_ID = eo.WORK_ORDER_ID
+        ,mt_material mm
+        ,mt_uom uom
+        ,mt_mod_locator wh
+        ,mt_mod_locator loc
+        ,iam_user luu
+        where ins.INSTRUCTION_ID = mia.INSTRUCTION_ID
+        and mia.ACTUAL_ID = miad.ACTUAL_ID
+        and miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mml.MATERIAL_ID = mm.MATERIAL_ID
+        and miad.UOM_ID = uom.UOM_ID
+        and mml.LOCATOR_ID = loc.LOCATOR_ID
+        and loc.PARENT_LOCATOR_ID = wh.LOCATOR_ID
+        and luu.id = miad.LAST_UPDATED_BY
+        and ins.SOURCE_DOC_ID = #{dto.instructionDocId}
+        and ins.TENANT_ID = #{tenantId}
+        and ins.INSTRUCTION_ID in
+        <foreach collection="idList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            <bind name="materialLotCodeLike" value="'%'+dto.materialLotCode+'%'"/>
+            and mml.material_lot_code like #{materialLotCodeLike}
+        </if>
+        <if test="dto.materialLotStatus != null and dto.materialLotStatus != ''">
+            and mmla_st.attr_value = #{dto.materialLotStatus}
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            and mml.quality_status = #{dto.qualityStatus}
+        </if>
+        <if test="dto.containerCode != null and dto.containerCode != ''">
+            <bind name="containerCodeLike" value="'%'+dto.containerCode+'%'"/>
+            and mc.container_code like #{containerCodeLike}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            and mm.material_name like #{materialNameLike}
+        </if>
+        <if test="dto.deliveryDateFrom != null">
+            and miad.LAST_UPDATE_DATE &gt;= #{dto.deliveryDateFrom}
+        </if>
+        <if test="dto.deliveryDateTo != null">
+            and miad.LAST_UPDATE_DATE &lt;= #{dto.deliveryDateTo}
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mml.locator_id = #{dto.locatorId}
+        </if>
+    </select>
+
+    <select id="selectPrepareListByLineId" resultType="com.ruike.wms.domain.vo.WmsProductPrepareDetailVO">
+        select mml.material_lot_id
+             , mml.material_lot_code
+             , mmla_st.attr_value  material_lot_status
+             , miad.container_id
+             , mc.container_code
+             , mml.material_id
+             , mm.material_code
+             , mm.material_name
+             , mmla_ver.attr_value material_version
+             , miad.actual_qty
+             , miad.uom_id
+             , uom.uom_code
+             , mml.lot
+             , mml.locator_id
+             , loc.locator_code,
+             attr3.ATTR_VALUE as soNum,
+             attr4.ATTR_VALUE AS soLineNum
+        from mt_instruction ins
+                 left join mt_instruction_attr insa on insa.instruction_id = ins.instruction_id
+            and insa.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+           , mt_instruction_actual mia
+           , mt_instruction_actual_detail miad
+                 left join mt_container mc on mc.CONTAINER_ID = miad.CONTAINER_ID
+           , mt_material_lot mml
+                 left join mt_material_lot_attr mmla_st on mmla_st.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            and mmla_st.ATTR_NAME = 'STATUS'
+                 left join mt_material_lot_attr mmla_ver on mmla_ver.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            and mmla_ver.ATTR_NAME = 'MATERIAL_VERSION'
+           	LEFT JOIN mt_material_lot_attr attr3 ON attr3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND attr3.ATTR_NAME = 'SO_NUM'
+            LEFT JOIN mt_material_lot_attr attr4 ON attr4.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND attr4.ATTR_NAME = 'SO_LINE_NUM'
+            , mt_material mm
+           , mt_uom uom
+           , mt_mod_locator loc
+        where ins.INSTRUCTION_ID = mia.INSTRUCTION_ID
+          and mia.ACTUAL_ID = miad.ACTUAL_ID
+          and miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+          and mml.MATERIAL_ID = mm.MATERIAL_ID
+          and miad.UOM_ID = uom.UOM_ID
+          and mml.LOCATOR_ID = loc.LOCATOR_ID
+          and ins.TENANT_ID = #{tenantId}
+          and ins.INSTRUCTION_ID = #{instructionId}
+    </select>
+
+    <select id="selectListByDocAndBarcode" resultType="com.ruike.wms.domain.vo.WmsInstructionActualDetailVO">
+        select ins.instruction_id
+        ,mia.actual_id
+        ,miad.actual_detail_id
+        ,mia.actual_qty primary_uom_qty
+        ,miad.actual_qty
+        ,miad.material_lot_id
+        from mt_instruction ins
+        ,mt_instruction_actual mia
+        ,mt_instruction_actual_detail miad
+        where ins.instruction_id = mia.instruction_id
+        and mia.actual_id = miad.actual_id
+        and miad.tenant_id = #{tenantId}
+        and ins.source_doc_id = #{instructionDocId}
+        <if test="materialLotIdList.size() == 0 and containerIdList.size() == 0">
+            and 1 = -1
+        </if>
+        <if test="materialLotIdList.size() != 0 and containerIdList.size() == 0">
+            and miad.material_lot_id in
+            <foreach collection="materialLotIdList" item="materialLotId" separator="," open="(" close=")">
+                #{materialLotId}
+            </foreach>
+        </if>
+        <if test="containerIdList.size() != 0 and materialLotIdList.size() == 0">
+            and miad.container_id in
+            <foreach collection="containerIdList" item="containerId" separator="," open="(" close=")">
+                #{containerId}
+            </foreach>
+        </if>
+        <if test="materialLotIdList.size() != 0 and containerIdList.size() != 0">
+            and (miad.material_lot_id in <foreach collection="materialLotIdList" item="materialLotId" separator=","
+                                                  open="(" close=")">
+            #{materialLotId}
+        </foreach> or miad.container_id in <foreach collection="containerIdList" item="containerId" separator=","
+                                                    open="(" close=")">
+            #{containerId}
+        </foreach>)
+        </if>
+    </select>
+
+    <select id="selectExecuteListByDocId" resultType="com.ruike.wms.domain.vo.WmsProdPrepareExecVO">
+        select ins.instruction_id
+             , mia.actual_id
+             , miad.actual_detail_id
+             , miad.material_lot_id
+             , mml.material_lot_code
+             , miad.container_id
+             , mml.top_container_id
+             , mml.locator_id
+             , loc.parent_locator_id                                   warehouse_id
+             , mia.from_locator_id                                     actual_from_locator_id
+             , ifnull(loc_mc.parent_locator_id, loc.parent_locator_id) target_warehouse_id
+             , mc.locator_id                                           container_locator_id
+             , mc_top.locator_id                                       top_container_locator_id
+             , mml.site_id
+             , mml.material_id
+             , mml.lot
+             , uom.uom_code
+             , miad.actual_qty                                         detail_actual_qty
+        from mt_instruction ins
+           , mt_instruction_actual mia
+           , mt_instruction_actual_detail miad
+                 left join mt_container mc on mc.container_id = miad.container_id
+           , mt_material_lot mml
+                 left join mt_material_lot_attr mmla_st on mmla_st.material_lot_id = mml.material_lot_id
+            and mmla_st.attr_name = 'STATUS'
+                 left join mt_container mc_top on mml.top_container_id = mc_top.container_id
+                 left join mt_mod_locator loc_mc on mc_top.locator_id = loc_mc.locator_id
+           , mt_mod_locator loc
+           , mt_uom uom
+        where ins.instruction_id = mia.instruction_id
+          and mia.actual_id = miad.actual_id
+          and miad.material_lot_id = mml.material_lot_id
+          and mml.locator_id = loc.locator_id
+          and mml.primary_uom_id = uom.uom_id
+          and mml.enable_flag = 'Y'
+          and mmla_st.attr_value = 'SCANNED'
+          and miad.tenant_id = #{tenantId}
+          and ins.source_doc_id = #{instructionDocId}
+    </select>
+
+    <select id="batchSelectById" resultType="tarzan.actual.domain.entity.MtInstructionActualDetail">
+        select miad.*
+        from mt_instruction_actual_detail miad
+        where miad.TENANT_ID = #{tenantId}
+          and ${whereInValuesSql}
+    </select>
+</mapper>

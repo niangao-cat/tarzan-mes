@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosCheckBarcodesMapper">
+
+    <select id="selectCheckBarcodes" resultType="com.ruike.hme.domain.vo.HmeCosCheckBarcodesVO">
+            SELECT
+                wo.work_order_num,
+                mmpl.PROD_LINE_CODE,
+                wo.qty,
+                mw.workcell_code,
+                cf.A08 bench,
+                hmll.ATTRIBUTE10 patch,
+                SUBSTRING( mll.material_lot_code FROM 8 FOR 1 ) hotType,
+                hmll.ATTRIBUTE4 barcode,
+                hmll.ATTRIBUTE13 ausn_Ratio,
+                mll.material_lot_code box,
+                CONCAT(
+                hmll.load_row,
+                ',',
+                hmll.load_column
+                ) row_cloumn,
+                hmll.hot_sink_code,
+                mlnr.nc_code,
+                mnc.description,
+                CASE
+                WHEN cs.COS_SCRAP_ID IS NOT NULL THEN
+                '报废' ELSE '合格'
+                END orderType,
+                mla.ATTR_VALUE note,
+                hmll.ATTRIBUTE2 wafer,
+                hmll.ATTRIBUTE1 cosType,
+                hiam.real_name operatorName,
+                DATE_FORMAT( js.creation_date, '%Y-%m-%d' ) creation_date,
+                (
+                SELECT
+                GROUP_CONCAT( DISTINCT he.ASSET_ENCODING ORDER BY he.ASSET_ENCODING SEPARATOR '/' )
+                FROM
+                hme_eo_job_equipment heje,
+                hme_equipment he
+                WHERE
+                heje.equipment_id = he.EQUIPMENT_ID
+                AND heje.job_id = js.job_id
+                ) equipment,
+                mm.material_code,
+                mm.material_name,
+                (
+                SELECT
+                GROUP_CONCAT(
+                DISTINCT lab_code SEPARATOR '/'
+                )
+                FROM
+                  hme_material_lot_lab_code hmllc
+                WHERE
+                  hmllc.load_sequence = hmll.load_sequence
+                ) experiment_code
+            FROM
+                hme_eo_job_sn js,
+                mt_work_order wo
+                LEFT JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_ID = wo.PRODUCTION_LINE_ID,
+                mt_mod_workcell mw,
+                hme_material_lot_load hmll
+                LEFT JOIN hme_cos_scrap cs ON hmll.load_sequence = cs.load_sequence
+                LEFT JOIN hme_cos_function cf ON hmll.load_sequence = cf.load_sequence
+                LEFT JOIN hme_material_lot_nc_load mlnl ON hmll.load_sequence = mlnl.load_sequence
+                LEFT JOIN hme_material_lot_nc_record mlnr ON mlnl.nc_load_id = mlnr.nc_load_id
+                LEFT JOIN mt_nc_code mnc ON mlnr.nc_code = mnc.nc_code,
+                mt_material_lot mll
+                LEFT JOIN mt_material_lot_attr mla ON mll.material_lot_id = mla.material_lot_id
+                AND mla.attr_name = 'REMARK',
+                mt_material mm,
+                hzero_platform.iam_user hiam,
+                hzero_platform.hpfm_lov_value hlv1
+            WHERE
+                js.work_order_id = wo.work_order_id
+                AND js.workcell_id = mw.workcell_id
+                AND js.tenant_id = hmll.tenant_id
+                AND (
+                js.material_lot_id = hmll.material_lot_id
+                OR js.material_lot_id = hmll.source_material_lot_id
+                )
+                AND js.material_lot_id = mll.material_lot_id
+                AND js.sn_material_id = mm.material_id
+                AND js.created_by = hiam.id
+                AND js.job_type = hlv1.`VALUE`
+                AND hlv1.lov_code = 'HME.MJ_JOB_TYPE'
+                and js.tenant_id = #{tenantId}
+                and js.creation_date between #{dto.creationDateFrom} and #{dto.creationDateTo}
+            <if test="dto.workcellId != null and dto.workcellId != ''">
+                AND js.workcell_id = #{dto.workcellId}
+            </if>
+            <if test="dto.workOrderNumList != null and dto.workOrderNumList.size()>0">
+                and wo.WORK_ORDER_NUM in
+                <foreach collection="dto.workOrderNumList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.cosType != null and dto.cosType != ''">
+                AND hmll.ATTRIBUTE1 = #{dto.cosType}
+            </if>
+            <if test="dto.waferList != null and dto.waferList.size()>0">
+                and hmll.ATTRIBUTE2 in
+                <foreach collection="dto.waferList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.operatorId != null and dto.operatorId != ''">
+                AND hiam.id = #{dto.operatorId}
+            </if>
+            <if test="dto.boxList != null and dto.boxList.size()>0">
+                and mll.material_lot_code in
+                <foreach collection="dto.boxList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.hotSinkCode != null and dto.hotSinkCode != ''">
+                and hmll.hot_sink_code LIKE concat('%', concat(#{dto.hotSinkCode}, '%'))
+            </if>
+            <if test="dto.barcodeList != null and dto.barcodeList.size()>0">
+                and hmll.ATTRIBUTE4 in
+                <foreach collection="dto.barcodeList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.benchList != null and dto.benchList.size()>0">
+                and cf.A08 in
+                <foreach collection="dto.benchList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.patchList != null and dto.patchList.size()>0">
+                and hmll.ATTRIBUTE10 in
+                <foreach collection="dto.boxList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.experimentCodeList != null and dto.experimentCodeList.size()>0">
+                and exists (select 1 from
+                    hme_material_lot_lab_code hmllc
+                    WHERE
+                    hmllc.load_sequence = hmll.load_sequence
+                    and hmllc.lab_code in
+                    <foreach collection="dto.experimentCodeList" index="index" item="item" open="(" close=")" separator=",">
+                        #{item}
+                    </foreach>
+                    )
+            </if>
+            <if test="dto.ncCodeId != null and dto.ncCodeId != ''">
+                and mlnr.nc_code_id = #{dto.ncCodeId}
+            </if>
+    </select>
+
+    <select id="selectCheckBarcodes2" resultType="com.ruike.hme.domain.vo.HmeCosCheckBarcodesVO">
+            SELECT
+                wo.work_order_num,
+                wo.qty,
+                mw.workcell_code,
+                cf.A08 bench,
+                hmll.ATTRIBUTE10 patch,
+                SUBSTRING( mll.material_lot_code FROM 8 FOR 1 ) hotType,
+                hmll.ATTRIBUTE4 barcode,
+                mll.material_lot_code box,
+                hmll.hot_sink_code,
+                mlnr.nc_code,
+                mnc.description,
+                CASE
+                WHEN cs.COS_SCRAP_ID IS NOT NULL THEN
+                '报废' ELSE '合格'
+                END orderType,
+                mla.ATTR_VALUE note,
+                hmll.ATTRIBUTE2 wafer,
+                hmll.ATTRIBUTE1 cosType,
+                hiam.real_name operatorName,
+                DATE_FORMAT( js.creation_date, '%Y-%m-%d' ) creation_date,
+                (
+                SELECT
+                GROUP_CONCAT( DISTINCT he.ASSET_ENCODING ORDER BY he.ASSET_ENCODING SEPARATOR '/' )
+                FROM
+                hme_eo_job_equipment heje,
+                hme_equipment he
+                WHERE
+                heje.equipment_id = he.EQUIPMENT_ID
+                AND heje.job_id = js.job_id
+                ) equipment,
+                mm.material_code,
+                mm.material_name
+            FROM
+                hme_eo_job_sn js,
+                mt_work_order wo,
+                mt_mod_workcell mw,
+                hme_material_lot_load hmll
+                LEFT JOIN hme_cos_scrap cs ON hmll.load_sequence = cs.load_sequence
+                LEFT JOIN hme_cos_function cf ON hmll.load_sequence = cf.load_sequence
+                LEFT JOIN hme_material_lot_nc_load mlnl ON hmll.load_sequence = mlnl.load_sequence
+                LEFT JOIN hme_material_lot_nc_record mlnr ON mlnl.nc_load_id = mlnr.nc_load_id
+                LEFT JOIN mt_nc_code mnc ON mlnr.nc_code = mnc.nc_code,
+                mt_material_lot mll
+                LEFT JOIN mt_material_lot_attr mla ON mll.material_lot_id = mla.material_lot_id
+                AND mla.attr_name = 'REMARK',
+                mt_material mm,
+                hzero_platform.iam_user hiam
+            WHERE
+                js.work_order_id = wo.work_order_id
+                AND js.workcell_id = mw.workcell_id
+                AND js.tenant_id = hmll.tenant_id
+                AND js.material_lot_id = hmll.material_lot_id
+                AND js.material_lot_id = mll.material_lot_id
+                AND js.sn_material_id = mm.material_id
+                AND js.created_by = hiam.id
+                and js.tenant_id = #{tenantId}
+                and js.creation_date between #{dto.creationDateFrom} and #{dto.creationDateTo}
+            <if test="dto.workcellId != null and dto.workcellId != ''">
+                AND js.workcell_id = #{dto.workcellId}
+            </if>
+            <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+                and wo.work_order_num LIKE concat('%', concat(#{dto.workOrderNum}, '%'))
+            </if>
+            <if test="dto.cosType != null and dto.cosType != ''">
+                AND hmll.ATTRIBUTE1 = #{dto.cosType}
+            </if>
+            <if test="dto.wafer != null and dto.wafer != ''">
+                and hmll.ATTRIBUTE2 LIKE concat('%', concat(#{dto.wafer}, '%'))
+            </if>
+            <if test="dto.operatorId != null and dto.operatorId != ''">
+                AND hiam.id = #{dto.operatorId}
+            </if>
+            <if test="dto.box != null and dto.box != ''">
+                and mll.material_lot_code LIKE concat('%', concat(#{dto.box}, '%'))
+            </if>
+            <if test="dto.hotSinkCode != null and dto.hotSinkCode != ''">
+                and hmll.hot_sink_code LIKE concat('%', concat(#{dto.hotSinkCode}, '%'))
+            </if>
+            <if test="dto.barcode != null and dto.barcode != ''">
+                and hmll.ATTRIBUTE4 LIKE concat('%', concat(#{dto.barcode}, '%'))
+            </if>
+            <if test="dto.bench != null and dto.bench != ''">
+                and cf.A08 LIKE concat('%', concat(#{dto.bench}, '%'))
+            </if>
+            <if test="dto.patch != null and dto.patch != ''">
+                and hmll.ATTRIBUTE10 LIKE concat('%', concat(#{dto.patch}, '%'))
+            </if>
+    </select>
+</mapper>

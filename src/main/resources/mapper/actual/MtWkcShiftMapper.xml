@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtWkcShiftMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtWkcShift">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WKC_SHIFT_ID" property="wkcShiftId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="DATE"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="SHIFT_START_TIME" property="shiftStartTime" jdbcType="TIMESTAMP"/>
+        <result column="SHIFT_END_TIME" property="shiftEndTime" jdbcType="TIMESTAMP"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="timeLimitShift" resultMap="BaseResultMap">
+        SELECT *
+        FROM mt_wkc_shift ws
+        WHERE ws.TENANT_ID = ${tenantId}
+        <if test="condition.workcellId != null">
+            AND ws.workcell_id = #{condition.workcellId}
+        </if>
+        <if test="condition.shiftStartTimeFrom != null">
+            AND ws.SHIFT_START_TIME &gt;= #{condition.shiftStartTimeFrom}
+        </if>
+        <if test="condition.shiftStartTimeTo != null">
+            AND #{condition.shiftStartTimeTo} &gt;= ws.SHIFT_START_TIME
+        </if>
+        <if test="condition.shiftEndTimeFrom != null">
+            AND (ws.SHIFT_END_TIME &gt;= #{condition.shiftEndTimeFrom} or ws.SHIFT_END_TIME is null)
+        </if>
+        <if test="condition.shiftEndTimeTo != null">
+            AND (#{condition.shiftEndTimeTo} &gt;= ws.SHIFT_END_TIME )
+        </if>
+        <if test="condition.shiftCode!= null">
+            AND ws.SHIFT_CODE = #{condition.shiftCode}
+        </if>
+    </select>
+
+    <select id="gettimes" resultType="Long">
+        select sum(TimeStampDiff(SECOND,wf.SHIFT_START_TIME , wf.SHIFT_END_TIME)*1000) from mt_wkc_shift wf where
+        wf.TENANT_ID = ${tenantId} and wf.WKC_SHIFT_ID in(
+        <foreach collection="ids" item="id" separator=",">
+            #{id}
+        </foreach>
+        )
+        AND wf.SHIFT_START_TIME is not NULL
+        AND wf.SHIFT_END_TIME is not NULL
+    </select>
+
+    <select id="nextShift" resultMap="BaseResultMap">
+        SELECT * FROM mt_wkc_shift ws WHERE ws.TENANT_ID = ${tenantId}
+        <if test="condition.workcellId != null">
+            AND ws.workcell_id = #{condition.workcellId}
+        </if>
+        <if test="condition.shiftEndTime!= null">
+            AND ws.SHIFT_START_TIME &gt;= #{condition.shiftEndTime}
+        </if>
+        AND ws.WKC_SHIFT_ID &lt;&gt; #{condition.wkcShiftId}
+        order by ws.SHIFT_START_TIME asc
+    </select>
+
+    <select id="previousShift" resultMap="BaseResultMap">
+        SELECT * FROM mt_wkc_shift ws WHERE ws.TENANT_ID = ${tenantId}
+        <if test="condition.workcellId != null">
+            AND ws.workcell_id = #{condition.workcellId}
+        </if>
+        <if test="condition.shiftStartTime!= null">
+            AND #{condition.shiftStartTime} &gt;= ws.SHIFT_END_TIME
+        </if>
+        AND ws.WKC_SHIFT_ID &lt;&gt; #{condition.wkcShiftId}
+        ORDER BY ws.SHIFT_END_TIME asc
+    </select>
+
+    <select id="currentShift" resultMap="BaseResultMap">
+        SELECT * FROM mt_wkc_shift ws WHERE ws.TENANT_ID = ${tenantId}
+        <if test="condition.shiftStartTime!= null">
+            AND #{condition.shiftStartTime} &gt;= ws.SHIFT_START_TIME
+        </if>
+        <if test="condition.workcellId != null">
+            AND ws.workcell_id = #{condition.workcellId}
+        </if>
+        AND ws.SHIFT_END_TIME is NULL
+        and ws.SHIFT_START_TIME =
+        (SELECT max( ws2.SHIFT_START_TIME ) FROM mt_wkc_shift ws2 where ws2.TENANT_ID = ${tenantId}
+        <if test="condition.workcellId != null">
+            AND ws2.workcell_id = #{condition.workcellId}
+        </if>
+        )
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.actual.domain.vo.MtWkcShiftVO9">
+        SELECT *
+        FROM mt_wkc_shift ws
+        WHERE ws.TENANT_ID = ${tenantId}
+        <if test="condition.wkcShiftId != null">
+            AND ws.WKC_SHIFT_ID = #{condition.wkcShiftId}
+        </if>
+        <if test="condition.workcellId != null">
+            AND ws.workcell_id = #{condition.workcellId}
+        </if>
+        <if test="condition.shiftDateFrom != null">
+            AND ws.SHIFT_DATE &gt;= #{condition.shiftDateFrom,jdbcType=DATE}
+        </if>
+        <if test="condition.shiftDateTo != null">
+            AND ws.SHIFT_DATE &lt;= #{condition.shiftDateTo,jdbcType=DATE}
+        </if>
+        <if test="condition.shiftCode!= null">
+            AND ws.SHIFT_CODE = #{condition.shiftCode}
+        </if>
+        <if test="condition.shiftStartTimeFrom != null">
+            AND ws.SHIFT_START_TIME &gt;= #{condition.shiftStartTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="condition.shiftStartTimeTo != null">
+            AND ws.SHIFT_START_TIME &lt;= #{condition.shiftStartTimeTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="condition.shiftEndTimeFrom != null">
+            AND ws.SHIFT_END_TIME &gt;= #{condition.shiftEndTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="condition.shiftEndTimeTo != null">
+            AND ws.SHIFT_END_TIME &lt;= #{condition.shiftEndTimeTo,jdbcType=TIMESTAMP}
+        </if>
+    </select>
+</mapper>

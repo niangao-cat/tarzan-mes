@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosTestMonitorLineMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosTestMonitorLine">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cos_monitor_line_id" property="cosMonitorLineId" jdbcType="VARCHAR"/>
+        <result column="cos_monitor_header_id" property="cosMonitorHeaderId" jdbcType="VARCHAR"/>
+        <result column="material_lot_id" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="line_check_status" property="lineCheckStatus" jdbcType="VARCHAR"/>
+        <result column="material_lot_status" property="materialLotStatus" jdbcType="VARCHAR"/>
+        <result column="pass_date" property="passDate" jdbcType="DATE"/>
+        <result column="pass_by" property="passBy" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryCosMonitorLine" resultType="com.ruike.hme.domain.vo.HmeCosTestMonitorLineVO">
+        SELECT
+                hctml.cos_monitor_line_id,
+                mml.MATERIAL_LOT_CODE,
+                hctml.line_check_status,
+                hctml.material_lot_status,
+                hctml.pass_date,
+                hctml.pass_by
+        FROM
+                hme_cos_test_monitor_line hctml
+        LEFT JOIN mt_material_lot mml ON hctml.material_lot_id = mml.MATERIAL_LOT_ID
+        WHERE
+                hctml.tenant_id =#{tenantId}
+                AND hctml.cos_monitor_header_id =#{cosMonitorHeaderId}
+    </select>
+
+    <select id="queryCosTypeAndWafer" resultType="com.ruike.hme.domain.vo.HmeCosTestMonitorLineVO">
+        SELECT
+        mml.MATERIAL_LOT_ID as materialLotId,
+        mmla.ATTR_VALUE AS cosTypeValue,
+        mml.MATERIAL_LOT_CODE as materialLotCode,
+        mmls.ATTR_VALUE AS waferNumValue
+        FROM
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr mmla ON mml.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID AND mmla.ATTR_NAME = 'COS_TYPE'
+        LEFT JOIN mt_material_lot_attr mmls ON mml.MATERIAL_LOT_ID = mmls.MATERIAL_LOT_ID AND mmls.ATTR_NAME = 'WAFER_NUM'
+        WHERE
+        mml.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryLoginName" resultType="java.lang.String">
+        SELECT
+                iu.login_name
+        FROM
+                iam_user iu
+        WHERE
+                iu.id =#{userId}
+    </select>
+</mapper>

@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtEoStepActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtEoStepActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ROUTER_ACTUAL_ID" property="eoRouterActualId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="QUEUE_QTY" property="queueQty" jdbcType="DECIMAL"/>
+        <result column="WORKING_QTY" property="workingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_PENDING_QTY" property="completePendingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QTY" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="BYPASSED_FLAG" property="bypassedFlag" jdbcType="VARCHAR"/>
+        <result column="REWORK_STEP_FLAG" property="reworkStepFlag" jdbcType="VARCHAR"/>
+        <result column="LOCAL_REWORK_FLAG" property="localReworkFlag" jdbcType="VARCHAR"/>
+        <result column="MAX_PROCESS_TIMES" property="maxProcessTimes" jdbcType="DECIMAL"/>
+        <result column="TIMES_PROCESSED" property="timesProcessed" jdbcType="DECIMAL"/>
+        <result column="PREVIOUS_STEP_ID" property="previousStepId" jdbcType="VARCHAR"/>
+        <result column="QUEUE_DATE" property="queueDate" jdbcType="TIMESTAMP"/>
+        <result column="WORKING_DATE" property="workingDate" jdbcType="TIMESTAMP"/>
+        <result column="COMPLETED_DATE" property="completedDate" jdbcType="TIMESTAMP"/>
+        <result column="COMPLETE_PENDING_DATE" property="completePendingDate" jdbcType="TIMESTAMP"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="SPECIAL_INSTRUCTION" property="specialInstruction" jdbcType="VARCHAR"/>
+        <result column="HOLD_COUNT" property="holdCount" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="EoRouterMap" type="tarzan.actual.domain.vo.MtEoStepActualVO13">
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="EO_ROUTER_ACTUAL_ID" property="eoRouterActualId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_EO_STEP_ACTUAL_ID" property="sourceEoStepActualId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="stepCompletedQty" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <resultMap id="ResultMapView1" type="tarzan.actual.domain.entity.MtEoRouterActual">
+        <result column="EO_ROUTER_ACTUAL_ID" property="eoRouterActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="SUB_ROUTER_FLAG" property="subRouterFlag" jdbcType="VARCHAR"/>
+        <result column="SOURCE_EO_STEP_ACTUAL_ID" property="sourceEoStepActualId" jdbcType="VARCHAR"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="getRouterId" resultType="String">
+        SELECT t.ROUTER_ID
+          FROM mt_eo_router_actual t,
+               mt_eo_step_actual s
+         WHERE t.TENANT_ID = ${tenantId}
+           AND s.TENANT_ID = ${tenantId}
+           AND s.EO_ROUTER_ACTUAL_ID = t.EO_ROUTER_ACTUAL_ID
+           AND s.EO_STEP_ACTUAL_ID = #{eoStepActualId}
+    </select>
+
+    <select id="routerRelaxedFlowBatchQuery" resultType="tarzan.actual.domain.vo.MtEoStepActualVO41">
+        SELECT s.EO_STEP_ACTUAL_ID,
+               r.RELAXED_FLOW_FLAG
+        FROM mt_router r,
+             mt_eo_router_actual t,
+             mt_eo_step_actual s
+        WHERE r.TENANT_ID = t.TENANT_ID
+          and t.TENANT_ID = s.TENANT_ID
+          AND s.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+          and r.ROUTER_ID = t.ROUTER_ID
+          AND t.EO_ROUTER_ACTUAL_ID = s.EO_ROUTER_ACTUAL_ID
+          AND ${eoStepActualIdInSql}
+    </select>
+
+    <select id="getMaxSequence" resultType="Long">
+        SELECT max(s.SEQUENCE)
+          FROM mt_eo_step_actual s,
+               mt_eo_router_actual t
+         WHERE s.TENANT_ID = ${tenantId}
+           AND t.TENANT_ID = ${tenantId}
+           AND s.EO_ROUTER_ACTUAL_ID = t.EO_ROUTER_ACTUAL_ID
+           AND t.EO_ID = (SELECT t2.eo_id FROM mt_eo_router_actual t2 WHERE t2.TENANT_ID = ${tenantId} AND t2.EO_ROUTER_ACTUAL_ID = #{eoRouterActualId})
+    </select>
+
+    <select id="selectByEoRouterActual" resultMap="EoRouterMap">
+        SELECT esa.EO_STEP_ACTUAL_ID,
+        esa.ROUTER_STEP_ID,
+        esa.OPERATION_ID,
+        esa.STEP_NAME,
+        esa.SEQUENCE,
+        esa.COMPLETED_QTY,
+        era.EO_ID,
+        era.ROUTER_ID,
+        era.SOURCE_EO_STEP_ACTUAL_ID,
+        era.EO_ROUTER_ACTUAL_ID,
+        era.QTY
+        FROM mt_eo_step_actual esa,
+        mt_eo_router_actual era
+        WHERE esa.TENANT_ID = ${tenantId}
+        AND era.TENANT_ID = ${tenantId}
+        AND era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        <if test="dto.routerStepId != null">
+            AND esa.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.operationId != null">
+            AND esa.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.stepName != null">
+            AND esa.STEP_NAME = #{dto.stepName}
+        </if>
+        <if test="dto.status != null">
+            AND esa.STATUS IN
+            <foreach collection="dto.status" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.eoId != null">
+            AND era.EO_ID = #{dto.eoId}
+        </if>
+        <if test="dto.routerId != null">
+            AND era.ROUTER_ID = #{dto.routerId}
+        </if>
+        <if test="dto.eoRouterActualId != null">
+            AND era.EO_ROUTER_ACTUAL_ID = #{dto.eoRouterActualId}
+        </if>
+        <if test="dto.eoStepActualId != null">
+            AND esa.EO_STEP_ACTUAL_ID = #{dto.eoStepActualId}
+        </if>
+    </select>
+
+    <select id="selectEoStepActualIdByEoIds" resultType="java.lang.String">
+        SELECT esa.EO_STEP_ACTUAL_ID
+        FROM mt_eo_step_actual esa,
+        mt_eo_router_actual era
+        WHERE esa.TENANT_ID = ${tenantId}
+        AND era.TENANT_ID = ${tenantId}
+        AND era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        <if test="eoIds != null">
+            AND era.EO_ID IN
+            <foreach collection="eoIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="eoAllStepActualIsBypassed" resultType="int">
+        SELECT count(1) 
+          FROM mt_eo_step_actual s, 
+               mt_eo_router_actual t
+         where s.TENANT_ID = ${tenantId}
+           and t.TENANT_ID = ${tenantId}
+           and s.EO_ROUTER_ACTUAL_ID = t.EO_ROUTER_ACTUAL_ID
+           and s.BYPASSED_FLAG = 'Y' 
+           and s.STATUS not in('SCRAPPED','COMPLETED')
+           and t.EO_ID = #{eoId}
+    </select>
+
+    <select id="selectSourcePre" resultMap="BaseResultMap">
+        SELECT t2.*
+          FROM mt_eo_step_actual t1,
+               mt_eo_step_actual t2
+         WHERE t1.TENANT_ID = ${tenantId}
+           AND t2.TENANT_ID = ${tenantId}
+           AND t2.EO_STEP_ACTUAL_ID = t1.PREVIOUS_STEP_ID
+           AND t1.EO_STEP_ACTUAL_ID = #{eoStepActualId}
+    </select>
+
+    <select id="selectAnyPre" resultMap="BaseResultMap">
+        SELECT t2.*
+          FROM mt_eo_step_actual t1,
+               mt_eo_step_actual t2
+         WHERE t1.TENANT_ID = ${tenantId}
+           AND t2.TENANT_ID = ${tenantId}
+           AND t2.EO_ROUTER_ACTUAL_ID = t1.EO_ROUTER_ACTUAL_ID
+           AND t2.SEQUENCE &lt; t1.SEQUENCE
+           AND t1.EO_STEP_ACTUAL_ID = #{eoStepActualId}
+    </select>
+
+    <select id="selectUnCompletedByEoId" resultMap="BaseResultMap">
+        SELECT esa.*
+          FROM mt_eo_step_actual esa,
+               mt_eo_router_actual era 
+         WHERE esa.TENANT_ID = ${tenantId}
+           AND era.TENANT_ID = ${tenantId}
+           AND era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+           AND era.EO_ID = #{eoId}
+           AND esa.STATUS NOT IN ('COMPLETED','SCRAPPED')
+    </select>
+
+    <select id="selectByRouterStepIds" resultMap="BaseResultMap">
+        SELECT t.*
+        FROM mt_eo_step_actual t
+        WHERE t.TENANT_ID = ${tenantId}
+        AND t.EO_ROUTER_ACTUAL_ID = #{eoRouterActualId}
+        AND t.STATUS IN
+        <foreach collection="status" item="item" open="(" separator="," close=")" index="index">
+            #{item}
+        </foreach>
+        AND t.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" item="item" open="(" separator="," close=")" index="index">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByRouterStepIdAndEoRouterActualId" resultMap="BaseResultMap">
+        SELECT sa.EO_STEP_ACTUAL_ID
+        FROM mt_eo_step_workcell_actual swa,
+        mt_eo_step_actual sa
+        where swa.TENANT_ID = ${tenantId}
+        and sa.TENANT_ID = ${tenantId}
+        and swa.EO_STEP_ACTUAL_ID = sa.EO_STEP_ACTUAL_ID
+        <if test="dto.routerStepId!=null">
+            and sa.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.eoRouterActualId!=null">
+            and sa.EO_ROUTER_ACTUAL_ID = #{dto.eoRouterActualId}
+        </if>
+    </select>
+
+    <select id="selectByOperationId" resultMap="ResultMapView1">
+        SELECT ra.EO_ID
+        FROM mt_eo_step_actual sa,
+        mt_eo_router_actual ra
+        WHERE sa.TENANT_ID = ${tenantId}
+        AND ra.TENANT_ID = ${tenantId}
+        AND ra.EO_ROUTER_ACTUAL_ID = sa.EO_ROUTER_ACTUAL_ID
+        AND NOT EXISTS (SELECT swa.EO_STEP_ACTUAL_ID FROM MT_EO_STEP_WORKCELL_ACTUAL swa WHERE swa.TENANT_ID =
+        ${tenantId} AND swa.EO_STEP_ACTUAL_ID = sa.EO_STEP_ACTUAL_ID )
+        <if test="dto.operationId!=null">
+            and sa.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.stepName!=null">
+            and sa.STEP_NAME = #{dto.stepName}
+        </if>
+    </select>
+
+    <select id="selectPrevious" resultMap="BaseResultMap">
+        SELECT t1.EO_STEP_ACTUAL_ID,
+               t2.*
+          FROM mt_eo_step_actual t1,
+               mt_eo_step_actual t2
+         WHERE t1.TENANT_ID = ${tenantId}
+           AND t2.TENANT_ID = ${tenantId}
+           AND t2.EO_STEP_ACTUAL_ID = t1.PREVIOUS_STEP_ID
+           AND t1.EO_STEP_ACTUAL_ID = #{eoStepActualId}
+    </select>
+
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select *
+        from mt_eo_step_actual
+        where TENANT_ID = ${tenantId}
+        AND EO_STEP_ACTUAL_ID IN
+        <foreach collection="eoStepActualIds" item="item" open="(" separator="," close=")" index="index">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="propertyLimitEoStepActualPropertyQuery" resultMap="BaseResultMap">
+        select
+        t.*
+        from mt_eo_step_actual t
+        where t.TENANT_ID=#{tenantId}
+        <if test="vo.eoStepActualId != null">
+            and t.EO_STEP_ACTUAL_ID=#{vo.eoStepActualId}
+        </if>
+        <if test="vo.eoRouterActualId != null">
+            and t.EO_ROUTER_ACTUAL_ID=#{vo.eoRouterActualId}
+        </if>
+        <if test="vo.routerStepId != null">
+            and t.ROUTER_STEP_ID=#{vo.routerStepId}
+        </if>
+        <if test="vo.operationId != null">
+            and t.OPERATION_ID=#{vo.operationId}
+        </if>
+        <if test="vo.stepName != null">
+            and t.STEP_NAME=#{vo.stepName}
+        </if>
+        <if test="vo.bypassedFlag != null">
+            and t.BYPASSED_FLAG=#{vo.bypassedFlag}
+        </if>
+        <if test="vo.reworkStepFlag != null">
+            and t.REWORK_STEP_FLAG=#{vo.reworkStepFlag}
+        </if>
+        <if test="vo.localReworkFlag != null">
+            and t.LOCAL_REWORK_FLAG=#{vo.localReworkFlag}
+        </if>
+        <if test="vo.previousStepId != null">
+            and t.PREVIOUS_STEP_ID=#{vo.previousStepId}
+        </if>
+        <if test="vo.queueDateFrom != null">
+            and t.QUEUE_DATE &gt;=DATE_FORMAT(#{vo.queueDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.queueDateTo != null">
+            and t.QUEUE_DATE &lt;=DATE_FORMAT(#{vo.queueDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.workingDateFrom != null">
+            and t.WORKING_DATE &gt;=DATE_FORMAT(#{vo.workingDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.workingDateTo != null">
+            and t.WORKING_DATE &lt;=DATE_FORMAT(#{vo.workingDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.completedDateFrom != null">
+            and t.COMPLETED_DATE &gt;=DATE_FORMAT(#{vo.completedDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.completedDateTo != null">
+            and t.COMPLETED_DATE &lt;=DATE_FORMAT(#{vo.completedDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.completePendingDateFrom != null">
+            and t.COMPLETE_PENDING_DATE &gt;=DATE_FORMAT(#{vo.completePendingDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.completePendingDateTo != null">
+            and t.COMPLETE_PENDING_DATE &lt;=DATE_FORMAT(#{vo.completePendingDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.specialInstruction != null">
+            and t.SPECIAL_INSTRUCTION=#{vo.specialInstruction}
+        </if>
+    </select>
+
+    <select id="selectByStepActualIdList" resultMap="BaseResultMap">
+        select
+        t.*
+        from mt_eo_step_actual t
+        where t.TENANT_ID=#{tenantId}
+        <if test="sourceEoStepActualIdList != null and sourceEoStepActualIdList.size()>0">
+            and t.EO_STEP_ACTUAL_ID in
+            <foreach collection="sourceEoStepActualIdList" open="(" close=")" item="data" index="index" separator=",">
+                #{data}
+            </foreach>
+        </if>
+
+    </select>
+    <select id="eoLimitStepActualBatchQuery" resultType="tarzan.actual.domain.vo.MtEoStepActualVO4">
+        select
+        r.EO_ID,
+        t.EO_STEP_ACTUAL_ID
+        from mt_eo_step_actual t
+        join mt_eo_router_actual r on r.EO_ROUTER_ACTUAL_ID=t.EO_ROUTER_ACTUAL_ID
+        where t.TENANT_ID=${tenantId}
+        and r.TENANT_ID=${tenantId}
+        <if test="eoIdList != null and eoIdList.size()>0">
+            and r.EO_ID in
+            <foreach collection="eoIdList" open="(" close=")" item="data" index="index" separator=",">
+                #{data}
+            </foreach>
+        </if>
+    </select>
+    <select id="eoStepActualProcessedBatchGet" resultType="tarzan.actual.domain.vo.MtEoStepActualVO35">
+        select
+        t.EO_STEP_ACTUAL_ID,
+        t.QUEUE_QTY,
+        t.WORKING_QTY,
+        t.COMPLETED_QTY,
+        t.SCRAPPED_QTY,
+        t.COMPLETE_PENDING_QTY,
+        t.STATUS,
+        t.ROUTER_STEP_ID,
+        t.EO_ROUTER_ACTUAL_ID,
+        t.STEP_NAME
+        from mt_eo_step_actual t
+        where t.TENANT_ID=${tenantId}
+        <if test="eoStepActualIdList != null and eoStepActualIdList.size()>0">
+            and t.EO_STEP_ACTUAL_ID in
+            <foreach collection="eoStepActualIdList" open="(" close=")" item="data" index="index" separator=",">
+                #{data}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="eoAndStepLimitStepActualBatchQuery" resultType="tarzan.actual.domain.vo.MtEoStepActualVO36">
+        SELECT
+        r.EO_ID,
+        t.EO_STEP_ACTUAL_ID,
+        t.ROUTER_STEP_ID
+        FROM
+        mt_eo_step_actual t
+        JOIN mt_eo_router_actual r ON r.EO_ROUTER_ACTUAL_ID = t.EO_ROUTER_ACTUAL_ID
+        WHERE
+        t.TENANT_ID = ${tenantId}
+        AND r.TENANT_ID = ${tenantId}
+        <if test="eoMessageList != null and eoMessageList.size() > 0">
+            <foreach collection="eoMessageList" open="AND (" close=")" separator="OR" item="item">
+                (r.EO_ID = #{item.eoId} AND t.ROUTER_STEP_ID = #{item.routerStepId})
+            </foreach>
+        </if>
+    </select>
+    <select id="eoStepActualListForUi" resultMap="BaseResultMap">
+        select
+        t.*
+        from mt_eo_step_actual t
+        inner join mt_eo_router_actual t1 on t.EO_ROUTER_ACTUAL_ID=t1.EO_ROUTER_ACTUAL_ID
+        where t.TENANT_ID=#{tenantId}
+        and t1.TENANT_ID=#{tenantId}
+        and t1.EO_ID=#{dto.eoId}
+        <if test="dto.stepName != null">
+            and t.STEP_NAME like concat('%', #{dto.stepName},'%'}
+        </if>
+        Order by t.SEQUENCE ${dto.sortDirection}
+    </select>
+
+    <select id="selectByOperationCustom" resultType="tarzan.actual.domain.vo.MtProcessWorkingVO2">
+        SELECT
+        era.EO_ID eoId,
+        era.ROUTER_ID routerId,
+        esa.EO_STEP_ACTUAL_ID eoStepActualId,
+        esa.ROUTER_STEP_ID routerStepId
+        FROM
+        mt_eo_step_actual esa
+        JOIN mt_eo_step_wip esw ON esw.EO_STEP_ACTUAL_ID = esa.EO_STEP_ACTUAL_ID
+        JOIN mt_eo_router_actual era ON era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        JOIN mt_eo eo ON eo.EO_ID = era.EO_ID
+        WHERE
+        esa.TENANT_ID = ${tenantId}
+        AND esw.TENANT_ID = ${tenantId}
+        AND era.TENANT_ID = ${tenantId}
+        AND eo.TENANT_ID = ${tenantId}
+        AND esa.OPERATION_ID = #{dto.operationId}
+        <if test='dto.stepName !=null and dto.stepName !=""'>
+            AND esa.STEP_NAME = #{dto.stepName}
+        </if>
+        AND esw.QUEUE_QTY &gt; 0
+        AND esw.WORKCELL_ID = ''
+        AND eo.PRODUCTION_LINE_ID = #{dto.productionLineId}
+        ORDER BY esa.CREATION_DATE ASC
+
+    </select>
+
+    <resultMap id="ResultMapView2" type="tarzan.actual.domain.vo.MtEoStepActualVO38">
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <collection property="eoStepActualId" ofType="String"
+                    column="{eoRouterActualId=EO_ROUTER_ACTUAL_ID,tenantId=TENANT_ID}" select="selectEoStepActualIdByEoAndRouter">
+        </collection>
+    </resultMap>
+
+    <select id="selectByEoAndRouter" resultMap="ResultMapView2">
+        SELECT
+        	era.EO_ID,
+        	era.ROUTER_ID,
+			era.EO_ROUTER_ACTUAL_ID,
+			era.TENANT_ID
+		FROM
+			mt_eo_router_actual era
+		WHERE
+			era.TENANT_ID = ${tenantId}
+			AND era.EO_ID = #{eoRouter.eoId}
+        	AND era.ROUTER_ID = #{eoRouter.routerId}
+    </select>
+
+    <select id="selectEoStepActualIdByEoAndRouter" resultType="String">
+        SELECT
+        	esa.EO_STEP_ACTUAL_ID
+		FROM
+			mt_eo_step_actual esa
+		WHERE
+			esa.TENANT_ID = ${tenantId}
+			AND esa.EO_ROUTER_ACTUAL_ID = #{eoRouterActualId}
+    </select>
+
+    <select id="getMaxSequenceBatch" resultType="tarzan.actual.domain.vo.MtEoStepActualVO43">
+        SELECT t.EO_ID, max(s.SEQUENCE) MAX_SEQUENCE
+        FROM mt_eo_step_actual s,
+             mt_eo_router_actual t
+        WHERE s.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+          AND t.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+          AND s.EO_ROUTER_ACTUAL_ID = t.EO_ROUTER_ACTUAL_ID
+          AND ${eoIdInSql}
+        GROUP BY t.EO_ID
+    </select>
+
+</mapper>

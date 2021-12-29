@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsDistributionRevokeMapper">
+
+     <!--查询单据的产线-->
+    <select id="prodLineQuery" resultType="com.ruike.wms.api.dto.WmsDistributionRevokeReturnDTO3">
+        SELECT
+            mmpl.PROD_LINE_ID,
+            mmpl.PROD_LINE_CODE,
+            mmpl.PROD_LINE_NAME
+        FROM
+            mt_instruction_doc_attr mida,
+            mt_mod_production_line mmpl
+        WHERE
+            mida.ATTR_NAME = 'PROD_LINE_CODE'
+        AND mida.ATTR_VALUE = mmpl.PROD_LINE_CODE
+        AND mida.INSTRUCTION_DOC_ID =#{instructionDocId}
+    </select>
+
+    <!--查询工段-->
+    <select id="WorkcellQuery" resultType="com.ruike.wms.api.dto.WmsDistributionRevokeReturnDTO3">
+        SELECT
+            mmw.WORKCELL_ID,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME
+        FROM
+            mt_instruction_doc_attr mida,
+            mt_mod_workcell mmw
+        WHERE
+            mida.ATTR_NAME = 'WORKCELL'
+        AND mida.ATTR_VALUE = mmw.WORKCELL_CODE
+        AND mida.INSTRUCTION_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="qtyquery" resultType="java.lang.String">
+        SELECT
+            sum(mml.PRIMARY_UOM_QTY)
+        FROM
+            mt_material_lot_attr mmla,
+            mt_material_lot mml
+        WHERE
+            mmla.ATTR_NAME = 'STATUS'
+        AND mmla.ATTR_VALUE = 'PREPARED'
+        AND mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIds" index="i" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="instructionIdQuery" resultType="java.lang.String">
+        SELECT
+            mi.INSTRUCTION_ID
+        FROM
+            mt_instruction mi,
+            mt_instruction_actual mia,
+            mt_instruction_actual_detail miad
+        WHERE
+            mi.SOURCE_DOC_ID =#{instructionDocId}
+        AND mi.INSTRUCTION_id = mia.INSTRUCTION_ID
+        AND mia.ACTUAL_ID = miad.ACTUAL_ID
+        AND miad.MATERIAL_LOT_ID =#{materialLotId}
+    </select>
+
+
+</mapper>

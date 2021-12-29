@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtNumrangeHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtNumrangeHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NUMRANGE_HIS_ID" property="numrangeHisId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_ID" property="numrangeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_GROUP" property="numrangeGroup" jdbcType="VARCHAR"/>
+        <result column="NUM_DESCRIPTION" property="numDescription" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX1" property="inputBox1" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX2" property="inputBox2" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX3" property="inputBox3" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX4" property="inputBox4" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX5" property="inputBox5" jdbcType="VARCHAR"/>
+        <result column="NUM_EXAMPLE" property="numExample" jdbcType="VARCHAR"/>
+        <result column="OUTSIDE_NUM_FLAG" property="outsideNumFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VoMap" type="io.tarzan.common.domain.vo.MtNumrangeHisVO" extends="BaseResultMap">
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL" />
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="OBJECT_CODE" property="objectCode" jdbcType="VARCHAR"/>
+        <result column="OBJECT_NAME" property="objectName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="numrangeHisQueryForUi" resultMap="VoMap">
+        SELECT
+        t.*,
+        e.EVENT_BY,
+        e.EVENT_TIME,
+        o.OBJECT_CODE,
+        o.OBJECT_NAME
+        FROM
+        mt_numrange_his t,
+        mt_event e,
+        mt_numrange_object o
+        WHERE
+        t.event_id = e.event_id
+        AND o.object_id = t.object_id
+        AND t.object_id = #{dto.objectId}
+        AND t.tenant_id = e.tenant_id
+        AND t.tenant_id = #{tenantId}
+        AND t.NUMRANGE_GROUP = #{dto.numrangeGroup}
+        <if test="dto.endTime!=null and dto.endTime!=''">
+            AND e.EVENT_TIME  &lt;=DATE_FORMAT(#{dto.endTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.startTime!=null and dto.startTime!=''">
+            AND DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')  &lt;= e.EVENT_TIME
+        </if>
+        ORDER BY t.CREATION_DATE DESC
+    </select>
+</mapper>

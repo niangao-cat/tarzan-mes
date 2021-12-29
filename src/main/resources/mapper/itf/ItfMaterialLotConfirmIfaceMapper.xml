@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfMaterialLotConfirmIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfMaterialLotConfirmIface">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="iface_id" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="site_code" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="material_lot_code" property="materialLotCode" jdbcType="VARCHAR"/>
+        <result column="material_code" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="material_version" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="uom_code" property="uomCode" jdbcType="VARCHAR"/>
+        <result column="warehouse_code" property="warehouseCode" jdbcType="VARCHAR"/>
+        <result column="locator_code" property="locatorCode" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="quality_status" property="qualityStatus" jdbcType="VARCHAR"/>
+        <result column="qty" property="qty" jdbcType="DECIMAL"/>
+        <result column="so_num" property="soNum" jdbcType="VARCHAR"/>
+        <result column="so_line_num" property="soLineNum" jdbcType="VARCHAR"/>
+        <result column="lot_code" property="lotCode" jdbcType="VARCHAR"/>
+        <result column="production_date" property="productionDate" jdbcType="VARCHAR"/>
+        <result column="container_code" property="containerCode" jdbcType="VARCHAR"/>
+        <result column="batch_id" property="batchId" jdbcType="DECIMAL"/>
+        <result column="process_date" property="processDate" jdbcType="DATE"/>
+        <result column="process_status" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="process_message" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="materialLotBatchQuery" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE
+        from mt_material_lot mml
+        where mml.MATERIAL_LOT_CODE in
+        <foreach collection="materialLotCodeList" item="item" open="(" close=")" separator="," index="index">
+            #{item}
+        </foreach>
+        and mml.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="containerBatchQuery" resultType="tarzan.inventory.domain.entity.MtContainer">
+        select mc.CONTAINER_ID, mc.CONTAINER_CODE
+        from mt_container mc
+        where mc.CONTAINER_CODE in
+        <foreach collection="containerCodeList" item="item" open="(" close=")" separator="," index="index">
+            #{item}
+        </foreach>
+        and mc.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="materialLotConfirmIfaceQuery" resultType="com.ruike.itf.domain.entity.ItfMaterialLotConfirmIface">
+        SELECT mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mml.SITE_ID, mms.SITE_CODE,
+               mml.MATERIAL_ID, mm.MATERIAL_CODE, mml.PRIMARY_UOM_ID, mu.UOM_CODE,
+               mml.LOCATOR_ID, locator.LOCATOR_CODE, locator.PARENT_LOCATOR_ID as warehouse_id,
+               warehouse.LOCATOR_CODE as warehouse_code, mml.ENABLE_FLAG, mml.QUALITY_STATUS,
+               mml.PRIMARY_UOM_QTY as qty, mml.LOT as lot_code, mml.TOP_CONTAINER_ID, mc.CONTAINER_CODE,
+               attr.ATTR_VALUE as status, attr2.ATTR_VALUE as so_num, attr3.ATTR_VALUE as SO_LINE_NUM,
+               attr4.ATTR_VALUE as PRODUCTION_DATE, attr5.ATTR_VALUE as MATERIAL_VERSION
+        from mt_material_lot mml
+         left join mt_mod_locator locator on locator.LOCATOR_ID = mml.LOCATOR_ID
+         left join mt_mod_locator warehouse on warehouse.LOCATOR_ID = locator.PARENT_LOCATOR_ID
+         left join mt_container mc on mc.CONTAINER_ID = mml.TOP_CONTAINER_ID
+         left join mt_material_lot_attr attr on attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+         and attr.ATTR_NAME = 'STATUS' and attr.TENANT_ID = mml.TENANT_ID
+         left join mt_material_lot_attr attr2 on attr2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+         and attr2.ATTR_NAME = 'SO_NUM' and attr2.TENANT_ID = mml.TENANT_ID
+         left join mt_material_lot_attr attr3 on attr3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+         and attr3.ATTR_NAME = 'SO_LINE_NUM' and attr3.TENANT_ID = mml.TENANT_ID
+         left join mt_material_lot_attr attr4 on attr4.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+         and attr4.ATTR_NAME = 'PRODUCT_DATE' and attr4.TENANT_ID = mml.TENANT_ID
+         left join mt_material_lot_attr attr5 on attr5.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+         and attr5.ATTR_NAME = 'MATERIAL_VERSION' and attr5.TENANT_ID = mml.TENANT_ID,
+         mt_mod_site mms,
+         mt_material mm,
+         mt_uom mu
+        where mml.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIdList" item="item" open="(" close=")" separator="," index="index">
+            #{item}
+        </foreach>
+        and mms.SITE_ID = mml.SITE_ID
+        and mm.MATERIAL_ID = mml.MATERIAL_ID
+        and mu.UOM_ID = mml.PRIMARY_UOM_ID
+    </select>
+
+    <select id="ifaceSendDataQuery" resultType="com.ruike.itf.domain.entity.ItfMaterialLotConfirmIface">
+        select imlci.iface_id ,imlci.material_lot_code, imlci.material_code, imlci.material_version, imlci.uom_code,
+               imlci.warehouse_code, imlci.status, imlci.quality_status, imlci.qty,
+               imlci.so_num, imlci.so_line_num, imlci.lot_code, imlci.production_date, imlci.container_code
+        from itf_material_lot_confirm_iface imlci
+        where imlci.batch_id = #{batchId}
+        and imlci.process_status = 'N'
+        and imlci.tenant_id = #{tenantId}
+    </select>
+
+    <update id="updateIfaceData">
+        update itf_material_lot_confirm_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            process_date = CURRENT_TIMESTAMP,
+            process_status = 'E',
+            process_message = #{message}
+        </set>
+        <where>
+            iface_id in
+            <foreach collection="ifaceIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+</mapper>

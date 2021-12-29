@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsInvTransferIssueMapper">
+
+    <select id="selectDocCondition" resultType="com.ruike.wms.api.dto.WmsInvTransferDTO">
+        SELECT
+          mid.INSTRUCTION_DOC_ID,
+          mid.INSTRUCTION_DOC_NUM,
+          mid.INSTRUCTION_DOC_TYPE,
+          mid.INSTRUCTION_DOC_STATUS,
+          mid.SITE_ID,
+          mms.SITE_CODE,
+          mms.SITE_NAME,
+          mid.REMARK
+        FROM
+          mt_instruction_doc mid
+        LEFT JOIN mt_mod_site mms ON mms.SITE_ID = mid.SITE_ID
+        WHERE mid.TENANT_ID = #{tenantId}
+        <if test="instructionDocNum != null">
+            and mid.INSTRUCTION_DOC_NUM = #{instructionDocNum}
+        </if>
+    </select>
+
+    <select id="selectDocLineCondition" resultType="com.ruike.wms.api.dto.WmsInvTransferDTO2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+          mi.INSTRUCTION_ID,
+          mi.INSTRUCTION_NUM,
+          mi.INSTRUCTION_STATUS,
+          mi.MATERIAL_ID,
+          mi.SITE_ID,
+          item.MATERIAL_CODE,
+          tl.MATERIAL_NAME,
+          mi.QUANTITY,
+          mi.FROM_SITE_ID,
+          mi.TO_SITE_ID,
+          site.SITE_CODE AS TO_SITE_CODE,
+          site_tl.SITE_NAME AS TO_SITE_NAME,
+          mi.FROM_LOCATOR_ID AS FROM_WAREHOUSE_ID,
+          from_wh.LOCATOR_CODE AS FROM_WAREHOUSE_CODE,
+          from_wh_tl.LOCATOR_NAME AS FROM_WAREHOUSE_NAME,
+          mi.TO_LOCATOR_ID AS TO_WAREHOUSE_ID,
+          to_wh.LOCATOR_CODE AS TO_WAREHOUSE_CODE,
+          to_wh_tl.LOCATOR_NAME AS TO_WAREHOUSE_NAME,
+          ia_mv.attr_value MATERIAL_VERSION,
+          ia_eq.attr_value EXECUTE_QTY,
+          ia_fli.attr_value FROM_LOCATOR_ID,
+          ia_es.attr_value EXCESS_SETTING,
+          ia_ev.attr_value EXCESS_VALUE,
+          from_loc.LOCATOR_CODE AS FROM_LOCATOR_CODE,
+          from_loc_tl.LOCATOR_NAME AS FROM_LOCATOR_NAME,
+          ia_tli.attr_value TO_LOCATOR_ID,
+          to_loc.LOCATOR_CODE AS TO_LOCATOR_CODE,
+          to_loc_tl.LOCATOR_NAME AS TO_LOCATOR_NAME,
+          CASE
+            WHEN 'ISSUE' = #{type} AND mid.INSTRUCTION_DOC_TYPE = 'SEND_RECEIVE_EXECUTE' THEN
+              (SELECT sum( mml.PRIMARY_UOM_QTY )
+              FROM mt_instruction_detail mid,
+                   mt_material_lot mml
+              WHERE mid.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+              AND mid.INSTRUCTION_ID = mi.INSTRUCTION_ID)
+          ELSE
+              mia.ACTUAL_QTY
+          END AS ACTUAL_QTY,
+          CASE
+            WHEN 'ISSUE' = #{type} AND mid.INSTRUCTION_DOC_TYPE = 'SEND_RECEIVE_EXECUTE' THEN
+              (SELECT count(1)
+              FROM mt_instruction_detail mid
+              WHERE mid.INSTRUCTION_ID = mi.INSTRUCTION_ID)
+          ELSE
+            (select count(1)
+            from mt_instruction_actual_detail miad
+            where mia.ACTUAL_ID = miad.ACTUAL_ID)
+          END AS CODE_QTY,
+          mi.UOM_ID,
+          uom.UOM_CODE,
+          uom_tl.UOM_NAME
+        FROM
+        mt_instruction_doc mid,
+        mt_instruction mi
+        LEFT JOIN mt_instruction_attr ia_mv ON mi.INSTRUCTION_ID = ia_mv.INSTRUCTION_ID and ia_mv.attr_name = 'MATERIAL_VERSION'
+        LEFT JOIN mt_instruction_attr ia_eq ON mi.INSTRUCTION_ID = ia_eq.INSTRUCTION_ID and ia_eq.attr_name = 'EXECUTE_QTY'
+        LEFT JOIN mt_instruction_attr ia_fli ON mi.INSTRUCTION_ID = ia_fli.INSTRUCTION_ID and ia_fli.attr_name = 'FROM_LOCATOR_ID'
+        LEFT JOIN mt_instruction_attr ia_es ON mi.INSTRUCTION_ID = ia_es.INSTRUCTION_ID and ia_es.attr_name = 'EXCESS_SETTING'
+        LEFT JOIN mt_instruction_attr ia_ev ON mi.INSTRUCTION_ID = ia_ev.INSTRUCTION_ID and ia_ev.attr_name = 'EXCESS_VALUE'
+        LEFT JOIN mt_instruction_attr ia_tli ON mi.INSTRUCTION_ID = ia_tli.INSTRUCTION_ID and ia_tli.attr_name = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_instruction_actual mia ON mi.INSTRUCTION_ID = mia.INSTRUCTION_ID
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = mi.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID AND tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator from_wh ON from_wh.LOCATOR_ID = mi.FROM_LOCATOR_ID
+        LEFT JOIN mt_mod_locator_tl from_wh_tl ON from_wh_tl.LOCATOR_ID = from_wh.LOCATOR_ID
+        AND from_wh_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator to_wh ON to_wh.LOCATOR_ID = mi.TO_LOCATOR_ID
+        LEFT JOIN mt_mod_locator_tl to_wh_tl ON to_wh_tl.LOCATOR_ID = to_wh.LOCATOR_ID
+        AND to_wh_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator from_loc ON from_loc.LOCATOR_ID = ia_fli.attr_value
+        LEFT JOIN mt_mod_locator_tl from_loc_tl ON from_loc_tl.LOCATOR_ID = from_loc.LOCATOR_ID
+        AND from_loc_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator to_loc ON to_loc.LOCATOR_ID = ia_tli.attr_value
+        LEFT JOIN mt_mod_locator_tl to_loc_tl ON to_loc_tl.LOCATOR_ID = to_loc.LOCATOR_ID
+        AND to_loc_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_site site ON site.SITE_ID = mi.TO_SITE_ID
+        LEFT JOIN mt_mod_site_tl site_tl ON site_tl.SITE_ID = site.SITE_ID
+        AND site_tl.LANG = #{lang}
+        LEFT JOIN mt_uom uom ON uom.UOM_ID = mi.UOM_ID
+        LEFT JOIN mt_uom_tl uom_tl ON uom_tl.UOM_ID = uom.UOM_ID AND uom_tl.LANG = #{lang}
+        WHERE mi.TENANT_ID = #{tenantId}
+        AND mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        <if test="sourceDocId != null">
+            and mid.INSTRUCTION_DOC_ID = #{sourceDocId}
+        </if>
+        <if test="instructionId != null">
+            and mi.INSTRUCTION_ID = #{instructionId}
+        </if>
+    </select>
+
+    <select id="selectMaterialLotCondition" resultType="com.ruike.wms.api.dto.WmsCostCtrMaterialDTO3">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+          mml.MATERIAL_LOT_ID,
+          mml.MATERIAL_LOT_CODE,
+          mml.SITE_ID,
+          site.SITE_CODE,
+          mml.ENABLE_FLAG,
+          mml.QUALITY_STATUS,
+          mml.MATERIAL_ID,
+          item.MATERIAL_CODE,
+          tl.MATERIAL_NAME,
+          mml.PRIMARY_UOM_ID,
+          uom.UOM_CODE AS PRIMARY_UOM_CODE,
+          uom_tl.UOM_NAME AS PRIMARY_UOM_NAME,
+          mml.PRIMARY_UOM_QTY,
+          mla_mv.ATTR_VALUE MATERIAL_VERSION,
+          mml.LOCATOR_ID,
+          locator.LOCATOR_CODE,
+          locator.PARENT_LOCATOR_ID AS WAREHOUSE_ID,
+          warehouse.LOCATOR_CODE AS WAREHOUSE_CODE,
+          mml.LOT,
+          mla_mf.ATTR_VALUE MF_FLAG,
+          mml.FREEZE_FLAG
+        FROM
+          mt_material_lot mml
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = mml.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+          AND tl.LANG = #{lang}
+        LEFT JOIN mt_uom uom ON uom.UOM_ID = mml.PRIMARY_UOM_ID
+        LEFT JOIN mt_uom_tl uom_tl ON uom_tl.UOM_ID = uom.UOM_ID
+          AND uom_tl.LANG = #{lang}
+        LEFT JOIN mt_material_lot_attr mla_mv ON mla_mv.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID and mla_mv.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr mla_mf ON mla_mf.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID and mla_mf.ATTR_NAME = 'MF_FLAG'
+        LEFT JOIN mt_mod_site site ON site.SITE_ID = mml.SITE_ID
+        LEFT JOIN mt_mod_locator locator ON locator.LOCATOR_ID = mml.LOCATOR_ID
+        LEFT JOIN mt_mod_locator warehouse ON warehouse.LOCATOR_ID = locator.PARENT_LOCATOR_ID
+        WHERE mml.TENANT_ID = #{tenantId}
+        <if test="materialLotIds != null">
+            AND mml.MATERIAL_LOT_ID in
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectLocatorId" resultType="java.lang.String">
+        SELECT
+          loc.LOCATOR_ID
+        FROM
+          mt_mod_locator loc
+        WHERE loc.TENANT_ID = #{tenantId}
+        <if test="parentLocatorId != null">
+            AND loc.PARENT_LOCATOR_ID = #{parentLocatorId}
+        </if>
+        <if test="locatorType != null">
+            AND loc.LOCATOR_TYPE = #{locatorType}
+        </if>
+    </select>
+
+    <select id="selectMaterialLotCount" resultType="java.lang.Integer">
+        SELECT
+          count(1)
+        FROM
+          mt_instruction mi,
+          mt_instruction_detail mid,
+          mt_material_lot mml
+        where mi.TENANT_ID = #{tenantId}
+        and mi.INSTRUCTION_ID = mid.INSTRUCTION_ID
+        and mi.TENANT_ID = mid.TENANT_ID
+        and mid.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        <if test="materialLotCode != null">
+            and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+        </if>
+        <if test="sourceDocId != null">
+            and mi.SOURCE_DOC_ID = #{sourceDocId}
+        </if>
+    </select>
+
+</mapper>

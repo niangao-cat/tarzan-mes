@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtEbsPoLineIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtEbsPoLineIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="PO_HEADER_ID" property="poHeaderId" jdbcType="VARCHAR"/>
+        <result column="ITEM_ID" property="itemId" jdbcType="VARCHAR"/>
+        <result column="UOM" property="uom" jdbcType="VARCHAR"/>
+        <result column="UNIT_PRICE" property="unitPrice" jdbcType="DECIMAL"/>
+        <result column="LINE_DESCRIPTION" property="lineDescription" jdbcType="VARCHAR"/>
+        <result column="EXPIRATION_DATE" property="expirationDate" jdbcType="TIMESTAMP"/>
+        <result column="LINE_TPYE" property="lineTpye" jdbcType="VARCHAR"/>
+        <result column="QUANTITY_ORDERED" property="quantityOrdered" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_RECEIVED" property="quantityReceived" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_ACCEPTED" property="quantityAccepted" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_DELIVERED" property="quantityDelivered" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_CANCELLED" property="quantityCancelled" jdbcType="DECIMAL"/>
+        <result column="LINE_CANCEL_FLAG" property="lineCancelFlag" jdbcType="VARCHAR"/>
+        <result column="LINE_CLOSED_CODE" property="lineClosedCode" jdbcType="VARCHAR"/>
+        <result column="LOCATION_CANCEL_FLAG" property="locationCancelFlag" jdbcType="VARCHAR"/>
+        <result column="LOCATION_CLOSED_CODE" property="locationClosedCode" jdbcType="VARCHAR"/>
+        <result column="NEED_BY_DATE" property="needByDate" jdbcType="TIMESTAMP"/>
+        <result column="CONSIGNED_FLAG" property="consignedFlag" jdbcType="VARCHAR"/>
+        <result column="RECEIVING_ROUTING_ID" property="receivingRoutingId" jdbcType="VARCHAR"/>
+        <result column="WIP_ENTITY_ID" property="wipEntityId" jdbcType="VARCHAR"/>
+        <result column="PO_LINE_ID" property="poLineId" jdbcType="VARCHAR"/>
+        <result column="PO_LINE_NUM" property="poLineNum" jdbcType="VARCHAR"/>
+        <result column="PO_LOCATION_ID" property="poLocationId" jdbcType="VARCHAR"/>
+        <result column="PO_SHIPMENT_NUM" property="poShipmentNum" jdbcType="VARCHAR"/>
+        <result column="PO_DISTRIBUTION_ID" property="poDistributionId" jdbcType="VARCHAR"/>
+        <result column="PO_DISTRIBUTION_NUM" property="poDistributionNum" jdbcType="VARCHAR"/>
+        <result column="PO_RELEASE_ID" property="poReleaseId" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE1" property="lineAttribute1" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE2" property="lineAttribute2" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE3" property="lineAttribute3" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE4" property="lineAttribute4" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE5" property="lineAttribute5" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE6" property="lineAttribute6" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE7" property="lineAttribute7" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE8" property="lineAttribute8" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE9" property="lineAttribute9" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE10" property="lineAttribute10" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE11" property="lineAttribute11" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE12" property="lineAttribute12" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE13" property="lineAttribute13" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE14" property="lineAttribute14" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE15" property="lineAttribute15" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE1" property="locationAttribute1" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE2" property="locationAttribute2" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE3" property="locationAttribute3" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE4" property="locationAttribute4" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE5" property="locationAttribute5" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE6" property="locationAttribute6" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE7" property="locationAttribute7" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE8" property="locationAttribute8" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE9" property="locationAttribute9" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE10" property="locationAttribute10" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE11" property="locationAttribute11" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE12" property="locationAttribute12" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE13" property="locationAttribute13" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE14" property="locationAttribute14" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ATTRIBUTE15" property="locationAttribute15" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE1" property="distributionAttribute1" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE2" property="distributionAttribute2" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE3" property="distributionAttribute3" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE4" property="distributionAttribute4" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE5" property="distributionAttribute5" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE6" property="distributionAttribute6" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE7" property="distributionAttribute7" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE8" property="distributionAttribute8" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE9" property="distributionAttribute9" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE10" property="distributionAttribute10" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE11" property="distributionAttribute11" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE12" property="distributionAttribute12" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE13" property="distributionAttribute13" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE14" property="distributionAttribute14" jdbcType="VARCHAR"/>
+        <result column="DISTRIBUTION_ATTRIBUTE15" property="distributionAttribute15" jdbcType="VARCHAR"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="getUnprocessedList" resultMap="BaseResultMap">
+        select t.* from mt_ebs_po_line_iface t where t.TENANT_ID = ${tenantId} and t.STATUS in ('N', 'E')
+    </select>
+</mapper>

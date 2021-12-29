@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWoJobSnMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeWoJobSn">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WO_JOB_SN_ID" property="woJobSnId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="SITE_IN_NUM" property="siteInNum" jdbcType="DECIMAL"/>
+        <result column="UNQUALIFIED_NUM" property="unqualifiedNum" jdbcType="DECIMAL"/>
+        <result column="PROCESSED_NUM" property="processedNum" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <resultMap id="HmeIncomingMap" type="com.ruike.hme.api.dto.HmeWoJobSnReturnDTO">
+        <result property="operationRecordId" column="OPERATION_RECORD_ID"/>
+        <result property="capacity" column="CAPACITY"/>
+        <result property="workOrderNum" column="WORK_ORDER_NUM"/>
+        <result property="containerTypeCode" column="CONTAINER_TYPE_CODE"/>
+        <result property="cosType" column="COS_TYPE"/>
+        <result property="averageWavelength" column="AVERAGE_WAVELENGTH"/>
+        <result property="type" column="TYPE"/>
+        <result property="lotNo" column="LOT_NO"/>
+        <result property="wafer" column="WAFER"/>
+        <result property="jobBatch" column="JOB_BATCH"/>
+        <result property="barNum" column="BAR_NUM"/>
+        <result property="cosNum" column="COS_NUM"/>
+        <result property="remark" column="REMARK"/>
+        <result property="locationColumn" column="LOCATION_COLUMN"/>
+        <result property="locationRow" column="LOCATION_ROW"/>
+    </resultMap>
+    <resultMap id="HmeWoJobSnReturnDTO4MAP" type="com.ruike.hme.api.dto.HmeWoJobSnReturnDTO4">
+
+        <result property="materialLotId" column="MATERIAL_LOT_ID"/>
+        <result property="materialLotCode" column="MATERIAL_LOT_CODE"/>
+        <result property="materialCode" column="MATERIAL_CODE"/>
+        <result property="cosType" column="COS_TYPE"/>
+        <result property="primaryUonQty" column="PRIMARY_UON_QTY"/>
+        <result property="materialName" column="MATERIAL_NAME"/>
+        <result property="siteOutDate" column="SITE_OUT_DATA"/>
+        <result property="jobBatch" column="JOB_BATCH"/>
+        <result property="remark" column="REMARK"/>
+    </resultMap>
+    <!--获取工单数据-->
+    <select id="workList" resultType="com.ruike.hme.api.dto.HmeWoJobSnReturnDTO">
+        SELECT
+            hcor.operation_record_id,
+            mwo.WORK_ORDER_Id,
+            mwo.WORK_ORDER_NUM,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mct.CONTAINER_TYPE_CODE,
+            hcor.cos_type,
+            hcor.average_wavelength,
+            hcor.type,
+            hcor.lot_no,
+            hcor.wafer,
+            hcor.attribute1 as sap_lot,
+            hcor.job_batch,
+            hcor.bar_num,
+            hcor.cos_num,
+            hcor.remark,
+            hcc.COLUMN_NUM LOCATION_COLUMN,
+	        hcc.LINE_NUM LOCATION_ROW,
+            hcc.CAPACITY,
+            hcor.SURPLUS_COS_NUM,
+            hcor.created_by,
+            DATE_FORMAT(hcor.creation_date,'%Y-%m-%d %H:%i:%S') creation_date,
+            (
+                SELECT
+                    IFNULL(SUM(cor.cos_num), 0)
+                FROM hme_cos_operation_record cor
+                WHERE cor.tenant_id = 0
+                AND cor.work_order_id = hcor.work_order_id
+                AND cor.wafer = hcor.wafer
+            ) TOTAL_COS_NUM
+        FROM
+            mt_work_order mwo,
+            hme_cos_operation_record hcor
+            LEFT JOIN hme_container_capacity hcc ON hcc.OPERATION_ID = hcor.operation_id
+            AND hcc.CONTAINER_TYPE_ID = hcor.container_type_id
+            AND hcc.COS_TYPE = hcor.cos_type
+            LEFT JOIN mt_container_type mct ON mct.CONTAINER_TYPE_ID = hcor.container_type_id
+            AND mct.ENABLE_FLAG = 'Y',
+            mt_material mm
+        <if test="dto.sourceMaterialLotCode != null">
+            ,hme_eo_job_sn hejs,
+            mt_material_lot_attr mmla,
+            mt_material_lot mml
+        </if>
+        WHERE
+            mwo.WORK_ORDER_ID = hcor.work_order_id
+        and mm.MATERIAL_ID = mwo.MATERIAL_ID
+        AND mwo.SITE_ID = hcor.site_id
+        AND mwo.PRODUCTION_LINE_ID=#{dto.prodLineId}
+        AND hcor.workcell_id =#{dto.workcellId}
+        AND hcor.operation_id = #{dto.operationId}
+        <if test="dto.sourceMaterialLotCode != null">
+            AND hejs.job_type = 'IO'
+            AND hejs.source_job_id = hcor.operation_record_id
+            AND mmla.MATERIAL_LOT_ID = hejs.MATERIAL_LOT_ID
+            AND mmla.ATTR_NAME = 'ORIGINAL_ID'
+            and mmla.ATTR_VALUE = mml.material_lot_id
+            and mml.material_lot_code = #{dto.sourceMaterialLotCode}
+        </if>
+        <if test="dto.workOrderNum != null">
+        AND mwo.WORK_ORDER_NUM = #{dto.workOrderNum}
+        </if>
+        <if test="dto.cosType != null">
+            AND hcor.cos_type = #{dto.cosType}
+        </if>
+        <if test="dto.wafer != null">
+            AND hcor.wafer = #{dto.wafer}
+        </if>
+        <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+            AND hcor.creation_date >= #{dto.creationDateFrom}
+        </if>
+        <if test="dto.creationDateTo != null and dto.creationDateTo != ''">
+            AND hcor.creation_date <![CDATA[<=]]> #{dto.creationDateTo}
+        </if>
+        order by hcor.creation_date desc
+    </select>
+
+    <select id="workDetails" resultType="com.ruike.hme.api.dto.HmeWoJobSnReturnDTO4">
+        SELECT
+            hejs.job_id eo_Job_Id,
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mm.MATERIAL_CODE,
+            hcor.cos_type,
+            mml.PRIMARY_UOM_QTY PRIMARY_UON_QTY,
+            hcor.job_batch,
+            mm.MATERIAL_NAME,
+            hcor.remark,
+            hejs.site_out_date,
+            IFNULL(hejs.sn_qty, 0) sn_qty,
+            mmla.ATTR_VALUE CHIP_NUM
+        FROM
+            hme_eo_job_sn hejs,
+            mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr mmla ON mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'CHIP_NUM',
+        mt_material mm,
+        hme_cos_operation_record hcor
+        WHERE
+            mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND mml.MATERIAL_LOT_ID = hejs.material_lot_id
+        AND mml.SITE_ID =#{dto.siteId}
+        AND hejs.job_type = 'IO'
+        AND hejs.source_job_id = hcor.operation_record_id
+        AND hcor.operation_record_id =#{dto.operationRecordId}
+        AND hcor.site_id =#{dto.siteId}
+        AND hcor.tenant_Id=#{tenantId}
+        ORDER BY
+            hejs.site_in_date ASC
+    </select>
+
+    <select id="queryMaterialType" resultType="java.lang.String">
+        SELECT
+            hmb.ITEM_TYPE
+        FROM
+            mt_material_basic hmb,
+            mt_material_site mms
+        WHERE
+            hmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mms.MATERIAL_ID = #{materialId}
+        AND mms.SITE_ID = #{siteId}
+    </select>
+
+    <select id="getMaterials" resultType="java.lang.String">
+        SELECT
+          mbc.MATERIAL_ID
+        FROM
+            hme_cos_operation_record hcor,
+          mt_work_order mwo,
+          mt_bom_component mbc
+        where hcor.work_order_id=mwo.WORK_ORDER_ID
+        and mwo.BOM_ID=mbc.BOM_ID
+        and hcor.operation_record_id=#{operationRecordId}
+    </select>
+
+    <!--查询工单组件-->
+    <select id="component" resultType="com.ruike.hme.api.dto.HmeWoJobSnReturnDTO6">
+        SELECT
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mbc.QTY
+        FROM
+            mt_work_order mwo,
+            mt_material mm,
+            mt_bom_component mbc
+        WHERE
+            mm.MATERIAL_ID = mbc.MATERIAL_ID
+        AND mbc.BOM_ID = mwo.BOM_ID
+        AND mwo.WORK_ORDER_ID = #{workOrderId}
+        AND mwo.tenant_Id = #{tenantId}
+    </select>
+
+    <select id="selectCosType" resultType="java.lang.String">
+        SELECT
+            mmsa.ATTR_VALUE
+        FROM
+            mt_bom_component mbc,
+            mt_material_site mms,
+            mt_material_basic mmb,
+            mt_material_site_attr mmsa
+        WHERE
+            mbc.BOM_ID = #{bomId}
+        AND mms.MATERIAL_ID = mbc.MATERIAL_ID
+        AND mms.SITE_ID = #{siteId}
+        AND mms.MATERIAL_SITE_ID = mmb.MATERIAL_SITE_ID
+        AND mmb.ITEM_GROUP = #{itemGroup}
+        AND mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mmsa.ATTR_NAME = 'attribute5'
+    </select>
+
+    <select id="queryWorkQty" resultType="java.math.BigDecimal">
+        SELECT
+            bca.ATTR_VALUE
+        FROM
+            mt_bom_component mbc,
+		    mt_bom_component_attr bca,
+            mt_material_site mms,
+            mt_material_basic mmb
+        WHERE
+            mbc.BOM_ID = #{bomId}
+        AND mbc.BOM_COMPONENT_ID = bca.BOM_COMPONENT_ID
+        AND mms.MATERIAL_ID = mbc.MATERIAL_ID
+        AND mms.SITE_ID = #{siteId}
+        AND mms.MATERIAL_SITE_ID = mmb.MATERIAL_SITE_ID
+        AND mmb.ITEM_GROUP = #{itemGroup}
+        AND bca.ATTR_NAME = 'lineAttribute5'
+        LIMIT 1
+    </select>
+
+    <select id="getMaterialsByWorkOrder" resultType="java.lang.String">
+        SELECT
+          mbc.MATERIAL_ID
+        FROM
+          mt_work_order mwo,
+          mt_bom_component mbc
+        where mwo.WORK_ORDER_ID=#{workOrderId}
+         and mwo.BOM_ID=mbc.BOM_ID
+    </select>
+
+    <select id="selectByOperationRecordId" resultType="com.ruike.hme.api.dto.HmeWoJobSnReturnDTO7">
+        SELECT
+            hcor.operation_record_id,
+            hcor.WORK_ORDER_ID,
+            mwo.WORK_ORDER_NUM,
+            hcor.wafer,
+            hcor.container_type_id,
+            mct.CONTAINER_TYPE_CODE,
+            mct.CONTAINER_TYPE_DESCRIPTION,
+            hcor.cos_type,
+            hcor.lot_no,
+            hcor.average_wavelength,
+            hcor.type,
+            hcor.remark,
+            hcor.job_batch,
+            hcor.bar_num,
+            hcor.cos_num,
+            hcor.operation_id,
+            hcor.site_id
+        FROM
+            HME_COS_OPERATION_RECORD hcor
+            LEFT JOIN mt_container_type mct ON hcor.container_type_id = mct.CONTAINER_TYPE_ID,
+            mt_work_order mwo
+        WHERE
+            hcor.WORK_ORDER_ID = mwo.WORK_ORDER_ID
+        AND hcor.operation_record_id = #{operationRecordId}
+        AND hcor.TENANT_ID=#{tenantId}
+    </select>
+
+    <select id="queryRouterStepId" resultType="java.lang.String">
+        SELECT
+	        rs.ROUTER_STEP_ID
+        FROM
+	        mt_work_order wo
+        LEFT JOIN mt_router_step rs ON wo.ROUTER_ID = rs.ROUTER_ID
+        LEFT JOIN mt_router_operation ro ON ro.ROUTER_STEP_ID = rs.ROUTER_STEP_ID
+        WHERE
+            wo.TENANT_ID = #{tenantId}
+        AND ro.OPERATION_ID = #{operationId}
+        AND wo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+</mapper>

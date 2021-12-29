@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsContainerMapper">
+
+    <select id="containerHeaderQuery" resultType="com.ruike.wms.api.dto.WmsContainerResultDTO"
+            parameterType="com.ruike.wms.api.dto.WmsContainerQryDTO">
+        select ct.CONTAINER_ID,ct.CONTAINER_CODE,ct.CONTAINER_NAME,ctt.CONTAINER_TYPE_DESCRIPTION,ct.DESCRIPTION,
+        ct.`STATUS` containerStatus,st.SITE_CODE,lc.LOCATOR_CODE,ct.OWNER_TYPE,
+        case
+        when ct.OWNER_TYPE = 'SUPPLIER' then
+        (select sp.SUPPLIER_CODE from mt_supplier sp where sp.SUPPLIER_ID = ct.OWNER_ID )
+        when ct.OWNER_TYPE = 'CUSTOMER' then
+        (select cust.CUSTOMER_CODE from mt_customer cust where cust.CUSTOMER_ID = ct.OWNER_ID )
+        end OWNER_CODE,
+        ct.LAST_LOAD_TIME,ct.LAST_UNLOAD_TIME,ct.CREATION_DATE,iam_user.real_name
+        CREATED_BY,ct.LAST_UPDATE_DATE,iam_user2.real_name LAST_UPDATED_BY,
+        cta.ATTR_VALUE CREATION_REASON,wh.LOCATOR_CODE wareHouse
+        ,ct.TOP_CONTAINER_ID
+        ,ct_top.CONTAINER_CODE top_CONTAINER_CODE
+        ,ct.CURRENT_CONTAINER_ID
+        ,ct_cur.CONTAINER_CODE CURRENT_CONTAINER_CODE
+        from mt_container ct
+        left join mt_container ct_top on ct_top.CONTAINER_ID = ct.TOP_CONTAINER_ID
+        left join mt_container ct_cur on ct_cur.CONTAINER_ID = ct.CURRENT_CONTAINER_ID
+        left join mt_container_type ctt on ct.CONTAINER_TYPE_ID = ctt.CONTAINER_TYPE_ID
+        left join mt_mod_site st on ct.SITE_ID = st.SITE_ID
+        left join mt_mod_locator lc on ct.LOCATOR_ID = lc.LOCATOR_ID
+        left JOIN tarzan_mes.mt_mod_locator wh ON wh.LOCATOR_ID = lc.PARENT_LOCATOR_ID
+        left join mt_container_attr cta on ct.CONTAINER_ID = cta.CONTAINER_ID and cta.ATTR_NAME = 'CREATE_REASON'
+        left join iam_user iam_user on iam_user.id = ct.CREATED_BY
+        left join iam_user iam_user2 on iam_user2.id = ct.LAST_UPDATED_BY
+        <choose>
+            <when test='isEmpty == "Y"'>
+                left join
+            </when>
+            <when test='isEmpty == "N"'>
+                inner join
+            </when>
+            <when test="materialId != null">
+                inner join
+            </when>
+            <otherwise>
+                left join
+            </otherwise>
+        </choose>
+        (
+        select ctd.CONTAINER_ID CONTAINER_ID_DETAIL from mt_container_load_detail ctd
+        left join mt_material_lot mt on ctd.LOAD_OBJECT_ID = mt.MATERIAL_LOT_ID
+        where 1=1
+        <if test="materialId != null">
+            and ctd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT' and mt.MATERIAL_ID in
+            <foreach collection="materialIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        group by ctd.CONTAINER_ID
+        ) ctdl on ct.CONTAINER_ID = ctdl.CONTAINER_ID_DETAIL
+        where 1=1
+        <if test="containerCode != null">
+            <bind name="containerCodeLike" value="'%'+containerCode+'%'"/>
+            and ct.CONTAINER_CODE like #{containerCodeLike}
+        </if>
+        <if test="containerStatus != null">
+            and ct.`STATUS` = #{containerStatus}
+        </if>
+        <if test="locatorId != null">
+            and ct.LOCATOR_ID in
+            <foreach collection="locatorIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="wareHouseId != null">
+            and lc.PARENT_LOCATOR_ID in
+            <foreach collection="warehouseIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="siteId != null">
+            and ct.SITE_ID = #{siteId}
+        </if>
+        <if test="containerTypeId != null">
+            and ct.CONTAINER_TYPE_ID = #{containerTypeId}
+        </if>
+        <if test="materialLotCode != null">
+            <bind name="materialLotCodeLike" value="'%'+materialLotCode+'%'"/>
+            and exists (select 1
+            from mt_container_load_detail ctd
+            ,mt_material_lot mml
+            where ctd.LOAD_OBJECT_ID = mml.material_lot_id
+            and ctd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+            and ctd.container_id = ct.container_id
+            and mml.material_lot_code like #{materialLotCodeLike}
+            )
+        </if>
+        <choose>
+            <when test='isEmpty == "Y"'>
+                and ctdl.CONTAINER_ID_DETAIL IS NULL
+            </when>
+            <when test='isEmpty == "N"'>
+                and ctdl.CONTAINER_ID_DETAIL IS NOT NULL
+            </when>
+        </choose>
+        order by ct.CREATION_DATE desc
+    </select>
+
+    <select id="containerLineQuery" resultType="com.ruike.wms.api.dto.WmsContainerLineResultDTO"
+            parameterType="com.ruike.wms.api.dto.WmsContainerQryDTO">
+        SELECT
+        ct.CONTAINER_ID,
+        ct.CONTAINER_CODE,
+        ctd.LOAD_OBJECT_TYPE,
+        ctd.CONTAINER_LOAD_DETAIL_ID,
+        CASE
+        WHEN ctd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT' THEN
+        (
+        SELECT
+        CONCAT(
+        mtl.MATERIAL_LOT_CODE,
+        '!',
+        mtl.LOT
+        )
+        FROM
+        mt_material_lot mtl
+        WHERE
+        mtl.MATERIAL_LOT_ID = ctd.LOAD_OBJECT_ID
+        )
+        WHEN ctd.LOAD_OBJECT_TYPE = 'CONTAINER' THEN
+        (select mc.CONTAINER_CODE
+        from mt_container mc
+        where mc.CONTAINER_ID = ctd.LOAD_OBJECT_ID)
+        END LOAD_OBJECT_CODE,
+        CASE
+        WHEN ctd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT' THEN
+        (
+        SELECT
+        CONCAT(
+        mt.MATERIAL_CODE,
+        '!',
+        mt.MATERIAL_NAME,
+        '!',
+        u.UOM_CODE
+        )
+        FROM
+        mt_material_lot mtl
+        INNER JOIN mt_material mt ON mtl.MATERIAL_ID = mt.MATERIAL_ID
+        LEFT JOIN mt_uom u ON mt.PRIMARY_UOM_ID = u.UOM_ID
+        WHERE
+        mtl.MATERIAL_LOT_ID = ctd.LOAD_OBJECT_ID
+        LIMIT 1
+        )
+        END CODE_NAME,
+        CASE
+        WHEN ctd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT' THEN
+        (
+        SELECT
+        PRIMARY_UOM_QTY
+        FROM
+        mt_material_lot mml
+        WHERE
+        mml.MATERIAL_LOT_ID = ctd.LOAD_OBJECT_ID
+        )
+        END LOAD_QTY,
+        CASE
+        WHEN ctd.LOAD_OBJECT_TYPE = 'CONTAINER' THEN
+        (
+        SELECT
+        mct.CONTAINER_TYPE_DESCRIPTION
+        FROM
+        mt_container mc
+        LEFT JOIN mt_container_type mct ON mc.CONTAINER_TYPE_ID = mct.CONTAINER_TYPE_ID
+        WHERE
+        mc.CONTAINER_ID = ctd.LOAD_OBJECT_ID
+        )
+        END container_type_description,
+        iam_user.real_name CREATED_BY,
+        ctd.CREATION_DATE,
+        iam_user2.real_name LAST_UPDATED_BY,
+        ctd.LAST_UPDATE_DATE
+        FROM
+        mt_container_load_detail ctd
+        INNER JOIN mt_container ct ON ctd.CONTAINER_ID = ct.CONTAINER_ID
+        LEFT JOIN iam_user iam_user ON iam_user.id = ctd.CREATED_BY
+        LEFT JOIN iam_user iam_user2 ON iam_user2.id = ctd.LAST_UPDATED_BY
+        WHERE 1 = 1
+        <if test=" containerId != null">
+            and ctd.CONTAINER_ID = #{containerId}
+        </if>
+        <if test=" containerCode != null">
+            and ct.CONTAINER_CODE = #{containerCode}
+        </if>
+        order by ctd.CREATION_DATE desc
+    </select>
+
+    <select id="containerHeaderHis" resultType="com.ruike.wms.api.dto.WmsContainerHisResultDTO"
+            parameterType="com.ruike.wms.api.dto.WmsContainerHisQryDTO">
+        select ct.CONTAINER_ID,ct.CONTAINER_CODE,ct.CONTAINER_NAME,ctt.CONTAINER_TYPE_DESCRIPTION,ct.DESCRIPTION,
+        ct.`STATUS` containerStatus,st.SITE_CODE,lc.LOCATOR_CODE,ct.OWNER_TYPE,
+        case
+        when ct.OWNER_TYPE = 'SUPPLIER' then
+        (select sp.SUPPLIER_CODE from mt_supplier sp where sp.SUPPLIER_ID = ct.OWNER_ID )
+        when ct.OWNER_TYPE = 'CUSTOMER' then
+        (select cust.CUSTOMER_CODE from mt_customer cust where cust.CUSTOMER_ID = ct.OWNER_ID )
+        end OWNER_CODE,
+        ct.LAST_LOAD_TIME,ct.LAST_UNLOAD_TIME,ct.CREATION_DATE,iam_user.real_name
+        CREATED_BY,ct.LAST_UPDATE_DATE,iam_user2.real_name LAST_UPDATED_BY,
+        met.DESCRIPTION eventTypeCode,me.CREATION_DATE eventTime,iam_user3.real_name EVENT_BY,cta.ATTR_VALUE
+        CREATION_REASON
+        from mt_container_his ct
+        left join mt_container_type ctt on ct.CONTAINER_TYPE_ID = ctt.CONTAINER_TYPE_ID
+        left join mt_mod_site st on ct.SITE_ID = st.SITE_ID
+        left join mt_mod_locator lc on ct.LOCATOR_ID = lc.LOCATOR_ID
+        left join tarzan_mes.mt_event me on ct.EVENT_ID = me.EVENT_ID
+        left join tarzan_mes.mt_event_type met on me.EVENT_TYPE_ID = met.EVENT_TYPE_ID
+        left join mt_container_attr_his cta on ct.CONTAINER_ID = cta.CONTAINER_ID and cta.ATTR_NAME = 'CREATE_REASON'
+        left join iam_user iam_user on iam_user.id = ct.CREATED_BY
+        left join iam_user iam_user2 on iam_user2.id = ct.LAST_UPDATED_BY
+        left join iam_user iam_user3 on iam_user3.id = me.EVENT_BY
+        where 1 = 1
+
+        <if test="containHeaders != null">
+            and ct.CONTAINER_ID in (
+            <foreach collection="containHeaders" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+
+        order by ct.CREATION_DATE desc
+    </select>
+
+    <select id="containerLineHis" resultType="com.ruike.wms.api.dto.WmsContainerLineHisResultDTO"
+            parameterType="com.ruike.wms.api.dto.WmsContainerHisQryDTO">
+        select ct.CONTAINER_ID,ct.CONTAINER_CODE,ctd.LOAD_OBJECT_TYPE,ctd.CONTAINER_LOAD_DETAIL_ID,
+        case
+        when ctd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT' then
+        (select mtl.MATERIAL_LOT_CODE from mt_material_lot mtl where mtl.MATERIAL_LOT_ID = ctd.LOAD_OBJECT_ID)
+        when ctd.LOAD_OBJECT_TYPE = 'CONTAINER' then
+        (select ict.CONTAINER_CODE from mt_container ict where ict.CONTAINER_ID = ctd.LOAD_OBJECT_ID)
+        end LOAD_OBJECT_CODE,
+        case
+        when ctd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT' then
+        (
+        select CONCAT( mt.MATERIAL_CODE,'!',mt.MATERIAL_NAME) from mt_material_lot mtl
+        inner join mt_material mt on mtl.MATERIAL_ID = mt.MATERIAL_ID
+        where mtl.MATERIAL_LOT_ID = ctd.LOAD_OBJECT_ID limit 1
+        )
+        when ctd.LOAD_OBJECT_TYPE = 'CONTAINER' then
+        (
+        select CONCAT(imt.MATERIAL_CODE,'!',imt.MATERIAL_NAME) from mt_container_load_detail ictl
+        inner join mt_material_lot imtl on ictl.LOAD_OBJECT_ID = imtl.MATERIAL_LOT_ID
+        inner join mt_material imt on imtl.MATERIAL_ID = imt.MATERIAL_ID
+        where ictl.CONTAINER_ID = ctd.LOAD_OBJECT_ID and ictl.LOAD_OBJECT_TYPE = 'MATERIAL_LOT' limit 1
+        )
+        end CODE_NAME,
+        ctd.LOAD_QTY,iam_user.real_name CREATED_BY,ctd.CREATION_DATE,iam_user2.real_name
+        LAST_UPDATED_BY,ctd.LAST_UPDATE_DATE,
+        met.DESCRIPTION eventTypeCode,me.CREATION_DATE eventTime,iam_user3.real_name EVENT_BY
+        from mt_container_load_detail_his ctd
+        inner join mt_container ct on ctd.CONTAINER_ID = ct.CONTAINER_ID
+        left join tarzan_mes.mt_event me on ctd.EVENT_ID = me.EVENT_ID
+        left join tarzan_mes.mt_event_type met on me.EVENT_TYPE_ID = met.EVENT_TYPE_ID
+        left join iam_user iam_user on iam_user.id = ctd.CREATED_BY
+        left join iam_user iam_user2 on iam_user2.id = ctd.LAST_UPDATED_BY
+        left join iam_user iam_user3 on iam_user3.id = me.EVENT_BY
+        where 1=1
+        <if test="containLines != null">
+            and ctd.CONTAINER_LOAD_DETAIL_ID in (
+            <foreach collection="containLines" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        order by ctd.CREATION_DATE desc
+    </select>
+
+    <select id="containnerCodeQuery" resultType="com.ruike.wms.api.dto.WmsContainerInfoResultDTO">
+        SELECT mc.`CONTAINER_NAME`              containerName,
+               mc.`CONTAINER_CODE`              containercode,
+               mc.`CONTAINER_TYPE_ID`,
+               mct.`CONTAINER_TYPE_DESCRIPTION` containerType,
+               mml.`LOCATOR_CODE`               locatorCode,
+               mmlor.`ORGANIZATION_ID`,
+               mms.`SITE_NAME`                  siteName,
+               mgs.`DESCRIPTION`                status
+        FROM mt_container mc
+                 LEFT JOIN mt_container_type mct ON mc.`CONTAINER_TYPE_ID` = mct.`CONTAINER_TYPE_ID`
+                 LEFT JOIN mt_mod_locator mml ON mc.`LOCATOR_ID` = mml.`LOCATOR_ID`
+                 LEFT JOIN mt_mod_locator_org_rel mmlor
+                           ON mml.`LOCATOR_ID` = mmlor.`LOCATOR_ID` AND mmlor.`ORGANIZATION_TYPE` = "site"
+                 LEFT JOIN mt_mod_site mms ON mmlor.`ORGANIZATION_ID` = mms.`SITE_ID`
+                 LEFT JOIN mt_gen_status mgs
+                           ON mgs.`STATUS_GROUP` = 'CONTAINER_STATUS' AND mc.`STATUS` = mgs.`STATUS_CODE`
+        WHERE mc.`CONTAINER_ID` = #{containerId}
+          and mc.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="getMaterialLotInfoByLotId"
+            resultType="com.ruike.wms.api.dto.WmsContainerDetailResultDTO">
+
+        SELECT mml.material_lot_code objectCode,
+               mml.MATERIAL_ID,
+               mm.material_name      materialName,
+               mm.material_code      materialCode,
+               mml.PRIMARY_UOM_QTY   quantity,
+               mml.PRIMARY_UOM_ID,
+               mu.uom_code           unitofmaterial,
+               mml.quality_status,
+               mgs.description AS    qualitystatus
+        FROM mt_material_lot mml
+                 LEFT JOIN `mt_material` mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+                 LEFT JOIN mt_uom mu ON mml.PRIMARY_UOM_ID = mu.uom_id
+                 LEFT JOIN mt_gen_status mgs ON mgs.module = 'MATERIAL_LOT' AND mgs.status_group = 'QUALITY_STATUS'
+            AND mgs.`STATUS_CODE` = mml.quality_status
+        WHERE MATERIAL_LOT_ID = #{materialLotId}
+          and mml.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="getContainerInfoByContainerId"
+            resultType="com.ruike.wms.api.dto.WmsContainerDetailResultDTO">
+
+        SELECT mml.material_lot_code objectCode,
+               mml.MATERIAL_ID,
+               mm.material_name      materialName,
+               mm.material_code      materialCode,
+               mml.PRIMARY_UOM_QTY   quantity,
+               mml.PRIMARY_UOM_ID,
+               mu.uom_code           unitofmaterial,
+               mml.quality_status,
+               mgs.description AS    qualitystatus
+        FROM mt_material_lot mml
+                 LEFT JOIN `mt_material` mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+                 LEFT JOIN mt_uom mu ON mml.PRIMARY_UOM_ID = mu.uom_id
+                 LEFT JOIN mt_gen_status mgs ON mgs.module = 'MATERIAL_LOT' AND mgs.status_group = 'QUALITY_STATUS'
+            AND mgs.`STATUS_CODE` = mml.quality_status
+        WHERE MATERIAL_LOT_ID = #{materialLotId}
+          and mml.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="getContainerCodeById" resultType="java.lang.String">
+        select CONTAINER_CODE
+        from mt_container
+        where CONTAINER_ID = #{containerId}
+          and TENANT_ID = #{tenantId}
+
+    </select>
+
+    <select id="getMaterialLotInfoById"
+            resultType="com.ruike.wms.api.dto.WmsContainerDetailResultDTO">
+        SELECT material_lot_code  objectCode,
+               PRIMARY_UOM_QTY    quantity,
+               uom_code           unitofmaterial,
+               mm.material_name   materialName,
+               mm.material_code   materialCode,
+               mgs.description AS qualitystatus
+        FROM mt_material_lot mml
+                 LEFT JOIN mt_uom mu ON mml.PRIMARY_UOM_ID = mu.uom_id
+                 LEFT JOIN mt_material mm ON mml.material_id = mm.material_id
+                 LEFT JOIN mt_gen_status mgs ON mgs.module = 'MATERIAL_LOT' AND mgs.status_group = 'QUALITY_STATUS'
+            AND mgs.`STATUS_CODE` = mml.quality_status
+        WHERE mml.MATERIAL_LOT_ID = #{loadObjectId}
+          and mml.TENANT_ID = #{tenantId}
+    </select>
+    <select id="queryType" parameterType="com.ruike.wms.api.dto.WmsContainerTypeMaintainRequestDTO"
+            resultType="com.ruike.wms.api.dto.WmsContainerTypeMaintainResponseDTO">
+        SELECT
+        mct.CONTAINER_TYPE_ID,
+        mct.CONTAINER_TYPE_CODE,
+        mct.CONTAINER_TYPE_DESCRIPTION,
+        mct.LENGTH,
+        mct.WIDTH,
+        mct.HEIGHT,
+        mu.UOM_CODE,
+        mcta.ATTR_VALUE AS AGV_FLAG
+        FROM
+        mt_container_type mct
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = mct.SIZE_UOM_ID
+        LEFT JOIN mt_container_type_attr mcta ON mcta.CONTAINER_TYPE_ID = mct.CONTAINER_TYPE_ID
+        AND mcta.ATTR_NAME = 'AGV_FLAG'
+        <where>
+            <if test="containerType!=null and containerType!=''">
+                and mct.CONTAINER_TYPE_CODE LIKE CONCAT('%',#{containerType},'%')
+            </if>
+            <if test="description!=null and description!=''">
+                AND mct.CONTAINER_TYPE_DESCRIPTION LIKE CONCAT('%',#{description},'%')
+            </if>
+            <if test="agvFlag!=null and agvFlag!=''">
+                and mcta.ATTR_VALUE=#{agvFlag}
+            </if>
+            AND mct.ENABLE_FLAG = 'Y'
+        </where>
+    </select>
+
+    <select id="selectByCode" resultType="com.ruike.wms.domain.vo.WmsContainerVO">
+        select mc.container_code
+             , mc.container_id
+             , mc.status
+             , mc.container_name
+             , mc.locator_id
+             , mc.site_id
+             , loc.locator_code
+             , mc.top_container_id
+             , mc.current_container_id
+             , loc.parent_locator_id warehouse_id
+        from mt_container mc
+           , mt_mod_locator loc
+        where mc.locator_id = loc.locator_id
+          and mc.tenant_id = #{tenantId}
+          and mc.container_code = #{containerCode}
+        limit 1
+    </select>
+</mapper>

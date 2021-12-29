@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.dispatch.infra.mapper.MtEoDispatchActionMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.dispatch.domain.entity.MtEoDispatchAction">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_DISPATCH_ACTION_ID" property="eoDispatchActionId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="PLAN_START_TIME" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="PLAN_END_TIME" property="planEndTime" jdbcType="TIMESTAMP"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="DATE"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="ASSIGN_QTY" property="assignQty" jdbcType="DECIMAL"/>
+        <result column="REVISION" property="revision" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByShiftCodesAndDates" resultMap="BaseResultMap">
+        SELECT *
+        FROM mt_eo_dispatch_action
+        WHERE 1 = 1
+        AND TENANT_ID = #{tenantId}
+        <if test="condition.workcellId != null">
+            AND WORKCELL_ID = #{condition.workcellId}
+        </if>
+        <if test="condition.operationId != null">
+            AND OPERATION_ID = #{condition.operationId}
+        </if>
+        <foreach collection="shiftCodeAndDates" item="item" separator="or" open="AND (" close=")">
+            (SHIFT_DATE = #{item.shiftDate} AND SHIFT_CODE = #{item.shiftCode})
+        </foreach>
+        ORDER BY SHIFT_DATE ASC, SHIFT_CODE ASC, PRIORITY ASC, PLAN_START_TIME ASC, PLAN_END_TIME ASC
+    </select>
+
+    <select id="getMaxRevision" resultType="java.lang.Long">
+        SELECT
+        max( REVISION )
+        FROM
+        mt_eo_dispatch_action
+        WHERE 1 = 1
+        AND TENANT_ID = #{tenantId}
+        <if test="condition.operationId != null">
+            AND OPERATION_ID = #{condition.operationId}
+        </if>
+        <if test="condition.workcellId != null">
+            AND WORKCELL_ID = #{condition.workcellId}
+        </if>
+        <if test="condition.shiftDate != null">
+            AND SHIFT_DATE = #{condition.shiftDate}
+        </if>
+        <if test="condition.shiftCode != null">
+            AND SHIFT_CODE = #{condition.shiftCode}
+        </if>
+    </select>
+
+    <select id="eoDispatchActionQueryById" resultMap="BaseResultMap">
+        select *
+        from mt_eo_dispatch_action
+        where 1 = 1
+        and TENANT_ID = #{tenantId}
+        and EO_DISPATCH_ACTION_ID in
+        <foreach collection="actionIds" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+
+    </select>
+
+    <select id="propertyLimitDispatchedActionPropertyQuery" resultMap="BaseResultMap">
+        select
+        t.*
+        from mt_eo_dispatch_action t
+        where t.TENANT_ID=#{tenantId}
+        <if test="vo.eoDispatchActionId != null">
+            and t.EO_DISPATCH_ACTION_ID=#{vo.eoDispatchActionId}
+        </if>
+        <if test="vo.eoId != null">
+            and t.EO_ID=#{vo.eoId}
+        </if>
+        <if test="vo.routerStepId != null">
+            and t.ROUTER_STEP_ID=#{vo.routerStepId}
+        </if>
+        <if test="vo.operationId != null">
+            and t.OPERATION_ID=#{vo.operationId}
+        </if>
+        <if test="vo.priority != null">
+            and t.PRIORITY=#{vo.priority}
+        </if>
+        <if test="vo.planStartTimeFrom != null">
+            and t.PLAN_START_TIME &gt;= DATE_FORMAT(#{vo.planStartTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.planStartTimeTo != null">
+            and t.PLAN_START_TIME &lt;= DATE_FORMAT(#{vo.planStartTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.planEndTimeFrom != null">
+            and t.PLAN_END_TIME &gt;= DATE_FORMAT(#{vo.planEndTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.planEndTimeTo != null">
+            and t.PLAN_END_TIME &lt;= DATE_FORMAT(#{vo.planEndTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.shiftDateFrom != null">
+            and t.SHIFT_DATE &gt;= DATE_FORMAT(#{vo.shiftDateFrom},'%Y-%m-%d')
+        </if>
+        <if test="vo.shiftDateTo != null">
+            and t.SHIFT_DATE &lt;= DATE_FORMAT(#{vo.shiftDateTo},'%Y-%m-%d')
+        </if>
+        <if test="vo.shiftCode != null">
+            and t.SHIFT_CODE=#{vo.shiftCode}
+        </if>
+        <if test="vo.revision != null">
+            and t.REVISION=#{vo.revision}
+        </if>
+        <if test="vo.workcellId != null">
+            and t.WORKCELL_ID=#{vo.workcellId}
+        </if>
+        <if test="vo.status != null">
+            and t.STATUS=#{vo.status}
+        </if>
+    </select>
+
+    <select id="propertyLimitDispatchedActionPropertyBatchQuery" resultMap="BaseResultMap">
+        select
+        t.*
+        from mt_eo_dispatch_action t
+        where t.TENANT_ID=#{tenantId}
+        <if test="vo.eoDispatchActionIdList!= null and vo.eoDispatchActionIdList.size()>0">
+            and t.EO_DISPATCH_ACTION_ID IN
+            <foreach collection="vo.eoDispatchActionIdList" item="eoDispatchActionId" separator="," open="(" close=")"
+                     index="index">
+                #{eoDispatchActionId}
+            </foreach>
+        </if>
+        <if test="vo.eoIdList != null and vo.eoIdList.size()>0">
+            and t.EO_ID IN
+            <foreach collection="vo.eoIdList" item="eoId" separator="," open="(" close=")" index="index">
+                #{eoId}
+            </foreach>
+        </if>
+        <if test="vo.routerStepIdList != null and vo.routerStepIdList.size()>0">
+            and t.ROUTER_STEP_ID IN
+            <foreach collection="vo.routerStepIdList" item="routerStepId" separator="," open="(" close=")"
+                     index="index">
+                #{routerStepId}
+            </foreach>
+        </if>
+        <if test="vo.operationIdList != null and vo.operationIdList.size()>0">
+            and t.OPERATION_ID IN
+            <foreach collection="vo.operationIdList" item="operationId" separator="," open="(" close=")" index="index">
+                #{operationId}
+            </foreach>
+        </if>
+        <if test="vo.planStartTimeFrom != null">
+            and t.PLAN_START_TIME &gt;= DATE_FORMAT(#{vo.planStartTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.planStartTimeTo != null">
+            and t.PLAN_START_TIME &lt;= DATE_FORMAT(#{vo.planStartTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.planEndTimeFrom != null">
+            and t.PLAN_END_TIME &gt;= DATE_FORMAT(#{vo.planEndTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.planEndTimeTo != null">
+            and t.PLAN_END_TIME &lt;= DATE_FORMAT(#{vo.planEndTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.shiftDateFrom != null">
+            and t.SHIFT_DATE &gt;= DATE_FORMAT(#{vo.shiftDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.shiftDateTo != null">
+            and t.SHIFT_DATE &lt;= DATE_FORMAT(#{vo.shiftDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="vo.shiftCodeList != null and vo.shiftCodeList.size()>0">
+            and t.SHIFT_CODE IN
+            <foreach collection="vo.shiftCodeList" item="shiftCode" separator="," open="(" close=")" index="index">
+                #{shiftCode}
+            </foreach>
+        </if>
+        <if test="vo.workcellIdList != null and vo.workcellIdList.size()>0">
+            and t.WORKCELL_ID IN
+            <foreach collection="vo.workcellIdList" item="workcellId" separator="," open="(" close=")" index="index">
+                #{workcellId}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="eoAndRouterStepLimitQuery" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_eo_dispatch_action t
+        WHERE
+        1 = 1
+        AND t.TENANT_ID = ${tenantId}
+        <if test="dtos != null and dtos.size() > 0">
+            <foreach collection="dtos" item="item" open="AND (" separator="OR" close=")">
+                ( t.EO_ID = #{item.eoId} AND t.ROUTER_STEP_ID = #{item.routerStepId} )
+            </foreach>
+        </if>
+        <if test="workcellId != null">
+            AND t.WORKCELL_ID = #{workcellId}
+        </if>
+    </select>
+</mapper>

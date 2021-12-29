@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeMaterialLotLabCodeMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeMaterialLotLabCode">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="LAB_CODE_ID" property="labCodeId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="OBJECT" property="object" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_LOAD_ID" property="materialLotLoadId" jdbcType="VARCHAR"/>
+        <result column="LAB_CODE" property="labCode" jdbcType="VARCHAR"/>
+        <result column="JOB_ID" property="jobId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_OBJECT" property="sourceObject" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_MATERIAL_LOT_ID" property="sourceMaterialLotId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_MATERIAL_ID" property="sourceMaterialId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectLabCode" resultType="com.ruike.hme.domain.vo.HmeMaterialLotLabCodeVO">
+        SELECT
+            mllc.lab_code_id,
+            mllc.lab_code,
+            mllc.router_step_id,
+            mrs.sequence,
+            mrs.description
+        FROM
+            hme_material_lot_lab_code mllc
+            LEFT JOIN mt_router_step mrs ON mllc.router_step_id = mrs.router_step_id
+        WHERE
+            mllc.tenant_id = #{tenantId}
+            and mllc.material_lot_id = #{materialLotId}
+        ORDER BY
+            mllc.creation_date
+    </select>
+
+    <select id="selectMaterial" resultType="java.lang.String">
+        SELECT
+            hmllc.material_lot_id
+        FROM
+            hme_material_lot_lab_code hmllc
+        WHERE
+            hmllc.tenant_id = #{tenantId}
+            AND hmllc.lab_code like CONCAT("%",#{labCode},"%")
+            AND hmllc.enable_flag = 'Y'
+        GROUP BY
+            hmllc.material_lot_id
+    </select>
+
+    <select id="selectLabCode2" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLabCode">
+        SELECT
+            hmllc.lab_code_id,
+            hmllc.lab_code,
+            hmllc.enable_flag
+        FROM
+            hme_material_lot_lab_code hmllc
+        WHERE
+            hmllc.tenant_id = #{tenantId}
+            AND hmllc.material_lot_id = #{dto.materialLotId}
+            AND hmllc.router_step_id = #{dto.routerStepId}
+            AND hmllc.lab_code = #{dto.labCode}
+    </select>
+
+    <select id="batchSelectLabCode2" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLabCode">
+        SELECT
+            hmllc.lab_code_id,
+            hmllc.lab_code,
+            hmllc.enable_flag,
+            hmllc.material_lot_id,
+            hmllc.router_step_id,
+            hmllc.enable_flag
+        FROM
+            hme_material_lot_lab_code hmllc
+        WHERE
+            hmllc.tenant_id = #{tenantId}
+            AND hmllc.material_lot_id IN
+        <foreach collection="materialLotIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+            AND hmllc.router_step_id IN
+        <foreach collection="eoStepIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        <if test="labCode != null and labCode != '' ">
+            AND hmllc.lab_code = #{labCode}
+        </if>
+    </select>
+
+    <select id="batchSelectLabCode" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLabCode">
+        SELECT
+            hmllc.material_lot_id,
+            hmllc.lab_code,
+            hmllc.enable_flag
+        FROM
+            hme_material_lot_lab_code hmllc
+        WHERE
+            hmllc.tenant_id = #{tenantId}
+            AND hmllc.material_lot_id IN
+        <foreach collection="materialLotIdlist" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+            AND hmllc.router_step_id = #{routerStepId}
+            AND hmllc.enable_flag = 'Y'
+    </select>
+
+</mapper>

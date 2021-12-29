@@ -1,0 +1,719 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEquipmentMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEquipment">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EQUIPMENT_ID" property="equipmentId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="ASSET_NAME" property="assetName" jdbcType="VARCHAR"/>
+        <result column="ASSET_CLASS" property="assetClass" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTIONS" property="descriptions" jdbcType="VARCHAR"/>
+        <result column="SAP_NUM" property="sapNum" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_BODY_NUM" property="equipmentBodyNum" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_CONFIG" property="equipmentConfig" jdbcType="VARCHAR"/>
+        <result column="OA_CHECK_NUM" property="oaCheckNum" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_CATEGORY" property="equipmentCategory" jdbcType="VARCHAR"/>
+        <result column="APPLY_TYPE" property="applyType" jdbcType="VARCHAR"/>
+        <result column="EQUIPMENT_STATUS" property="equipmentStatus" jdbcType="VARCHAR"/>
+        <result column="DEAL_NUM" property="dealNum" jdbcType="VARCHAR"/>
+        <result column="DEAL_REASON" property="dealReason" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_ID" property="businessId" jdbcType="VARCHAR"/>
+        <result column="USER" property="user" jdbcType="VARCHAR"/>
+        <result column="PRESERVER" property="preserver" jdbcType="VARCHAR"/>
+        <result column="LOCATION" property="location" jdbcType="VARCHAR"/>
+        <result column="MEASURE_FLAG" property="measureFlag" jdbcType="VARCHAR"/>
+        <result column="FREQUENCY" property="frequency" jdbcType="VARCHAR"/>
+        <result column="BELONG_TO" property="belongTo" jdbcType="VARCHAR"/>
+        <result column="POSTING_DATE" property="postingDate" jdbcType="DATE"/>
+        <result column="SUPPLIER" property="supplier" jdbcType="VARCHAR"/>
+        <result column="BRAND" property="brand" jdbcType="VARCHAR"/>
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="AMOUNT" property="amount" jdbcType="DECIMAL"/>
+        <result column="CURRENCY" property="currency" jdbcType="VARCHAR"/>
+        <result column="CONTRACT_NUM" property="contractNum" jdbcType="VARCHAR"/>
+        <result column="RECRUITEMENT" property="recruitement" jdbcType="VARCHAR"/>
+        <result column="RECRUITEMENT_NUM" property="recruitementNum" jdbcType="VARCHAR"/>
+        <result column="WARRANTY_DATE" property="warrantyDate" jdbcType="DATE"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--设备台账管理-获取设备基础信息-->
+    <select id="queryEquipmentList" resultType="com.ruike.hme.domain.vo.HmeEquipmentVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        HE.TENANT_ID,
+        HE.EQUIPMENT_ID,
+        HE.ASSET_ENCODING,
+        HE.ASSET_NAME,
+        HE.ASSET_CLASS,
+        HE.DESCRIPTIONS,
+        HE.SAP_NUM,
+        HE.EQUIPMENT_BODY_NUM,
+        HE.EQUIPMENT_CONFIG,
+        HE.OA_CHECK_NUM,
+        HE.EQUIPMENT_CATEGORY,
+        HE.EQUIPMENT_TYPE,
+        HE.APPLY_TYPE,
+        HE.EQUIPMENT_STATUS,
+        HE.DEAL_NUM,
+        HE.DEAL_REASON,
+        HE.BUSINESS_ID,
+        HE.USER,
+        HE.PRESERVER,
+        HE.LOCATION,
+        HE.MEASURE_FLAG,
+        HE.FREQUENCY,
+        HE.BELONG_TO,
+        HE.POSTING_DATE,
+        HE.SUPPLIER,
+        HE.BRAND,
+        HE.MODEL,
+        HE.UNIT,
+        HE.QUANTITY,
+        HE.AMOUNT,
+        HE.CURRENCY,
+        HE.CONTRACT_NUM,
+        HE.RECRUITEMENT,
+        HE.RECRUITEMENT_NUM,
+        HE.WARRANTY_DATE,
+        HE.SITE_ID,
+        MMS.SITE_CODE,
+        HE.REMARK,
+        GROUP_CONCAT(HEWR.STATION_ID SEPARATOR '/') AS STATION_ID,
+        GROUP_CONCAT(MMW.WORKCELL_CODE SEPARATOR '/') AS WORKCELL_CODE,
+        GROUP_CONCAT(MMWT.WORKCELL_NAME SEPARATOR '/') AS WORKCELL_NAME,
+        HE.ATTRIBUTE1,
+        MMA.DESCRIPTION AS BUSINESS_NAME,
+        HE.ATTRIBUTE2 AS ledger_Type
+        FROM
+        HME_EQUIPMENT HE
+        LEFT JOIN MT_MOD_SITE MMS ON HE.SITE_ID = MMS.SITE_ID
+        LEFT JOIN HME_EQUIPMENT_WKC_REL HEWR ON HE.EQUIPMENT_ID = HEWR.EQUIPMENT_ID AND HEWR.ENABLE_FLAG = 'Y'
+        LEFT JOIN MT_MOD_WORKCELL MMW ON HEWR.STATION_ID = MMW.WORKCELL_ID
+        LEFT JOIN MT_MOD_WORKCELL_TL MMWT ON MMW.WORKCELL_ID = MMWT.WORKCELL_ID AND MMWT.LANG = #{lang}
+        LEFT JOIN MT_MOD_AREA MMA ON MMA.AREA_ID = HE.BUSINESS_ID
+        WHERE 1=1
+        AND HE.TENANT_ID = #{tenantId}
+        <if test="equipmentId != null and equipmentId!='' ">
+            AND HE.EQUIPMENT_ID = #{equipmentId}
+        </if>
+        <if test="assetEncodingList != null and assetEncodingList.size() > 0">
+            AND HE.ASSET_ENCODING IN
+            <foreach collection="assetEncodingList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="assetName != null and assetName != '' ">
+            <bind name="assetNameLike" value="'%' +assetName + '%'"/>
+            AND HE.ASSET_NAME LIKE  #{assetNameLike}
+        </if>
+        <if test="assetClassList !=null and assetClassList.size()>0">
+            and HE.ASSET_CLASS in
+            <foreach collection="assetClassList" open="(" close=")" item="assetClass" separator="," index="index">
+                #{assetClass}
+            </foreach>
+        </if>
+        <if test="descriptions != null and descriptions!='' ">
+            <bind name="descriptionsLike" value="'%' +descriptions + '%'"/>
+            AND HE.DESCRIPTIONS LIKE #{descriptionsLike}
+        </if>
+        <if test="sapNum != null and sapNum!='' ">
+            <bind name="sapNumLike" value="'%' +sapNum + '%'"/>
+            AND HE.SAP_NUM LIKE  #{sapNumLike}
+        </if>
+        <if test="equipmentBodyNum != null and equipmentBodyNum!='' ">
+            <bind name="equipmentBodyNumLike" value="'%' +equipmentBodyNum + '%'"/>
+            AND HE.EQUIPMENT_BODY_NUM LIKE  #{equipmentBodyNumLike}
+        </if>
+        <if test="equipmentConfig != null and equipmentConfig!='' ">
+            <bind name="equipmentConfigLike" value="'%' +equipmentConfig + '%'"/>
+            AND HE.EQUIPMENT_CONFIG LIKE  #{equipmentConfigLike}
+        </if>
+        <if test="oaCheckNum != null and oaCheckNum!='' ">
+            <bind name="oaCheckNumLike" value="'%' +oaCheckNum + '%'"/>
+            AND HE.OA_CHECK_NUM LIKE  #{oaCheckNumLike}
+        </if>
+        <if test="equipmentCategoryList !=null and equipmentCategoryList.size()>0">
+            and HE.EQUIPMENT_CATEGORY in
+            <foreach collection="equipmentCategoryList" open="(" close=")" item="equipmentCategory" separator="," index="index">
+                #{equipmentCategory}
+            </foreach>
+        </if>
+        <if test="applyType != null and applyType!='' ">
+            AND HE.APPLY_TYPE = #{applyType}
+        </if>
+        <if test="equipmentStatusList !=null and equipmentStatusList.size()>0">
+            and HE.EQUIPMENT_STATUS in
+            <foreach collection="equipmentStatusList" open="(" close=")" item="equipmentStatus" separator="," index="index">
+                #{equipmentStatus}
+            </foreach>
+        </if>
+        <if test="dealNum != null and dealNum!='' ">
+            <bind name="dealNumLike" value="'%' +dealNum + '%'"/>
+            AND HE.DEAL_NUM LIKE #{dealNumLike}
+        </if>
+        <if test="dealReason != null and dealReason!='' ">
+            <bind name="dealReasonLike" value="'%' +dealReason + '%'"/>
+            AND HE.DEAL_REASON LIKE #{dealReasonLike}
+        </if>
+        <if test="businessIdList !=null and businessIdList.size()>0">
+            and HE.BUSINESS_ID in
+            <foreach collection="businessIdList" open="(" close=")" item="businessId" separator="," index="index">
+                #{businessId}
+            </foreach>
+        </if>
+        <if test="user != null and user!='' ">
+            <bind name="userLike" value="'%' +user + '%'"/>
+            AND HE.USER LIKE  #{userLike}
+        </if>
+        <if test="preserver != null and preserver!='' ">
+            <bind name="preserverLike" value="'%' +preserver + '%'"/>
+            AND HE.PRESERVER LIKE  #{preserverLike}
+        </if>
+        <if test="location != null and location!='' ">
+            <bind name="locationLike" value="'%' +location + '%'"/>
+            AND HE.LOCATION LIKE  #{locationLike}
+        </if>
+        <if test="measureFlag != null and measureFlag!='' ">
+            AND HE.MEASURE_FLAG = #{measureFlag}
+        </if>
+        <if test="frequencyList !=null and frequencyList.size()>0">
+            and HE.FREQUENCY in
+            <foreach collection="frequencyList" open="(" close=")" item="frequency" separator="," index="index">
+                #{frequency}
+            </foreach>
+        </if>
+        <if test="supplier != null and supplier!='' ">
+            <bind name="supplierLike" value="'%' +supplier + '%'"/>
+            AND HE.SUPPLIER LIKE  #{supplierLike}
+        </if>
+        <if test="brand != null and brand!='' ">
+            <bind name="brandLike" value="'%' +brand + '%'"/>
+            AND HE.BRAND LIKE  #{brandLike}
+        </if>
+        <if test="model != null and model!='' ">
+            <bind name="modelLike" value="'%' +model + '%'"/>
+            AND HE.MODEL LIKE  #{modelLike}
+        </if>
+        <if test="recruitement != null and recruitement!='' ">
+            <bind name="recruitementLike" value="'%' +recruitement + '%'"/>
+            AND HE.RECRUITEMENT LIKE #{recruitementLike}
+        </if>
+        <if test="recruitementNum != null and recruitementNum!='' ">
+            <bind name="recruitementNumLike" value="'%' +recruitementNum + '%'"/>
+            AND HE.RECRUITEMENT_NUM LIKE  #{recruitementNumLike}
+        </if>
+        <if test="contractNum != null and contractNum!='' ">
+            <bind name="contractNumLike" value="'%' +contractNum + '%'"/>
+            AND HE.CONTRACT_NUM LIKE  #{contractNumLike}
+        </if>
+        <if test="postingDateStart != null and postingDateStart!='' ">
+            AND HE.POSTING_DATE >= #{postingDateStart}
+        </if>
+        <if test="postingDateEnd != null and postingDateEnd!='' ">
+            AND HE.POSTING_DATE &lt;= #{postingDateEnd}
+        </if>
+        <if test="belongTo != null and belongTo !='' ">
+            <bind name="belongToLike" value="'%' +belongTo + '%'"/>
+            AND HE.BELONG_TO LIKE #{belongToLike}
+        </if>
+        <if test="siteId != null and siteId!='' ">
+            AND HE.SITE_ID = #{siteId}
+        </if>
+        <if test="stationId != null and stationId!='' ">
+            AND HEWR.STATION_ID = #{stationId}
+        </if>
+        <if test="ledgerTypeList !=null and ledgerTypeList.size()>0">
+            and HE.ATTRIBUTE2 in
+            <foreach collection="ledgerTypeList" open="(" close=")" item="ledgerType" separator="," index="index">
+                #{ledgerType}
+            </foreach>
+        </if>
+        <if test=" attribute1 != null and attribute1 !='' ">
+            AND HE.ATTRIBUTE1 = #{attribute1}
+        </if>
+        <if test="equipmentTypeList != null and equipmentTypeList.size() > 0 ">
+            AND HE.EQUIPMENT_TYPE in
+            <foreach collection="equipmentTypeList" open="(" close=")" item="equipmentType" separator="," index="index">
+                #{equipmentType}
+            </foreach>
+        </if>
+        <if test="workcellCodeIdList !=null and workcellCodeIdList.size()>0">
+        AND EXISTS (
+        SELECT
+        1
+        FROM
+        HME_EQUIPMENT_WKC_REL HEWR1
+        WHERE
+        HEWR1.STATION_ID in
+            <foreach collection="workcellCodeIdList" open="(" close=")" item="workcellCodeId" separator="," index="index">
+                #{workcellCodeId}
+            </foreach>
+        AND HE.EQUIPMENT_ID = HEWR1.EQUIPMENT_ID
+        AND HEWR1.ENABLE_FLAG = 'Y'
+        )
+        </if>
+        GROUP BY
+        HE.TENANT_ID,
+        HE.EQUIPMENT_ID,
+        HE.ASSET_ENCODING,
+        HE.ASSET_NAME,
+        HE.ASSET_CLASS,
+        HE.DESCRIPTIONS,
+        HE.SAP_NUM,
+        HE.EQUIPMENT_BODY_NUM,
+        HE.EQUIPMENT_CONFIG,
+        HE.OA_CHECK_NUM,
+        HE.EQUIPMENT_CATEGORY,
+        HE.EQUIPMENT_TYPE,
+        HE.APPLY_TYPE,
+        HE.EQUIPMENT_STATUS,
+        HE.DEAL_NUM,
+        HE.DEAL_REASON,
+        HE.BUSINESS_ID,
+        HE.USER,
+        HE.PRESERVER,
+        HE.LOCATION,
+        HE.MEASURE_FLAG,
+        HE.FREQUENCY,
+        HE.BELONG_TO,
+        HE.POSTING_DATE,
+        HE.SUPPLIER,
+        HE.BRAND,
+        HE.MODEL,
+        HE.UNIT,
+        HE.QUANTITY,
+        HE.AMOUNT,
+        HE.CURRENCY,
+        HE.CONTRACT_NUM,
+        HE.RECRUITEMENT,
+        HE.RECRUITEMENT_NUM,
+        HE.WARRANTY_DATE,
+        HE.SITE_ID,
+        MMS.SITE_CODE,
+        HE.REMARK,
+        HE.ATTRIBUTE1,
+        MMA.DESCRIPTION,
+        HE.ATTRIBUTE2
+        ORDER BY HE.CREATION_DATE DESC, HE.ASSET_ENCODING ASC
+    </select>
+
+    <select id="queryEquipmentList2" resultType="com.ruike.hme.domain.entity.HmeEquipment">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        HE.TENANT_ID,
+        HE.EQUIPMENT_ID,
+        HE.ASSET_ENCODING,
+        HE.ASSET_NAME,
+        HE.ASSET_CLASS,
+        HE.DESCRIPTIONS,
+        HE.SAP_NUM,
+        HE.EQUIPMENT_BODY_NUM,
+        HE.EQUIPMENT_CONFIG,
+        HE.OA_CHECK_NUM,
+        HE.EQUIPMENT_CATEGORY,
+        HE.EQUIPMENT_TYPE,
+        HE.APPLY_TYPE,
+        HE.EQUIPMENT_STATUS,
+        HE.DEAL_NUM,
+        HE.DEAL_REASON,
+        HE.BUSINESS_ID,
+        HE.USER,
+        HE.PRESERVER,
+        HE.LOCATION,
+        HE.MEASURE_FLAG,
+        HE.FREQUENCY,
+        HE.BELONG_TO,
+        HE.POSTING_DATE,
+        HE.SUPPLIER,
+        HE.BRAND,
+        HE.MODEL,
+        HE.UNIT,
+        HE.QUANTITY,
+        HE.AMOUNT,
+        HE.CURRENCY,
+        HE.CONTRACT_NUM,
+        HE.RECRUITEMENT,
+        HE.RECRUITEMENT_NUM,
+        HE.WARRANTY_DATE,
+        HE.SITE_ID,
+        HE.REMARK,
+        HE.ATTRIBUTE1,
+        HE.ATTRIBUTE2
+        FROM
+        HME_EQUIPMENT HE
+        LEFT JOIN MT_MOD_SITE MMS ON HE.SITE_ID = MMS.SITE_ID
+        LEFT JOIN HME_EQUIPMENT_WKC_REL HEWR ON HE.EQUIPMENT_ID = HEWR.EQUIPMENT_ID AND HEWR.ENABLE_FLAG = 'Y'
+        LEFT JOIN MT_MOD_WORKCELL MMW ON HEWR.STATION_ID = MMW.WORKCELL_ID
+        LEFT JOIN MT_MOD_WORKCELL_TL MMWT ON MMW.WORKCELL_ID = MMWT.WORKCELL_ID AND MMWT.LANG = #{lang}
+        LEFT JOIN MT_MOD_AREA MMA ON MMA.AREA_ID = HE.BUSINESS_ID
+        WHERE 1=1
+        AND HE.TENANT_ID = #{tenantId}
+        <if test="equipmentId != null and equipmentId!='' ">
+            AND HE.EQUIPMENT_ID = #{equipmentId}
+        </if>
+        <if test="assetEncodingList != null and assetEncodingList.size() > 0">
+            AND HE.ASSET_ENCODING IN
+            <foreach collection="assetEncodingList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="assetName != null and assetName != '' ">
+            <bind name="assetNameLike" value="'%' +assetName + '%'"/>
+            AND HE.ASSET_NAME LIKE  #{assetNameLike}
+        </if>
+        <if test="assetClassList !=null and assetClassList.size()>0">
+            and HE.ASSET_CLASS in
+            <foreach collection="assetClassList" open="(" close=")" item="assetClass" separator="," index="index">
+                #{assetClass}
+            </foreach>
+        </if>
+        <if test="descriptions != null and descriptions!='' ">
+            <bind name="descriptionsLike" value="'%' +descriptions + '%'"/>
+            AND HE.DESCRIPTIONS LIKE #{descriptionsLike}
+        </if>
+        <if test="sapNum != null and sapNum!='' ">
+            <bind name="sapNumLike" value="'%' +sapNum + '%'"/>
+            AND HE.SAP_NUM LIKE  #{sapNumLike}
+        </if>
+        <if test="equipmentBodyNum != null and equipmentBodyNum!='' ">
+            <bind name="equipmentBodyNumLike" value="'%' +equipmentBodyNum + '%'"/>
+            AND HE.EQUIPMENT_BODY_NUM LIKE  #{equipmentBodyNumLike}
+        </if>
+        <if test="equipmentConfig != null and equipmentConfig!='' ">
+            <bind name="equipmentConfigLike" value="'%' +equipmentConfig + '%'"/>
+            AND HE.EQUIPMENT_CONFIG LIKE  #{equipmentConfigLike}
+        </if>
+        <if test="oaCheckNum != null and oaCheckNum!='' ">
+            <bind name="oaCheckNumLike" value="'%' +oaCheckNum + '%'"/>
+            AND HE.OA_CHECK_NUM LIKE  #{oaCheckNumLike}
+        </if>
+        <if test="equipmentCategoryList !=null and equipmentCategoryList.size()>0">
+            and HE.EQUIPMENT_CATEGORY in
+            <foreach collection="equipmentCategoryList" open="(" close=")" item="equipmentCategory" separator="," index="index">
+                #{equipmentCategory}
+            </foreach>
+        </if>
+        <if test="applyType != null and applyType!='' ">
+            AND HE.APPLY_TYPE = #{applyType}
+        </if>
+        <if test="equipmentStatusList !=null and equipmentStatusList.size()>0">
+            and HE.EQUIPMENT_STATUS in
+            <foreach collection="equipmentStatusList" open="(" close=")" item="equipmentStatus" separator="," index="index">
+                #{equipmentStatus}
+            </foreach>
+        </if>
+        <if test="dealNum != null and dealNum!='' ">
+            <bind name="dealNumLike" value="'%' +dealNum + '%'"/>
+            AND HE.DEAL_NUM LIKE #{dealNumLike}
+        </if>
+        <if test="dealReason != null and dealReason!='' ">
+            <bind name="dealReasonLike" value="'%' +dealReason + '%'"/>
+            AND HE.DEAL_REASON LIKE #{dealReasonLike}
+        </if>
+        <if test="businessIdList !=null and businessIdList.size()>0">
+            and HE.BUSINESS_ID in
+            <foreach collection="businessIdList" open="(" close=")" item="businessId" separator="," index="index">
+                #{businessId}
+            </foreach>
+        </if>
+        <if test="user != null and user!='' ">
+            <bind name="userLike" value="'%' +user + '%'"/>
+            AND HE.USER LIKE  #{userLike}
+        </if>
+        <if test="preserver != null and preserver!='' ">
+            <bind name="preserverLike" value="'%' +preserver + '%'"/>
+            AND HE.PRESERVER LIKE  #{preserverLike}
+        </if>
+        <if test="location != null and location!='' ">
+            <bind name="locationLike" value="'%' +location + '%'"/>
+            AND HE.LOCATION LIKE  #{locationLike}
+        </if>
+        <if test="measureFlag != null and measureFlag!='' ">
+            AND HE.MEASURE_FLAG = #{measureFlag}
+        </if>
+        <if test="frequencyList !=null and frequencyList.size()>0">
+            and HE.FREQUENCY in
+            <foreach collection="frequencyList" open="(" close=")" item="frequency" separator="," index="index">
+                #{frequency}
+            </foreach>
+        </if>
+        <if test="supplier != null and supplier!='' ">
+            <bind name="supplierLike" value="'%' +supplier + '%'"/>
+            AND HE.SUPPLIER LIKE  #{supplierLike}
+        </if>
+        <if test="brand != null and brand!='' ">
+            <bind name="brandLike" value="'%' +brand + '%'"/>
+            AND HE.BRAND LIKE  #{brandLike}
+        </if>
+        <if test="model != null and model!='' ">
+            <bind name="modelLike" value="'%' +model + '%'"/>
+            AND HE.MODEL LIKE  #{modelLike}
+        </if>
+        <if test="recruitement != null and recruitement!='' ">
+            <bind name="recruitementLike" value="'%' +recruitement + '%'"/>
+            AND HE.RECRUITEMENT LIKE #{recruitementLike}
+        </if>
+        <if test="recruitementNum != null and recruitementNum!='' ">
+            <bind name="recruitementNumLike" value="'%' +recruitementNum + '%'"/>
+            AND HE.RECRUITEMENT_NUM LIKE  #{recruitementNumLike}
+        </if>
+        <if test="contractNum != null and contractNum!='' ">
+            <bind name="contractNumLike" value="'%' +contractNum + '%'"/>
+            AND HE.CONTRACT_NUM LIKE  #{contractNumLike}
+        </if>
+        <if test="postingDateStart != null and postingDateStart!='' ">
+            AND HE.POSTING_DATE >= #{postingDateStart}
+        </if>
+        <if test="postingDateEnd != null and postingDateEnd!='' ">
+            AND HE.POSTING_DATE &lt;= #{postingDateEnd}
+        </if>
+        <if test="belongTo != null and belongTo !='' ">
+            <bind name="belongToLike" value="'%' +belongTo + '%'"/>
+            AND HE.BELONG_TO LIKE #{belongToLike}
+        </if>
+        <if test="siteId != null and siteId!='' ">
+            AND HE.SITE_ID = #{siteId}
+        </if>
+        <if test="stationId != null and stationId!='' ">
+            AND HEWR.STATION_ID = #{stationId}
+        </if>
+        <if test="ledgerTypeList !=null and ledgerTypeList.size()>0">
+            and HE.ATTRIBUTE2 in
+            <foreach collection="ledgerTypeList" open="(" close=")" item="ledgerType" separator="," index="index">
+                #{ledgerType}
+            </foreach>
+        </if>
+        <if test=" attribute1 != null and attribute1 !='' ">
+            AND HE.ATTRIBUTE1 = #{attribute1}
+        </if>
+        <if test="equipmentTypeList != null and equipmentTypeList.size() > 0 ">
+            AND HE.EQUIPMENT_TYPE in
+            <foreach collection="equipmentTypeList" open="(" close=")" item="equipmentType" separator="," index="index">
+                #{equipmentType}
+            </foreach>
+        </if>
+        <if test="workcellCodeIdList !=null and workcellCodeIdList.size()>0">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            HME_EQUIPMENT_WKC_REL HEWR1
+            WHERE
+            HEWR1.STATION_ID in
+            <foreach collection="workcellCodeIdList" open="(" close=")" item="workcellCodeId" separator="," index="index">
+                #{workcellCodeId}
+            </foreach>
+            AND HE.EQUIPMENT_ID = HEWR1.EQUIPMENT_ID
+            AND HEWR1.ENABLE_FLAG = 'Y'
+            )
+        </if>
+        GROUP BY
+        HE.TENANT_ID,
+        HE.EQUIPMENT_ID,
+        HE.ASSET_ENCODING,
+        HE.ASSET_NAME,
+        HE.ASSET_CLASS,
+        HE.DESCRIPTIONS,
+        HE.SAP_NUM,
+        HE.EQUIPMENT_BODY_NUM,
+        HE.EQUIPMENT_CONFIG,
+        HE.OA_CHECK_NUM,
+        HE.EQUIPMENT_CATEGORY,
+        HE.EQUIPMENT_TYPE,
+        HE.APPLY_TYPE,
+        HE.EQUIPMENT_STATUS,
+        HE.DEAL_NUM,
+        HE.DEAL_REASON,
+        HE.BUSINESS_ID,
+        HE.USER,
+        HE.PRESERVER,
+        HE.LOCATION,
+        HE.MEASURE_FLAG,
+        HE.FREQUENCY,
+        HE.BELONG_TO,
+        HE.POSTING_DATE,
+        HE.SUPPLIER,
+        HE.BRAND,
+        HE.MODEL,
+        HE.UNIT,
+        HE.QUANTITY,
+        HE.AMOUNT,
+        HE.CURRENCY,
+        HE.CONTRACT_NUM,
+        HE.RECRUITEMENT,
+        HE.RECRUITEMENT_NUM,
+        HE.WARRANTY_DATE,
+        HE.SITE_ID,
+        HE.REMARK,
+        HE.ATTRIBUTE1,
+        HE.ATTRIBUTE2
+        ORDER BY HE.CREATION_DATE DESC, HE.ASSET_ENCODING ASC
+    </select>
+
+    <select id="queryWorkcellHisForUi" resultType="com.ruike.hme.domain.vo.HmeEquipmentHisVO2">
+        SELECT
+        wr.EVENT_ID AS eventId,
+        he.ASSET_ENCODING AS assetEncoding,
+        he.ASSET_NAME AS assetName,
+        he.DESCRIPTIONS AS assetDesc,
+        mw.WORKCELL_NAME AS workcellName,
+        mw.WORKCELL_CODE AS workcellCode,
+        me.EVENT_TIME AS eventTime,
+        me.EVENT_BY AS eventBy,
+        et.EVENT_TYPE_CODE AS eventTypeCode,
+        et.DESCRIPTION AS eventTypeDesc
+        FROM
+        hme_equipment he
+        LEFT JOIN hme_equipment_wkc_rel_his wr ON he.EQUIPMENT_ID = wr.EQUIPMENT_ID
+        LEFT JOIN mt_mod_workcell mw ON mw.WORKCELL_ID = wr.STATION_ID
+        LEFT JOIN mt_event me ON me.EVENT_ID = wr.EVENT_ID
+        LEFT JOIN mt_event_type et ON me.EVENT_TYPE_ID = et.EVENT_TYPE_ID AND et.ENABLE_FLAG = "Y"
+        WHERE
+        he.EQUIPMENT_ID = #{equipmentId}
+        AND he.TENANT_ID = #{tenantId}
+        <if test="startTime != null and startTime != ''">
+            AND me.EVENT_TIME >= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND me.EVENT_TIME <![CDATA[<=]]> #{endTime}
+        </if>
+        ORDER BY wr.CREATION_DATE DESC
+    </select>
+
+    <select id="queryOneInfo" resultType="com.ruike.hme.domain.vo.HmeEquipmentVO3">
+        SELECT
+            he.asset_name,
+            he.equipment_id,
+            GROUP_CONCAT(hewr.station_id SEPARATOR  ',') as station_id,
+            GROUP_CONCAT(mmw.workcell_name SEPARATOR  ',') as workcell_name,
+            he.supplier,
+            he.model
+        FROM hme_equipment he
+        LEFT JOIN hme_equipment_wkc_rel hewr ON hewr.equipment_id = he.equipment_id
+        LEFT JOIN mt_mod_workcell mmw ON mmw.workcell_id = hewr.station_id
+        WHERE he.asset_encoding = #{assetEncoding}
+        AND hewr.enable_flag = 'Y'
+        AND mmw.enable_flag = 'Y'
+        AND he.TENANT_ID = #{tenantId}
+        GROUP BY he.equipment_id
+    </select>
+
+    <select id="queryMultiInfo" resultType="com.ruike.hme.domain.vo.HmeEquipmentVO3">
+        SELECT
+            he.asset_name,
+            he.equipment_id,
+            hewr.station_id,
+            mmw.workcell_name,
+            he.supplier,
+            he.model,
+            mmw.WORKCELL_CODE
+        FROM hme_equipment he
+        LEFT JOIN hme_equipment_wkc_rel hewr ON hewr.equipment_id = he.equipment_id
+        LEFT JOIN mt_mod_workcell mmw ON mmw.workcell_id = hewr.station_id
+        WHERE he.asset_encoding = #{assetEncoding}
+        AND hewr.enable_flag = 'Y'
+        AND mmw.enable_flag = 'Y'
+        AND he.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryEquipmentHis" resultType="com.ruike.hme.domain.vo.HmeEquipmentHisVO3">
+      SELECT
+         eh.equipment_his_id,
+         eh.equipment_type,
+         eh.asset_encoding,
+         eh.asset_name,
+         eh.equipment_body_num,
+         eh.model,
+         eh.brand,
+         eh.supplier,
+         mma.description business_name,
+         eh.preserver,
+         eh.location,
+         eh.frequency,
+         eh.unit,
+         eh.quantity,
+         eh.amount,
+         eh.asset_class,
+         eh.posting_date,
+         eh.sap_num,
+         eh.equipment_config,
+         eh.contract_num,
+         eh.recruitement,
+         eh.recruitement_num,
+         eh.oa_check_num,
+         eh.measure_flag,
+         eh.warranty_date,
+         eh.remark,
+         eh.equipment_category,
+         eh.equipment_status,
+         eh.currency,
+         eh.`user`,
+         eh.deal_num,
+         eh.deal_reason,
+         eh.belong_to,
+         eh.apply_type,
+         eh.ATTRIBUTE1 manage_mode,
+         eh.ATTRIBUTE2 ledger_category,
+         eh.last_update_date,
+         eh.last_updated_by,
+         iu.real_name last_updated_by_name
+    FROM
+        hme_equipment_his eh
+    LEFT JOIN mt_mod_area mma ON mma.AREA_ID = eh.business_id
+    LEFT JOIN iam_user iu ON iu.id = eh.last_updated_by
+    WHERE eh.tenant_id = #{tenantId}
+    AND eh.equipment_id = #{equipmentId}
+    ORDER BY eh.creation_date DESC
+    </select>
+
+    <update id="batchUpdateEquipmentPrintFlag">
+        update hme_equipment
+        set
+        ATTRIBUTE3 = 'Y',
+        object_version_number = object_version_number + 1,
+        last_updated_by = #{userId},
+        last_update_date = CURRENT_TIMESTAMP
+        where tenant_id = #{tenantId}
+        and equipment_id in
+        <foreach collection="hmeEquipmentList" index="index" item="item" open="(" close=")" separator=",">
+            #{item.equipmentId}
+        </foreach>
+    </update>
+
+    <select id="queryEquipmentOfWkc" resultType="java.lang.String">
+        SELECT
+            he.EQUIPMENT_CATEGORY
+        FROM
+            hme_equipment_wkc_rel hewr,
+            hme_equipment he
+        WHERE
+            he.EQUIPMENT_ID = hewr.equipment_id
+          AND hewr.TENANT_ID = #{tenantId}
+          AND hewr.ENABLE_FLAG = 'Y'
+          AND hewr.station_id = #{workcellId}
+        GROUP BY
+            he.EQUIPMENT_CATEGORY
+    </select>
+</mapper>

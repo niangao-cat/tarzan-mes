@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsQrCodeAnalysisMapper">
+
+    <select id="selectMaterialLotId" resultType="java.lang.String">
+        SELECT
+        mmla.MATERIAL_LOT_ID
+        FROM
+        mt_material_lot_attr mmla,
+        mt_material_lot mml
+        WHERE mmla.TENANT_ID = #{tenantId}
+        AND mmla.ATTR_NAME = 'OUTER_BOX'
+        AND mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mml.ENABLE_FLAG = 'Y'
+        <if test="attrValue != null">
+            and mmla.ATTR_VALUE = #{attrValue}
+        </if>
+    </select>
+
+
+
+</mapper>

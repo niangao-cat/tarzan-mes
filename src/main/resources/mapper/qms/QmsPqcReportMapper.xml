@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsPqcReportMapper">
+
+    <select id="pqcReportHeadDataQueryByDepartment" resultType="com.ruike.qms.domain.vo.QmsPqcReportVO">
+        SELECT
+            mma.AREA_ID,
+            mma.AREA_NAME,
+            count(qph.PQC_HEADER_ID) AS nc_num
+        FROM
+        qms_pqc_header qph
+        LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = qph.PROD_LINE_ID
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mmor.TENANT_ID = qph.TENANT_ID
+        LEFT JOIN mt_mod_organization_rel mmor2 ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.TENANT_ID = qph.TENANT_ID
+        LEFT JOIN mt_mod_area mma ON mma.AREA_ID = mmor.PARENT_ORGANIZATION_ID
+        WHERE
+        qph.TENANT_ID = #{tenantId}
+        AND qph.INSPECTION_STATUS = 'COMPLETED'
+        AND qph.INSPECTION_RESULT = 'NG'
+        <if test="dto.departmentId != null">
+            AND mmor2.PARENT_ORGANIZATION_ID = #{dto.departmentId}
+        </if>
+        <if test="dto.inspectionFinishFromDate != null">
+            and qph.INSPECTION_FINISH_DATE >= DATE_FORMAT(#{dto.inspectionFinishFromDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.inspectionFinishToDate != null">
+            and qph.INSPECTION_FINISH_DATE &lt;= DATE_FORMAT(#{dto.inspectionFinishToDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        GROUP BY mma.AREA_ID
+        order by mma.AREA_ID
+    </select>
+
+    <select id="pqcReportHeadDataQueryByWorkshop" resultType="com.ruike.qms.domain.vo.QmsPqcReportVO">
+        SELECT
+            mmw.WORKCELL_ID as PROCESS_ID,
+            mmw.WORKCELL_NAME AS PROCESS_NAME,
+            count(DISTINCT(qph.PQC_HEADER_ID)) AS nc_num
+        FROM
+            qms_pqc_header qph
+        LEFT JOIN qms_pqc_line qpl ON qpl.TENANT_ID = qph.TENANT_ID
+        AND qpl.PQC_HEADER_ID = qph.PQC_HEADER_ID
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = qpl.PROCESS_ID
+        LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = qph.PROD_LINE_ID
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel mmor2 ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.TENANT_ID = qph.TENANT_ID
+        WHERE
+            qph.TENANT_ID = #{tenantId}
+        AND qph.INSPECTION_STATUS = 'COMPLETED'
+        AND qph.INSPECTION_RESULT = 'NG'
+        and mmor2.PARENT_ORGANIZATION_ID = #{dto.departmentId}
+        and mmor.PARENT_ORGANIZATION_ID = #{dto.workshopId}
+        <if test="dto.inspectionFinishFromDate != null">
+            and qph.INSPECTION_FINISH_DATE >= DATE_FORMAT(#{dto.inspectionFinishFromDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.inspectionFinishToDate != null">
+            and qph.INSPECTION_FINISH_DATE &lt;= DATE_FORMAT(#{dto.inspectionFinishToDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        group by mmw.WORKCELL_ID
+        order by mmw.WORKCELL_ID
+    </select>
+
+    <select id="pgcReportDetailDataQuery" resultType="com.ruike.qms.domain.vo.QmsPqcReportVO2">
+        select qph.PQC_HEADER_ID, qpl.PQC_LINE_ID, qpd.PQC_DETAILS_ID, mma.AREA_ID, mma.AREA_NAME, qpl.PROCESS_ID, mmw.WORKCELL_NAME as PROCESS_NAME,
+               qph.last_updated_by, qph.INSPECTION_FINISH_DATE, qpd.REMARK as attribute1
+        from qms_pqc_header qph
+        left join qms_pqc_line qpl
+        on qpl.TENANT_ID = qph.TENANT_ID
+        and qpl.PQC_HEADER_ID = qph.PQC_HEADER_ID
+        left join qms_pqc_details qpd
+        on qpd.TENANT_ID = qph.TENANT_ID
+        and qpd.PQC_HEADER_ID = qph.PQC_HEADER_ID
+        and qpd.PQC_LINE_ID = qpl.PQC_LINE_ID
+        left join mt_mod_organization_rel mmor
+        on mmor.ORGANIZATION_ID = qph.PROD_LINE_ID
+        and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel mmor2 ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.TENANT_ID = qph.TENANT_ID
+        left join mt_mod_area mma
+        on mma.AREA_ID = mmor.PARENT_ORGANIZATION_ID
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = qpl.PROCESS_ID
+        where qph.TENANT_ID = #{tenantId}
+        and qph.INSPECTION_STATUS = 'COMPLETED'
+        and qph.INSPECTION_RESULT = 'NG'
+        and mmor2.PARENT_ORGANIZATION_ID = #{dto.departmentId}
+        and mmor.PARENT_ORGANIZATION_ID = #{dto.workshopId}
+        <if test="dto.processId != null and dto.processId != ''">
+            and qpl.PROCESS_ID = #{dto.processId}
+        </if>
+        and qpd.REMARK is not NULL
+        and qpd.REMARK != ''
+        order by qpl.PROCESS_ID
+    </select>
+
+    <select id="pqcReportHeadDataExportByDepartment" resultType="com.ruike.qms.domain.vo.QmsPqcReportVO3">
+        SELECT
+        mma.AREA_ID,
+        mma.AREA_NAME,
+        count(qph.PQC_HEADER_ID) AS nc_num
+        FROM
+        qms_pqc_header qph
+        LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = qph.PROD_LINE_ID
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mmor.TENANT_ID = qph.TENANT_ID
+        LEFT JOIN mt_mod_organization_rel mmor2 ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.TENANT_ID = qph.TENANT_ID
+        LEFT JOIN mt_mod_area mma ON mma.AREA_ID = mmor.PARENT_ORGANIZATION_ID
+        WHERE
+        qph.TENANT_ID = #{tenantId}
+        AND qph.INSPECTION_STATUS = 'COMPLETED'
+        AND qph.INSPECTION_RESULT = 'NG'
+        <if test="dto.departmentId != null">
+            AND mmor2.PARENT_ORGANIZATION_ID = #{dto.departmentId}
+        </if>
+        <if test="dto.inspectionFinishFromDate != null">
+            and qph.INSPECTION_FINISH_DATE >= DATE_FORMAT(#{dto.inspectionFinishFromDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.inspectionFinishToDate != null">
+            and qph.INSPECTION_FINISH_DATE &lt;= DATE_FORMAT(#{dto.inspectionFinishToDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        GROUP BY mma.AREA_ID
+        order by mma.AREA_ID
+    </select>
+
+    <select id="pqcReportHeadDataExportByWorkshop" resultType="com.ruike.qms.domain.vo.QmsPqcReportVO4">
+        SELECT
+        mmw.WORKCELL_ID as PROCESS_ID,
+        mmw.WORKCELL_NAME AS PROCESS_NAME,
+        count(DISTINCT(qph.PQC_HEADER_ID)) AS nc_num
+        FROM
+        qms_pqc_header qph
+        LEFT JOIN qms_pqc_line qpl ON qpl.TENANT_ID = qph.TENANT_ID
+        AND qpl.PQC_HEADER_ID = qph.PQC_HEADER_ID
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = qpl.PROCESS_ID
+        LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = qph.PROD_LINE_ID
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel mmor2 ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.TENANT_ID = qph.TENANT_ID
+        WHERE
+        qph.TENANT_ID = #{tenantId}
+        AND qph.INSPECTION_STATUS = 'COMPLETED'
+        AND qph.INSPECTION_RESULT = 'NG'
+        and mmor2.PARENT_ORGANIZATION_ID = #{dto.departmentId}
+        and mmor.PARENT_ORGANIZATION_ID = #{dto.workshopId}
+        <if test="dto.inspectionFinishFromDate != null">
+            and qph.INSPECTION_FINISH_DATE >= DATE_FORMAT(#{dto.inspectionFinishFromDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.inspectionFinishToDate != null">
+            and qph.INSPECTION_FINISH_DATE &lt;= DATE_FORMAT(#{dto.inspectionFinishToDate},'%Y-%m-%d %H:%i:%S')
+        </if>
+        group by mmw.WORKCELL_ID
+        order by mmw.WORKCELL_ID
+    </select>
+
+    <select id="pgcReportDetailDataExport" resultType="com.ruike.qms.domain.vo.QmsPqcReportVO5">
+        select qph.PQC_HEADER_ID, qpl.PQC_LINE_ID, qpd.PQC_DETAILS_ID, mma.AREA_ID, mma.AREA_NAME, qpl.PROCESS_ID, mmw.WORKCELL_NAME as PROCESS_NAME,
+               qph.last_updated_by, qph.INSPECTION_FINISH_DATE, qpd.REMARK as attribute1
+        from qms_pqc_header qph
+        left join qms_pqc_line qpl
+        on qpl.TENANT_ID = qph.TENANT_ID
+        and qpl.PQC_HEADER_ID = qph.PQC_HEADER_ID
+        left join qms_pqc_details qpd
+        on qpd.TENANT_ID = qph.TENANT_ID
+        and qpd.PQC_HEADER_ID = qph.PQC_HEADER_ID
+        and qpd.PQC_LINE_ID = qpl.PQC_LINE_ID
+        left join mt_mod_organization_rel mmor
+        on mmor.ORGANIZATION_ID = qph.PROD_LINE_ID
+        and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        and mmor.ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel mmor2 ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.ORGANIZATION_TYPE = 'AREA'
+        AND mmor2.TENANT_ID = qph.TENANT_ID
+        left join mt_mod_area mma
+        on mma.AREA_ID = mmor.PARENT_ORGANIZATION_ID
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = qpl.PROCESS_ID
+        where qph.TENANT_ID = #{tenantId}
+        and qph.INSPECTION_STATUS = 'COMPLETED'
+        and qph.INSPECTION_RESULT = 'NG'
+        and mmor2.PARENT_ORGANIZATION_ID = #{dto.departmentId}
+        and mmor.PARENT_ORGANIZATION_ID = #{dto.workshopId}
+        <if test="dto.processId != null and dto.processId != ''">
+            and qpl.PROCESS_ID = #{dto.processId}
+        </if>
+        and qpd.REMARK is not NULL
+        and qpd.REMARK != ''
+        order by qpl.PROCESS_ID
+    </select>
+</mapper>

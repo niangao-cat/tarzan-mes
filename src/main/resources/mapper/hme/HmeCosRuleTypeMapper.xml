@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosRuleTypeMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosRuleType">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="COS_RULE_TYPE_ID" property="cosRuleTypeId" jdbcType="VARCHAR"/>
+        <result column="COS_RULE_ID" property="cosRuleId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="COS_NUMBER" property="cosNumber" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="COS_TYPE" property="cosType" jdbcType="VARCHAR"/>
+        <result column="POWER_SINGLE_POINT" property="powerSinglePoint" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="cosRuleQuery" resultType="com.ruike.hme.api.dto.HmeCosRuleTypeDTO">
+        SELECT
+            hcrt.cos_rule_id,
+            hcrt.cos_rule_type_Id,
+            hcrt.site_id,
+            hcrt.cos_rule_type_id,
+            hcrt.cos_number,
+            hcrt.material_id,
+            hcrt.cos_type,
+            hcrt.power_single_point,
+            mm.material_code
+        FROM
+            hme_cos_rule_type hcrt,
+            mt_material mm
+        WHERE
+            hcrt.TENANT_ID =#{tenantId}
+        AND hcrt.material_id = mm.material_id
+        AND hcrt.cos_rule_id =#{cosRuleId}
+    </select>
+
+    <select id="selectRule" resultType="com.ruike.hme.api.dto.HmeCosRuleTypeDTO1">
+        SELECT
+            hcrt.material_Id,
+            hcrt.cos_type,
+            hcrt.power_single_point,
+            count(*) cos_count
+        FROM
+            hme_cos_rule_type hcrt
+        WHERE
+            hcrt.cos_rule_id =#{cosRuleId}
+        GROUP BY
+            hcrt.material_Id,
+            hcrt.cos_type,
+            hcrt.power_single_point
+    </select>
+</mapper>

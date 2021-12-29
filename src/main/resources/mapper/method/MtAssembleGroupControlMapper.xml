@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtAssembleGroupControlMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtAssembleGroupControl">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_GROUP_CONTROL_ID" property="assembleGroupControlId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_CONTROL_ID" property="assembleControlId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_GROUP_ID" property="assembleGroupId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="propertyLimitAssembleGroupControlPropertyQuery" resultMap="BaseResultMap">
+        select t.*
+        from mt_assemble_group_control t
+        where t.TENANT_ID=#{tenantId}
+        <if test="dto.assembleGroupControlId != null">
+            and t.ASSEMBLE_GROUP_CONTROL_ID=#{dto.assembleGroupControlId}
+        </if>
+        <if test="dto.assembleGroupId != null">
+            and t.ASSEMBLE_GROUP_ID=#{dto.assembleGroupId}
+        </if>
+        <if test="dto.assembleControlId != null">
+            and t.ASSEMBLE_CONTROL_ID=#{dto.assembleControlId}
+        </if>
+        <if test="dto.workcellId != null">
+            and t.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="dto.enableFlag != null">
+            and t.ENABLE_FLAG=#{dto.enableFlag}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsLibraryAgeReportMapper">
+
+    <select id="libraryAgeReportQuery" resultType="com.ruike.wms.domain.vo.WmsLibraryAgeReportVO">
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mml.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               mmla.ATTR_VALUE as MATERIAL_VERSION, mml.LOT, mml.PRIMARY_UOM_QTY, mml.PRIMARY_UOM_ID,
+               mu.UOM_CODE, mmla_pd.ATTR_VALUE as PRODUCT_DATE, mml.CREATION_DATE, mml.IN_LOCATOR_TIME,mmla_r.ATTR_VALUE AS receiptDate, mm.SHELF_LIFE,
+               mmla_s.ATTR_VALUE as status, mml.QUALITY_STATUS, mml.LOCATOR_ID, mmlo.LOCATOR_CODE,
+               mmlo.PARENT_LOCATOR_ID, mml_par.LOCATOR_CODE as PARENT_LOCATOR_CODE, mcld.CONTAINER_ID, mc.CONTAINER_CODE,
+               DATEDIFF(CURDATE(), IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ))+1 as library_age,
+               DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY) as beyond_date,
+               DATEDIFF(CURDATE(), DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY))+1 as beyond_day
+        from mt_material_lot mml
+        left join mt_material mm
+        on mm.MATERIAL_ID = mml.MATERIAL_ID
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'MATERIAL_VERSION'
+        and mmla.TENANT_ID = mml.TENANT_ID
+        left join mt_uom mu
+        on mu.UOM_ID = mml.PRIMARY_UOM_ID
+        left join mt_material_lot_attr mmla_pd
+        on mmla_pd.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla_pd.ATTR_NAME = 'PRODUCT_DATE'
+        and mmla_pd.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr mmla_s
+        on mmla_s.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla_s.ATTR_NAME = 'STATUS'
+        and mmla_s.TENANT_ID = mml.TENANT_ID
+        left join mt_mod_locator mmlo
+        on mmlo.LOCATOR_ID = mml.LOCATOR_ID
+        left join mt_mod_locator mml_par
+        on mml_par.LOCATOR_ID = mmlo.PARENT_LOCATOR_ID
+        left join mt_container_load_detail mcld
+        on mcld.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        and mcld.LOAD_OBJECT_ID = mml.MATERIAL_LOT_ID
+        and mcld.TENANT_ID = mml.TENANT_ID
+        left join mt_container mc
+        on mc.CONTAINER_ID = mcld.CONTAINER_ID
+        LEFT JOIN mt_material_lot_attr mmla_r ON mmla_r.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla_r.ATTR_NAME = 'RECEIPT_DATE'
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{dto.siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        <if test="dto.parentLocatorId != null and dto.parentLocatorId != ''">
+            and mmlo.PARENT_LOCATOR_ID = #{dto.parentLocatorId}
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mml.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mml.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.containerCode != null and dto.containerCode != ''">
+            and mc.CONTAINER_CODE like concat('%',#{dto.containerCode} ,'%')
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            and mml.MATERIAL_LOT_CODE like concat('%',#{dto.materialLotCode} ,'%')
+        </if>
+        <if test="dto.lot != null and dto.lot != ''">
+            and mml.LOT like concat('%',#{dto.lot} ,'%')
+        </if>
+        <if test="dto.beyondDateFrom != null">
+            and DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY) >= DATE_FORMAT(#{dto.beyondDateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="dto.finalBeyondDateTo != null">
+            and DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY) &lt;= DATE_FORMAT(#{dto.finalBeyondDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.libraryAgeFrom != null">
+            and DATEDIFF(CURDATE(), IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ))+1 >= #{dto.libraryAgeFrom}
+        </if>
+        <if test="dto.libraryAgeTo != null">
+            and DATEDIFF(CURDATE(), IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ))+1 &lt;= #{dto.libraryAgeTo}
+        </if>
+        order by mm.MATERIAL_CODE asc, library_age desc,  mml.MATERIAL_LOT_CODE asc
+    </select>
+
+    <select id="libraryAgeGroupQuery" resultType="com.ruike.wms.domain.vo.WmsLibraryAgeReportVO2">
+        select mml.MATERIAL_ID, mml.lot, mml.LOCATOR_ID, mm.MATERIAL_CODE,
+               mm.MATERIAL_NAME, mmlo.LOCATOR_CODE, mmlo.PARENT_LOCATOR_ID,
+               mml_par.LOCATOR_CODE as PARENT_LOCATOR_CODE, mm.PRIMARY_UOM_ID, mu.UOM_CODE
+        from mt_material_lot mml
+        left join mt_material mm
+        on mm.MATERIAL_ID = mml.MATERIAL_ID
+        left join mt_mod_locator mmlo
+        on mmlo.LOCATOR_ID = mml.LOCATOR_ID
+        left join mt_mod_locator mml_par
+        on mml_par.LOCATOR_ID = mmlo.PARENT_LOCATOR_ID
+        left join mt_uom mu
+        on mu.UOM_ID = mm.PRIMARY_UOM_ID
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{dto.siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        <if test="dto.parentLocatorId != null and dto.parentLocatorId != ''">
+            and mmlo.PARENT_LOCATOR_ID = #{dto.parentLocatorId}
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mml.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mml.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.lot != null and dto.lot != ''">
+            and mml.LOT like concat('%',#{dto.lot} ,'%')
+        </if>
+        group by mml.MATERIAL_ID, mml.lot, mml.LOCATOR_ID
+        order by mm.MATERIAL_CODE
+    </select>
+
+    <select id="qtySumQuery" resultType="java.math.BigDecimal">
+        select IFNULL(sum(mml.PRIMARY_UOM_QTY),0)
+        from mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr mmla_r ON mmla_r.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla_r.ATTR_NAME = 'RECEIPT_DATE'
+        LEFT JOIN mt_material_lot_attr mmla_pd ON mmla_pd.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla_pd.ATTR_NAME = 'PRODUCT_DATE'
+        where mml.TENANT_ID = #{tenantId}
+        and mml.MATERIAL_ID = #{materialId}
+        and mml.lot = #{lot}
+        and mml.LOCATOR_ID = #{locatorId}
+        and DATEDIFF(CURDATE(), IFNULL( IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE), mml.CREATION_DATE ))+1 >= #{dto.minLibraryAge}
+        and DATEDIFF(CURDATE(), IFNULL( IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE), mml.CREATION_DATE ))+1 &lt;= #{dto.maxLibraryAge}
+    </select>
+
+    <select id="libraryAgeExportQuery" resultType="com.ruike.wms.domain.vo.WmsLibraryAgeReportVO4">
+        select mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mml.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               mmla.ATTR_VALUE as MATERIAL_VERSION, mml.LOT, mml.PRIMARY_UOM_QTY, mml.PRIMARY_UOM_ID,
+               mu.UOM_CODE, mmla_pd.ATTR_VALUE as PRODUCT_DATE, mml.CREATION_DATE, mml.IN_LOCATOR_TIME,mmla_r.ATTR_VALUE AS receiptDate, mm.SHELF_LIFE,
+               mmla_s.ATTR_VALUE as status, mml.QUALITY_STATUS, mml.LOCATOR_ID, mmlo.LOCATOR_CODE,
+               mmlo.PARENT_LOCATOR_ID, mml_par.LOCATOR_CODE as PARENT_LOCATOR_CODE, mcld.CONTAINER_ID, mc.CONTAINER_CODE,
+               DATEDIFF(CURDATE(), IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ))+1 as library_age,
+               DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY) as beyond_date,
+               DATEDIFF(CURDATE(), DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY))+1 as beyond_day,
+               DATE_FORMAT(mml.CREATION_DATE, '%Y-%m-%d %H:%i:%s') as CREATION_DATE_STR,
+               DATE_FORMAT(mml.IN_LOCATOR_TIME, '%Y-%m-%d %H:%i:%s') as IN_LOCATOR_TIME_STR,
+               DATE_FORMAT((DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY)), '%Y-%m-%d') as beyond_date_str
+        from mt_material_lot mml
+        left join mt_material mm
+        on mm.MATERIAL_ID = mml.MATERIAL_ID
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'MATERIAL_VERSION'
+        and mmla.TENANT_ID = mml.TENANT_ID
+        left join mt_uom mu
+        on mu.UOM_ID = mml.PRIMARY_UOM_ID
+        left join mt_material_lot_attr mmla_pd
+        on mmla_pd.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla_pd.ATTR_NAME = 'PRODUCT_DATE'
+        and mmla_pd.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr mmla_s
+        on mmla_s.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla_s.ATTR_NAME = 'STATUS'
+        and mmla_s.TENANT_ID = mml.TENANT_ID
+        left join mt_mod_locator mmlo
+        on mmlo.LOCATOR_ID = mml.LOCATOR_ID
+        left join mt_mod_locator mml_par
+        on mml_par.LOCATOR_ID = mmlo.PARENT_LOCATOR_ID
+        left join mt_container_load_detail mcld
+        on mcld.LOAD_OBJECT_TYPE = 'MATERIAL_LOT'
+        and mcld.LOAD_OBJECT_ID = mml.MATERIAL_LOT_ID
+        and mcld.TENANT_ID = mml.TENANT_ID
+        left join mt_container mc
+        on mc.CONTAINER_ID = mcld.CONTAINER_ID
+        LEFT JOIN mt_material_lot_attr mmla_r ON mmla_r.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla_r.ATTR_NAME = 'RECEIPT_DATE'
+        where mml.TENANT_ID = #{tenantId}
+        and mml.SITE_ID = #{dto.siteId}
+        and mml.ENABLE_FLAG = 'Y'
+        <if test="dto.parentLocatorId != null and dto.parentLocatorId != ''">
+            and mmlo.PARENT_LOCATOR_ID = #{dto.parentLocatorId}
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mml.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mml.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.containerCode != null and dto.containerCode != ''">
+            and mc.CONTAINER_CODE like concat('%',#{dto.containerCode} ,'%')
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            and mml.MATERIAL_LOT_CODE like concat('%',#{dto.materialLotCode} ,'%')
+        </if>
+        <if test="dto.lot != null and dto.lot != ''">
+            and mml.LOT like concat('%',#{dto.lot} ,'%')
+        </if>
+        <if test="dto.beyondDateFrom != null">
+            and DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY) >= DATE_FORMAT(#{dto.beyondDateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="dto.finalBeyondDateTo != null">
+            and DATE_ADD(IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ), INTERVAL ceil(mm.SHELF_LIFE) DAY) &lt;= DATE_FORMAT(#{dto.finalBeyondDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.libraryAgeFrom != null">
+            and DATEDIFF(CURDATE(), IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ))+1 >= #{dto.libraryAgeFrom}
+        </if>
+        <if test="dto.libraryAgeTo != null">
+            and DATEDIFF(CURDATE(), IFNULL(IFNULL(mml.IN_LOCATOR_TIME,IFNULL(mmla_pd.ATTR_VALUE,mmla_r.ATTR_VALUE)), mml.CREATION_DATE ))+1 &lt;= #{dto.libraryAgeTo}
+        </if>
+        order by mm.MATERIAL_CODE asc, library_age desc,  mml.MATERIAL_LOT_CODE asc
+    </select>
+</mapper>

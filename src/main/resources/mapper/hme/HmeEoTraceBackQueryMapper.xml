@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoTraceBackQueryMapper">
+
+	<select id="eoWorkcellQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO">
+        SELECT
+			he.job_id,
+			me.EO_ID,
+			me.EO_NUM,
+			mrs.ROUTER_STEP_ID AS parent_workcell_id,
+			mrs.STEP_NAME AS parent_workcell_code,
+			mrs.DESCRIPTION AS parent_workcell_name,
+			he.WORKCELL_ID,
+			cell.WORKCELL_CODE,
+			cell.WORKCELL_NAME,
+			he.site_in_date,
+			he.site_out_date,
+			he.site_in_by AS created_by,
+			he.site_out_by AS operator_id,
+			he.rework_flag AS is_rework_flag,
+            he.ATTRIBUTE7 AS is_abnormal_out_site,
+			he.job_type,
+			IFNULL(he.ATTRIBUTE7, 'N') EXCEPTION_FLAG
+		FROM
+			mt_material_lot mml
+		LEFT JOIN mt_eo me on me.EO_ID = mml.EO_ID
+		LEFT JOIN hme_eo_job_sn he ON me.EO_ID = he.eo_id
+		LEFT JOIN mt_router_step mrs ON mrs.ROUTER_STEP_ID = he.eo_step_id
+		LEFT JOIN mt_mod_workcell cell ON he.WORKCELL_ID = cell.WORKCELL_ID
+		WHERE
+			mml.TENANT_ID = #{tenantId}
+		AND mml.MATERIAL_LOT_CODE = #{dto.eoIdentification}
+		AND me.EO_ID is not null
+		ORDER BY
+			he.creation_date
+    </select>
+
+    <select id="eoMaterialQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO2">
+		<bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+		select  * from (
+		SELECT
+		job_lot_mat.MATERIAL_ID,
+		item.MATERIAL_CODE,
+		tl.MATERIAL_NAME,
+		lot.MATERIAL_LOT_CODE,
+		job_lot_mat.release_qty,
+		job_lot_mat.creation_date last_update_date
+		FROM hme_eo_job_sn_lot_material job_lot_mat
+		LEFT JOIN mt_material_lot lot ON lot.material_lot_id = job_lot_mat.material_lot_id
+		LEFT JOIN mt_material item ON item.MATERIAL_ID = job_lot_mat.MATERIAL_ID
+		LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+		AND tl.LANG = #{lang}
+		WHERE job_lot_mat.TENANT_ID = #{tenantId}
+		AND job_lot_mat.job_id = #{jobId}
+		UNION
+		SELECT
+		job_mat.MATERIAL_ID,
+		item.MATERIAL_CODE,
+		tl.MATERIAL_NAME,
+		job_mat.MATERIAL_LOT_CODE,
+		job_mat.release_qty,
+		job_mat.last_update_date
+		FROM hme_eo_job_material job_mat
+		LEFT JOIN mt_material item ON item.MATERIAL_ID = job_mat.MATERIAL_ID
+		LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+		AND tl.LANG = #{lang}
+		WHERE job_mat.TENANT_ID = #{tenantId}
+		AND job_mat.job_id = #{jobId}
+		AND ((job_mat.is_issued = '1' and job_mat.release_qty >0) or ( job_mat.release_qty &lt; 0))
+		) t
+		ORDER BY t.last_update_date ASC
+	</select>
+
+    <select id="eoJobDataQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO3">
+        SELECT
+      	  mor.PARENT_ORGANIZATION_ID AS parent_workcell_id,
+      	  cell_parent.WORKCELL_CODE AS parent_workcell_code,
+      	  cell_parent.WORKCELL_NAME AS parent_workcell_name,
+      	  job_data.workcell_id,
+      	  cell.WORKCELL_CODE,
+      	  cell.WORKCELL_NAME,
+      	  '' AS position,
+      	  '' AS equipment,
+      	  tag.TAG_CODE,
+      	  tag.TAG_DESCRIPTION,
+      	  job_data.maximal_value,
+      	  '' AS standard_value,
+      	  job_data.minimum_value,
+      	  job_data.result,
+		  dre.cos_status,
+		  job_data.remark
+        FROM hme_eo_job_data_record job_data
+        LEFT JOIN hme_data_record_extend dre ON dre.job_record_id = job_data.job_record_id
+      	LEFT JOIN mt_mod_organization_rel mor ON job_data.workcell_id = mor.ORGANIZATION_ID
+      	  AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+      	  AND mor.TOP_SITE_ID = #{topSiteId}
+      	LEFT JOIN mt_mod_workcell cell_parent ON cell_parent.WORKCELL_ID = mor.PARENT_ORGANIZATION_ID
+      	LEFT JOIN mt_mod_workcell cell ON job_data.WORKCELL_ID = cell.WORKCELL_ID
+      	LEFT JOIN mt_tag tag ON job_data.tag_id = tag.tag_id
+        WHERE job_data.TENANT_ID = #{tenantId}
+        AND job_data.workcell_id = #{workcellId}
+      	AND job_data.job_id = #{jobId}
+      	ORDER BY job_data.last_update_date
+    </select>
+
+	<select id="productComponentQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO7">
+		SELECT
+		mm.MATERIAL_CODE,
+		mm.MATERIAL_NAME,
+		hejm.material_lot_code,
+		hejm.release_qty AS release_qty_str,
+		hejm.job_material_id,
+		wig.item_group_description
+		FROM
+		mt_material_lot mml
+		LEFT JOIN hme_eo_job_sn hejs ON hejs.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+		LEFT JOIN hme_eo_job_material hejm ON hejm.job_id = hejs.job_id
+		LEFT JOIN mt_material mm ON mm.MATERIAL_ID = hejm.MATERIAL_ID
+		LEFT JOIN mt_material_site mms ON mms.MATERIAL_ID = mm.MATERIAL_ID
+		AND mms.SITE_ID = mml.SITE_ID
+		LEFT JOIN mt_material_basic mmb ON mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+		LEFT JOIN wms_item_group wig ON wig.item_group_code = mmb.item_group
+		where hejm.tenant_id = #{tenantId}
+		<if test="dto.materialLotCode != null">
+			AND mml.MATERIAL_LOT_CODE = #{dto.materialLotCode}
+		</if>
+		AND hejm.material_lot_code is not null
+		ORDER BY hejm.creation_date ASC
+	</select>
+
+	<select id="productComponentQuery2" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO7">
+				SELECT
+		mm.MATERIAL_CODE,
+		mm.MATERIAL_NAME,
+		hejm.material_lot_code,
+		hejm.release_qty AS release_qty_str,
+		hejm.job_material_id,
+		wig.item_group_description
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN hme_eo_job_material hejm ON hejm.job_id = hejs.job_id
+		LEFT JOIN mt_material mm ON mm.MATERIAL_ID = hejm.MATERIAL_ID
+		LEFT JOIN mt_material_site mms ON mms.MATERIAL_ID = mm.MATERIAL_ID
+		AND mms.SITE_ID = #{siteId}
+		LEFT JOIN mt_material_basic mmb ON mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+		LEFT JOIN wms_item_group wig ON wig.item_group_code = mmb.item_group
+		where hejm.tenant_id = #{tenantId}
+		AND hejs.eo_id = #{eoId}
+		AND hejm.material_lot_code is not null
+		ORDER BY hejm.creation_date ASC
+	</select>
+
+	<select id="productComponentTopQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO7">
+		 SELECT
+			wig.item_group_description,
+			mm.MATERIAL_CODE,
+			mm.MATERIAL_NAME,
+			mml.PRIMARY_UOM_QTY AS release_qty_str,
+			'0' AS job_material_id
+		 FROM
+			mt_material_lot mml
+		 LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mml.MATERIAL_ID
+		 LEFT JOIN mt_material_site mms ON mms.MATERIAL_ID = mm.MATERIAL_ID
+		 AND mms.SITE_ID = mml.SITE_ID
+		 LEFT JOIN mt_material_basic mmb ON mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+		 LEFT JOIN wms_item_group wig ON wig.item_group_code = mmb.item_group
+		 WHERE
+			mml.TENANT_ID = #{tenantId}
+		<if test="dto.materialLotCode != null">
+		 	AND mml.MATERIAL_LOT_CODE = #{dto.materialLotCode}
+		</if>
+	</select>
+
+	<select id="substrateFlagQuery" resultType="java.lang.Long">
+		select count(*)
+		from mt_material_lot mml
+		left join hme_eo_job_sn hejs
+		on hejs.material_lot_id = mml.MATERIAL_LOT_ID
+		left join hme_eo_job_material hejm
+		on hejm.job_id = hejs.job_id
+		where hejm.tenant_id = #{tenantId}
+		and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+	</select>
+
+	<select id="substrateFlagQuery2" resultType="java.lang.Long">
+		select count(*)
+		from hme_eo_job_sn hejs,
+		     hme_eo_job_material hejm
+		where hejm.job_id = hejs.job_id
+		and hejs.tenant_id = #{tenantId}
+        and hejs.eo_id = #{eoId}
+	</select>
+
+	<select id="equipmentQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO8">
+		select heje.equipment_id, he.ASSET_NAME AS equipmentn_name, he.ASSET_ENCODING AS equipment_code, heje.EQUIPMENT_STATUS
+		from hme_eo_job_equipment heje
+		left join hme_equipment he
+		on he.EQUIPMENT_ID = heje.equipment_id
+		where heje.tenant_id = #{tenantId}
+		and heje.workcell_id = #{workcellId}
+		and heje.job_id = #{jobId}
+		order by heje.CREATION_DATE asc
+	</select>
+
+	<select id="exceptionInfoQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO9">
+		select he.exception_id, he.exception_name, hewr.exception_remark, hewr.creation_date, hewr.close_time, hewr.created_by, hewr.responded_by
+		from hme_exc_wkc_record hewr
+		left join hme_exception he
+		on he.exception_id = hewr.exception_id
+		where hewr.tenant_id = #{tenantId}
+		and hewr.workcell_id = #{workcellId}
+		and hewr.eo_id = #{eoId}
+	</select>
+
+	<select id="ncInfoFlagQuery" resultType="java.lang.Long">
+		select count(*)
+		from mt_nc_record mnr
+		where mnr.TENANT_ID = #{tenantId}
+		and mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+		and mnr.EO_ID = #{eoId}
+		and (mnr.PARENT_NC_RECORD_ID IS NULL or mnr.PARENT_NC_RECORD_ID = '')
+	</select>
+
+	<select id="ncInfoQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO10">
+		select mnr.NC_RECORD_ID, mnr.ROOT_CAUSE_WORKCELL_ID AS found_workcell_id, mmw2.WORKCELL_NAME AS found_workcell_name,
+			   mnr.WORKCELL_ID AS responsed_workcell_id, mmw1.WORKCELL_NAME AS responsed_workcell_name,
+			   mnr.NC_TYPE, mnc.DESCRIPTION, mnc2.DESCRIPTION AS nc_code, mnr.NC_STATUS, mml.MATERIAL_LOT_CODE,
+			   mnr.MATERIAL_ID, mm.MATERIAL_NAME, mnr.COMMENTS, mnr2.COMMENTS AS dispose_opinion, mnr.USER_ID,
+			   mnr.DATE_TIME, mnr2.CLOSED_USER_ID, mnr2.CLOSED_DATE_TIME, iu.real_name user_name, ciu.real_name closed_user_name, attr.process_method
+		from mt_nc_record mnr
+		left join mt_mod_workcell mmw1
+		on mmw1.WORKCELL_ID = mnr.WORKCELL_ID
+		left join mt_mod_workcell mmw2
+		on mmw2.WORKCELL_ID = mnr.ROOT_CAUSE_WORKCELL_ID
+		left join mt_nc_group mnc
+		on mnc.NC_GROUP_ID = mnr.NC_CODE_ID
+		left join mt_nc_record mnr2
+		on mnr2.PARENT_NC_RECORD_ID = mnr.NC_RECORD_ID
+		left join mt_nc_code mnc2
+		on mnc2.NC_CODE_ID = mnr2.NC_CODE_ID
+		left join mt_material_lot mml
+		on mml.MATERIAL_LOT_ID = mnr.MATERIAL_LOT_ID
+		left join mt_material mm
+		on mm.MATERIAL_ID = mnr.MATERIAL_ID
+		left join hzero_platform.iam_user iu on iu.id = mnr.USER_ID
+		left join hzero_platform.iam_user ciu on ciu.id = mnr.CLOSED_USER_ID
+		left join hme_nc_record_attr attr on attr.parent_record_id = mnr.NC_RECORD_ID
+		where (mnr.PARENT_NC_RECORD_ID is null or mnr.PARENT_NC_RECORD_ID = '')
+		and mnr.TENANT_ID = #{tenantId}
+		and mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+		and mnr.EO_ID = #{eoId}
+		order by mnr.creation_date ASC
+	</select>
+
+	<select id="getJobId" resultType="java.lang.String">
+		select hejm.job_id
+	    from hme_eo_job_material hejm
+	    where hejm.tenant_id = #{tenantId}
+		and hejm.material_lot_code = #{materialLotCode}
+		UNION
+		select hejslm.job_id
+		from mt_material_lot mml,
+	         hme_eo_job_sn_lot_material hejslm
+		where mml.tenant_id = #{tenantId}
+		and mml.material_lot_code = #{materialLotCode}
+        and hejslm.material_lot_id = mml.MATERIAL_LOT_ID
+	</select>
+
+	<select id="reverseTrace" resultType="com.ruike.hme.domain.vo.HmeEoTraceBackQueryVO">
+		select hejs.work_order_id, mwo.WORK_ORDER_NUM, hejs.eo_id, me.EO_NUM, hejs.material_lot_id,
+		       mml.MATERIAL_LOT_CODE as feedSn, me.IDENTIFICATION as currentSn
+		from  hme_eo_job_sn hejs
+		left join mt_work_order mwo
+		on mwo.WORK_ORDER_ID = hejs.work_order_id
+		left join mt_eo me
+		on me.eo_id = hejs.eo_id
+		left join mt_material_lot mml
+		on mml.material_lot_id = hejs.material_lot_id
+		where hejs.tenant_id = #{tenantId}
+		and hejs.job_id in
+		<foreach collection="jobIdList" separator="," open="(" close=")" item="i" index="index">
+			#{i}
+		</foreach>
+		group by hejs.work_order_id, mwo.WORK_ORDER_NUM, hejs.eo_id, me.EO_NUM, hejs.material_lot_id, mml.MATERIAL_LOT_CODE, me.IDENTIFICATION
+	</select>
+    <select id="queryTagGroupIdByDesc" resultType="java.lang.String">
+		SELECT
+			hejdr.tag_group_id
+		FROM
+			hme_eo_job_data_record hejdr
+			JOIN mt_tag mt ON hejdr.tag_id = mt.TAG_ID
+		WHERE
+			hejdr.eo_id = #{eoId}
+	</select>
+	<select id="queryTagIdByGroupIdAndOrderByNum" resultType="java.lang.String">
+		SELECT
+			mtga.TAG_ID
+		FROM
+			mt_tag_group mtg
+			JOIN mt_tag_group_assign mtga ON mtg.TAG_GROUP_ID = mtga.TAG_GROUP_ID
+		WHERE
+			mtg.TAG_GROUP_ID = #{tagGroupId}
+		ORDER BY
+			mtga.SERIAL_NUMBER
+		LIMIT 21
+	</select>
+
+	<select id="eoWorkcellQueryByReWork" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO">
+		SELECT
+			he.job_id,
+			me.EO_ID,
+			me.EO_NUM,
+			mrs.ROUTER_STEP_ID AS parent_workcell_id,
+			mrs.STEP_NAME AS parent_workcell_code,
+			mrs.DESCRIPTION AS parent_workcell_name,
+			he.WORKCELL_ID,
+			cell.WORKCELL_CODE,
+			cell.WORKCELL_NAME,
+			he.site_in_date,
+			he.site_out_date,
+			he.site_in_by AS created_by,
+			he.site_out_by AS operator_id,
+			he.rework_flag AS is_rework_flag,
+			he.ATTRIBUTE7 AS is_abnormal_out_site,
+			he.job_type,
+			IFNULL(he.ATTRIBUTE7, 'N') EXCEPTION_FLAG
+		FROM
+			mt_eo me
+		LEFT JOIN hme_eo_job_sn he ON me.EO_ID = he.eo_id
+		LEFT JOIN mt_router_step mrs ON mrs.ROUTER_STEP_ID = he.eo_step_id
+		LEFT JOIN mt_mod_workcell cell ON he.WORKCELL_ID = cell.WORKCELL_ID,
+		hme_eo_rel er,
+		mt_material_lot mmll LEFT JOIN mt_material_lot_attr attr ON attr.material_lot_id = mmll.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'TOP_EO_ID'
+		WHERE
+			me.TENANT_ID = #{tenantId}
+		AND er.TENANT_ID = me.TENANT_ID
+		AND er.eo_id = me.EO_ID
+		AND er.top_eo_id = attr.ATTR_VALUE
+		AND mmll.TENANT_ID = er.TENANT_ID
+		AND mmll.MATERIAL_LOT_CODE = #{dto.eoIdentification}
+		ORDER BY
+			me.creation_date DESC, he.creation_date ASC
+	</select>
+
+	<select id="quantityAnalyzeQuery" resultType="com.ruike.hme.domain.entity.HmeQuantityAnalyzeLine">
+		SELECT
+			qal.tag_code,
+			qal.tag_description,
+			qal.result
+		FROM
+			hme_quantity_analyze_doc qad,
+			hme_quantity_analyze_line qal
+		WHERE qad.tenant_id = #{tenantId}
+		AND qad.material_lot_id = #{materialLotId}
+		AND qal.tenant_id = qad.tenant_id
+		AND qal.qa_doc_id = qad.qa_doc_id
+	</select>
+
+	<select id="batchExceptionInfoQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO9">
+		select
+			he.exception_id,
+			he.exception_name,
+			hewr.exception_remark,
+			hewr.creation_date,
+			hewr.close_time,
+			hewr.created_by,
+			hewr.responded_by,
+			hewr.workcell_id,
+			hewr.eo_id
+		from hme_exc_wkc_record hewr
+		left join hme_exception he
+		on he.exception_id = hewr.exception_id
+		where hewr.tenant_id = #{tenantId}
+		and (hewr.workcell_id, hewr.eo_id) IN
+		<foreach collection="eoWorkcellQueryList" item="item" index="index" open="(" close=")" separator=",">
+			(#{item.workcellId}, #{item.eoId})
+		</foreach>
+	</select>
+
+	<select id="batchEoJobDataQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO3">
+		 SELECT
+      	  mor.PARENT_ORGANIZATION_ID AS parent_workcell_id,
+      	  cell_parent.WORKCELL_CODE AS parent_workcell_code,
+      	  cell_parent.WORKCELL_NAME AS parent_workcell_name,
+      	  job_data.workcell_id,
+		  job_data.job_id,
+      	  cell.WORKCELL_CODE,
+      	  cell.WORKCELL_NAME,
+      	  '' AS position,
+      	  '' AS equipment,
+      	  tag.TAG_CODE,
+      	  tag.TAG_DESCRIPTION,
+      	  job_data.maximal_value,
+      	  '' AS standard_value,
+      	  job_data.minimum_value,
+      	  job_data.result,
+		  job_data.remark,
+		  dre.cos_status
+        FROM hme_eo_job_data_record job_data
+		LEFT JOIN hme_data_record_extend dre ON dre.job_record_id = job_data.job_record_id
+      	LEFT JOIN mt_mod_organization_rel mor ON job_data.workcell_id = mor.ORGANIZATION_ID
+      	  AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+      	  AND mor.TOP_SITE_ID = #{siteId}
+      	LEFT JOIN mt_mod_workcell cell_parent ON cell_parent.WORKCELL_ID = mor.PARENT_ORGANIZATION_ID
+      	LEFT JOIN mt_mod_workcell cell ON job_data.WORKCELL_ID = cell.WORKCELL_ID
+      	LEFT JOIN mt_tag tag ON job_data.tag_id = tag.tag_id
+        WHERE job_data.TENANT_ID = #{tenantId}
+        AND (job_data.workcell_id, job_data.job_id) IN
+        <foreach collection="dtoList" item="item" index="index" open="(" close=")" separator=",">
+			(#{item.workcellId}, #{item.jobId})
+		</foreach>
+		ORDER BY job_data.last_update_date
+	</select>
+
+	<select id="dataCollectQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO">
+		SELECT
+			mo.OPERATION_NAME parent_workcell_name,
+		    '' parent_workcell_code,
+		    'DATA_COLLECTION' job_type,
+			mmw.WORKCELL_ID,
+			mmw.WORKCELL_CODE,
+			mmw.WORKCELL_NAME,
+			dch.collect_header_id,
+			dch.site_in_date,
+			dch.site_out_date,
+			dch.site_in_by AS created_by,
+			dch.site_out_by AS operator_id,
+			mml.eo_id,
+		    'N' is_rework_flag,
+		    'N' EXCEPTION_FLAG
+		FROM
+		  	mt_material_lot mml,
+			hme_data_collect_header dch,
+		  	mt_operation mo,
+			mt_mod_workcell mmw
+		WHERE
+			mml.TENANT_ID = #{tenantId}
+		AND mml.MATERIAL_LOT_CODE = #{dto.eoIdentification}
+		AND dch.tenant_id = mml.TENANT_ID
+		AND dch.material_lot_id = mml.MATERIAL_LOT_ID
+		AND mo.OPERATION_ID = dch.operation_id
+		AND mmw.WORKCELL_ID = dch.workcell_id
+	</select>
+
+	<select id="dataCollectJobDataQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO3">
+		SELECT
+			mt.TAG_DESCRIPTION,
+			mt.TAG_CODE,
+			'' AS position,
+			'' AS equipment,
+			dcl.minimum_value,
+			dcl.maximal_value,
+			dcl.standard,
+			dcl.result,
+			dcl.collect_header_id
+		FROM
+			hme_data_collect_line dcl,
+			mt_tag mt
+		WHERE
+			dcl.tenant_id = #{tenantId}
+		AND dcl.collect_header_id = #{collectHeaderId}
+		AND mt.TAG_ID = dcl.tag_id
+	</select>
+
+	<select id="batchDataCollectJobDataQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO3">
+		SELECT
+			mt.TAG_DESCRIPTION,
+			mt.TAG_CODE,
+			'' AS position,
+			'' AS equipment,
+			dcl.minimum_value,
+			dcl.maximal_value,
+			dcl.standard,
+			dcl.result,
+			dcl.collect_header_id
+		FROM
+			hme_data_collect_line dcl,
+			mt_tag mt
+		WHERE
+			dcl.tenant_id = #{tenantId}
+		AND dcl.collect_header_id IN
+		<foreach collection="collectHeaderIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND mt.TAG_ID = dcl.tag_id
+	</select>
+
+	<select id="batchEquipmentQuery" resultType="com.ruike.hme.api.dto.HmeEoTraceBackQueryDTO8">
+		select
+		heje.equipment_id,
+		he.ASSET_NAME AS equipmentn_name,
+		he.ASSET_ENCODING AS equipment_code,
+		heje.EQUIPMENT_STATUS,
+		heje.workcell_id,
+		heje.job_id
+		from hme_eo_job_equipment heje
+		left join hme_equipment he
+		on he.EQUIPMENT_ID = heje.equipment_id
+		where heje.tenant_id = #{tenantId}
+		and (heje.workcell_id, heje.job_id) IN
+		<foreach collection="dtoList" item="item" index="index" open="(" close=")" separator=",">
+			(#{item.workcellId}, #{item.jobId})
+		</foreach>
+		order by heje.CREATION_DATE asc
+	</select>
+</mapper>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.reports.infra.mapper.HmeCosInProductionMapper">
+
+    <select id="selectListByCondition" resultType="com.ruike.reports.domain.vo.HmeCosInProductionVO">
+        select
+            mwo.WORK_ORDER_NUM,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mwo.WORK_ORDER_TYPE,
+            mmpl.PROD_LINE_CODE,
+            mmpl.PROD_LINE_NAME,
+            mwo.`STATUS`,
+            mwo.QTY work_order_qty,
+            (
+                SELECT
+                    IFNULL(sum(hcor.cos_num), 0)
+                FROM
+                    hme_cos_operation_record hcor,
+                    mt_mod_workcell mmw1,
+                    hpfm_lov_value hlv1
+                WHERE
+                    hcor.workcell_id = mmw1.WORKCELL_ID
+                AND hcor.wafer = mmal3.ATTR_VALUE
+                AND hcor.work_order_id = mwo.WORK_ORDER_ID
+                AND mmw1.WORKCELL_CODE = hlv1.`VALUE`
+                AND hlv1.lov_code = 'HME.COS_LL_WORKCELL'
+            ) cos_num,
+            (
+                SELECT
+                    IFNULL(sum(mwoa.COMPLETED_QTY), 0)
+                FROM
+                    mt_work_order_actual mwoa
+                WHERE
+                    mwoa.WORK_ORDER_ID = mwo.WORK_ORDER_ID
+            ) COMPLETED_QTY,
+            mmal3.ATTR_VALUE wafer,
+            mmal4.ATTR_VALUE cos_type,
+            mml.MATERIAL_LOT_CODE,
+            mml.PRIMARY_UOM_QTY qty,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME,
+            mo.OPERATION_NAME,
+            hejs.site_in_date,
+            hejs.site_out_date,
+            hejs.created_by
+        from
+            mt_material_lot mml
+            inner join mt_material_lot_attr mmla
+                on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+                and mmla.ATTR_NAME = 'MF_FLAG'
+                and mmla.ATTR_VALUE = 'Y'
+            inner join mt_material_lot_attr mmla2
+                on mmla2.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+                and mmla2.ATTR_NAME = 'WORK_ORDER_ID'
+            inner join mt_work_order mwo
+                on mwo.WORK_ORDER_ID = mmla2.ATTR_VALUE
+            LEFT JOIN mt_mod_production_line mmpl
+                ON mwo.PRODUCTION_LINE_ID = mmpl.PROD_LINE_ID
+            inner join mt_material mm
+                on mm.MATERIAL_ID = mml.MATERIAL_ID
+            inner join mt_material_lot_attr mmal3
+                on mmal3.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+                and mmal3.ATTR_NAME = 'WAFER_NUM'
+            inner join mt_material_lot_attr mmal4
+                on mmal4.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+                and mmal4.ATTR_NAME = 'COS_TYPE'
+            inner join (
+                                    select
+                                        mml.MATERIAL_LOT_ID,
+                                        max(hejs.creation_date) max_creation_date,
+                                        hejs.workcell_id
+                                    from mt_material_lot mml
+                                        inner join hme_eo_job_sn hejs
+                                        on hejs.material_lot_id = mml.MATERIAL_LOT_ID
+                                    where hejs.job_type in ('COS_PASTER_OUT','IO_TRANSFER','IO','COS_FETCH_OUT','COS_WIRE_BOND','CHIP_NUM_ENTERING')
+                                    group by mml.MATERIAL_LOT_ID,hejs.workcell_id
+                        ) last_workcell
+                on last_workcell.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            inner join mt_mod_workcell mmw
+                on mmw.WORKCELL_ID = last_workcell.workcell_id
+            inner join hme_eo_job_sn hejs
+             on hejs.MATERIAL_LOT_ID = last_workcell.MATERIAL_LOT_ID
+             and hejs.creation_date = last_workcell.max_creation_date
+            inner join mt_operation mo
+             on mo.OPERATION_ID = hejs.operation_id
+        where mml.ENABLE_FLAG = 'Y'
+            and hejs.creation_date between #{dto.creationDateFrom} and #{dto.creationDateTo}
+            <if test="dto.workOrderNumList != null and dto.workOrderNumList.size()>0">
+                and mwo.WORK_ORDER_NUM in
+                <foreach collection="dto.workOrderNumList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.workcellId != null and dto.workcellId != ''">
+                and mmw.WORKCELL_ID = #{dto.workcellId}
+            </if>
+            <if test="dto.cosType != null and dto.cosType != ''">
+                and mmal4.ATTR_VALUE = #{dto.cosType}
+            </if>
+            <if test="dto.waferList != null and dto.waferList.size()>0">
+                and mmal3.ATTR_VALUE in
+                <foreach collection="dto.waferList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.materialCodeList != null and dto.materialCodeList.size()>0">
+                and mm.MATERIAL_CODE in
+                <foreach collection="dto.materialCodeList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.materialLotCodeList != null and dto.materialLotCodeList.size()>0">
+                and mml.MATERIAL_LOT_CODE in
+                <foreach collection="dto.materialLotCodeList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.operatorId != null and dto.operatorId != ''">
+                and hejs.mml.CREATED_BY = #{dto.operatorId}
+            </if>
+    </select>
+</mapper>

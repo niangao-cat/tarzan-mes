@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmePlanRateReportMapper">
+    <select id="planRateReportQuery" resultType="com.ruike.hme.api.dto.HmePlanRateReportRateDTO">
+        SELECT
+        t.SHIFT_DATE,
+        t.SHIFT_CODE,
+        t.WORKCELL_ID,
+        t.description,
+        ROUND( t.plannedProduction, 0 ) plannedProduction,
+        0 actualProduction,
+        round( t.plannedProduction, 0 ) plannedDelivery,
+        0 actualAelivery,
+        ROUND( ifnull( t.quantityUnderProduction, 0 ), 0 ) quantityUnderProduction,
+        round( ifnull( t.inProcessStandard, 0 ), 0 ) inProcessStandards,
+        0 actualProductionRatio,
+        0 actualAeliveryRatio,
+        0 percentageInProduction
+        FROM
+        (
+        SELECT
+        mcs.SHIFT_DATE,
+        mcs.SHIFT_CODE,
+        mmw.WORKCELL_ID,
+        mmw.WORKCELL_NAME description,
+        mmw.WORKCELL_NAME,
+        mcs.CALENDAR_SHIFT_ID,
+        (
+        SELECT
+        ifnull( SUM( DR.DISPATCH_QTY ), 0 )
+        FROM
+        hme_wo_dispatch_recode dr
+        WHERE
+        dr.TENANT_ID = #{tenantId}
+        AND dr.WORKCELL_ID = mmw.WORKCELL_ID
+        AND dr.CALENDAR_SHIFT_ID = mcs.CALENDAR_SHIFT_ID
+        ) plannedProduction,
+        (
+        SELECT
+        sum( wip.WORKING_QTY + wip.QUEUE_QTY + wip.COMPLETED_QTY ) sum_qty
+        FROM
+        mt_eo_step_wip wip,
+        mt_mod_organization_rel mor1,
+        mt_mod_organization_rel mor2
+        WHERE
+        mor1.ORGANIZATION_ID = wip.WORKCELL_ID
+        AND mor1.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor1.PARENT_ORGANIZATION_ID = mor2.ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_ID = mmw.WORKCELL_ID
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.TOP_SITE_ID = mor1.TOP_SITE_ID
+        AND mor1.TOP_SITE_ID = #{hmePlanRateReportRequestDTO.siteId}
+        GROUP BY
+        mor2.PARENT_ORGANIZATION_ID
+        ) quantityUnderProduction,
+        (
+        SELECT ifnull( wa.ATTR_VALUE, 0 )
+        FROM mt_mod_workcell_attr wa
+        WHERE wa.WORKCELL_ID = mmw.WORKCELL_ID AND wa.ATTR_NAME = 'PROCESS_STANDARD' ) inProcessStandard
+        FROM
+        mt_mod_workcell mmw
+        JOIN mt_calendar_org_rel mcor ON mcor.ORGANIZATION_ID = mmw.WORKCELL_ID AND mcor.ORGANIZATION_TYPE = 'WORKCELL'
+        JOIN mt_calendar_shift mcs ON mcor.CALENDAR_ID = mcs.CALENDAR_ID,
+        mt_mod_organization_rel mmor
+        WHERE
+        mmor.TOP_SITE_ID = #{hmePlanRateReportRequestDTO.siteId}
+        AND mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mmor.PARENT_ORGANIZATION_ID = #{hmePlanRateReportRequestDTO.prodLineId}
+        AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mmor.ORGANIZATION_ID = mmw.WORKCELL_ID
+        AND mcor.ENABLE_FLAG = 'Y'
+        AND mcs.ENABLE_FLAG = 'Y'
+        AND mcs.SHIFT_DATE <![CDATA[ >= ]]> str_to_date(#{hmePlanRateReportRequestDTO.dateTimeFrom}, '%Y-%m-%d')
+        AND mcs.SHIFT_DATE <![CDATA[ <= ]]> str_to_date(#{hmePlanRateReportRequestDTO.dateTimeTo}, '%Y-%m-%d')
+        <if test="hmePlanRateReportRequestDTO.lineId != null and hmePlanRateReportRequestDTO.lineId != ''">
+            and mmw.WORKCELL_ID = #{hmePlanRateReportRequestDTO.lineId}
+        </if>
+        ORDER BY
+        mcs.SHIFT_DATE,
+        mmor.SEQUENCE,
+        mcs.SEQUENCE
+        ) t
+    </select>
+
+    <select id="selectDetailList" resultType="com.ruike.hme.domain.vo.HmePlanRateDetailVO">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT wo.WORK_ORDER_NUM,
+        wo.WORK_ORDER_ID,
+        mm.MATERIAL_ID,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        eo.EO_ID,
+        eo.eo_num,
+        eo.IDENTIFICATION eo_IDENTIFICATION,
+        eo.CREATION_DATE eo_CREATION_DATE,
+        eo.STATUS eo_status_code,
+        gst.DESCRIPTION eo_status_DESCRIPTION,
+        sn.site_in_date,
+        sn.created_by sn_created_by,
+        iu.real_name sn_created_by_name
+        FROM hme_eo_job_sn sn,
+        mt_wkc_shift wks,
+        mt_mod_organization_rel mor1,
+        mt_mod_organization_rel mor2,
+        mt_work_order wo,
+        mt_material mm,
+        mt_gen_status gs,
+        mt_gen_status_tl gst,
+        iam_user iu,
+        mt_eo eo
+        WHERE sn.shift_id = wks.WKC_SHIFT_ID
+        AND sn.workcell_id = mor1.ORGANIZATION_ID
+        AND mor1.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor1.PARENT_ORGANIZATION_ID = mor2.ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_type = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_ID = wks.workcell_id
+        AND sn.rework_flag = 'N'
+        AND eo.EO_ID = sn.eo_id
+        AND eo.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND mm.MATERIAL_ID = eo.MATERIAL_ID
+        AND gs.MODULE = 'ORDER'
+        AND gs.STATUS_GROUP = 'EO_STATUS'
+        AND gs.STATUS_CODE = eo.`STATUS`
+        and gst.GEN_STATUS_ID = gs.GEN_STATUS_ID
+        and gst.LANG = #{lang}
+        AND iu.id = sn.created_by
+        and mor1.TOP_SITE_ID = mor2.TOP_SITE_ID
+        AND mor2.SEQUENCE = (
+        SELECT min(mor3.SEQUENCE)
+        FROM mt_mod_organization_rel mor3
+        WHERE mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.PARENT_ORGANIZATION_type = 'WORKCELL'
+        and mor3.TOP_SITE_ID = mor1.TOP_SITE_ID
+        AND mor3.PARENT_ORGANIZATION_ID = wks.workcell_id)
+        and wks.TENANT_ID = #{tenantId}
+        and mor1.TOP_SITE_ID = #{siteId}
+        AND wks.SHIFT_DATE = #{shiftDate}
+        AND wks.SHIFT_CODE = #{shiftCode}
+        AND wks.workcell_id = #{workcellId}
+    </select>
+
+    <select id="selectWoRouterStepList" resultType="com.ruike.hme.domain.vo.HmePlanRateWoRouterStepVO">
+        select sn.work_order_id
+             , sn.eo_id
+             , mrs.ROUTER_STEP_ID
+             , mrs.SEQUENCE
+             , cor.qty
+        from hme_eo_job_sn sn
+           , hme_wkc_complete_output_record cor
+           , mt_wkc_shift wks
+           , mt_router_step mrs
+        where sn.eo_step_id = mrs.ROUTER_STEP_ID
+          and sn.shift_id = wks.WKC_SHIFT_ID
+          and cor.work_order_id = sn.work_order_id
+          and cor.material_id = sn.sn_material_id
+          and cor.workcell_id = wks.WORKCELL_ID
+          and cor.wkc_shift_id = wks.WKC_SHIFT_ID
+          and sn.eo_id is not null
+          and sn.site_out_date is not null
+          and sn.rework_flag = 'N'
+          and cor.tenant_id = #{tenantId}
+          AND wks.SHIFT_DATE = #{shiftDate}
+          AND wks.SHIFT_CODE = #{shiftCode}
+          AND wks.workcell_id = #{workcellId};
+
+    </select>
+
+    <select id="selectDeliveryDetailList" resultType="com.ruike.hme.domain.vo.HmePlanRateDetailVO">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select wo.work_order_num,
+        wo.work_order_id,
+        mm.material_id,
+        mm.material_code,
+        mm.material_name,
+        eo.eo_id,
+        eo.eo_num,
+        eo.identification eo_identification,
+        eo.creation_date eo_creation_date,
+        eo.status eo_status_code,
+        gst.description eo_status_description,
+        sn.site_in_date,
+        sn.created_by sn_created_by,
+        iu.real_name sn_created_by_name
+        from
+        hme_eo_job_sn sn,
+        mt_eo eo,
+        mt_work_order wo,
+        mt_material mm,
+        mt_gen_status mgs,
+        mt_gen_status_tl gst,
+        hzero_platform.iam_user iu
+        where sn.eo_id = eo.eo_id
+        and eo.work_order_id = wo.work_order_id
+        and mm.material_id = eo.material_id
+        and iu.id = sn.site_out_by
+        and mgs.module = 'ORDER'
+        and mgs.status_group = 'EO_STATUS'
+        and mgs.status_code = eo.status
+        and mgs.gen_status_id = gst.gen_status_id
+        and sn.rework_flag = 'N'
+        and gst.lang = #{lang}
+        and eo.tenant_id = #{tenantId}
+        and
+        <foreach collection="dtoList" item="dto" open="(" close=")" separator="or">
+            (sn.eo_id = #{dto.eoId}
+            and sn.eo_step_id = #{dto.routerStepId})
+        </foreach>
+
+    </select>
+
+    <select id="queryDeliveryDetailList" resultType="com.ruike.hme.domain.vo.HmePlanRateDetailVO">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+            wo.work_order_num,
+            wo.work_order_id,
+            mm.material_id,
+            mm.material_code,
+            mm.material_name,
+            eo.eo_id,
+            eo.eo_num,
+            eo.identification eo_identification,
+            eo.creation_date eo_creation_date,
+            eo.status eo_status_code,
+            mgst.description eo_status_description,
+            sn.site_in_date,
+            sn.created_by sn_created_by,
+            iu.real_name sn_created_by_name
+        from
+            mt_eo eo
+        left join mt_work_order wo on wo.work_order_id = eo.work_order_id
+        left join mt_material mm on mm.material_id = eo.material_id
+        left join mt_gen_status mgs on mgs.status_code = eo.STATUS
+        and mgs.module = 'ORDER'
+        and mgs.status_group = 'EO_STATUS'
+        left join mt_gen_status_tl mgst on mgst.gen_status_id = mgs.gen_status_id
+        and mgst.lang = #{lang},
+        hme_eo_job_sn sn,
+        mt_mod_organization_rel mmor1,
+        mt_mod_organization_rel mmor2,
+        mt_wkc_shift mws,
+        mt_mod_workcell mmw,
+        mt_mod_workcell_attr mmwa,
+        iam_user iu
+        where
+        1 = 1
+        and eo.eo_id = sn.eo_id
+        and sn.eo_id is not null
+        and sn.site_out_date is not null
+        and sn.rework_flag = 'N'
+        and sn.workcell_id = mmor2.organization_id
+        and mmor2.organization_type = 'WORKCELL'
+        and mmor2.parent_organization_id = mmw.workcell_id
+        and mmor2.parent_organization_type = 'WORKCELL'
+        and mmor2.top_site_id = mmor1.top_site_id
+        and mmor1.organization_id = mmw.workcell_id
+        and mmor1.organization_type = 'WORKCELL'
+        and mmor1.parent_organization_id = mws.workcell_id
+        and mmor1.parent_organization_type = 'WORKCELL'
+        and mmw.workcell_id = mmwa.workcell_id
+        and mmwa.attr_name = 'OUTPUT_FLAG'
+        and mmwa.attr_value = 'Y'
+        and mmwa.tenant_id = mmw.tenant_id
+        and mmw.tenant_id = sn.tenant_id
+        and sn.tenant_id = #{tenantId}
+        and sn.shift_id = mws.wkc_shift_id
+        and sn.site_out_by = iu.id
+        and mmor2.top_site_id = #{siteId}
+        and mws.workcell_id = #{workcellId}
+        and mws.shift_date = #{shiftDate}
+        and mws.shift_code = #{shiftCode}
+    </select>
+
+    <select id="actualProductionQuery" resultType="com.ruike.hme.api.dto.HmePlanRateReportRateDTO">
+        select
+            wks.shift_date,
+            wks.shift_code,
+            wks.workcell_id,
+            count(1) actualProduction
+        from
+            mt_mod_organization_rel mor1,
+            mt_mod_organization_rel mor2 ,
+            hme_eo_job_sn sn,
+            mt_wkc_shift wks,
+            (select mor3.parent_organization_id workcell_id,
+                    min(mor3.sequence) sequence
+               from mt_mod_organization_rel mor3
+              where mor3.top_site_id = #{dto.siteId}
+                and mor3.parent_organization_type = 'WORKCELL'
+                and mor3.parent_organization_id in
+        <foreach collection="workcellIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+                and mor3.organization_type = 'WORKCELL'
+              group by mor3.parent_organization_id) rel_seq
+        where
+            mor1.top_site_id = #{dto.siteId}
+            and mor1.parent_organization_type = 'WORKCELL'
+            and mor1.parent_organization_id = mor2.organization_id
+            and mor1.organization_type = 'WORKCELL'
+            and mor2.top_site_id = #{dto.siteId}
+            and mor2.parent_organization_type = 'WORKCELL'
+            and mor2.parent_organization_id = wks.workcell_id
+            and mor2.organization_type = 'WORKCELL'
+            and mor2.sequence = rel_seq.sequence
+            and rel_seq.workcell_id = wks.workcell_id
+            and sn.workcell_id = mor1.organization_id
+            and sn.shift_id = wks.wkc_shift_id
+            and sn.rework_flag = 'N'
+            and sn.eo_id is not null
+            and wks.workcell_id in
+        <foreach collection="workcellIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and wks.shift_date <![CDATA[ >= ]]> str_to_date(#{dto.dateTimeFrom}, '%Y-%m-%d')
+            and wks.shift_date <![CDATA[ <= ]]> str_to_date(#{dto.dateTimeTo}, '%Y-%m-%d')
+            and wks.shift_code in
+        <foreach collection="shiftCodeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            and wks.tenant_id = #{tenantId}
+        group by wks.shift_date,
+                 wks.shift_code,
+                 wks.workcell_id
+    </select>
+
+    <select id="actualAeliveryQuery" resultType="com.ruike.hme.api.dto.HmePlanRateReportRateDTO">
+        SELECT
+        mws.shift_date,
+        mws.shift_code,
+        mws.workcell_id,
+        ROUND(sum(eo.qty), 0) actualAelivery
+        FROM
+        mt_eo eo,
+        hme_eo_job_sn sn,
+        mt_mod_organization_rel mmor1,
+        mt_mod_organization_rel mmor2,
+        mt_wkc_shift mws,
+        mt_mod_workcell prs,
+        mt_mod_workcell_attr mmwa
+        WHERE
+        1 = 1
+        AND eo.eo_id = sn.eo_id
+        AND sn.eo_id IS NOT NULL
+        AND sn.site_out_date IS NOT NULL
+        AND sn.rework_flag = 'N'
+        AND sn.workcell_id = mmor2.organization_id
+        AND mmor2.top_site_id = #{dto.siteId}
+        AND mmor2.parent_organization_type = 'WORKCELL'
+        AND mmor2.parent_organization_id = prs.workcell_id
+        AND mmor2.organization_type = 'WORKCELL'
+        AND mmor1.top_site_id = mmor2.top_site_id
+        AND mmor1.parent_organization_type = 'WORKCELL'
+        AND mmor1.parent_organization_id = mws.workcell_id
+        AND mmor1.organization_type = 'WORKCELL'
+        AND mmor1.organization_id = mmor2.parent_organization_id
+        AND prs.workcell_id = mmwa.workcell_id
+        AND mmwa.attr_name = 'OUTPUT_FLAG'
+        AND mmwa.attr_value = 'Y'
+        AND mmwa.tenant_id = prs.tenant_id
+        AND prs.tenant_id = sn.tenant_id
+        AND sn.tenant_id = #{tenantId}
+        AND sn.shift_id = mws.wkc_shift_id
+        AND mws.workcell_id in
+        <foreach collection="workcellIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND mws.shift_date <![CDATA[ >= ]]> str_to_date(#{dto.dateTimeFrom}, '%Y-%m-%d')
+        AND mws.shift_date <![CDATA[ <= ]]> str_to_date(#{dto.dateTimeTo}, '%Y-%m-%d')
+        AND mws.shift_code in
+        <foreach collection="shiftCodeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        group by mws.shift_date,
+                 mws.shift_code,
+                 mws.workcell_id
+    </select>
+
+</mapper>

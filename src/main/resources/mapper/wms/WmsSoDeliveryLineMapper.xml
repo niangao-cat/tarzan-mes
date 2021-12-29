@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsSoDeliveryLineMapper">
+
+    <select id="selectListByDocId" resultType="com.ruike.wms.domain.vo.WmsSoDeliveryLineVO">
+        select ins.instruction_id
+             , ins.instruction_status
+             , insa_ln.attr_value                                         instruction_line_num
+             , ins.material_id
+             , mm.material_code
+             , mm.material_name
+             , ifnull(insa_ver.attr_value, '')                            material_version
+             , ins.quantity                                               demand_qty
+             , ifnull((select sum(mia.actual_qty)
+                       from mt_instruction_actual mia
+                       where mia.instruction_id = ins.instruction_id), 0) actual_qty
+             , ins.uom_id
+             , uom.uom_code
+             , ins.from_site_id
+             , ins.from_locator_id
+             , ins.TO_LOCATOR_ID
+             , wh.LOCATOR_CODE                                            from_warehouse_code
+             , ins.source_order_id
+             , ins.SOURCE_ORDER_LINE_ID
+             , insa_so.ATTR_VALUE                                         SO_NUM
+             , insa_so1.ATTR_VALUE                                        SO_LINE_NUM
+             , ins.remark
+             , ins.CREATED_BY
+             , ins.LAST_UPDATED_BY
+             , ins.CREATION_DATE
+             , ins.LAST_UPDATE_DATE,
+             attr1.ATTR_VALUE AS sn,
+             attr2.ATTR_VALUE AS specStockFlag
+        from mt_instruction ins
+                 left join mt_instruction_attr insa_ln on insa_ln.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_ln.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                 left join mt_instruction_attr insa_so on insa_so.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_so.ATTR_NAME = 'SO_NUM'
+                 left join mt_instruction_attr insa_so1 on insa_so1.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_so1.ATTR_NAME = 'SO_LINE_NUM'
+                 left join mt_instruction_attr insa_ver on insa_ver.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_ver.ATTR_NAME = 'MATERIAL_VERSION'
+            	LEFT JOIN mt_instruction_attr attr1 ON attr1.INSTRUCTION_ID = ins.INSTRUCTION_ID
+	        AND attr1.ATTR_NAME = 'SN'
+	            LEFT JOIN mt_instruction_attr attr2 ON attr2.INSTRUCTION_ID = ins.INSTRUCTION_ID
+	        AND attr2.ATTR_NAME = 'SPEC_STOCK_FLAG'
+                 left join mt_mod_locator wh on (CONCAT(ins.from_locator_id, ins.TO_LOCATOR_ID)) = wh.locator_id
+           , mt_material mm
+           , mt_uom uom
+        where ins.material_id = mm.material_id
+          and ins.uom_id = uom.uom_id
+          and ins.tenant_id = #{tenantId}
+          and ins.source_doc_id = #{instructionDocId}
+        order by (insa_ln.attr_value + 0)
+    </select>
+
+    <select id="selectWoByInstructionIdList" resultType="com.ruike.wms.domain.vo.WmsInstructionWoVO">
+        select ins.INSTRUCTION_ID
+        from mt_work_order mwo
+        ,mt_work_order_attr woa_so
+        ,mt_work_order_attr woa_sol
+        ,mt_instruction ins
+        where mwo.WORK_ORDER_ID = woa_so.WORK_ORDER_ID
+        and woa_so.ATTR_NAME = 'attribute1'
+        and mwo.WORK_ORDER_ID = woa_sol.WORK_ORDER_ID
+        and woa_sol.ATTR_NAME = 'attribute7'
+        and ins.SOURCE_ORDER_ID = woa_so.ATTR_VALUE
+        and ins.SOURCE_ORDER_LINE_ID = woa_sol.ATTR_VALUE
+        and ins.TENANT_ID = #{tenantId}
+        and ins.INSTRUCTION_ID in
+        <foreach collection="instructionIdList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectPrepareListByDocId" resultType="com.ruike.wms.domain.vo.WmsProductPrepareLineVO">
+        select ins.instruction_id
+             , ins.instruction_status
+             , insa_ln.attr_value                                         instruction_line_num
+             , ins.material_id
+             , mm.material_code
+             , mm.material_name
+             , ifnull(insa_ver.attr_value, '')                            material_version
+             , ins.quantity                                               demand_qty
+             , ifnull((select sum(mia.actual_qty)
+                       from mt_instruction_actual mia
+                       where mia.instruction_id = ins.instruction_id), 0) actual_qty
+             , (select count(miad.material_lot_id)
+                from mt_instruction_actual mia
+                   , mt_instruction_actual_detail miad
+                where mia.instruction_id = ins.instruction_id
+                  and mia.actual_id = miad.actual_id) material_lot_count
+             , ins.uom_id
+             , uom.uom_code
+             , ins.from_site_id
+             , mms.site_code                          from_site_code
+             , ins.from_locator_id
+             , wh.locator_code                        from_locator_code
+             , attr2.ATTR_VALUE                       so_num
+             , attr3.ATTR_VALUE                       so_line_num
+             , insa_sf.attr_value                     so_flag
+             , insa_tul.attr_value                    tolerance_upper_limit
+             ,attr1.ATTR_VALUE  as specStockFlag,
+             attr4.ATTR_VALUE AS sn
+        from mt_instruction ins
+                 left join mt_instruction_attr insa_ln on insa_ln.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_ln.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                 left join mt_instruction_attr insa_ver on insa_ver.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_ver.ATTR_NAME = 'MATERIAL_VERSION'
+                 left join mt_instruction_attr insa_sf on insa_sf.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_sf.ATTR_NAME = 'SO_FLAG'
+                 left join mt_instruction_attr insa_tul on insa_tul.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_tul.ATTR_NAME = 'TOLERANCE_UPPER_LIMIT'
+            	LEFT JOIN mt_instruction_attr attr1 ON attr1.INSTRUCTION_ID = ins.INSTRUCTION_ID
+	        AND attr1.ATTR_NAME = 'SPEC_STOCK_FLAG'
+	            LEFT JOIN mt_instruction_attr attr2 ON attr2.INSTRUCTION_ID = ins.INSTRUCTION_ID
+	        AND attr2.ATTR_NAME = 'SO_NUM'
+	            LEFT JOIN mt_instruction_attr attr3 ON attr3.INSTRUCTION_ID = ins.INSTRUCTION_ID
+	        AND attr3.ATTR_NAME = 'SO_LINE_NUM'
+	        LEFT JOIN mt_instruction_attr attr4 ON attr4.INSTRUCTION_ID = ins.INSTRUCTION_ID
+	        AND attr4.ATTR_NAME = 'SN'
+                 left join mt_mod_locator wh on ins.FROM_LOCATOR_ID = wh.LOCATOR_ID
+           , mt_material mm
+           , mt_uom uom
+           , mt_mod_site mms
+        where ins.MATERIAL_ID = mm.MATERIAL_ID
+          and ins.UOM_ID = uom.UOM_ID
+          and ins.FROM_SITE_ID = mms.SITE_ID
+          and ins.INSTRUCTION_STATUS != 'CANCEL'
+          and ins.TENANT_ID = #{tenantId}
+          and ins.SOURCE_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="selectPickUpLocatorByLineId" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        select mml.locator_id
+             , loc.locator_code
+        from mt_instruction ins
+                 left join mt_instruction_actual mia on mia.instruction_id = ins.instruction_id
+                 join mt_material_lot mml on mml.site_id = ins.from_site_id
+                 join mt_mod_locator loc on loc.locator_id = mml.locator_id
+            and mml.material_id = ins.material_id and ins.tenant_id = mml.tenant_id
+                 left join mt_instruction_attr insa_ver on insa_ver.instruction_id = ins.instruction_id
+            and insa_ver.ATTR_NAME = 'MATERIAL_VERSION'
+                 left join mt_instruction_attr insa_sf on insa_sf.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_sf.ATTR_NAME = 'SO_FLAG'
+                 left join mt_instruction_attr insa_so on insa_so.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_so.ATTR_NAME = 'SO_NUM'
+                 left join mt_instruction_attr insa_sol on insa_sol.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_sol.ATTR_NAME = 'SO_LINE_NUM'
+                 left join mt_instruction_attr insa_mf on insa_mf.INSTRUCTION_ID = ins.INSTRUCTION_ID
+            and insa_mf.ATTR_NAME = 'MF_FLAG'
+        where mml.ENABLE_FLAG = 'Y'
+          and mml.QUALITY_STATUS = 'OK'
+          and ifnull(insa_mf.ATTR_VALUE, '') != 'Y'
+          and (insa_sf.attr_value = 'N' and ifnull(insa_so.ATTR_VALUE, '') = ''
+                   and ifnull(insa_sol.ATTR_VALUE, '') = '' or (insa_so.ATTR_VALUE = ins.SOURCE_ORDER_ID
+            and insa_sol.ATTR_VALUE = ins.SOURCE_ORDER_LINE_ID))
+          and (ifnull(mia.FROM_SITE_ID, '-1') = '-1'
+            or (ifnull(ins.FROM_SITE_ID, '-1') = '-1' and mia.ACTUAL_ID is null)
+            or loc.PARENT_LOCATOR_ID = ifnull(mia.FROM_LOCATOR_ID, ins.FROM_LOCATOR_ID))
+          and ins.INSTRUCTION_ID = #{instructionId}
+          and ins.TENANT_ID = #{tenantId}
+        order by mml.lot
+        limit 1
+    </select>
+
+</mapper>

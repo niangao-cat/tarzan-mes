@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsStocktakeRangeMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.vo.WmsStocktakeRangeVO">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="STOCKTAKE_RANGE_ID" property="stocktakeRangeId" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_ID" property="stocktakeId" jdbcType="VARCHAR"/>
+        <result column="RANGE_OBJECT_TYPE" property="rangeObjectType" jdbcType="VARCHAR"/>
+        <result column="RANGE_OBJECT_ID" property="rangeObjectId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <update id="batchUpdateList">
+        <bind name="userId" value="@io.choerodon.core.oauth.DetailsHelper@getUserDetails().getUserId()"/>
+        update mt_stocktake_range
+        <set>
+            range_object_id =
+            <foreach collection="list" item="rec" index="index"
+                     separator=" " open="case STOCKTAKE_RANGE_ID" close="end">
+                when #{rec.stocktakeRangeId} then #{rec.rangeObjectId}
+            </foreach>
+            ,object_version_num = object_version_num + 1
+            ,last_updated_by = userId
+            ,last_update_date = now()
+        </set>
+        where STOCKTAKE_RANGE_ID in
+        <foreach collection="data" item="rec" separator="," open="(" close=")">
+            #{rec.stocktakeRangeId}
+        </foreach>
+    </update>
+
+    <select id="selectListByDocId" resultType="com.ruike.wms.domain.vo.WmsStocktakeRangeVO">
+        <if test="dto.rangeObjectType == 'LOCATOR'">
+            select msr.*
+            ,ml.LOCATOR_CODE range_Object_Code
+            ,ml.LOCATOR_NAME range_Object_Name
+            from mt_stocktake_range msr
+            ,mt_mod_locator ml
+            where msr.RANGE_OBJECT_ID = ml.LOCATOR_ID
+            and msr.STOCKTAKE_ID = #{dto.stocktakeId}
+            and msr.range_Object_Type = #{dto.rangeObjectType}
+            <if test="dto.rangeObjectCode != null and dto.rangeObjectCode != ''">
+                AND FIND_IN_SET(ml.locator_code ,#{dto.rangeObjectCode})
+            </if>
+            <if test="dto.rangeObjectName != null and dto.rangeObjectName != ''">
+                <bind name="rangeObjectNameLike" value="'%'+dto.rangeObjectName+'%'"/>
+                and ml.locator_name like #{rangeObjectNameLike}
+            </if>
+        </if>
+        <if test="dto.rangeObjectType == 'MATERIAL'">
+            select msr.*
+            ,mm.material_code range_Object_Code
+            ,mm.material_name range_Object_Name
+            from mt_stocktake_range msr
+            ,mt_material mm
+            where msr.RANGE_OBJECT_ID = mm.material_id
+            and msr.STOCKTAKE_ID = #{dto.stocktakeId}
+            and msr.range_Object_Type = #{dto.rangeObjectType}
+            <if test="dto.rangeObjectCode != null and dto.rangeObjectCode != ''">
+                <bind name="rangeObjectCodeLike" value="'%'+dto.rangeObjectCode+'%'"/>
+                and mm.material_code like #{rangeObjectCodeLike}
+            </if>
+            <if test="dto.rangeObjectName != null and dto.rangeObjectName != ''">
+                <bind name="rangeObjectNameLike" value="'%'+dto.rangeObjectName+'%'"/>
+                and mm.material_name like #{rangeObjectNameLike}
+            </if>
+        </if>
+    </select>
+
+    <select id="selectLocatorsByDocIds" resultType="com.ruike.wms.domain.vo.WmsStocktakeRangeVO">
+        select msr.stocktake_id
+        , ml.locator_code range_object_code
+        , ml.locator_name range_object_name
+        from mt_stocktake_range msr
+        , mt_mod_locator ml
+        where msr.RANGE_OBJECT_ID = ml.LOCATOR_ID
+        and msr.TENANT_ID = #{tenantId}
+        and msr.STOCKTAKE_ID in
+        <foreach collection="stocktakeIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        and msr.range_Object_Type = 'LOCATOR'
+    </select>
+
+    <select id="selectCoveredRangeList" resultType="java.lang.String">
+        select msd.STOCKTAKE_ID
+        from mt_stocktake_doc msd
+        where msd.STOCKTAKE_STATUS in ('NEW', 'RELEASED')
+        and exists(select 1
+        from mt_stocktake_range msr
+        where msr.STOCKTAKE_ID = msd.STOCKTAKE_ID
+        and msr.RANGE_OBJECT_TYPE = #{rangeObjectType}
+        and msr.range_object_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>)
+        and msd.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectMaterialLotInRange" resultType="com.ruike.wms.domain.vo.WmsMaterialLotVO">
+        select mml.MATERIAL_LOT_ID
+             , mml.MATERIAL_LOT_CODE
+        from mt_material_lot mml
+                 left join mt_material_lot_attr mmla_mf on mmla_mf.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            and mmla_mf.ATTR_NAME = 'MF_FLAG'
+                 left join mt_material_lot_attr mmla_vir on mmla_vir.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            and mmla_vir.ATTR_NAME = 'VIRTUAL_FLAG'
+        where ifnull(mmla_mf.ATTR_VALUE, 'N') != 'Y'
+          and ifnull(mmla_vir.ATTR_VALUE, 'N') != 'Y'
+          and mml.ENABLE_FLAG = 'Y'
+          and mml.TENANT_ID = #{tenantId}
+          and mml.LOCATOR_ID in (select mtr.RANGE_OBJECT_ID
+                                 from mt_stocktake_range mtr
+                                 where mtr.RANGE_OBJECT_TYPE = 'LOCATOR'
+                                   and mtr.STOCKTAKE_ID = #{stocktakeId})
+          and mml.MATERIAL_ID in (select mtr.RANGE_OBJECT_ID
+                                  from mt_stocktake_range mtr
+                                  where mtr.RANGE_OBJECT_TYPE = 'MATERIAL'
+                                    and mtr.STOCKTAKE_ID = #{stocktakeId})
+    </select>
+
+    <select id="selectActiveRangeList" resultType="com.ruike.wms.domain.vo.WmsStocktakeRangeVO">
+        select msr.*
+        from mt_stocktake_range msr
+           , mt_stocktake_doc msd
+        where msr.STOCKTAKE_ID = msd.STOCKTAKE_ID
+          and msd.STOCKTAKE_STATUS in ('NEW', 'RELEASED')
+          and msr.RANGE_OBJECT_TYPE = #{rangeObjectType}
+          and msr.tenant_id = #{tenantId}
+    </select>
+
+    <insert id="batchInsertList" parameterType="com.ruike.wms.domain.vo.WmsStocktakeRangeVO">
+        insert into mt_stocktake_range (
+        TENANT_ID
+        ,STOCKTAKE_RANGE_ID
+        ,STOCKTAKE_ID
+        ,RANGE_OBJECT_TYPE
+        ,RANGE_OBJECT_ID
+        ,CID
+        ,OBJECT_VERSION_NUMBER
+        ,CREATED_BY
+        ,CREATION_DATE
+        ,LAST_UPDATED_BY
+        ,LAST_UPDATE_DATE
+        ) values
+        <foreach collection="data" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.stocktakeRangeId},
+            #{item.stocktakeId},
+            #{item.rangeObjectType},
+            #{item.rangeObjectId},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="batchDeleteList">
+        delete from mt_stocktake_range
+        WHERE
+        TENANT_ID = #{tenantId}
+        and stocktake_range_id IN (
+        <foreach collection="idList" item="id" separator=",">
+            #{id}
+        </foreach>
+        )
+    </delete>
+
+</mapper>

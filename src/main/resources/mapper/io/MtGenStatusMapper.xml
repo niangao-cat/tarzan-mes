@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtGenStatusMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtGenStatus">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="GEN_STATUS_ID" property="genStatusId" jdbcType="VARCHAR"/>
+        <result column="MODULE" property="module" jdbcType="VARCHAR"/>
+        <result column="STATUS_GROUP" property="statusGroup" jdbcType="VARCHAR"/>
+        <result column="STATUS_CODE" property="statusCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_FLAG" property="defaultFlag" jdbcType="VARCHAR"/>
+        <result column="RELATION_TABLE" property="relationTable" jdbcType="VARCHAR"/>
+        <result column="INITIAL_FLAG" property="initialFlag" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByConditionCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.GEN_STATUS_ID,
+        b.MODULE,
+        b.STATUS_GROUP,
+        b.STATUS_CODE,
+        t.DESCRIPTION,
+        b.DEFAULT_FLAG,
+        b.RELATION_TABLE,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        FROM
+        mt_gen_status b,
+        mt_gen_status_tl t
+        WHERE
+        b.GEN_STATUS_ID = t.GEN_STATUS_ID
+        AND t.LANG = #{locale}
+        AND b.TENANT_ID = ${tenantId}
+        AND b.MODULE = #{condition.module}
+        <if test="condition.statusCode!=null">
+            and b.STATUS_CODE = #{condition.statusCode}
+        </if>
+        <if test="condition.description!=null">
+            and t.DESCRIPTION = #{condition.description}
+        </if>
+    </select>
+    
+    <select id="selectAllGenStatus" resultMap="BaseResultMap">
+          SELECT b.TENANT_ID,
+		         b.GEN_STATUS_ID,
+		         b.MODULE,
+		         b.STATUS_GROUP,
+		         b.STATUS_CODE,
+		         t.DESCRIPTION,
+		         b.DEFAULT_FLAG,
+		         b.RELATION_TABLE,
+		         b.INITIAL_FLAG,
+		         b.SEQUENCE,
+		         b.CID,
+		         b.OBJECT_VERSION_NUMBER,
+		         b.CREATED_BY,
+		         b.CREATION_DATE,
+		         b.LAST_UPDATED_BY,
+		         b.LAST_UPDATE_DATE
+            FROM mt_gen_status b,
+                 mt_gen_status_tl t
+           WHERE b.GEN_STATUS_ID = t.GEN_STATUS_ID
+             AND t.LANG = #{language}
+    </select>
+
+    <select id="selectCondition" resultType="io.tarzan.common.domain.vo.MtGenStatusVO5">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT tb.TENANT_ID,
+        tb.GEN_STATUS_ID,
+        tb.MODULE,
+        tb.STATUS_GROUP,
+        tb.STATUS_CODE,
+        t.DESCRIPTION,
+        tb.DEFAULT_FLAG,
+        tb.RELATION_TABLE,
+        tb.INITIAL_FLAG,
+        tb.SEQUENCE,
+        tb.CID,
+        tb.OBJECT_VERSION_NUMBER,
+        tb.CREATED_BY,
+        tb.CREATION_DATE,
+        tb.LAST_UPDATED_BY,
+        tb.LAST_UPDATE_DATE
+        FROM mt_gen_status tb,
+        mt_gen_status_tl t
+        WHERE tb.GEN_STATUS_ID = t.GEN_STATUS_ID
+        AND tb.TENANT_ID = ${tenantId}
+        AND t.LANG = #{locale}
+        <if test="dto.relationTable != null">
+            AND tb.RELATION_TABLE = #{dto.relationTable}
+        </if>
+        <if test="dto.sequence != null">
+            AND tb.SEQUENCE = #{dto.sequence}
+        </if>
+        <if test="dto.statusGroup != null">
+            AND tb.STATUS_GROUP = #{dto.statusGroup}
+        </if>
+        <if test="dto.defaultFlag != null">
+            AND tb.DEFAULT_FLAG = #{dto.defaultFlag}
+        </if>
+        <if test="dto.genStatusId != null">
+            AND tb.GEN_STATUS_ID = #{dto.genStatusId}
+        </if>
+        <if test="dto.module != null">
+            AND tb.MODULE = #{dto.module}
+        </if>
+        <if test="dto.description != null">
+            AND t.DESCRIPTION like concat(concat('%',#{dto.description}),'%')
+        </if>
+        <if test="dto.initialFlag != null">
+            AND tb.INITIAL_FLAG = #{dto.initialFlag}
+        </if>
+        <if test="dto.statusCode != null">
+            AND tb.STATUS_CODE = #{dto.statusCode}
+        </if>
+        order by tb.MODULE,tb.STATUS_GROUP,tb.SEQUENCE
+    </select>
+</mapper>

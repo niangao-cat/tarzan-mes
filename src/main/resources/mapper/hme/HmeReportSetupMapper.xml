@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeReportSetupMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeReportSetup">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="REPORT_SETUP_ID" property="reportSetupId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="REPORT_TYPE" property="reportType" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="ATTACHMENT_UUID" property="attachmentUuid" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryReportSetupsList" resultType="com.ruike.hme.domain.vo.HmeReportSetupVO2">
+        SELECT
+	        rs.*,
+	        ms.SITE_NAME,
+	        ms.SITE_CODE,
+	        pl.PROD_LINE_CODE,
+	        pl.PROD_LINE_NAME,
+	        mw.WORKCELL_CODE,
+	        mw.WORKCELL_NAME
+        FROM
+	        hme_report_setup rs
+        LEFT JOIN mt_mod_site ms ON ms.SITE_ID = rs.site_id
+        LEFT JOIN mt_mod_production_line pl ON pl.PROD_LINE_ID = rs.prod_line_id
+        LEFT JOIN mt_mod_workcell mw ON mw.WORKCELL_ID = rs.workcell_id
+        WHERE
+            rs.TENANT_ID = #{tenantId}
+        AND rs.report_type = #{reportType}
+    </select>
+
+    <select id="querySiteName" resultType="io.tarzan.common.domain.vo.MtExtendVO5">
+        SELECT
+	        sa.ATTR_NAME attr_name,
+	        sa.ATTR_VALUE attr_value,
+	        sa.LANG lang
+        FROM
+	        mt_mod_site ms,
+	        mt_mod_site_attr sa
+        WHERE ms.SITE_ID = sa.SITE_ID
+        AND sa.ATTR_NAME = 'SITE_NICKNAME'
+        AND ms.ENABLE_FLAG = 'Y'
+        AND ms.TENANT_ID = #{tenantId}
+        AND ms.SITE_ID = #{siteId}
+    </select>
+
+    <select id="queryReportSetupsListOfSite" resultType="com.ruike.hme.domain.vo.HmeReportSetupVO4">
+        SELECT
+	        rs.*,
+	        pl.PROD_LINE_CODE,
+	        pl.PROD_LINE_NAME
+        FROM
+	        hme_report_setup rs
+        LEFT JOIN mt_mod_production_line pl ON pl.PROD_LINE_ID = rs.prod_line_id
+        WHERE
+            rs.TENANT_ID = #{tenantId}
+        AND rs.report_type = 'MONTHLY_OUTPUT_REPORT'
+        AND rs.site_id = #{siteId}
+        AND rs.enable_flag = '1'
+        AND pl.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="queryBatchCompletedQty" resultType="com.ruike.hme.domain.vo.HmeReportSetupVO4">
+        SELECT
+            IFNULL(sum(ea.completed_qty) ,0) month_completed_qty,
+            wo.PRODUCTION_LINE_ID prod_line_id
+        FROM
+            mt_work_order wo,
+            mt_eo me,
+            mt_eo_actual ea
+        WHERE wo.WORK_ORDER_ID = me.WORK_ORDER_ID
+        AND wo.TENANT_ID = #{tenantId}
+        AND wo.SITE_ID = #{siteId}
+        AND wo.PRODUCTION_LINE_ID IN
+        <foreach collection="prodLineIdList" item="item" index="index" separator=","  open="(" close=")">
+            #{item}
+        </foreach>
+        AND me.`STATUS` = 'COMPLETED'
+        AND me.EO_ID = ea.EO_ID
+        AND ea.actual_end_time >= #{startTime}
+        AND ea.actual_end_time <![CDATA[<]]> #{endTime}
+        GROUP BY
+        wo.PRODUCTION_LINE_ID
+    </select>
+
+    <select id="queryBatchDispatchQty" resultType="com.ruike.hme.domain.vo.HmeReportSetupVO4">
+        SELECT
+            IFNULL( sum( dr.DISPATCH_QTY ), 0 ) month_dispatch_qty,
+            wo.PRODUCTION_LINE_ID prod_line_id,
+            dr.WORKCELL_ID workcell_id
+        FROM
+            mt_work_order wo,
+            hme_wo_dispatch_recode dr,
+            mt_calendar_shift mcs
+        WHERE
+            dr.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND mcs.CALENDAR_SHIFT_ID = dr.CALENDAR_SHIFT_ID
+        AND wo.TENANT_ID = #{tenantId}
+        AND wo.PRODUCTION_LINE_ID IN
+        <foreach collection="prodLineIdList" item="item" index="index" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND dr.WORKCELL_ID IN
+        <foreach collection="workcellIdList" item="workcell" index="index" separator="," open="(" close=")">
+            #{workcell}
+        </foreach>
+        AND mcs.SHIFT_DATE >= #{startTime}
+        AND mcs.SHIFT_DATE <![CDATA[<]]> #{endTime}
+        GROUP BY
+        wo.PRODUCTION_LINE_ID,
+        dr.WORKCELL_ID
+    </select>
+
+    <select id="queryBatchDailyCompletedQty" resultType="com.ruike.hme.domain.vo.HmeReportSetupVO4">
+        SELECT
+        IFNULL(sum(ea.completed_qty) ,0) daily_completed_qty,
+        wo.PRODUCTION_LINE_ID prod_line_id,
+        CAST(DATE_FORMAT(ea.actual_end_time, '%d') as SIGNED) day_time
+        FROM
+        mt_work_order wo,
+        mt_eo me,
+        mt_eo_actual ea
+        WHERE wo.WORK_ORDER_ID = me.WORK_ORDER_ID
+        AND wo.TENANT_ID = #{tenantId}
+        AND wo.SITE_ID = #{siteId}
+        AND me.`STATUS` = 'COMPLETED'
+        AND me.EO_ID = ea.EO_ID
+        AND ea.ACTUAL_END_TIME >= #{startTime}
+        AND ea.ACTUAL_END_TIME <![CDATA[<]]> #{endTime}
+        GROUP BY
+        wo.PRODUCTION_LINE_ID,
+        day_time
+    </select>
+</mapper>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtNumrangeAssignHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtNumrangeAssignHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NUMRANGE_ASSIGN_HIS_ID" property="numrangeAssignHisId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_ASSIGN_ID" property="numrangeAssignId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_ID" property="numrangeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_ID" property="objectTypeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_CODE" property="objectTypeCode" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE" property="site" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    
+    <resultMap id="VOResultMap" type="io.tarzan.common.domain.vo.MtNumrangeAssignHisVO">
+        <result column="NUMRANGE_ID" property="numrangeId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_GROUP" property="numrangeGroup" jdbcType="VARCHAR"/>
+        <result column="NUM_DESCRIPTION" property="numDescription" jdbcType="VARCHAR"/>
+        <result column="OUTSIDE_NUM_FLAG" property="outsideNumFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="NUM_EXAMPLE" property="numExample" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_CODE" property="objectCode" jdbcType="VARCHAR"/>
+        <result column="OBJECT_NAME" property="objectDesc" jdbcType="VARCHAR"/>
+
+        <result column="NUMRANGE_ASSIGN_HIS_ID" property="numrangeAssignHisId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_ASSIGN_ID" property="numrangeAssignId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_ID" property="objectTypeId" jdbcType="VARCHAR"/>
+        <result column="TYPE_CODE" property="objectType" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="objectTypeDesc" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE" property="site" jdbcType="VARCHAR"/>
+		<result column="SITE_DESC" property="siteDesc" jdbcType="VARCHAR"/>
+		
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="USER_ID" property="userId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+
+    </resultMap>
+    
+    <select id="selectByConditionCustom" resultMap="VOResultMap">
+    	<bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+	        a_his.NUMRANGE_ID,
+	        a_his.CREATED_BY  USER_ID,
+	        b.NUMRANGE_GROUP,
+	        b.NUM_DESCRIPTION,
+	        b.OUTSIDE_NUM_FLAG,
+	        b.ENABLE_FLAG,
+	        b.NUM_EXAMPLE,
+	        b.OBJECT_ID,
+	        b1.OBJECT_CODE,
+	        tl2.OBJECT_NAME,
+	        a_his.NUMRANGE_ASSIGN_HIS_ID,
+	        a_his.OBJECT_TYPE_ID,
+	        b2.TYPE_CODE,
+	        tl3.DESCRIPTION,
+	        a_his.SITE_ID,
+	        a_his.SITE,
+	        a_his.EVENT_ID,
+	        e.EVENT_TIME
+        FROM
+	        mt_numrange_assign_his a_his
+	        JOIN mt_event e ON a_his.EVENT_ID = e.EVENT_ID
+	        LEFT JOIN mt_numrange b ON a_his.NUMRANGE_ID = b.NUMRANGE_ID AND b.TENANT_ID = a_his.TENANT_ID 
+	        LEFT JOIN mt_numrange_tl b_tl ON b.NUMRANGE_ID = b_tl.NUMRANGE_ID AND b_tl.LANG = #{lang}
+	        INNER JOIN mt_numrange_object b1 ON b.OBJECT_ID=b1.OBJECT_ID
+	        INNER JOIN mt_numrange_object_tl tl2 on b1.OBJECT_ID=tl2.OBJECT_ID and  tl2.lang=#{lang}
+	        LEFT JOIN mt_gen_type b2 ON a_his.OBJECT_TYPE_ID=b2.GEN_TYPE_ID AND b2.TENANT_ID = a_his.TENANT_ID 
+	        LEFT JOIN mt_gen_type_tl tl3 on b2.GEN_TYPE_ID=tl3.GEN_TYPE_ID and tl3.lang=#{lang}
+        WHERE
+	        a_his.TENANT_ID = #{tenantId}
+	        AND e.TENANT_ID = #{tenantId}
+	        AND b1.TENANT_ID = #{tenantId}
+	        AND b.OBJECT_ID = #{condition.objectId}
+	        <if test='condition.endTime !=null'>
+	            and e.EVENT_TIME &lt;=DATE_FORMAT(#{condition.endTime},'%Y-%m-%d %H:%i:%S')
+	        </if>
+	        <if test='condition.startTime !=null'>
+	            and DATE_FORMAT(#{condition.startTime},'%Y-%m-%d %H:%i:%S') &lt;= e.EVENT_TIME
+	        </if>
+	        <if test="condition.numrangeGroupList!=null and condition.numrangeGroupList.size>0">
+                and b.NUMRANGE_GROUP in
+                <foreach collection="condition.numrangeGroupList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        ORDER BY a_his.CREATION_DATE DESC
+    </select>
+    
+</mapper>

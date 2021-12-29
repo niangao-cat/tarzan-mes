@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtMaterialBasisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtMaterialBasic">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OLD_ITEM_CODE" property="oldItemCode" jdbcType="VARCHAR"/>
+        <result column="LONG_DESCRIPTION" property="longDescription" jdbcType="VARCHAR"/>
+        <result column="ITEM_TYPE" property="itemType" jdbcType="VARCHAR"/>
+        <result column="MAKE_BUY_CODE" property="makeBuyCode" jdbcType="VARCHAR"/>
+        <result column="LOT_CONTROL_CODE" property="lotControlCode" jdbcType="VARCHAR"/>
+        <result column="QC_FLAG" property="qcFlag" jdbcType="VARCHAR"/>
+        <result column="RECEIVING_ROUTING_ID" property="receivingRoutingId" jdbcType="VARCHAR"/>
+        <result column="WIP_SUPPLY_TYPE" property="wipSupplyType" jdbcType="VARCHAR"/>
+        <result column="VMI_FLAG" property="vmiFlag" jdbcType="VARCHAR"/>
+        <result column="ITEM_GROUP" property="itemGroup" jdbcType="VARCHAR"/>
+        <result column="PRODUCT_GROUP" property="productGroup" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <insert id="batchInsert">
+        insert into mt_material_basic values
+        <foreach collection="basic" item="item" separator="," index="index">
+            (
+            #{item.tenantId},
+            #{item.materialSiteId},
+            #{item.materialId},
+            #{item.oldItemCode},
+            #{item.longDescription},
+            #{item.itemType},
+            #{item.makeBuyCode},
+            #{item.lotControlCode},
+            #{item.qcFlag},
+            #{item.receivingRoutingId},
+            #{item.wipSupplyType},
+            #{item.vmiFlag},
+            #{item.itemGroup},
+            #{item.productGroup},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+    <select id="selectCondition" resultType="tarzan.iface.domain.vo.MtMaterialBasisVO2">
+        SELECT * FROM mt_material_basic tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.materialId != null">
+            AND tb.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.materialSiteId != null">
+            AND tb.MATERIAL_SITE_ID = #{dto.materialSiteId}
+        </if>
+        <if test="dto.oldItemCode != null">
+            AND tb.OLD_ITEM_CODE = #{dto.oldItemCode}
+        </if>
+        <if test="dto.longDescription != null">
+            AND tb.LONG_DESCRIPTION = #{dto.longDescription}
+        </if>
+        <if test="dto.itemType != null">
+            AND tb.ITEM_TYPE = #{dto.itemType}
+        </if>
+        <if test="dto.makeBuyCode != null">
+            AND tb.MAKE_BUY_CODE = #{dto.makeBuyCode}
+        </if>
+        <if test="dto.lotControlCode != null">
+            AND tb.LOT_CONTROL_CODE = #{dto.lotControlCode}
+        </if>
+        <if test="dto.qcFlag != null">
+            AND tb.QC_FLAG = #{dto.qcFlag}
+        </if>
+        <if test="dto.receivingRoutingId != null">
+            AND tb.RECEIVING_ROUTING_ID = #{dto.receivingRoutingId}
+        </if>
+        <if test="dto.wipSupplyType != null">
+            AND tb.WIP_SUPPLY_TYPE = #{dto.wipSupplyType}
+        </if>
+        <if test="dto.vmiFlag != null">
+            AND tb.VMI_FLAG = #{dto.vmiFlag}
+        </if>
+        <if test="dto.itemGroup != null">
+            AND tb.ITEM_GROUP = #{dto.itemGroup}
+        </if>
+        <if test="dto.productGroup != null">
+            AND tb.PRODUCT_GROUP = #{dto.productGroup}
+        </if>
+    </select>
+</mapper>

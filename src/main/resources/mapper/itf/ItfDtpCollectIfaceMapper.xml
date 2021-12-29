@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfDtpCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfDtpCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="DTP_CURRENT" property="dtpCurrent" jdbcType="DECIMAL"/>
+        <result column="DTP_THRESCHOLD_CURRENT" property="dtpThrescholdCurrent" jdbcType="DECIMAL"/>
+        <result column="DTP_VOLTAGE" property="dtpVoltage" jdbcType="DECIMAL"/>
+        <result column="DTP_THRESCHOLD_VOLTAGE" property="dtpThrescholdVoltage" jdbcType="DECIMAL"/>
+        <result column="DTP_CENTER_WAVELENGTH" property="dtpCenterWavelength" jdbcType="DECIMAL"/>
+        <result column="DTP_LINEWIDTH" property="dtpLinewidth" jdbcType="DECIMAL"/>
+        <result column="DTP_IPCE" property="dtpIpce" jdbcType="DECIMAL"/>
+        <result column="DTP_SE" property="dtpSe" jdbcType="DECIMAL"/>
+        <result column="DTP_WAVELENGTH_DIFFER" property="dtpWavelengthDiffer" jdbcType="DECIMAL"/>
+        <result column="DTP_LINEWIDTH_DIFFER" property="dtpLinewidthDiffer" jdbcType="DECIMAL"/>
+        <result column="DTP_CHANGE_RATE" property="dtpChangeRate" jdbcType="DECIMAL"/>
+        <result column="DTP_MODE" property="dtpMode" jdbcType="VARCHAR"/>
+        <result column="DTP_POWER" property="dtpPower" jdbcType="DECIMAL"/>
+        <result column="DTP_OPERATION_NAME" property="dtpOperationName" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE1" property="dtpAttribute1" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE2" property="dtpAttribute2" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE3" property="dtpAttribute3" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE4" property="dtpAttribute4" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE5" property="dtpAttribute5" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE6" property="dtpAttribute6" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE7" property="dtpAttribute7" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE8" property="dtpAttribute8" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE9" property="dtpAttribute9" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE10" property="dtpAttribute10" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE11" property="dtpAttribute11" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE12" property="dtpAttribute12" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE13" property="dtpAttribute13" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE14" property="dtpAttribute14" jdbcType="VARCHAR"/>
+        <result column="DTP_ATTRIBUTE15" property="dtpAttribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_dtp_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        SN,
+        DTP_CURRENT,
+        DTP_THRESCHOLD_CURRENT,
+        DTP_VOLTAGE,
+        DTP_THRESCHOLD_VOLTAGE,
+        DTP_CENTER_WAVELENGTH,
+        DTP_LINEWIDTH,
+        DTP_IPCE,
+        DTP_SE,
+        DTP_WAVELENGTH_DIFFER,
+        DTP_LINEWIDTH_DIFFER,
+        DTP_CHANGE_RATE,
+        DTP_MODE,
+        DTP_POWER,
+        DTP_OPERATION_NAME,
+        PRIMARY_KEY,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        DTP_ATTRIBUTE1,
+        DTP_ATTRIBUTE2,
+        DTP_ATTRIBUTE3,
+        DTP_ATTRIBUTE4,
+        DTP_ATTRIBUTE5,
+        DTP_ATTRIBUTE6,
+        DTP_ATTRIBUTE7,
+        DTP_ATTRIBUTE8,
+        DTP_ATTRIBUTE9,
+        DTP_ATTRIBUTE10,
+        DTP_ATTRIBUTE11,
+        DTP_ATTRIBUTE12,
+        DTP_ATTRIBUTE13,
+        DTP_ATTRIBUTE14,
+        DTP_ATTRIBUTE15)
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.interfaceId},
+            #{item.assetEncoding},
+            #{item.sn},
+            #{item.dtpCurrent},
+            #{item.dtpThrescholdCurrent},
+            #{item.dtpVoltage},
+            #{item.dtpThrescholdVoltage},
+            #{item.dtpCenterWavelength},
+            #{item.dtpLinewidth},
+            #{item.dtpIpce},
+            #{item.dtpSe},
+            #{item.dtpWavelengthDiffer},
+            #{item.dtpLinewidthDiffer},
+            #{item.dtpChangeRate},
+            #{item.dtpMode},
+            #{item.dtpPower},
+            #{item.dtpOperationName},
+            #{item.primaryKey},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.dtpAttribute1},
+            #{item.dtpAttribute2},
+            #{item.dtpAttribute3},
+            #{item.dtpAttribute4},
+            #{item.dtpAttribute5},
+            #{item.dtpAttribute6},
+            #{item.dtpAttribute7},
+            #{item.dtpAttribute8},
+            #{item.dtpAttribute9},
+            #{item.dtpAttribute10},
+            #{item.dtpAttribute11},
+            #{item.dtpAttribute12},
+            #{item.dtpAttribute13},
+            #{item.dtpAttribute14},
+            #{item.dtpAttribute15}
+            )
+        </foreach>
+    </insert>
+</mapper>

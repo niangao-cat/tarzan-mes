@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.dispatch.infra.mapper.MtDispatchStrategyOrgRelMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.dispatch.domain.entity.MtDispatchStrategyOrgRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="STRATEGY_ORG_REL_ID" property="strategyOrgRelId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="RANGE_STRATEGY" property="rangeStrategy" jdbcType="VARCHAR"/>
+        <result column="PUBLISH_STRATEGY" property="publishStrategy" jdbcType="VARCHAR"/>
+        <result column="MOVE_STRATEGY" property="moveStrategy" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdAndType" resultType="tarzan.dispatch.domain.vo.MtDispatchStrategyOrgRelVO3">
+        SELECT
+            dsor.RANGE_STRATEGY,
+            dsor.PUBLISH_STRATEGY,
+            dsor.MOVE_STRATEGY
+        FROM
+            mt_dispatch_strategy_org_rel dsor
+        WHERE
+            dsor.TENANT_ID = #{tenantId}
+            <if test="dto.organizationType!=null">
+                AND dsor.ORGANIZATION_TYPE = #{dto.organizationType}
+            </if>
+            <if test="dto.organizationId!=null">
+                AND dsor.ORGANIZATION_ID = #{dto.organizationId}
+            </if>
+
+    </select>
+
+    <select id="selectByMyCondition" resultType="tarzan.dispatch.domain.vo.MtDispatchStrategyOrgRelVO5">
+        SELECT
+        dsor.RANGE_STRATEGY,
+        dsor.PUBLISH_STRATEGY,
+        dsor.MOVE_STRATEGY,
+        dsor.ORGANIZATION_ID,
+        dsor.ORGANIZATION_TYPE,
+        dsor.STRATEGY_ORG_REL_ID,
+        dsor.ENABLE_FLAG
+        FROM
+        mt_dispatch_strategy_org_rel dsor
+        WHERE
+        dsor.TENANT_ID = #{tenantId}
+        <if test="dto.strategyOrgRelId!=null">
+            AND dsor.STRATEGY_ORG_REL_ID = #{dto.strategyOrgRelId}
+        </if>
+        <if test="dto.organizationId!=null">
+            AND dsor.ORGANIZATION_ID = #{dto.organizationId}
+        </if>
+
+        <if test="dto.organizationType!=null">
+            AND dsor.ORGANIZATION_TYPE = #{dto.organizationType}
+        </if>
+        <if test="dto.rangeStrategy!=null">
+            AND dsor.RANGE_STRATEGY = #{dto.rangeStrategy}
+        </if>
+
+        <if test="dto.publishStrategy!=null">
+            AND dsor.PUBLISH_STRATEGY = #{dto.publishStrategy}
+        </if>
+        <if test="dto.moveStrategy!=null">
+            AND dsor.MOVE_STRATEGY = #{dto.moveStrategy}
+        </if>
+    </select>
+</mapper>

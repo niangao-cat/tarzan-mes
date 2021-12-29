@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfFacCollectIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfFacCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="FAC_LOT" property="facLot" jdbcType="VARCHAR"/>
+        <result column="FAC_GLUE_LOT" property="facGlueLot" jdbcType="VARCHAR"/>
+        <result column="FAC_GLUE_TYPE" property="facGlueType" jdbcType="VARCHAR"/>
+        <result column="FAC_GLUE_OPEN_DATE" property="facGlueOpenDate" jdbcType="DATE"/>
+        <result column="FAC_HOT_START_DATE" property="facHotStartDate" jdbcType="DATE"/>
+        <result column="FAC_IS_CHART" property="facIsChart" jdbcType="VARCHAR"/>
+        <result column="FAC_COS_POS" property="facCosPos" jdbcType="VARCHAR"/>
+        <result column="FAC_CURRENT" property="facCurrent" jdbcType="DECIMAL"/>
+        <result column="FAC_CENTER_Y" property="facCenterY" jdbcType="DECIMAL"/>
+        <result column="FAC_CENTER_X" property="facCenterX" jdbcType="DECIMAL"/>
+        <result column="FAC_WIDTH_Y" property="facWidthY" jdbcType="DECIMAL"/>
+        <result column="FAC_WIDTH_X" property="facWidthX" jdbcType="DECIMAL"/>
+        <result column="FAC_ERR" property="facErr" jdbcType="VARCHAR"/>
+        <result column="FAC_REMARK" property="facRemark" jdbcType="VARCHAR"/>
+        <result column="FAC_COS_TYPE" property="facCosType" jdbcType="VARCHAR"/>
+        <result column="FAC_PARA_SHIFT" property="facParaShift" jdbcType="VARCHAR"/>
+        <result column="FAC_RAY_ANGLE" property="facRayAngle" jdbcType="VARCHAR"/>
+        <result column="FAC_EXP_CODE" property="facExpCode" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE1" property="facAttribute1" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE2" property="facAttribute2" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE3" property="facAttribute3" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE4" property="facAttribute4" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE5" property="facAttribute5" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE6" property="facAttribute6" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE7" property="facAttribute7" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE8" property="facAttribute8" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE9" property="facAttribute9" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE10" property="facAttribute10" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE11" property="facAttribute11" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE12" property="facAttribute12" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE13" property="facAttribute13" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE14" property="facAttribute14" jdbcType="VARCHAR"/>
+        <result column="FAC_ATTRIBUTE15" property="facAttribute15" jdbcType="VARCHAR"/>
+        <result column="FAC_COS_NC_CODE" property="facCosNcCode" jdbcType="VARCHAR"/>
+        <result column="FAC_NC_CODE" property="facNcCode" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_fac_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        SN,
+        FAC_LOT,
+        FAC_GLUE_LOT,
+        FAC_GLUE_TYPE,
+        FAC_GLUE_OPEN_DATE,
+        FAC_HOT_START_DATE,
+        FAC_IS_CHART,
+        FAC_COS_POS,
+        FAC_CURRENT,
+        FAC_CENTER_Y,
+        FAC_CENTER_X,
+        FAC_WIDTH_Y,
+        FAC_WIDTH_X,
+        FAC_ERR,
+        FAC_REMARK,
+        FAC_COS_TYPE,
+        FAC_PARA_SHIFT,
+        FAC_RAY_ANGLE,
+        FAC_EXP_CODE,
+        PRIMARY_KEY,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        FAC_ATTRIBUTE1,
+        FAC_ATTRIBUTE2,
+        FAC_ATTRIBUTE3,
+        FAC_ATTRIBUTE4,
+        FAC_ATTRIBUTE5,
+        FAC_ATTRIBUTE6,
+        FAC_ATTRIBUTE7,
+        FAC_ATTRIBUTE8,
+        FAC_ATTRIBUTE9,
+        FAC_ATTRIBUTE10,
+        FAC_ATTRIBUTE11,
+        FAC_ATTRIBUTE12,
+        FAC_ATTRIBUTE13,
+        FAC_ATTRIBUTE14,
+        FAC_ATTRIBUTE15,
+        FAC_COS_NC_CODE,
+        FAC_NC_CODE)
+        VALUES
+    <foreach collection="domains" index="index" item="item" separator=",">
+        (
+        #{item.interfaceId},
+        #{item.assetEncoding},
+        #{item.sn},
+        #{item.facLot},
+        #{item.facGlueLot},
+        #{item.facGlueType},
+        #{item.facGlueOpenDate},
+        #{item.facHotStartDate},
+        #{item.facIsChart},
+        #{item.facCosPos},
+        #{item.facCurrent},
+        #{item.facCenterY},
+        #{item.facCenterX},
+        #{item.facWidthY},
+        #{item.facWidthX},
+        #{item.facErr},
+        #{item.facRemark},
+        #{item.facCosType},
+        #{item.facParaShift},
+        #{item.facRayAngle},
+        #{item.facExpCode},
+        #{item.primaryKey},
+        #{item.processDate},
+        #{item.processMessage},
+        #{item.processStatus},
+        #{item.tenantId},
+        #{item.objectVersionNumber},
+        #{item.creationDate},
+        #{item.createdBy},
+        #{item.lastUpdatedBy},
+        #{item.lastUpdateDate},
+        #{item.attributeCategory},
+        #{item.facAttribute1},
+        #{item.facAttribute2},
+        #{item.facAttribute3},
+        #{item.facAttribute4},
+        #{item.facAttribute5},
+        #{item.facAttribute6},
+        #{item.facAttribute7},
+        #{item.facAttribute8},
+        #{item.facAttribute9},
+        #{item.facAttribute10},
+        #{item.facAttribute11},
+        #{item.facAttribute12},
+        #{item.facAttribute13},
+        #{item.facAttribute14},
+        #{item.facAttribute15},
+        #{item.facCosNcCode},
+        #{item.facNcCode}
+        )
+    </foreach>
+</insert>
+</mapper>

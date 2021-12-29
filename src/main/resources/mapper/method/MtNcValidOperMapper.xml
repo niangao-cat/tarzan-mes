@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtNcValidOperMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtNcValidOper">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NC_VALID_OPER_ID" property="ncValidOperId" jdbcType="VARCHAR"/>
+        <result column="NC_OBJECT_ID" property="ncObjectId" jdbcType="VARCHAR"/>
+        <result column="NC_OBJECT_TYPE" property="ncObjectType" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_ID" property="dispositionGroupId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtNcValidOperDTO">
+        <result column="NC_VALID_OPER_ID" property="ncValidOperId" jdbcType="VARCHAR"/>
+        <result column="NC_OBJECT_ID" property="ncObjectId" jdbcType="VARCHAR"/>
+        <result column="NC_OBJECT_TYPE" property="ncObjectType" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="OPERATION_DESC" property="operationDesc" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_ID" property="dispositionGroupId" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_DESC" property="dispositionGroupDesc" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP" property="dispositionGroup" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryNcValidOperList" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mnvo.NC_VALID_OPER_ID,
+        mnvo.NC_OBJECT_ID,
+        mnvo.NC_OBJECT_TYPE,
+        mo.OPERATION_ID,
+        mo.OPERATION_NAME,
+        mot.DESCRIPTION OPERATION_DESC,
+        mdg.DISPOSITION_GROUP_ID,
+        mdg.DISPOSITION_GROUP,
+        mdgt.DESCRIPTION DISPOSITION_GROUP_DESC,
+        mnvo.ENABLE_FLAG
+        from mt_nc_valid_oper mnvo
+        left join mt_operation mo on mnvo.OPERATION_ID = mo.OPERATION_ID
+        left join mt_operation_tl mot on mo.OPERATION_ID = mot.OPERATION_ID and mot.LANG =  #{locale}
+        left join mt_disposition_group mdg on mnvo.DISPOSITION_GROUP_ID = mdg.DISPOSITION_GROUP_ID and mdg.TENANT_ID = ${tenantId}
+        left join mt_disposition_group_tl mdgt on mdg.DISPOSITION_GROUP_ID = mdgt.DISPOSITION_GROUP_ID and mdgt.LANG = #{locale}
+        where
+        mnvo.TENANT_ID = ${tenantId}
+        and mo.TENANT_ID = ${tenantId}
+        and mnvo.NC_OBJECT_ID = #{ncObjectId}
+        and mnvo.NC_OBJECT_TYPE = #{ncObjectType}
+    </select>
+
+</mapper>

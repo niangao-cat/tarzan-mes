@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtTagGroupAssignHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtTagGroupAssignHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_GROUP_ASSIGN_HIS_ID" property="tagGroupAssignHisId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ASSIGN_ID" property="tagGroupAssignId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="SERIAL_NUMBER" property="serialNumber" jdbcType="DECIMAL"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_METHOD" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="VALUE_ALLOW_MISSING" property="valueAllowMissing" jdbcType="VARCHAR"/>
+        <result column="TRUE_VALUE" property="trueValue" jdbcType="VARCHAR"/>
+        <result column="FALSE_VALUE" property="falseValue" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="MANDATORY_NUM" property="mandatoryNum" jdbcType="DECIMAL"/>
+        <result column="OPTIONAL_NUM" property="optionalNum" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.general.api.dto.MtTagGroupAssignHisDTO">
+        <result column="TAG_GROUP_ASSIGN_HIS_ID" property="tagGroupAssignHisId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ASSIGN_ID" property="tagGroupAssignId" jdbcType="VARCHAR"/>
+        <result column="SERIAL_NUMBER" property="serialNumber" jdbcType="DECIMAL"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="TAG_CODE" property="tagCode" jdbcType="VARCHAR"/>
+        <result column="TAG_DESCRIPTION" property="tagDescription" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_CODE" property="tagGroupCode" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_DESCRIPTION" property="tagGroupDescription" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_METHOD" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="VALUE_ALLOW_MISSING" property="valueAllowMissing" jdbcType="VARCHAR"/>
+        <result column="TRUE_VALUE" property="trueValue" jdbcType="VARCHAR"/>
+        <result column="FALSE_VALUE" property="falseValue" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="MANDATORY_NUM" property="mandatoryNum" jdbcType="DECIMAL"/>
+        <result column="OPTIONAL_NUM" property="optionalNum" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="queryTagGroupAssignHisForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mtgah.TAG_GROUP_ASSIGN_HIS_ID,
+        mtgah.TAG_GROUP_ASSIGN_ID,
+        mtgah.SERIAL_NUMBER,
+        mt.TAG_ID,
+        mt.TAG_CODE,
+        mtt.TAG_DESCRIPTION,
+        mtgah.TAG_GROUP_ID,
+        mtgb.TAG_GROUP_CODE,
+        mtgt.TAG_GROUP_DESCRIPTION,
+        mtgah.COLLECTION_METHOD,
+        mtgah.VALUE_ALLOW_MISSING,
+        mtgah.TRUE_VALUE,
+        mtgah.FALSE_VALUE,
+        mtgah.MINIMUM_VALUE,
+        mtgah.MAXIMAL_VALUE,
+        mtgah.UNIT,
+        mtgah.MANDATORY_NUM,
+        mtgah.OPTIONAL_NUM,
+        me.EVENT_ID,
+        me.EVENT_BY,
+        me.EVENT_TIME
+        from mt_tag_group_assign_his mtgah
+        join mt_tag_group mtgb on mtgah.TAG_GROUP_ID = mtgb.TAG_GROUP_ID
+        join mt_tag_group_tl mtgt on mtgb.TAG_GROUP_ID = mtgt.TAG_GROUP_ID and mtgt.LANG=#{locale}
+        join mt_tag mt on mtgah.TAG_ID = mt.TAG_ID
+        join mt_tag_tl mtt on mt.TAG_ID = mtt.TAG_ID and mtt.LANG = #{locale}
+        join mt_event me on mtgah.EVENT_ID = me.EVENT_ID and me.TENANT_ID = ${tenantId}
+        where mtgah.TENANT_ID = ${tenantId}
+        and mtgah.TAG_GROUP_ID = #{dto.tagGroupId}
+        <if test="dto.startTime != null">
+            and me.EVENT_TIME &gt;= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.endTime != null">
+            and me.EVENT_TIME &lt;= DATE_FORMAT(#{dto.endTime},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+</mapper>

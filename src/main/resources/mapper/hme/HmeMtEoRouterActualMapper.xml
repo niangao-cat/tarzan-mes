@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeMtEoRouterActualMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtEoRouterActual">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_ROUTER_ACTUAL_ID" property="eoRouterActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="SUB_ROUTER_FLAG" property="subRouterFlag" jdbcType="VARCHAR"/>
+        <result column="SOURCE_EO_STEP_ACTUAL_ID" property="sourceEoStepActualId" jdbcType="VARCHAR"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="eoOperationLimitCurrentRouterStepMap" type="com.ruike.hme.domain.vo.HmeMtEoRouterActualVO5">
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ROUTER_ACTUAL_ID" property="eoRouterActualId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="SUB_ROUTER_FLAG" property="subRouterFlag" jdbcType="VARCHAR"/>
+        <result column="SOURCE_EO_STEP_ACTUAL_ID" property="sourceEoStepActualId" jdbcType="VARCHAR"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="eoBatchOperationLimitCurrentRouterStepGet" resultMap="eoOperationLimitCurrentRouterStepMap">
+        SELECT t.EO_ROUTER_ACTUAL_ID,
+        esa.EO_STEP_ACTUAL_ID,
+        esa.ROUTER_STEP_ID,
+        t.ROUTER_ID,
+        t.SUB_ROUTER_FLAG,
+        t.SOURCE_EO_STEP_ACTUAL_ID,
+        esa.LAST_UPDATE_DATE,
+        t.EO_ID
+        FROM mt_eo_router_actual t,
+        mt_eo_step_actual esa
+        WHERE t.TENANT_ID = ${tenantId}
+        AND esa.TENANT_ID = ${tenantId}
+        AND t.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        <choose>
+            <when test="dto.eoIdList != null and dto.eoIdList.size() > 0">
+                AND t.EO_ID IN
+                <foreach collection="dto.eoIdList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1=2
+            </otherwise>
+        </choose>
+        <if test="dto.routerStepId!=null">
+            AND esa.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.operationId!=null">
+            AND esa.OPERATION_ID = #{dto.operationId}
+        </if>
+    </select>
+</mapper>

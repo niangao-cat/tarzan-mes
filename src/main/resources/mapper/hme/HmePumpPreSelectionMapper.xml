@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmePumpPreSelectionMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmePumpPreSelection">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="pump_pre_selection_id" property="pumpPreSelectionId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="selection_lot" property="selectionLot" jdbcType="VARCHAR"/>
+        <result column="sets_num" property="setsNum" jdbcType="DECIMAL"/>
+        <result column="comb_material_id" property="combMaterialId" jdbcType="VARCHAR"/>
+        <result column="bom_id" property="bomId" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="rule_head_id" property="ruleHeadId" jdbcType="VARCHAR"/>
+        <result column="pump_qty" property="pumpQty" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryTagInfoByMaterial" resultType="com.ruike.hme.domain.vo.HmePumpPreSelectionVO">
+        SELECT
+            hpfrl.rule_line_id,
+            hpfrl.tag_id,
+            mt.tag_code,
+            mt.tag_description,
+            hpfrl.calculate_type,
+            hpfrl.min_value,
+            hpfrl.max_value,
+            hpfrh.qty
+        FROM
+            hme_pump_filter_rule_header hpfrh,
+            hme_pump_filter_rule_line hpfrl,
+            mt_tag mt
+        WHERE
+            hpfrh.tenant_id = #{tenantId}
+        AND hpfrh.material_id = #{materialId}
+        AND hpfrh.enable_flag = 'Y'
+        AND hpfrl.rule_head_id = hpfrh.rule_head_id
+        AND hpfrl.tenant_id = hpfrh.tenant_id
+        AND hpfrl.enable_flag = 'Y'
+        AND hpfrl.tenant_id = hpfrh.tenant_id
+        AND mt.tag_id = hpfrl.tag_id
+    </select>
+
+    <select id="getLineWorkcellIdByWorkcell" resultType="java.lang.String">
+        SELECT
+        mor2.PARENT_ORGANIZATION_ID
+        FROM
+        mt_mod_organization_rel mor,
+        mt_mod_organization_rel mor2
+        WHERE mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_ID = #{workcellId}
+        AND mor.TENANT_ID = #{tenantId}
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_ID = mor.PARENT_ORGANIZATION_ID
+        AND mor2.TENANT_ID = mor.TENANT_ID
+    </select>
+
+    <select id="materialLotInfoQuery" resultType="com.ruike.hme.domain.vo.HmePumpPreSelectionVO4">
+        select mml.material_lot_id, mml.material_lot_code, mml.material_id,
+               mm.material_code, mm.material_name, mml.quality_status,
+               mml.enable_flag, mml.locator_id
+        from mt_material_lot mml,
+             mt_material mm
+        where mml.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and mm.material_id = mml.material_id
+    </select>
+
+    <select id="materialLotLoadedQuery" resultType="java.lang.String">
+        select mml.material_lot_code
+        from hme_pump_selection_details hpsd,
+             mt_material_lot mml
+        where hpsd.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hpsd.tenant_id = #{tenantId}
+        and mml.material_lot_id = hpsd.material_lot_id
+        limit 1
+    </select>
+
+    <select id="pumpSelectionLotLovQuery" resultType="com.ruike.hme.domain.vo.HmePumpPreSelectionVO2">
+        select hpps.pump_pre_selection_id, hpps.selection_lot, hpps.comb_material_id,
+               mm.material_code as comb_material_code, mm.material_name as comb_material_name,
+               hpps.bom_id, mb.revision, hpps.sets_num, hpps.status
+        from hme_pump_pre_selection hpps,
+             mt_material mm,
+             mt_bom mb
+        where hpps.tenant_id = #{tenantId}
+        and mm.material_id = hpps.comb_material_id
+        and mb.bom_id = hpps.bom_id
+        <if test="dto.combMaterialCode != null and dto.combMaterialCode != ''">
+            AND mm.material_code like CONCAT(#{dto.combMaterialCode},'%')
+        </if>
+        <if test="dto.revision != null and dto.revision != ''">
+            AND mb.revision like CONCAT(#{dto.revision},'%')
+        </if>
+        order by hpps.creation_date desc
+    </select>
+
+    <select id="pumpPreSelectionRecallQuery" resultType="com.ruike.hme.domain.vo.HmePumpPreSelectionVO5">
+        select hpps.pump_pre_selection_id, hpps.selection_lot, hpps.comb_material_id,
+               mm.material_code as comb_material_code, hpps.bom_id, mb.revision,
+               hpsd.pump_selection_details_id, hpsd.old_container_id, hpsd.new_container_id,
+               hpsd.material_lot_id, mml.material_lot_code, hpsd.material_id, mm2.material_code,
+               mm2.material_name, hpsd.status, hpsd.selection_order, hpsd.creation_date, hpps.pump_qty
+        from hme_pump_pre_selection hpps,
+             mt_material mm,
+             mt_bom mb,
+             hme_pump_selection_details hpsd,
+             mt_material_lot mml,
+             mt_material mm2
+        where hpps.tenant_id = #{tenantId}
+        and mm.material_id = hpps.comb_material_id
+        and mb.bom_id = hpps.bom_id
+        and hpsd.pump_pre_selection_id = hpps.pump_pre_selection_id
+        and mml.material_lot_id = hpsd.material_lot_id
+        and mm2.material_id = hpsd.material_id
+        <if test="dto.pumpPreSelectionId != null and dto.pumpPreSelectionId != ''">
+            AND hpps.pump_pre_selection_id = #{dto.pumpPreSelectionId}
+        </if>
+        <if test="dto.oldContainerId != null and dto.oldContainerId != ''">
+            AND hpsd.old_container_id = #{dto.oldContainerId}
+        </if>
+        <if test="dto.newContainerId != null and dto.newContainerId != ''">
+            AND hpsd.new_container_id = #{dto.newContainerId}
+        </if>
+        <if test="dto.pumpMaterialLotCode != null and dto.pumpMaterialLotCode != ''">
+            AND mml.material_lot_code = #{dto.pumpMaterialLotCode}
+        </if>
+        <if test="dto.creationDateFrom != null">
+            AND hpsd.creation_date >= DATE_FORMAT(#{dto.creationDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.creationDateTo != null">
+            AND hpsd.creation_date &lt;= DATE_FORMAT(#{dto.creationDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        order by hpps.selection_lot, hpsd.selection_order
+    </select>
+
+    <select id="containerInfoQuery" resultType="tarzan.inventory.domain.entity.MtContainer">
+        select mc.container_id, mc.container_code
+        from mt_container mc
+        where mc.container_id in
+        <foreach collection="containerIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <delete id="batchDeletePumpSelectionDetailsByPrimary">
+        delete from hme_pump_selection_details where pump_selection_details_id in
+        <foreach collection="pumpSelectionDetailsIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="materialLotInfoQueryByCode" resultType="com.ruike.hme.domain.vo.HmePumpPreSelectionVO4">
+        select mml.material_lot_id, mml.material_lot_code, mml.material_id,
+               mml.quality_status, mml.enable_flag, mml.locator_id
+        from mt_material_lot mml
+        where mml.MATERIAL_LOT_CODE in
+        <foreach collection="materialLotCodeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and mml.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="materialLotLoadedQuery2" resultType="java.lang.String">
+        select mml.material_lot_code
+        from hme_pump_selection_details hpsd,
+        mt_material_lot mml
+        where hpsd.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hpsd.status = 'LOADED'
+        and hpsd.tenant_id = #{tenantId}
+        and mml.material_lot_id = hpsd.material_lot_id
+        limit 1
+    </select>
+
+    <select id="getBomIdByMaterialRevision" resultType="java.lang.String">
+        select mb.bom_id
+        from mt_bom mb
+        where mb.bom_name = #{dto.materialCode}
+        and mb.revision = #{dto.revision}
+        and mb.tenant_id = #{tenantId}
+        limit 1
+    </select>
+
+    <select id="getBomComponentMaterialByBomId" resultType="java.lang.String">
+        select mbc.material_id
+        from mt_bom_component mbc
+        where mbc.bom_id = #{bomId}
+        and mbc.DATE_FROM &lt;= now()
+        and (mbc.DATE_TO is null or mbc.DATE_TO &gt;= now())
+        and mbc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getSubStituteGroupByMainMaterial" resultType="com.ruike.wms.domain.entity.WmsMaterialSubstituteRel">
+        select wmsr.MATERIAL_ID MAIN_MATERIAL_ID, wmsr.SUBSTITUTE_GROUP
+        from wms_material_substitute_rel wmsr
+        where wmsr.MATERIAL_ID in
+        <foreach collection="mainMaterialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and wmsr.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getMaterialBySubStituteGroup" resultType="java.lang.String">
+        select wmsr.MATERIAL_ID
+        from wms_material_substitute_rel wmsr
+        where wmsr.SUBSTITUTE_GROUP in
+        <foreach collection="subStituteGroupList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and wmsr.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getMaterialLotByMaterialLotAndMaterial" resultType="java.lang.String">
+        select mml.material_lot_id
+        from mt_material_lot mml
+        where mml.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and mml.material_id in
+        <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getPumpFilterRuleLineByMaterial" resultType="com.ruike.hme.domain.vo.HmePumpPreSelectionVO7">
+        select hpfrl.rule_line_id, hpfrl.parameter_code, hpfrl.tag_id,
+               hpfrl.calculate_type, hpfrl.min_value, hpfrl.max_value,
+               hpfrl.formula, hpfrl.sequence, hpfrl.priority,
+               hpfrh.rule_head_id, hpfrh.qty, hpfrh.material_id
+        from hme_pump_filter_rule_header hpfrh,
+             hme_pump_filter_rule_line hpfrl
+        where hpfrh.material_id = #{materialId}
+        and hpfrh.tenant_id = #{tenantId}
+        and hpfrh.enable_flag = 'Y'
+        and hpfrl.rule_head_id = hpfrh.rule_head_id
+        and hpfrl.enable_flag = 'Y'
+    </select>
+
+    <select id="getWorkcellByOperation" resultType="java.lang.String">
+        select mmor.ORGANIZATION_ID
+        from mt_operation mo,
+             mt_operation_wkc_dispatch_rel mowdr,
+             mt_mod_organization_rel mmor
+        where mo.operation_name in
+        <foreach collection="operationCodeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and mo.TENANT_ID = #{tenantId}
+        and mowdr.OPERATION_ID = mo.OPERATION_ID
+        and mowdr.TENANT_ID = mo.TENANT_ID
+        and mmor.PARENT_ORGANIZATION_ID = mowdr.WORKCELL_ID
+        and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+        and mmor.TENANT_ID = mo.TENANT_ID
+    </select>
+
+    <select id="eoJobSnDataQuery" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        select hejs.material_lot_id, hejs.job_id, hejs.last_update_date
+        from hme_eo_job_sn hejs
+        where hejs.material_lot_id in
+        <foreach collection="materialLotIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hejs.workcell_id in
+        <foreach collection="workcellIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hejs.site_out_date is not null
+        and hejs.site_out_date != ''
+        and hejs.tenant_id = #{tenantId}
+    </select>
+
+    <select id="eoJobDataRecordQuery" resultType="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        select hejdr.job_id, hejdr.tag_id, hejdr.result
+        from hme_eo_job_data_record hejdr
+        where hejdr.job_id in
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hejdr.tag_id in
+        <foreach collection="tagIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hejdr.result is not null
+        and hejdr.result != ''
+        and hejdr.tenant_id = #{tenantId}
+    </select>
+
+    <select id="newPumpSelectionDetailsQueryBySelectionLot" resultType="com.ruike.hme.domain.vo.HmePumpPreSelectionVO4">
+        SELECT hpsd.material_lot_id, mml.material_lot_code, hpsd.material_id, mm.material_code, mm.material_name,
+               hpsd.old_container_id as container_id, IFNULL(mc.container_code,'/') as container_code, hpsd.selection_order as group_num
+        from hme_pump_selection_details hpsd
+        left join mt_material mm on mm.material_id = hpsd.material_id
+        left join mt_container mc on mc.container_id = hpsd.old_container_id,
+        mt_material_lot mml
+        where hpsd.pump_pre_selection_id = #{pumpPreSelectionId}
+        and hpsd.status = 'NEW'
+        and hpsd.tenant_id = #{tenantId}
+        and mml.material_lot_id = hpsd.material_lot_id
+    </select>
+
+    <select id="getCountBySelectionDetailsId" resultType="java.lang.Long">
+        select count(1)
+        from hme_pump_selection_details hpsd
+        where hpsd.pump_selection_details_id in
+        <foreach collection="pumpSelectionDetailsIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getSetsNumBySelectionLot" resultType="com.ruike.hme.domain.entity.HmePumpPreSelection">
+        select hpps.pump_pre_selection_id, hpps.sets_num
+        from hme_pump_pre_selection hpps
+        where hpps.selection_lot = #{selectionLot}
+        and hpps.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getAlreadySetsNumBySelectionLot" resultType="java.lang.String">
+        select hpsd.selection_order
+        from hme_pump_selection_details hpsd
+        where hpsd.pump_pre_selection_id = #{pumpPreSelectionId}
+        and hpsd.`status` = 'LOADED'
+        and hpsd.tenant_id = #{tenantId}
+    </select>
+</mapper>

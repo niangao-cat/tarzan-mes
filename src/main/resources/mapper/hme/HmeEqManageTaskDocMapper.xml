@@ -1,0 +1,1084 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEqManageTaskDocMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="task_doc_id" property="taskDocId" jdbcType="VARCHAR"/>
+        <result column="doc_num" property="docNum" jdbcType="VARCHAR"/>
+        <result column="doc_type" property="docType" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="equipment_id" property="equipmentId" jdbcType="VARCHAR"/>
+        <result column="doc_status" property="docStatus" jdbcType="VARCHAR"/>
+        <result column="task_cycle" property="taskCycle" jdbcType="VARCHAR"/>
+        <result column="check_result" property="checkResult" jdbcType="VARCHAR"/>
+        <result column="shift_date" property="shiftDate" jdbcType="DATE"/>
+        <result column="shift_code" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="check_date" property="checkDate" jdbcType="DATE"/>
+        <result column="wkc_id" property="wkcId" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="check_by" property="checkBy" jdbcType="DECIMAL"/>
+        <result column="confirm_by" property="confirmBy" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectEqTagGroup" resultType="com.ruike.hme.api.dto.HmeEqTaskDocCreateDTO">
+        SELECT
+        	hemtg.manage_tag_group_id,
+        	hemtg.equipment_category
+        FROM
+        	hme_eq_manage_tag_group hemtg
+        WHERE hemtg.TENANT_ID = #{tenantId}
+        AND hemtg.ENABLE_FLAG = 'Y'
+        AND hemtg.STATUS = 'P'
+        AND hemtg.equipment_category IS NOT NULL
+    </select>
+
+    <select id="selectEqManageTag" resultType="com.ruike.hme.api.dto.HmeEqTaskDocCreateDTO">
+        SELECT
+          hemt.manage_tag_id,
+          hemt.manage_cycle
+        FROM
+          hme_eq_manage_tag hemt
+        WHERE hemt.TENANT_ID = #{tenantId}
+        AND hemt.manage_cycle = #{cycle}
+		AND hemt.manage_tag_group_id = #{manageTagGroupId}
+    </select>
+
+    <select id="selectEquipmentByCategory" resultType="com.ruike.hme.api.dto.HmeEquipmentDTO">
+        SELECT
+          he.SITE_ID,
+          he.EQUIPMENT_ID
+        FROM
+          hme_equipment he
+        WHERE he.TENANT_ID = #{tenantId}
+        AND he.EQUIPMENT_CATEGORY = #{equipmentCategory}
+    </select>
+
+    <select id="getStationId" resultType="java.lang.String">
+        SELECT
+          hewr.station_id
+        FROM
+          hme_equipment_wkc_rel hewr
+        WHERE hewr.TENANT_ID = #{tenantId}
+        AND hewr.site_id = #{siteId}
+        AND hewr.equipment_id = #{equipmentId}
+        AND hewr.ENABLE_FLAG = 'Y'
+        GROUP BY hewr.station_id
+    </select>
+
+    <select id="getDiffTime" resultType="java.lang.Integer" >
+        SELECT
+        timestampdiff(day,DATE_FORMAT(td.creation_date,'%Y-%m-%d'),DATE_FORMAT(NOW(),'%Y-%m-%d')) AS diff_time
+        FROM
+        hme_eq_manage_task_doc td
+        WHERE td.tenant_id = #{tenantId}
+        <if test="vo.siteId != null and vo.siteId !=''" >
+            AND td.site_id = #{vo.siteId}
+        </if>
+        <if test="vo.equipmentId != null and vo.equipmentId !=''" >
+            AND td.equipment_id = #{vo.equipmentId}
+        </if>
+        <if test="vo.docType != null and vo.docType !=''" >
+            AND td.doc_type = #{vo.docType}
+        </if>
+        <if test="vo.taskCycle != null and vo.taskCycle !=''" >
+            AND td.task_cycle = #{vo.taskCycle}
+        </if>
+        <if test="vo.shiftCode != null and vo.shiftCode !=''" >
+            AND td.shift_code = #{vo.shiftCode}
+        </if>
+        <if test="vo.shiftDate != null" >
+            AND DATE_FORMAT(td.shift_date,'%Y-%m-%d') = DATE_FORMAT(#{vo.shiftDate},'%Y-%m-%d')
+        </if>
+        <if test="vo.creationDate != null" >
+            AND DATE_FORMAT(td.creation_date,'%Y-%m-%d') = DATE_FORMAT(#{vo.creationDate},'%Y-%m-%d')
+        </if>
+        <if test="vo.creationWeekDate != null" >
+            AND DATE_FORMAT(td.creation_date,'%Y-%m-%d') = DATE_FORMAT(DATE_SUB(#{vo.creationWeekDate},INTERVAL 7 DAY),'%Y-%m-%d')
+        </if>
+        <if test="vo.creationMonthDate != null" >
+            AND DATE_FORMAT(td.creation_date,'%Y-%m') = DATE_FORMAT(#{vo.creationMonthDate},'%Y-%m')
+        </if>
+    </select>
+
+    <select id="queryTaskDocList" resultType="com.ruike.hme.api.dto.HmeEqTaskDocQueryDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        td.task_doc_id,
+        td.site_id,
+        mms.site_code,
+        mms_tl.site_name,
+        td.doc_num,
+        td.doc_type,
+        td.doc_status,
+        td.equipment_id,
+        he.asset_encoding AS equipment_code,
+        he.asset_name AS equipment_name,
+        td.task_cycle,
+        td.check_result,
+        td.shift_code,
+        date_format( td.shift_date, '%Y-%m-%d %H:%i:%s' ) shift_date,
+        date_format( td.check_date, '%Y-%m-%d %H:%i:%s' ) check_date,
+        td.check_by,
+        td.confirm_by,
+        date_format( td.creation_date, '%Y-%m-%d %H:%i:%s' ) creation_date,
+        td.wkc_id,
+        td.remark,
+        mmw.workcell_code AS wkc_code,
+        mmw_tl.workcell_name AS wkc_name,
+        he.MODEL,
+        he.EQUIPMENT_BODY_NUM,
+        mma.DESCRIPTION,
+        he.LOCATION,
+        he.PRESERVER
+        FROM
+        hme_eq_manage_task_doc td
+        JOIN mt_mod_site mms ON td.site_id = mms.SITE_ID
+        JOIN mt_mod_site_tl mms_tl ON mms.SITE_ID = mms_tl.SITE_ID AND mms_tl.LANG = #{lang}
+        JOIN hme_equipment he ON td.equipment_id = he.equipment_id
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = td.wkc_id
+        LEFT JOIN mt_mod_workcell_tl mmw_tl ON mmw.WORKCELL_ID = mmw_tl.WORKCELL_ID AND mmw_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_area mma ON he.BUSINESS_ID = mma.AREA_ID
+        WHERE
+        td.tenant_id = #{tenantId}
+        <if test="dto.siteId != null and dto.siteId != ''">
+            and td.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.equipmentId != null and dto.equipmentId != ''">
+            and td.equipment_id = #{dto.equipmentId}
+        </if>
+        <if test="dto.equipmentCode != null and dto.equipmentCode != ''">
+            and he.asset_encoding LIKE CONCAT(#{dto.equipmentCode},"%")
+        </if>
+        <if test="dto.docType != null and dto.docType != ''">
+            and td.doc_type = #{dto.docType}
+        </if>
+        <if test="dto.docStatus != null and dto.docStatus != ''">
+            and td.doc_status = #{dto.docStatus}
+        </if>
+        <if test="dto.checkResult != null and dto.checkResult != ''">
+            and td.check_result = #{dto.checkResult}
+        </if>
+        <if test="dto.wkcId != null and dto.wkcId != ''">
+            and td.wkc_id = #{dto.wkcId}
+        </if>
+        <if test="dto.checkDateFrom != null">
+            and DATE_FORMAT(td.check_date,'%Y-%m-%d %T') &gt;= DATE_FORMAT(#{dto.checkDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.checkDateTo != null">
+            and DATE_FORMAT(td.check_date,'%Y-%m-%d %T') &lt;= DATE_FORMAT(#{dto.checkDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateFrom != null">
+            and DATE_FORMAT(td.creation_date,'%Y-%m-%d %T') &gt;= DATE_FORMAT(#{dto.creationDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateTo != null">
+            and DATE_FORMAT(td.creation_date,'%Y-%m-%d %T') &lt;= DATE_FORMAT(#{dto.creationDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.taskCycle != null and dto.taskCycle != ''">
+            and td.task_cycle = #{dto.taskCycle}
+        </if>
+        <if test="dto.docNum != null and dto.docNum != ''">
+            and td.doc_num LIKE CONCAT(#{dto.docNum},"%")
+        </if>
+        <if test="dto.workcellIdList != null and dto.workcellIdList.size() > 0">
+            and td.wkc_id IN
+            <foreach collection="dto.workcellIdList" item="item" index="index" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.departmentId != null and dto.departmentId != ''">
+            and mma.AREA_ID = #{dto.departmentId}
+        </if>
+        ORDER BY td.creation_date DESC
+    </select>
+
+    <select id="queryTaskDocList2" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+        select *
+        from hme_eq_manage_task_doc hemtd
+        where hemtd.tenant_id = #{tenantId}
+        and hemtd.equipment_id = #{equipmentId}
+        and hemtd.doc_type='C'
+        and hemtd.task_cycle != '0.5'
+        and DATE_FORMAT(hemtd.creation_date,'%Y-%m-%d') = DATE_FORMAT(current_date,'%Y-%m-%d')
+    </select>
+
+    <select id="selectCheckEquipment" resultType="com.ruike.hme.api.dto.HmeEqTaskDocEquipmentDTO">
+      SELECT
+        t.manage_tag_group_id,
+        t.equipment_category,
+	    t.equipment_id,
+	    t.manage_cycle,
+	    t.SITE_ID,
+      	t.eq_level,
+      	t.doc_type
+      FROM
+         (SELECT
+           emtg.manage_tag_group_id,
+           emtg.equipment_category,
+	       he.equipment_id,
+	       emt.manage_cycle,
+	       emtg.site_id,
+           1 AS eq_level,
+           'C' doc_type
+         FROM
+         	hme_eq_manage_tag_group emtg,
+	        hme_eq_manage_tag emt,
+         	hme_equipment he
+         WHERE emtg.TENANT_ID = #{tenantId}
+           AND emtg.manage_tag_group_id = emt.manage_tag_group_id
+         	AND he.business_id = emtg.business_id
+         	AND he.EQUIPMENT_CATEGORY = emtg.equipment_category
+         	AND he.EQUIPMENT_STATUS != 'BF'
+         	AND he.ATTRIBUTE1 IN ('B', 'C')
+         	AND emtg.manage_type = 'EC'
+         	AND emtg.ENABLE_FLAG = 'Y'
+         	AND emtg.STATUS = 'P'
+         	AND emtg.business_id IS NOT NULL
+         	AND emtg.operation_id IS NOT NULL
+         	AND emt.manage_cycle IS NOT NULL
+         	AND EXISTS (
+         	  SELECT 1
+         	  FROM
+         		mt_operation_wkc_dispatch_rel mowdr,
+         		mt_mod_organization_rel mmor,
+         		hme_equipment_wkc_rel hewr
+         	  WHERE emtg.operation_id = mowdr.OPERATION_ID
+	    	  AND emtg.TENANT_ID = mowdr.TENANT_ID
+	    	  AND mowdr.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+	    	  AND mmor.TENANT_ID = mowdr.TENANT_ID
+	    	  AND mmor.TOP_SITE_ID = emtg.site_id
+	    	  AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+	    	  AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+	    	  AND hewr.station_id = mmor.ORGANIZATION_ID
+	    	  AND hewr.site_id = mmor.TOP_SITE_ID
+	    	  AND hewr.TENANT_ID = mmor.TENANT_ID
+	    	  AND hewr.ENABLE_FLAG = 'Y'
+	    	  AND hewr.equipment_id = he.equipment_id)
+	     UNION
+	     SELECT
+           emtg.manage_tag_group_id,
+           emtg.equipment_category,
+	       he.equipment_id,
+	       emt.manage_cycle,
+	       emtg.site_id,
+           2 AS eq_level,
+           'C' doc_type
+         FROM
+         	hme_eq_manage_tag_group emtg,
+	        hme_eq_manage_tag emt,
+         	hme_equipment he
+         WHERE emtg.TENANT_ID = #{tenantId}
+           AND emtg.manage_tag_group_id = emt.manage_tag_group_id
+         	AND he.business_id = emtg.business_id
+         	AND he.EQUIPMENT_CATEGORY = emtg.equipment_category
+         	AND he.EQUIPMENT_STATUS != 'BF'
+         	AND he.ATTRIBUTE1 IN ('B', 'C')
+         	AND emtg.manage_type = 'EC'
+         	AND emtg.ENABLE_FLAG = 'Y'
+         	AND emtg.STATUS = 'P'
+         	AND emtg.business_id IS NOT NULL
+         	AND emtg.operation_id IS NULL
+         	AND emt.manage_cycle IS NOT NULL
+         UNION
+         SELECT
+           emtg.manage_tag_group_id,
+           emtg.equipment_category,
+	       he.equipment_id,
+	       emt.manage_cycle,
+	       emtg.site_id,
+           3 AS eq_level,
+           'C' doc_type
+         FROM
+         	hme_eq_manage_tag_group emtg,
+	        hme_eq_manage_tag emt,
+         	hme_equipment he
+         WHERE emtg.TENANT_ID = #{tenantId}
+            AND emtg.manage_tag_group_id = emt.manage_tag_group_id
+         	AND he.EQUIPMENT_CATEGORY = emtg.equipment_category
+         	AND he.EQUIPMENT_STATUS != 'BF'
+         	AND he.ATTRIBUTE1 IN ('B', 'C')
+         	AND emtg.manage_type = 'EC'
+         	AND emtg.ENABLE_FLAG = 'Y'
+         	AND emtg.STATUS = 'P'
+         	AND emtg.business_id IS NULL
+         	AND emtg.operation_id IS NULL
+         	AND emt.manage_cycle IS NOT NULL) t
+          GROUP by t.manage_tag_group_id,
+                   t.equipment_category,
+	               t.equipment_id,
+	               t.manage_cycle,
+	               t.SITE_ID,
+      	           t.eq_level,
+      	           t.doc_type
+    </select>
+
+    <select id="selectMaintainEquipment" resultType="com.ruike.hme.api.dto.HmeEqTaskDocEquipmentDTO">
+      SELECT
+        t.manage_tag_group_id,
+        t.equipment_category,
+	    t.equipment_id,
+	    t.manage_cycle,
+	    t.site_id,
+      	t.eq_level,
+      	t.doc_type
+      FROM
+         (SELECT
+           emtg.manage_tag_group_id,
+           emtg.equipment_category,
+	       he.equipment_id,
+	       emt.manage_cycle,
+	       emtg.site_id,
+           1 AS eq_level,
+           'M' doc_type
+         FROM
+         	hme_eq_manage_tag_group emtg,
+	        hme_eq_manage_tag emt,
+         	hme_equipment he
+         WHERE emtg.TENANT_ID = #{tenantId}
+           AND emtg.manage_tag_group_id = emt.manage_tag_group_id
+         	AND he.business_id = emtg.business_id
+         	AND he.EQUIPMENT_CATEGORY = emtg.equipment_category
+         	AND he.EQUIPMENT_STATUS != 'BF'
+         	AND he.ATTRIBUTE1 IN ('B', 'M')
+         	AND emtg.manage_type = 'EM'
+         	AND emtg.ENABLE_FLAG = 'Y'
+         	AND emtg.STATUS = 'P'
+         	AND emtg.business_id IS NOT NULL
+         	AND emtg.operation_id IS NOT NULL
+         	AND emt.manage_cycle IS NOT NULL
+         	AND EXISTS (
+         	  SELECT 1
+         	  FROM
+         		mt_operation_wkc_dispatch_rel mowdr,
+         		mt_mod_organization_rel mmor,
+         		hme_equipment_wkc_rel hewr
+         	  WHERE emtg.operation_id = mowdr.OPERATION_ID
+	    	  AND emtg.TENANT_ID = mowdr.TENANT_ID
+	    	  AND mowdr.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+	    	  AND mmor.TENANT_ID = mowdr.TENANT_ID
+	    	  AND mmor.TOP_SITE_ID = emtg.site_id
+	    	  AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+	    	  AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+	    	  AND hewr.station_id = mmor.ORGANIZATION_ID
+	    	  AND hewr.site_id = mmor.TOP_SITE_ID
+	    	  AND hewr.TENANT_ID = mmor.TENANT_ID
+	    	  AND hewr.ENABLE_FLAG = 'Y'
+	    	  AND hewr.equipment_id = he.equipment_id)
+	     UNION
+	     SELECT
+           emtg.manage_tag_group_id,
+           emtg.equipment_category,
+	       he.equipment_id,
+	       emt.manage_cycle,
+	       emtg.site_id,
+           2 AS eq_level,
+           'M' doc_type
+         FROM
+         	hme_eq_manage_tag_group emtg,
+	       hme_eq_manage_tag emt,
+         	hme_equipment he
+         WHERE emtg.TENANT_ID = #{tenantId}
+           AND emtg.manage_tag_group_id = emt.manage_tag_group_id
+         	AND he.business_id = emtg.business_id
+         	AND he.EQUIPMENT_CATEGORY = emtg.equipment_category
+         	AND he.EQUIPMENT_STATUS != 'BF'
+         	AND he.ATTRIBUTE1 IN ('B', 'M')
+         	AND emtg.manage_type = 'EM'
+         	AND emtg.ENABLE_FLAG = 'Y'
+         	AND emtg.STATUS = 'P'
+         	AND emtg.business_id IS NOT NULL
+         	AND emtg.operation_id IS NULL
+         	AND emt.manage_cycle IS NOT NULL
+         UNION
+         SELECT
+           emtg.manage_tag_group_id,
+           emtg.equipment_category,
+	       he.equipment_id,
+	       emt.manage_cycle,
+	       emtg.site_id,
+           3 AS eq_level,
+           'M' doc_type
+         FROM
+         	hme_eq_manage_tag_group emtg,
+	        hme_eq_manage_tag emt,
+         	hme_equipment he
+          WHERE emtg.TENANT_ID = #{tenantId}
+            AND emtg.manage_tag_group_id = emt.manage_tag_group_id
+            AND he.EQUIPMENT_CATEGORY = emtg.equipment_category
+            AND he.EQUIPMENT_STATUS != 'BF'
+            AND he.ATTRIBUTE1 IN ('B', 'M')
+            AND emtg.manage_type = 'EM'
+            AND emtg.ENABLE_FLAG = 'Y'
+            AND emtg.STATUS = 'P'
+            AND emtg.business_id IS NULL
+            AND emtg.operation_id IS NULL
+            AND emt.manage_cycle IS NOT NULL) t
+      GROUP by t.manage_tag_group_id,
+               t.equipment_category,
+               t.equipment_id,
+               t.manage_cycle,
+               t.SITE_ID,
+               t.eq_level,
+               t.doc_type
+    </select>
+
+    <select id="queryManageTask" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+        SELECT *
+        FROM hme_eq_manage_task_doc
+        WHERE equipment_id = #{hmeEqManageTaskDoc.equipmentId}
+          AND doc_type = #{hmeEqManageTaskDoc.docType}
+          AND task_cycle != #{hmeEqManageTaskDoc.taskCycle}
+          AND creation_date >= DATE_FORMAT(#{hmeEqManageTaskDoc.creationDate}, '%Y-%m-%d %T')
+          AND creation_date &lt;= DATE_FORMAT(#{creationDateTo}, '%Y-%m-%d %T')
+          AND tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryManageTask3" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+        SELECT *
+        FROM hme_eq_manage_task_doc
+        WHERE equipment_id = #{hmeEqManageTaskDoc.equipmentId}
+          AND doc_type = #{hmeEqManageTaskDoc.docType}
+	      AND task_cycle = #{hmeEqManageTaskDoc.taskCycle}
+          AND creation_date &lt;= DATE_FORMAT(#{hmeEqManageTaskDoc.creationDate}, '%Y-%m-%d %T')
+          AND creation_date &gt;= DATE_FORMAT(#{creationDateFrom}, '%Y-%m-%d %T')
+          AND tenant_id = #{tenantId}
+    </select>
+
+    <select id="equipmentContent" resultType="com.ruike.hme.domain.vo.HmeEqManageTaskInfoVO">
+        SELECT dl.task_doc_line_id,
+        dl.manage_tag_id,
+        dl.check_value,
+        dl.result,
+        dl.task_doc_id,
+        dl.remark,
+        td.ATTRIBUTE1,
+        td.doc_num,
+        td.doc_status,
+        tg.manage_tag_group_id,
+        mt.serial_number,
+        mt.tag_descriptions,
+        mt.tag_code,
+        mt.standard_value,
+        mt.value_type,
+        mt.true_value,
+        mt.false_value,
+        mt.minimum_value,
+        mt.maximal_value,
+        mt.uom_id,
+        mu.uom_code
+        FROM hme_eq_manage_task_doc_line dl
+        LEFT JOIN hme_eq_manage_task_doc td ON td.task_doc_id = dl.task_doc_id
+        LEFT JOIN hme_eq_manage_tag_group tg ON tg.tag_group_id = td.ATTRIBUTE1
+        LEFT JOIN hme_eq_manage_tag mt ON mt.manage_tag_id = dl.manage_tag_id
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = mt.UOM_ID
+        WHERE dl.tenant_id = #{tenantId}
+        AND dl.task_doc_id in
+        <foreach collection="taskDocIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        ORDER BY dl.task_doc_id ASC, mt.serial_number ASC
+    </select>
+
+    <select id="queryManageTask2" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+        SELECT *
+        FROM hme_eq_manage_task_doc
+        WHERE equipment_id = #{hmeEqManageTaskDoc.equipmentId}
+          AND doc_type = #{hmeEqManageTaskDoc.docType}
+          AND creation_date >= DATE_FORMAT(#{hmeEqManageTaskDoc.creationDate}, '%Y-%m-%d %T')
+          AND creation_date &lt;= DATE_FORMAT(#{creationDateTo}, '%Y-%m-%d %T')
+          AND tenant_id = #{tenantId}
+    </select>
+
+    <select id="getCompleteQty" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM hme_eq_manage_task_doc_line dl
+        WHERE dl.tenant_id = #{tenantId}
+        AND dl.task_doc_id in
+        <foreach collection="taskDocIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        AND (dl.result is not null and dl.result != '')
+    </select>
+
+    <select id="queryTaskDocList3" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+        SELECT
+        hemtd.equipment_id,
+        hemtd.doc_type,
+        hemtd.task_cycle,
+        hemtd.creation_date
+        FROM
+        hme_eq_manage_task_doc hemtd
+        WHERE
+        hemtd.tenant_id = #{tenantId}
+        AND hemtd.doc_status = 'WAITING'
+        AND hemtd.equipment_id IN
+        <foreach collection="equipmentIdList" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+        AND ( CASE hemtd.task_cycle
+        WHEN '0.5' THEN (
+        DATE_FORMAT(hemtd.creation_date,'%Y-%m-%d') = DATE_FORMAT(current_date,'%Y-%m-%d')
+        AND hemtd.shift_code = #{shiftCode}
+        AND DATE_FORMAT( hemtd.shift_date, '%Y-%m-%d' ) = DATE_FORMAT( #{shiftDate}, '%Y-%m-%d' )
+        )
+        ELSE
+        hemtd.task_cycle >= TIMESTAMPDIFF(HOUR, hemtd.creation_date, now())/24
+        END)
+    </select>
+
+    <update id="batchUpdateManageTaskDoc">
+        update hme_eq_manage_task_doc
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            doc_status =
+            <foreach collection="manageTaskDocList" item="clause" index="index"
+                     separator=" " open="case task_doc_id" close="end">
+                when #{clause.taskDocId} then #{clause.docStatus}
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and task_doc_id in
+            <foreach collection="manageTaskDocList" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.taskDocId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="queryTaskDocOver24Hour" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+        SELECT
+	      td.task_doc_id,
+          td.site_id,
+          td.doc_num,
+          td.doc_type,
+          td.doc_status,
+          td.equipment_id,
+          td.task_cycle,
+          td.check_result,
+          td.shift_code,
+          td.shift_date,
+          td.check_date,
+          td.check_by,
+          td.confirm_by,
+          td.creation_date
+        FROM
+	        hme_eq_manage_task_doc td
+        WHERE td.tenant_id = #{tenantId}
+        AND td.task_cycle = '1'
+        AND TIMESTAMPDIFF(HOUR, td.creation_date, NOW()) >= 24
+        AND td.doc_status = 'WAITING'
+    </select>
+
+    <select id="queryTaskDocOverTaskCycle" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+         SELECT
+	      td.task_doc_id,
+          td.site_id,
+          td.doc_num,
+          td.doc_type,
+          td.doc_status,
+          td.equipment_id,
+          td.task_cycle,
+          td.check_result,
+          td.shift_code,
+          td.shift_date,
+          td.check_date,
+          td.check_by,
+          td.confirm_by,
+          td.creation_date
+        FROM
+	        hme_eq_manage_task_doc td
+        WHERE td.tenant_id = #{tenantId}
+        AND td.task_cycle != '1'
+        AND td.task_cycle != '0.5'
+        AND td.task_cycle <![CDATA[<=]]> TIMESTAMPDIFF(HOUR, td.creation_date, NOW()) / 24
+        AND td.doc_status = 'WAITING'
+    </select>
+
+    <select id="queryTaskDocListCount" resultType="int">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        COUNT (td.task_doc_id) count
+        FROM
+        hme_eq_manage_task_doc td
+        JOIN mt_mod_site mms ON td.site_id = mms.SITE_ID
+        JOIN mt_mod_site_tl mms_tl ON mms.SITE_ID = mms_tl.SITE_ID AND mms_tl.LANG = #{lang}
+        JOIN hme_equipment he ON td.equipment_id = he.equipment_id
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = td.wkc_id
+        LEFT JOIN mt_mod_workcell_tl mmw_tl ON mmw.WORKCELL_ID = mmw_tl.WORKCELL_ID AND mmw_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_area mma ON he.BUSINESS_ID = mma.AREA_ID
+        WHERE
+        td.tenant_id = #{tenantId}
+        AND td.doc_status = 'COMPLETED'
+        <if test="dto.siteId != null and dto.siteId != ''">
+            and td.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.equipmentId != null and dto.equipmentId != ''">
+            and td.equipment_id = #{dto.equipmentId}
+        </if>
+        <if test="dto.equipmentCode != null and dto.equipmentCode != ''">
+            and he.asset_encoding LIKE CONCAT(#{dto.equipmentCode},"%")
+        </if>
+        <if test="dto.docType != null and dto.docType != ''">
+            and td.doc_type = #{dto.docType}
+        </if>
+        <if test="dto.docStatus != null and dto.docStatus != ''">
+            and td.doc_status = #{dto.docStatus}
+        </if>
+        <if test="dto.checkResult != null and dto.checkResult != ''">
+            and td.check_result = #{dto.checkResult}
+        </if>
+        <if test="dto.wkcId != null and dto.wkcId != ''">
+            and td.wkc_id = #{dto.wkcId}
+        </if>
+        <if test="dto.checkDateFrom != null">
+            and DATE_FORMAT(td.check_date,'%Y-%m-%d %T') &gt;= DATE_FORMAT(#{dto.checkDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.checkDateTo != null">
+            and DATE_FORMAT(td.check_date,'%Y-%m-%d %T') &lt;= DATE_FORMAT(#{dto.checkDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateFrom != null">
+            and DATE_FORMAT(td.creation_date,'%Y-%m-%d %T') &gt;= DATE_FORMAT(#{dto.creationDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateTo != null">
+            and DATE_FORMAT(td.creation_date,'%Y-%m-%d %T') &lt;= DATE_FORMAT(#{dto.creationDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.taskCycle != null and dto.taskCycle != ''">
+            and td.task_cycle = #{dto.taskCycle}
+        </if>
+        <if test="dto.docNum != null and dto.docNum != ''">
+            and td.doc_num LIKE CONCAT(#{dto.docNum},"%")
+        </if>
+        <if test="dto.workcellIdList != null and dto.workcellIdList.size() > 0">
+            and td.wkc_id IN
+            <foreach collection="dto.workcellIdList" item="item" index="index" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.departmentId != null and dto.departmentId != ''">
+            and mma.AREA_ID = #{dto.departmentId}
+        </if>
+        ORDER BY td.creation_date DESC
+    </select>
+
+    <select id="queryWorkcellIdByProdLineId" resultType="java.lang.String">
+        SELECT
+            mor1.ORGANIZATION_ID
+        FROM
+        mt_mod_organization_rel mor1
+        ,mt_mod_organization_rel mor2
+        ,mt_mod_organization_rel mor3
+        WHERE
+            mor1.TOP_SITE_ID = #{siteId}
+        AND mor2.TOP_SITE_ID = mor1.TOP_SITE_ID
+        AND mor3.TOP_SITE_ID = mor2.TOP_SITE_ID
+        AND mor1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND	mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor1.ORGANIZATION_TYPE ='WORKCELL'
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor3.PARENT_ORGANIZATION_ID = #{prodLineId}
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor1.TENANT_ID = #{tenantId}
+        AND mor2.TENANT_ID = mor1.TENANT_ID
+        AND mor3.TENANT_ID = mor2.TENANT_ID
+    </select>
+
+    <select id="queryWorkcellIdByWorkShopId" resultType="java.lang.String">
+        SELECT
+            mor1.ORGANIZATION_ID
+        FROM
+        mt_mod_organization_rel mor1
+        ,mt_mod_organization_rel mor2
+        ,mt_mod_organization_rel mor3
+        ,mt_mod_organization_rel mor4
+        WHERE
+            mor1.TOP_SITE_ID = #{siteId}
+        AND mor2.TOP_SITE_ID = mor1.TOP_SITE_ID
+        AND mor3.TOP_SITE_ID = mor2.TOP_SITE_ID
+        AND mor4.TOP_SITE_ID = mor3.TOP_SITE_ID
+        AND mor1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND	mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor1.ORGANIZATION_TYPE ='WORKCELL'
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor4.PARENT_ORGANIZATION_ID = #{workshopId}
+        AND mor4.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+        AND mor1.TENANT_ID = #{tenantId}
+        AND mor2.TENANT_ID = mor1.TENANT_ID
+        AND mor3.TENANT_ID = mor2.TENANT_ID
+        AND mor4.TENANT_ID = mor3.TENANT_ID
+    </select>
+
+    <select id="queryWorkcellIdByAreaId" resultType="java.lang.String">
+        SELECT
+            mor1.ORGANIZATION_ID
+        FROM
+        mt_mod_organization_rel mor1
+        ,mt_mod_organization_rel mor2
+        ,mt_mod_organization_rel mor3
+        ,mt_mod_organization_rel mor4
+        ,mt_mod_organization_rel mor5
+        WHERE
+            mor1.TOP_SITE_ID = #{siteId}
+        AND mor2.TOP_SITE_ID = mor1.TOP_SITE_ID
+        AND mor3.TOP_SITE_ID = mor2.TOP_SITE_ID
+        AND mor4.TOP_SITE_ID = mor3.TOP_SITE_ID
+        AND mor5.TOP_SITE_ID = mor4.TOP_SITE_ID
+        AND mor1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND	mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor1.ORGANIZATION_TYPE ='WORKCELL'
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor4.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+        AND mor5.PARENT_ORGANIZATION_ID = #{areaId}
+        AND mor5.ORGANIZATION_TYPE = 'AREA'
+        AND mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+        AND mor1.TENANT_ID = #{tenantId}
+        AND mor2.TENANT_ID = mor1.TENANT_ID
+        AND mor3.TENANT_ID = mor2.TENANT_ID
+        AND mor4.TENANT_ID = mor3.TENANT_ID
+        AND mor5.TENANT_ID = mor4.TENANT_ID
+    </select>
+
+    <select id="queryOrganizationByWorkcellIds" resultType="com.ruike.hme.domain.vo.HmeOrganizationVO">
+        SELECT
+        mor1.ORGANIZATION_ID WORKCELL_ID,
+        mor2.ORGANIZATION_ID PROCESS_ID,
+        prc.WORKCELL_NAME PROCESS_NAME,
+        mor3.ORGANIZATION_ID LINE_WORKCELL_ID,
+        lwc.WORKCELL_NAME LINE_WORKCELL_NAME,
+        mpl.PROD_LINE_NAME PROD_LINE_NAME,
+        ws.AREA_NAME WORKSHOP_NAME,
+        mma.AREA_NAME
+        FROM
+        mt_mod_organization_rel mor1,
+        mt_mod_organization_rel mor2,
+        mt_mod_organization_rel mor3,
+        mt_mod_organization_rel mor4,
+        mt_mod_organization_rel mor5,
+        mt_mod_workcell prc,
+        mt_mod_workcell lwc,
+        mt_mod_production_line mpl,
+        mt_mod_area ws,
+        mt_mod_area mma
+        WHERE
+        mor1.TOP_SITE_ID = #{siteId}
+        AND mor1.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor1.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor1.ORGANIZATION_ID IN
+        <foreach collection="workcellIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND mor1.TENANT_ID = #{tenantId}
+        AND mor2.TOP_SITE_ID = mor1.TOP_SITE_ID
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.TENANT_ID = mor1.TENANT_ID
+        AND mor3.TOP_SITE_ID = mor2.TOP_SITE_ID
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.TENANT_ID = mor2.TENANT_ID
+        AND mor4.TOP_SITE_ID = mor3.TOP_SITE_ID
+        AND mor4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor4.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+        AND mor4.TENANT_ID = mor3.TENANT_ID
+        AND mor5.TOP_SITE_ID = mor4.TOP_SITE_ID
+        AND mor5.ORGANIZATION_TYPE = 'AREA'
+        AND mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+        AND mor5.TENANT_ID = mor4.TENANT_ID
+        AND prc.WORKCELL_ID = mor2.ORGANIZATION_ID
+        AND prc.WORKCELL_TYPE = 'PROCESS'
+        AND lwc.WORKCELL_ID = mor3.ORGANIZATION_ID
+        AND lwc.WORKCELL_TYPE = 'LINE'
+        AND mpl.PROD_LINE_ID = mor4.ORGANIZATION_ID
+        AND ws.AREA_ID = mor5.ORGANIZATION_ID
+        AND ws.AREA_CATEGORY = 'CJ'
+        AND mma.AREA_ID = mor5.PARENT_ORGANIZATION_ID
+        AND mma.AREA_CATEGORY = 'SYB'
+    </select>
+
+    <select id="queryUndoneTaskDocList" resultType="java.lang.String">
+        SELECT
+        td.task_doc_id
+        FROM
+        hme_eq_manage_task_doc td,
+        hme_equipment_wkc_rel wr
+        WHERE
+        td.tenant_id = #{tenantId}
+        AND td.doc_status = 'WAITING'
+        AND td.task_doc_id IN
+        <foreach collection="taskDocIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND wr.equipment_id = td.equipment_id
+        AND wr.TENANT_ID = td.tenant_id
+        AND EXISTS (
+        SELECT
+        1
+        FROM
+        hme_eo_job_sn ejs
+        WHERE
+        ejs.tenant_id = #{tenantId}
+        AND ejs.workcell_id = wr.station_id
+        AND ((ejs.site_in_date >= td.creation_date AND td.task_cycle >= TIMESTAMPDIFF( HOUR, td.creation_date, ejs.site_in_date ) / 24 )
+        OR
+        (ejs.site_out_date >= td.creation_date AND td.task_cycle >= TIMESTAMPDIFF( HOUR, td.creation_date, ejs.site_out_date ) / 24 ))
+        )
+        GROUP BY td.task_doc_id
+    </select>
+
+    <select id="queryUndoneTaskDocByWkcShift" resultType="java.lang.String">
+        SELECT
+        td.task_doc_id
+        FROM
+        hme_eq_manage_task_doc td,
+        hme_equipment_wkc_rel wr
+        WHERE
+        td.tenant_id = #{tenantId}
+        AND td.doc_status = 'WAITING'
+        AND td.task_doc_id IN
+        <foreach collection="taskDocIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND wr.equipment_id = td.equipment_id
+        AND wr.TENANT_ID = td.tenant_id
+        AND EXISTS (
+        SELECT
+        1
+        FROM
+        hme_eo_job_sn ejs
+        WHERE
+        ejs.tenant_id = #{tenantId}
+        AND ejs.workcell_id = wr.station_id
+        AND ((ejs.site_in_date >= date_format(#{shiftStartTime}, '%Y-%m-%d %H:%i:%s')  AND ejs.site_in_date <![CDATA[<=]]> date_format(#{shiftEndTime}, '%Y-%m-%d %H:%i:%s'))
+        OR
+        (ejs.site_out_date >= date_format(#{shiftStartTime}, '%Y-%m-%d %H:%i:%s') AND ejs.site_out_date <![CDATA[<=]]> date_format(#{shiftEndTime}, '%Y-%m-%d %H:%i:%s')))
+        )
+        GROUP BY td.task_doc_id
+    </select>
+
+    <select id="queryTaskDocShift" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+        SELECT
+          td.task_doc_id,
+          td.site_id,
+          td.doc_num,
+          td.doc_type,
+          td.doc_status,
+          td.equipment_id,
+          td.task_cycle,
+          td.check_result,
+          td.shift_code,
+          td.shift_date,
+          td.check_date,
+          td.check_by,
+          td.confirm_by,
+          td.creation_date
+        FROM
+         hme_eq_manage_task_doc td
+        WHERE
+        td.task_cycle = '0.5'
+        AND td.doc_status = 'WAITING'
+        AND td.tenant_id = #{tenantId}
+        AND td.creation_date <![CDATA[<=]]> date_sub(#{nowDay},interval 1 day)
+        AND EXISTS (
+        	SELECT
+        		1
+        	FROM
+        		mt_wkc_shift mws
+        	WHERE
+        		mws.SHIFT_DATE = td.shift_date
+        		AND mws.SHIFT_CODE = td.shift_code
+        		AND mws.TENANT_ID = #{tenantId}
+        )
+    </select>
+
+    <select id="queryTaskDocNonShift" resultType="com.ruike.hme.domain.entity.HmeEqManageTaskDoc">
+         SELECT
+          td.task_doc_id,
+          td.site_id,
+          td.doc_num,
+          td.doc_type,
+          td.doc_status,
+          td.equipment_id,
+          td.task_cycle,
+          td.check_result,
+          td.shift_code,
+          td.shift_date,
+          td.check_date,
+          td.check_by,
+          td.confirm_by,
+          td.creation_date
+        FROM
+         hme_eq_manage_task_doc td
+        WHERE
+        td.task_cycle = '0.5'
+        AND td.doc_status = 'WAITING'
+        AND td.tenant_id = #{tenantId}
+        AND td.creation_date <![CDATA[<=]]> date_sub(#{nowDay},interval 1 day)
+        AND NOT EXISTS (
+        	SELECT
+        		1
+        	FROM
+        		mt_wkc_shift mws
+        	WHERE
+        		mws.SHIFT_DATE = td.shift_date
+        		AND mws.SHIFT_CODE = td.shift_code
+        		AND mws.TENANT_ID = #{tenantId}
+        )
+    </select>
+
+    <select id="queryTaskDocAndLineList" resultType="com.ruike.hme.domain.vo.HmeEqTaskDocAndLineExportVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        td.task_doc_id,
+        td.site_id,
+        mms.site_code,
+        mms_tl.site_name,
+        td.doc_num,
+        td.doc_type,
+        td.doc_status,
+        td.equipment_id,
+        he.asset_encoding AS equipment_code,
+        he.asset_name AS equipment_name,
+        td.task_cycle,
+        td.check_result,
+        td.shift_code,
+        date_format( td.shift_date, '%Y-%m-%d %H:%i:%s' ) shift_date,
+        date_format( td.check_date, '%Y-%m-%d %H:%i:%s' ) check_date,
+        td.check_by,
+        td.confirm_by,
+        date_format( td.creation_date, '%Y-%m-%d %H:%i:%s' ) creation_date,
+        td.wkc_id,
+        td.remark,
+        mmw.workcell_code AS wkc_code,
+        mmw_tl.workcell_name AS wkc_name,
+        he.MODEL,
+        he.EQUIPMENT_BODY_NUM,
+        mma.DESCRIPTION,
+        he.LOCATION,
+        he.PRESERVER,
+        tdl.task_doc_line_id,
+        tdl.manage_tag_id,
+        tag.serial_number,
+        tag.tag_code,
+        tag.tag_descriptions AS tag_desc,
+        tag.value_type,
+        gen.DESCRIPTION AS value_type_desc,
+        tag.accuracy,
+        tag.minimum_value,
+        tag.standard_value,
+        tag.maximal_value,
+        tag.uom_id,
+        uom.uom_code,
+        uom_tl.uom_name,
+        tdl.check_value,
+        tdl.result,
+        tag.tool,
+        tag.responsible,
+        tdl.check_date AS item_check_date,
+        tdl.check_by AS item_check_by,
+        tdl.remark AS item_remark
+        FROM
+        hme_eq_manage_task_doc td
+        JOIN mt_mod_site mms ON td.site_id = mms.SITE_ID
+        JOIN mt_mod_site_tl mms_tl ON mms.SITE_ID = mms_tl.SITE_ID AND mms_tl.LANG = #{lang}
+        JOIN hme_equipment he ON td.equipment_id = he.equipment_id
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = td.wkc_id
+        LEFT JOIN mt_mod_workcell_tl mmw_tl ON mmw.WORKCELL_ID = mmw_tl.WORKCELL_ID AND mmw_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_area mma ON he.BUSINESS_ID = mma.AREA_ID
+        left join hme_eq_manage_task_doc_line tdl ON td.task_doc_id = tdl.task_doc_id
+        JOIN hme_eq_manage_tag tag ON tag.manage_tag_id = tdl.manage_tag_id
+        LEFT JOIN mt_uom uom ON tag.uom_id = uom.uom_id
+        LEFT JOIN mt_uom_tl uom_tl ON uom.uom_id = uom_tl.uom_id AND uom_tl.LANG = #{lang}
+        LEFT JOIN mt_gen_type gen ON gen.TYPE_CODE = tag.value_type AND gen.MODULE = 'GENERAL' AND gen.TYPE_GROUP = 'TAG_VALUE_TYPE'
+        LEFT JOIN mt_gen_type_tl gen_tl ON gen_tl.GEN_TYPE_ID = gen.GEN_TYPE_ID AND gen_tl.LANG = #{lang}
+        WHERE
+        td.tenant_id = #{tenantId}
+        <if test="dto.siteId != null and dto.siteId != ''">
+            and td.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.equipmentId != null and dto.equipmentId != ''">
+            and td.equipment_id = #{dto.equipmentId}
+        </if>
+        <if test="dto.equipmentCode != null and dto.equipmentCode != ''">
+            and he.asset_encoding LIKE CONCAT("%",#{dto.equipmentCode},"%")
+        </if>
+        <if test="dto.docType != null and dto.docType != ''">
+            and td.doc_type = #{dto.docType}
+        </if>
+        <if test="dto.docStatus != null and dto.docStatus != ''">
+            and td.doc_status = #{dto.docStatus}
+        </if>
+        <if test="dto.checkResult != null and dto.checkResult != ''">
+            and td.check_result = #{dto.checkResult}
+        </if>
+        <if test="dto.wkcId != null and dto.wkcId != ''">
+            and td.wkc_id = #{dto.wkcId}
+        </if>
+        <if test="dto.checkDateFrom != null">
+            and DATE_FORMAT(td.check_date,'%Y-%m-%d %T') &gt;= DATE_FORMAT(#{dto.checkDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.checkDateTo != null">
+            and DATE_FORMAT(td.check_date,'%Y-%m-%d %T') &lt;= DATE_FORMAT(#{dto.checkDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateFrom != null">
+            and DATE_FORMAT(td.creation_date,'%Y-%m-%d %T') &gt;= DATE_FORMAT(#{dto.creationDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateTo != null">
+            and DATE_FORMAT(td.creation_date,'%Y-%m-%d %T') &lt;= DATE_FORMAT(#{dto.creationDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.taskCycle != null and dto.taskCycle != ''">
+            and td.task_cycle = #{dto.taskCycle}
+        </if>
+        <if test="dto.docNum != null and dto.docNum != ''">
+            and td.doc_num LIKE CONCAT("%",#{dto.docNum},"%")
+        </if>
+        <if test="dto.workcellIdList != null and dto.workcellIdList.size() > 0">
+            and td.wkc_id IN
+            <foreach collection="dto.workcellIdList" item="item" index="index" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.departmentId != null and dto.departmentId != ''">
+            and mma.AREA_ID = #{dto.departmentId}
+        </if>
+        <if test="dto.itemCheckResult != null and dto.itemCheckResult != ''">
+            and tdl.result = #{dto.itemCheckResult}
+        </if>
+        ORDER BY td.creation_date DESC
+    </select>
+</mapper>

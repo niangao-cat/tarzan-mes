@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.dispatch.infra.mapper.MtOperationWkcDispatchRelMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.dispatch.domain.entity.MtOperationWkcDispatchRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OPERATION_WKC_DISPATCH_REL_ID" property="operationWkcDispatchRelId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="getMaxPriority" resultType="java.lang.Long">
+        SELECT
+        MAX( t.PRIORITY )
+        FROM
+        mt_operation_wkc_dispatch_rel t
+        WHERE
+        t.TENANT_ID = ${tenantId}
+        AND t.OPERATION_ID = #{operationId}
+        AND t.STEP_NAME = #{stepName}
+    </select>
+
+    <select id="propertyLimitOperationWkcQuery" resultType="tarzan.dispatch.domain.vo.MtOpWkcDispatchRelVO8">
+        select
+        t.OPERATION_WKC_DISPATCH_REL_ID,
+        t.OPERATION_ID,
+        t.STEP_NAME,
+        t.WORKCELL_ID,
+        t.PRIORITY
+        from mt_operation_wkc_dispatch_rel t
+        where
+        t.TENANT_ID = ${tenantId}
+        <if test="dto.operationWkcDispatchRelId != null">
+            and t.OPERATION_WKC_DISPATCH_REL_ID = #{dto.operationWkcDispatchRelId}
+        </if>
+        <if test="dto.operationId != null">
+            and t.OPERATION_ID= #{dto.operationId}
+        </if>
+        <if test="dto.workcellId != null">
+            and t.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="param2.priority != null">
+            and t.PRIORITY=#{dto.priority}
+        </if>
+        <if test='dto.stepName != null and "Y"==fuzzyQueryFlag'>
+            and t.STEP_NAME like concat('%',#{dto.stepName} ,'%')
+        </if>
+        <if test='dto.stepName != null and "N"==fuzzyQueryFlag'>
+            and t.STEP_NAME = #{dto.stepName}
+        </if>
+    </select>
+</mapper>

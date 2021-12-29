@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWorkOrderSnMapper">
+
+    <select id="selectEoByWoNum" resultType="com.ruike.hme.domain.vo.HmeWorkOrderSnVO2">
+        select eo.eo_id
+              ,wo.material_id
+              ,wo.uom_id
+        from   mt_work_order wo
+              ,mt_eo eo
+        where  wo.work_order_id = eo.work_order_id
+        and    wo.tenant_id = #{tenantId}
+        and    wo.work_order_num = #{workOrderNum}
+    </select>
+
+</mapper>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialMapper">
+
+    <select id="selectBySiteCondition" resultType="com.ruike.wms.domain.vo.WmsMaterialVO">
+        SELECT
+        item_site.SITE_ID,
+        b.MATERIAL_ID,
+        b.MATERIAL_CODE,
+        b.MATERIAL_NAME
+        FROM
+        MT_MATERIAL_SITE item_site,
+        mt_material b
+        WHERE
+        b.MATERIAL_ID = item_site.MATERIAL_ID
+        AND b.TENANT_ID = ${tenantId}
+        and item_site.SITE_ID = #{dto.siteId}
+        AND b.ENABLE_FLAG = 'Y'
+        <if test="dto.materialCode!=null">
+            and b.MATERIAL_CODE like CONCAT(#{dto.materialCode},"%")
+        </if>
+        <if test="dto.materialName!=null">
+            and b.MATERIAL_NAME like CONCAT(#{dto.materialName},"%")
+        </if>
+    </select>
+
+    <select id="selectByUserPermission" resultType="com.ruike.wms.domain.vo.WmsMaterialVO">
+        select mt.MATERIAL_ID,
+        mt.MATERIAL_CODE,
+        mt.MATERIAL_NAME,
+        attr.ATTR_VALUE lot_type,
+        attr2.ATTR_VALUE available_time
+        from mt_material mt,
+        mt_user_organization org,
+        mt_material_site mt_site
+        LEFT JOIN mt_material_site_attr attr ON mt_site.MATERIAL_SITE_ID = attr.MATERIAL_SITE_ID AND attr.ATTR_NAME =
+        'attribute14'
+        LEFT JOIN mt_material_site_attr attr2 ON mt_site.MATERIAL_SITE_ID = attr2.MATERIAL_SITE_ID AND attr2.ATTR_NAME =
+        'attribute9'
+        where mt_site.MATERIAL_ID = mt.MATERIAL_ID
+        and org.ORGANIZATION_ID = mt_site.SITE_ID
+        AND mt.ENABLE_FLAG = 'Y'
+        AND org.DEFAULT_ORGANIZATION_FLAG = 'Y'
+        and org.ORGANIZATION_TYPE = 'SITE'
+        and org.tenant_id = #{tenantId}
+        and org.USER_ID = #{dto.userId}
+        <if test="dto.materialCode!=null">
+            and mt.MATERIAL_CODE like CONCAT(#{dto.materialCode},"%")
+        </if>
+        <if test="dto.materialName!=null">
+            and mt.MATERIAL_NAME like CONCAT(#{dto.materialName},"%")
+        </if>
+    </select>
+
+    <select id="selectByItemGroup" resultType="com.ruike.wms.domain.vo.WmsMaterialVO">
+        SELECT item_site.SITE_ID,
+               b.MATERIAL_ID,
+               b.MATERIAL_CODE,
+               b.MATERIAL_NAME
+        FROM MT_MATERIAL_SITE item_site,
+             mt_material b,
+             mt_material_basic mmb
+        WHERE b.MATERIAL_ID = item_site.MATERIAL_ID
+          and mmb.MATERIAL_SITE_ID = item_site.MATERIAL_SITE_ID
+          and mmb.ITEM_GROUP = #{itemGroupCode}
+          AND b.TENANT_ID = ${tenantId}
+          and item_site.SITE_ID = #{siteId}
+          AND b.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="selectOnhandItemByGroup" resultType="com.ruike.wms.domain.vo.WmsMaterialVO">
+        SELECT item_site.SITE_ID,
+        b.MATERIAL_ID,
+        b.MATERIAL_CODE,
+        b.MATERIAL_NAME
+        FROM MT_MATERIAL_SITE item_site,
+        mt_material b,
+        mt_material_basic mmb
+        WHERE b.MATERIAL_ID = item_site.MATERIAL_ID
+        and mmb.MATERIAL_SITE_ID = item_site.MATERIAL_SITE_ID
+        AND b.ENABLE_FLAG = 'Y'
+        AND (select ifnull(sum(moq.ONHAND_QUANTITY),0)
+        from mt_inv_onhand_quantity moq
+        <if test="warehouseId != null and warehouseId != ''">
+            join mt_mod_locator loc on moq.LOCATOR_ID = loc.LOCATOR_ID and loc.PARENT_LOCATOR_ID = #{warehouseId}
+        </if>
+        where moq.TENANT_ID = b.TENANT_ID
+        and moq.MATERIAL_ID = b.MATERIAL_ID
+        and moq.SITE_ID = #{siteId}) > 0
+        and mmb.ITEM_GROUP = #{itemGroupCode}
+        AND b.TENANT_ID = ${tenantId}
+        and item_site.SITE_ID = #{siteId}
+    </select>
+
+</mapper>

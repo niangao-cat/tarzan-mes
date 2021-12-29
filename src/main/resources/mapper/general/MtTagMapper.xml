@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtTagMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtTag">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="TAG_CODE" property="tagCode" jdbcType="VARCHAR"/>
+        <result column="TAG_DESCRIPTION" property="tagDescription" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_METHOD" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="VALUE_TYPE" property="valueType" jdbcType="VARCHAR"/>
+        <result column="TRUE_VALUE" property="trueValue" jdbcType="VARCHAR"/>
+        <result column="FALSE_VALUE" property="falseValue" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="VALUE_ALLOW_MISSING" property="valueAllowMissing" jdbcType="VARCHAR"/>
+        <result column="MANDATORY_NUM" property="mandatoryNum" jdbcType="DECIMAL"/>
+        <result column="OPTIONAL_NUM" property="optionalNum" jdbcType="DECIMAL"/>
+        <result column="API_ID" property="apiId" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="TagPropertyResultMap" type="tarzan.general.api.dto.MtTagDTO1">
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="TAG_CODE" property="tagCode" jdbcType="VARCHAR"/>
+        <result column="TAG_DESCRIPTION" property="tagDescription" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_METHOD" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="VALUE_TYPE" property="valueType" jdbcType="VARCHAR"/>
+        <result column="TRUE_VALUE" property="trueValue" jdbcType="VARCHAR"/>
+        <result column="FALSE_VALUE" property="falseValue" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="VALUE_ALLOW_MISSING" property="valueAllowMissing" jdbcType="VARCHAR"/>
+        <result column="MANDATORY_NUM" property="mandatoryNum" jdbcType="DECIMAL"/>
+        <result column="OPTIONAL_NUM" property="optionalNum" jdbcType="DECIMAL"/>
+        <result column="API_ID" property="apiId" jdbcType="VARCHAR"/>
+        <result column="API_NAME" property="apiName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getTagGroupAssignId" resultType="java.lang.String">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t.TAG_GROUP_ASSIGN_ID
+        FROM
+        MT_TAG_GROUP_ASSIGN t
+        INNER JOIN MT_TAG_GROUP b1 ON t.tag_group_Id = b1.tag_group_Id
+        INNER JOIN MT_TAG_GROUP_tl t1 ON b1.tag_group_Id = t1.tag_group_Id
+        AND t1.LANG = #{locale}
+        INNER JOIN MT_TAG b2 ON t.TAG_ID = b2.TAG_ID
+        INNER JOIN MT_TAG_tl t2 ON b2.TAG_ID = t2.TAG_ID
+        AND t2.LANG = #{locale}
+        where 1=1
+        and t.TENANT_ID = ${tenantId}
+        and b1.TENANT_ID = ${tenantId}
+        and b2.TENANT_ID = ${tenantId}
+        <if test="dto.tagGroupCode!=null">
+            and b1.TAG_GROUP_CODE=#{dto.tagGroupCode}
+        </if>
+        <if test="dto.tagCode!=null">
+            and b2.TAG_CODE=#{dto.tagCode}
+        </if>
+    </select>
+
+    <select id="queryTagIds" resultType="java.lang.String">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        A.TAG_ID
+        FROM mt_tag A
+        INNER JOIN mt_tag_TL B ON A.TAG_ID = B.TAG_ID AND B.LANG = #{locale}
+        WHERE 1=1
+        and A.TENANT_ID = ${tenantId}
+        <if test='dto.tagCode!=null and dto.tagCode !=""'>
+            AND A.TAG_CODE =#{dto.tagCode}
+        </if>
+        <if test='dto.tagDescription!=null and dto.tagDescription !=""'>
+            AND B.TAG_DESCRIPTION =#{dto.tagDescription}
+        </if>
+        <if test='dto.remark!=null and dto.remark !=""'>
+            AND A.REMARK LIKE CONCAT(CONCAT('%',#{dto.remark}),'%')
+        </if>
+        <if test='dto.enableFlag!=null and dto.enableFlag !=""'>
+            AND A.ENABLE_FLAG =#{dto.enableFlag}
+        </if>
+        <if test='dto.collectionMethod!=null and dto.collectionMethod !=""'>
+            AND A.COLLECTION_METHOD =#{dto.collectionMethod}
+        </if>
+        <if test='dto.valueType!=null and dto.valueType !=""'>
+            AND A.VALUE_TYPE =#{dto.valueType}
+        </if>
+        <if test='dto.trueValue!=null and dto.trueValue !=""'>
+            AND A.TRUE_VALUE =#{dto.trueValue}
+        </if>
+        <if test='dto.falseValue!=null and dto.falseValue !=""'>
+            AND A.FALSE_VALUE =#{dto.falseValue}
+        </if>
+        <if test='dto.minimumValue!=null'>
+            AND A.MINIMUM_VALUE =#{dto.minimumValue}
+        </if>
+        <if test='dto.maximalValue!=null'>
+            AND A.MAXIMAL_VALUE =#{dto.maximalValue}
+        </if>
+        <if test='dto.unit!=null and dto.unit !=""'>
+            AND A.UNIT =#{dto.unit}
+        </if>
+        <if test='dto.valueAllowMissing!=null and dto.valueAllowMissing !=""'>
+            AND A.VALUE_ALLOW_MISSING =#{dto.valueAllowMissing}
+        </if>
+        <if test='dto.mandatoryNum!=null'>
+            AND A.MANDATORY_NUM =#{dto.mandatoryNum}
+        </if>
+        <if test='dto.optionalNum!=null'>
+            AND A.OPTIONAL_NUM =#{dto.optionalNum}
+        </if>
+        <if test='dto.apiId!=null and dto.apiId !=""'>
+            AND A.API_ID =#{dto.apiId}
+        </if>
+    </select>
+    <select id="queryTagWithTagApiForUi" resultMap="TagPropertyResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        b.tag_id,
+        b.tag_code,
+        t.tag_description,
+        b.remark,
+        b.ENABLE_FLAG,
+        b.collection_method,
+        b.value_type,
+        b.true_value,
+        b.false_value,
+        b.minimum_value,
+        b.maximal_value,
+        b.unit,
+        b.value_allow_missing,
+        b.mandatory_num,
+        b.optional_num,
+        b.api_id,
+        api.API_NAME
+        from mt_tag b
+        inner join mt_tag_tl t on b.TAG_ID= t.TAG_ID and t.LANG = #{locale}
+        left join mt_tag_api api on b.API_ID = api.API_ID
+        where b.TENANT_ID=#{tenantId}
+
+        <if test='tag.tagId!=null and tag.tagId!=""'>
+            and b.TAG_ID = #{tag.tagId}
+        </if>
+        <if test='tag.tagCode!=null and tag.tagCode!=""'>
+            and b.TAG_CODE LIKE CONCAT(CONCAT('%',#{tag.tagCode}),'%')
+        </if>
+        <if test='tag.tagDescription!=null and tag.tagDescription !=""'>
+            AND t.TAG_DESCRIPTION LIKE CONCAT(CONCAT('%',#{tag.tagDescription}),'%')
+        </if>
+        <if test='tag.remark!=null and tag.remark !=""'>
+            AND b.REMARK LIKE CONCAT(CONCAT('%',#{tag.remark}),'%')
+        </if>
+        <if test='tag.enableFlag!=null and tag.enableFlag !=""'>
+            AND b.ENABLE_FLAG =#{tag.enableFlag}
+        </if>
+        <if test='tag.collectionMethod!=null and tag.collectionMethod !=""'>
+            AND b.COLLECTION_METHOD =#{tag.collectionMethod}
+        </if>
+        <if test='tag.valueType!=null and tag.valueType !=""'>
+            AND b.VALUE_TYPE =#{tag.valueType}
+        </if>
+        <if test='tag.trueValue!=null and tag.trueValue !=""'>
+            AND b.TRUE_VALUE =#{tag.trueValue}
+        </if>
+        <if test='tag.falseValue!=null and tag.falseValue !=""'>
+            AND b.FALSE_VALUE =#{tag.falseValue}
+        </if>
+        <if test='tag.minimumValue!=null'>
+            AND b.MINIMUM_VALUE =#{tag.minimumValue}
+        </if>
+        <if test='tag.maximalValue!=null'>
+            AND b.MAXIMAL_VALUE =#{tag.maximalValue}
+        </if>
+        <if test='tag.unit!=null and tag.unit !=""'>
+            AND b.UNIT =#{tag.unit}
+        </if>
+        <if test='tag.valueAllowMissing!=null and tag.valueAllowMissing !=""'>
+            AND b.VALUE_ALLOW_MISSING =#{tag.valueAllowMissing}
+        </if>
+        <if test='tag.mandatoryNum!=null'>
+            AND b.MANDATORY_NUM =#{tag.mandatoryNum}
+        </if>
+        <if test='tag.optionalNum!=null'>
+            AND b.OPTIONAL_NUM =#{tag.optionalNum}
+        </if>
+        <if test='tag.apiId!=null and tag.apiId !=""'>
+            AND b.API_ID =#{tag.apiId}
+        </if>
+        ORDER BY b.CREATION_DATE DESC
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.general.domain.vo.MtTagVO4">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        tb.tag_id,
+        tb.tag_code,
+        t.tag_description,
+        tb.remark,
+        tb.ENABLE_FLAG,
+        tb.collection_method,
+        tb.value_type,
+        tb.true_value,
+        tb.false_value,
+        tb.minimum_value,
+        tb.maximal_value,
+        tb.unit,
+        tb.value_allow_missing,
+        tb.mandatory_num,
+        tb.optional_num,
+        tb.api_id
+        FROM
+        mt_tag tb
+        INNER JOIN mt_tag_tl t ON tb.TAG_ID = t.TAG_ID
+        AND t.LANG = #{locale}
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.collectionMethod != null">
+            AND tb.COLLECTION_METHOD = #{dto.collectionMethod}
+        </if>
+        <if test="dto.tagCode != null">
+            AND tb.TAG_CODE = #{dto.tagCode}
+        </if>
+        <if test="dto.tagId != null">
+            AND tb.TAG_ID = #{dto.tagId}
+        </if>
+        <if test="dto.valueType != null">
+            AND tb.VALUE_TYPE = #{dto.valueType}
+        </if>
+        <if test="dto.remark != null">
+            AND tb.REMARK = #{dto.remark}
+        </if>
+        <if test="dto.valueAllowMissing != null">
+            AND tb.VALUE_ALLOW_MISSING = #{dto.valueAllowMissing}
+        </if>
+        <if test="dto.enableFlag != null">
+            AND tb.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.apiId != null">
+            AND tb.API_ID = #{dto.apiId}
+        </if>
+        <if test="dto.tagDescription != null">
+            AND t.TAG_DESCRIPTION like CONCAT('%',CONCAT(#{dto.tagDescription},'%'))
+        </if>
+    </select>
+
+    <select id="selectByCodeList" resultMap="BaseResultMap">
+        select * from mt_tag tb where tb.TENANT_ID = ${tenantId}
+        and tb.TAG_CODE IN
+        <if test="tagCodeList!=null and tagCodeList.size()>0">
+            <foreach collection="tagCodeList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectByTagGroupId" resultMap="BaseResultMap">
+        select mt.* from mt_tag_group mtg
+        inner join mt_tag_group_assign mtga on mtga.TAG_GROUP_ID = mtg.TAG_GROUP_ID and mtg.TENANT_ID = mtga.TENANT_ID
+        inner join mt_tag mt on mt.TAG_ID = mtga.TAG_ID and mt.TENANT_ID = mtga.TENANT_ID
+        where mtg.TENANT_ID = ${tenantId}
+        and mtg.TAG_GROUP_ID = #{tagGroupId}
+        and mt.TAG_CODE = #{tagCode}
+    </select>
+
+</mapper>

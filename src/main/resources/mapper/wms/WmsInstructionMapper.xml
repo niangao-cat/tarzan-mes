@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsInstructionMapper">
+
+    <select id="selectDetailById" resultType="com.ruike.wms.domain.vo.WmsInstructionAttrVO">
+        select mi.*
+             , mia_ver.attr_value           material_version
+             , mia_so.attr_value            so_num
+             , mia_sol.attr_value           so_line_num
+             , mia_sq.attr_value            signed_qty
+             , mia_insl.attr_value          instruction_line_num
+             , ifnull(mida.ATTR_VALUE, 'Y') SIGN_FLAG
+             , mia_dq.attr_value            delivered_qty
+        from mt_instruction mi
+                 left join mt_instruction_doc_attr mida
+                           on mi.SOURCE_DOC_ID = mida.instruction_doc_id and mida.ATTR_NAME = 'SIGN_FLAG'
+                 left join mt_instruction_attr mia_ver on mi.INSTRUCTION_ID = mia_ver.INSTRUCTION_ID
+            and mia_ver.ATTR_NAME = 'MATERIAL_VERSION'
+                 left join mt_instruction_attr mia_so on mi.INSTRUCTION_ID = mia_so.INSTRUCTION_ID
+            and mia_so.ATTR_NAME = 'SO_NUM'
+                 left join mt_instruction_attr mia_sol on mi.INSTRUCTION_ID = mia_sol.INSTRUCTION_ID
+            and mia_sol.ATTR_NAME = 'SO_LINE_NUM'
+                 left join mt_instruction_attr mia_sq on mi.INSTRUCTION_ID = mia_sq.INSTRUCTION_ID
+            and mia_sq.ATTR_NAME = 'SIGNED_QTY'
+                 left join mt_instruction_attr mia_insl on mi.INSTRUCTION_ID = mia_insl.INSTRUCTION_ID
+            and mia_insl.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                 left join mt_instruction_attr mia_dq on mi.INSTRUCTION_ID = mia_dq.INSTRUCTION_ID
+            and mia_dq.ATTR_NAME = 'DELIVERED_QTY'
+        where mi.INSTRUCTION_ID = #{instructionId}
+          and mi.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectListByDocId" resultType="com.ruike.wms.domain.vo.WmsInstructionAttrVO">
+        select mi.*
+             , mia_ver.attr_value           material_version
+             , mia_so.attr_value            so_num
+             , mia_sol.attr_value           so_line_num
+             , mia_sq.attr_value            signed_qty
+             , mia_insl.attr_value          instruction_line_num
+             , ifnull(mida.ATTR_VALUE, 'Y') SIGN_FLAG
+        from mt_instruction mi
+                 left join mt_instruction_attr mia_ver on mi.INSTRUCTION_ID = mia_ver.INSTRUCTION_ID
+            and mia_ver.ATTR_NAME = 'MATERIAL_VERSION'
+                 left join mt_instruction_attr mia_so on mi.INSTRUCTION_ID = mia_so.INSTRUCTION_ID
+            and mia_so.ATTR_NAME = 'SO_NUM'
+                 left join mt_instruction_attr mia_sol on mi.INSTRUCTION_ID = mia_sol.INSTRUCTION_ID
+            and mia_sol.ATTR_NAME = 'SO_LINE_NUM'
+                 left join mt_instruction_attr mia_sq on mi.INSTRUCTION_ID = mia_sq.INSTRUCTION_ID
+            and mia_sq.ATTR_NAME = 'SIGNED_QTY'
+                 left join mt_instruction_attr mia_insl on mi.INSTRUCTION_ID = mia_insl.INSTRUCTION_ID
+            and mia_insl.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                 left join mt_instruction_doc_attr mida
+                           on mi.SOURCE_DOC_ID = mida.instruction_doc_id and mida.ATTR_NAME = 'SIGN_FLAG'
+        where mi.SOURCE_DOC_ID = #{instructionDocId}
+          and mi.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectScannedByDocId" resultType="com.ruike.wms.domain.vo.WmsInstructionAttrVO">
+        select mi.*
+             , mia_ver.attr_value           material_version
+             , mia_so.attr_value            so_num
+             , mia_sol.attr_value           so_line_num
+             , mia_sq.attr_value            signed_qty
+             , mia_insl.attr_value          instruction_line_num
+             , ifnull(mida.ATTR_VALUE, 'Y') SIGN_FLAG
+             , act.ACTUAL_QTY
+        from mt_instruction mi
+                 inner join mt_instruction_actual act on act.instruction_id = mi.instruction_id
+                 left join mt_instruction_attr mia_ver on mi.instruction_id = mia_ver.instruction_id
+            and mia_ver.ATTR_NAME = 'MATERIAL_VERSION'
+                 left join mt_instruction_attr mia_so on mi.instruction_id = mia_so.instruction_id
+            and mia_so.ATTR_NAME = 'SO_NUM'
+                 left join mt_instruction_attr mia_sol on mi.instruction_id = mia_sol.instruction_id
+            and mia_sol.ATTR_NAME = 'SO_LINE_NUM'
+                 left join mt_instruction_attr mia_sq on mi.instruction_id = mia_sq.instruction_id
+            and mia_sq.ATTR_NAME = 'SIGNED_QTY'
+                 left join mt_instruction_attr mia_insl on mi.instruction_id = mia_insl.instruction_id
+            and mia_insl.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                 left join mt_instruction_doc_attr mida
+                           on mi.SOURCE_DOC_ID = mida.instruction_doc_id and mida.ATTR_NAME = 'SIGN_FLAG'
+        where mi.SOURCE_DOC_ID = #{instructionDocId}
+          and mi.tenant_id = #{tenantId}
+          and exists(select 1
+                     from mt_instruction_actual mia
+                        , mt_instruction_actual_detail miad
+                        , mt_material_lot_attr mml_status
+                     where mia.actual_id = miad.actual_id
+                       and miad.material_lot_id = mml_status.material_lot_id
+                       and mml_status.attr_name = 'STATUS'
+                       and mml_status.ATTR_VALUE = 'SCANNED'
+                       and mia.instruction_id = mi.instruction_id)
+    </select>
+</mapper>

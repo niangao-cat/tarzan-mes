@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeInterceptInformationMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeInterceptInformation">
+                    <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+                    <result column="intercept_id" property="interceptId" jdbcType="VARCHAR"/>
+                    <result column="intercept_num" property="interceptNum" jdbcType="VARCHAR"/>
+                    <result column="dimension" property="dimension" jdbcType="VARCHAR"/>
+                    <result column="status" property="status" jdbcType="VARCHAR"/>
+                    <result column="remark" property="remark" jdbcType="VARCHAR"/>
+                    <result column="intercept_by" property="interceptBy" jdbcType="DECIMAL"/>
+                    <result column="intercept_date" property="interceptDate" jdbcType="DATE"/>
+                    <result column="cid" property="cid" jdbcType="DECIMAL"/>
+                    <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+                    <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+                    <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+                    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+                    <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+                    <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+            </resultMap>
+
+    <select id="queryHmeInterceptInformation" resultType="com.ruike.hme.domain.vo.HmeInterceptInformationVO">
+        SELECT
+        hii.intercept_id,
+        hii.intercept_num,
+        hii.dimension,
+        hii.`status`,
+        hii.remark,
+        hii.intercept_by,
+        hii.intercept_date
+        FROM
+        hme_intercept_information hii
+        WHERE
+        hii.tenant_id =#{tenantId}
+        <if test="dto.interceptNum !=null and dto.interceptNum !=''">
+            and hii.intercept_num =#{dto.interceptNum}
+        </if>
+        <if test="dto.status !=null and dto.status !=''">
+            and hii.`status` =#{dto.status}
+        </if>
+        <if test="dto.dimension !=null and dto.dimension !=''">
+            and hii.dimension =#{dto.dimension}
+        </if>
+        <if test="dto.interceptDateFrom !=null">
+            and hii.intercept_date <![CDATA[>=]]> #{dto.interceptDateFrom}
+        </if>
+        <if test="dto.interceptDateTo !=null">
+            and hii.intercept_date <![CDATA[<=]]> #{dto.interceptDateTo}
+        </if>
+        <if test="dto.interceptBy !=null and dto.interceptBy !=''">
+            and hii.intercept_by =#{dto.interceptBy}
+        </if>
+        <if test="dto.workcellId !=null and dto.workcellId !=''">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            hme_intercept_workcell hiw
+            WHERE
+            hiw.workcell_id =#{dto.workcellId}
+            AND hiw.intercept_id=hii.intercept_id
+            AND hiw.tenant_id=#{tenantId}
+            )
+        </if>
+        <if test="dto.interceptObject !=null and dto.interceptObject !=''">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            hme_intercept_object hio
+            WHERE
+            hio.intercept_object =#{dto.interceptObject}
+            AND hio.intercept_id=hii.intercept_id
+            AND hio.tenant_id=#{tenantId}
+            )
+        </if>
+        <if test="dto.materialLotCode !=null and dto.materialLotCode !=''">
+            AND EXISTS(
+            SELECT
+            1
+            FROM
+            mt_material_lot mml,
+            hme_intercept_release hir
+            WHERE
+            mml.MATERIAL_LOT_ID = hir.material_lot_id
+            AND hii.intercept_id = hir.intercept_id
+            AND mml.MATERIAL_LOT_CODE =#{dto.materialLotCode}
+            AND mml.TENANT_ID =#{tenantId}
+            AND hir.tenant_id =#{tenantId}
+            )
+        </if>
+        ORDER BY hii.last_update_date desc
+
+    </select>
+
+
+    <select id="queryInterceptExperimentList" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+                mml.MATERIAL_LOT_CODE AS snNumber,
+                mml.MATERIAL_LOT_ID,
+                hii.intercept_num,
+                hii.dimension,
+                hio.intercept_object,
+                hio.`status` AS statusObject,
+                hii.`status` AS statusInformation
+        FROM
+                hme_intercept_information hii,
+                hme_intercept_object hio,
+                hme_material_lot_lab_code hmallc,
+                mt_material_lot mml
+        WHERE
+                hii.intercept_id = hio.intercept_id
+                AND hio.intercept_object = hmallc.lab_code
+                AND hmallc.material_lot_id = mml.MATERIAL_LOT_ID
+                AND hio.intercept_id =#{interceptId}
+                AND hio.tenant_id = hmallc.tenant_id
+                AND hmallc.tenant_id = mml.TENANT_ID
+                AND hii.tenant_id =#{tenantId}
+    </select>
+
+    <select id="queryInterceptDimensionList" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+                me.IDENTIFICATION as snNumber,
+                mml.MATERIAL_LOT_ID,
+                hii.intercept_num,
+                hii.dimension,
+                hio.intercept_object,
+                hio.`status` as statusObject,
+                hii.`status` as statusInformation
+        FROM
+                hme_intercept_information hii,
+                hme_intercept_object hio,
+                mt_work_order mwo,
+                mt_eo me,
+                mt_material_lot mml
+        WHERE
+                hii.intercept_id = hio.intercept_id
+                AND hio.intercept_object = mwo.WORK_ORDER_NUM
+                AND mwo.TENANT_ID = #{tenantId}
+                AND mwo.WORK_ORDER_ID = me.WORK_ORDER_ID
+                AND me.TENANT_ID =#{tenantId}
+                AND hio.tenant_id =#{tenantId}
+                AND hio.intercept_id=#{interceptId}
+                AND mml.MATERIAL_LOT_CODE=me.IDENTIFICATION
+                AND mml.TENANT_ID=me.TENANT_ID
+    </select>
+
+    <select id="queryInterceptSerialNumber" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+                hio.intercept_object as snNumber,
+                hii.`status` as statusInformation,
+                hio.`status` as statusObject,
+                hii.intercept_num,
+                hii.dimension,
+                hio.intercept_object,
+                mml.MATERIAL_LOT_ID
+        FROM
+                hme_intercept_information hii,
+                hme_intercept_object hio,
+                mt_material_lot mml
+        WHERE
+                hio.tenant_id =#{tenantId}
+                AND hii.intercept_id = hio.intercept_id
+                AND hio.intercept_id =#{interceptId}
+                AND hio.intercept_object = mml.MATERIAL_LOT_CODE
+                AND hio.tenant_id = mml.TENANT_ID
+    </select>
+
+    <select id="queryInterceptComponentBatch" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+                mmld.MATERIAL_LOT_CODE as snNumber,
+                hii.`status` as statusInformation,
+                hio.`status` as statusObject,
+                hii.intercept_num,
+                hii.dimension,
+                hio.intercept_object,
+                mmld.MATERIAL_LOT_ID
+        FROM
+                hme_intercept_information hii,
+                hme_intercept_object hio,
+                mt_material_lot_attr mmla,
+                mt_material_lot mml,
+                hme_eo_job_sn_lot_material hejslm,
+                hme_eo_job_sn hejs,
+                mt_material_lot mmld
+        WHERE
+                hii.intercept_id = hio.intercept_id
+                AND hio.intercept_id =#{interceptId}
+                AND hio.tenant_id =#{tenantId}
+                AND mmla.ATTR_NAME = 'SUPPLIER_LOT'
+                AND mmla.ATTR_VALUE = hio.intercept_object
+                AND mmla.tenant_id = hio.tenant_id
+                AND mmla.material_lot_id = mml.MATERIAL_LOT_ID
+                AND hio.material_id = mml.MATERIAL_ID
+                AND hio.tenant_id = mml.TENANT_ID
+                AND mmla.tenant_id = mml.TENANT_ID
+                AND mml.MATERIAL_LOT_ID = hejslm.MATERIAL_LOT_ID
+                AND mml.TENANT_ID = hejslm.tenant_id
+                AND hejslm.is_released = 1
+                AND hejslm.release_qty > 0
+                AND hejslm.job_id = hejs.job_id
+                AND hejslm.tenant_id = hejs.tenant_id
+                AND hejs.material_lot_id = mmld.MATERIAL_LOT_ID
+                AND hejs.tenant_id = mmld.tenant_id
+        UNION
+        SELECT
+                mmlt.MATERIAL_LOT_CODE as snNumber,
+                hii.`status` as statusInformation,
+                hio.`status` as statusObject,
+                hii.intercept_num,
+                hii.dimension,
+                hio.intercept_object,
+                mmlt.MATERIAL_LOT_ID
+        FROM
+                hme_intercept_information hii,
+                hme_intercept_object hio,
+                mt_material_lot_attr mmla,
+                mt_material_lot mml,
+
+                hme_eo_job_sn hejs,
+                mt_material_lot mmld,
+                hme_eo_job_material hejm,
+                mt_material_lot mmlt
+        WHERE
+                hii.intercept_id = hio.intercept_id
+                AND hio.intercept_id =#{interceptId}
+                AND hio.tenant_id =#{tenantId}
+                AND mmla.ATTR_NAME = 'SUPPLIER_LOT'
+                AND mmla.ATTR_VALUE = hio.intercept_object
+                AND mmla.tenant_id = hio.tenant_id
+                AND mmla.material_lot_id = mml.MATERIAL_LOT_ID
+                AND hio.material_id = mml.MATERIAL_ID
+                AND hio.tenant_id = mml.TENANT_ID
+                AND mmla.tenant_id = mml.TENANT_ID
+                AND hejm.job_id = hejs.job_id
+                AND hejs.material_lot_id = mmld.MATERIAL_LOT_ID
+                AND hejs.tenant_id = mmld.tenant_id
+                AND mmld.MATERIAL_LOT_ID=hejm.MATERIAL_LOT_ID
+                AND mmld.TENANT_ID=hejm.TENANT_ID
+                AND hejm.is_issued=1
+                AND hejm.eo_id=mmlt.EO_ID
+                AND hejm.TENANT_ID=mmlt.TENANT_ID
+
+    </select>
+
+    <select id="queryInterceptComponentSupplierBatch" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+                mmld.MATERIAL_LOT_CODE as snNumber,
+                hii.`status` as statusInformation,
+                hio.`status` as statusObject,
+                hii.intercept_num,
+                hii.dimension,
+                hio.intercept_object,
+                mmld.MATERIAL_LOT_ID
+        FROM
+                hme_intercept_information hii,
+                hme_intercept_object hio,
+                mt_material_lot_attr mmla,
+                mt_material_lot mml,
+                hme_eo_job_sn_lot_material hejslm,
+                hme_eo_job_sn hejs,
+                mt_material_lot mmld
+        WHERE
+                hii.intercept_id = hio.intercept_id
+                AND hio.intercept_id =#{interceptId}
+                AND hio.tenant_id =#{tenantId}
+                AND mmla.ATTR_NAME = 'SUPPLIER_LOT'
+                AND mmla.ATTR_VALUE = hio.intercept_object
+                AND mmla.tenant_id = hio.tenant_id
+                AND mmla.material_lot_id = mml.MATERIAL_LOT_ID
+                AND hio.material_id = mml.MATERIAL_ID
+                AND hio.tenant_id = mml.TENANT_ID
+                AND mmla.tenant_id = mml.TENANT_ID
+                AND mml.MATERIAL_LOT_ID = hejslm.MATERIAL_LOT_ID
+                AND mml.TENANT_ID = hejslm.tenant_id
+                AND hejslm.is_released = 1
+                AND hejslm.release_qty > 0
+                AND hejslm.job_id = hejs.job_id
+                AND hejslm.tenant_id = hejs.tenant_id
+                AND hejs.material_lot_id = mmld.MATERIAL_LOT_ID
+                AND hejs.tenant_id = mmld.tenant_id
+        UNION
+        SELECT
+                mmlt.MATERIAL_LOT_CODE as snNumber,
+                hii.`status` as statusInformation,
+                hio.`status` as statusObject,
+                hii.intercept_num,
+                hii.dimension,
+                hio.intercept_object,
+                mmlt.MATERIAL_LOT_ID
+        FROM
+                hme_intercept_information hii,
+                hme_intercept_object hio,
+                mt_material_lot_attr mmla,
+                mt_material_lot mml,
+                hme_eo_job_sn_lot_material hejslm,
+                hme_eo_job_sn hejs,
+                mt_material_lot mmld,
+                hme_eo_job_material hejm,
+                mt_material_lot mmlt
+        WHERE
+                hii.intercept_id = hio.intercept_id
+                AND hio.intercept_id =#{interceptId}
+                AND hio.tenant_id =#{tenantId}
+                AND mmla.ATTR_NAME = 'SUPPLIER_LOT'
+                AND mmla.ATTR_VALUE = hio.intercept_object
+                AND mmla.tenant_id = hio.tenant_id
+                AND mmla.material_lot_id = mml.MATERIAL_LOT_ID
+                AND hio.material_id = mml.MATERIAL_ID
+                AND hio.tenant_id = mml.TENANT_ID
+                AND mmla.tenant_id = mml.TENANT_ID
+                AND mml.MATERIAL_LOT_ID = hejslm.MATERIAL_LOT_ID
+                AND mml.TENANT_ID = hejslm.tenant_id
+                AND hejslm.is_released = 1
+                AND hejslm.release_qty > 0
+                AND hejslm.job_id = hejs.job_id
+                AND hejslm.tenant_id = hejs.tenant_id
+                AND hejs.material_lot_id = mmld.MATERIAL_LOT_ID
+                AND hejs.tenant_id = mmld.tenant_id
+                AND mmld.MATERIAL_LOT_ID=hejm.MATERIAL_LOT_ID
+                AND mmld.TENANT_ID=hejm.TENANT_ID
+                AND hejm.is_issued=1
+                AND hejm.eo_id=mmlt.EO_ID
+                AND hejm.TENANT_ID=mmlt.TENANT_ID
+    </select>
+    <select id="whetherExistence" resultType="com.ruike.hme.domain.vo.HmeInterceptReleaseVO">
+        SELECT
+                hir.material_lot_id
+        FROM
+                hme_intercept_release hir
+        WHERE
+                hir.intercept_id =#{interceptId}
+                AND hir.tenant_id =#{tenantId}
+    </select>
+
+    <select id="queryWorkcellId" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+                hejs.workcell_id,
+                hejs.site_in_date,
+                hejs.MATERIAL_LOT_ID
+        FROM
+                hme_eo_job_sn hejs
+        WHERE
+                hejs.tenant_id =#{tenantId}
+                AND hejs.material_lot_id in
+            <foreach collection="materialLotId" open="(" index="index" item="materialLotId" separator="," close=")">
+                #{materialLotId}
+            </foreach>
+    </select>
+
+    <select id="queryWorkcellCodeAndName" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+                mmw.WORKCELL_CODE as workcell_code,
+                mmw.WORKCELL_NAME as workcell_name_description,
+                mmor.ORGANIZATION_ID as workcell_id
+        FROM
+                mt_mod_organization_rel mmor,
+                mt_mod_workcell mmw
+        WHERE
+                mmor.TENANT_ID =#{tenantId}
+                AND mmor.PARENT_ORGANIZATION_ID = mmw.WORKCELL_ID
+                AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+                AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+                AND mmor.ORGANIZATION_ID IN
+            <foreach collection="workcellId" item="workcellId"  index="index" open="(" separator="," close=")">
+                #{workcellId}
+            </foreach>
+    </select>
+
+    <select id="querySnInterceptByLot" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+            mmlt.MATERIAL_LOT_CODE AS sn_number,
+            hii.`status` AS status_information,
+            hio.`status` AS status_object,
+            hii.intercept_num,
+            hii.dimension,
+            hio.intercept_object,
+            mmlt.MATERIAL_LOT_ID
+        FROM
+            hme_intercept_object hio,
+            hme_intercept_information hii,
+            mt_material_lot mml,
+            hme_eo_job_material hejm,
+            hme_eo_job_sn hejs,
+            mt_material_lot mmlt
+        WHERE
+            hio.intercept_id = #{interceptId}
+        AND hio.material_id IN
+        <foreach collection="materialIdList" item="item"  index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+          AND hio.tenant_id = #{tenantId}
+          AND hii.intercept_id = hio.intercept_id
+          AND mml.TENANT_ID = hio.tenant_id
+          AND mml.LOT = hio.intercept_object
+          AND mml.MATERIAL_ID = hio.material_id
+          AND hejm.tenant_id = mml.TENANT_ID
+          AND hejm.is_issued = 1
+          AND hejm.material_lot_id = mml.MATERIAL_LOT_ID
+          AND hejs.job_id = hejm.job_id
+          AND mmlt.MATERIAL_LOT_ID = hejs.material_lot_id
+    </select>
+    <select id="queryLotTimeInterceptByLot" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+            mmlt.MATERIAL_LOT_CODE AS sn_number,
+            hii.`status` AS status_information,
+            hio.`status` AS status_object,
+            hii.intercept_num,
+            hii.dimension,
+            hio.intercept_object,
+            mmlt.MATERIAL_LOT_ID
+        FROM
+            hme_intercept_object hio,
+            hme_intercept_information hii,
+            mt_material_lot mml,
+            hme_eo_job_sn_lot_material hejslm,
+            hme_eo_job_sn hejs,
+            mt_material_lot mmlt
+        WHERE
+            hio.intercept_id = #{interceptId}
+          AND hio.material_id IN
+        <foreach collection="materialIdList" item="item"  index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+          AND hio.tenant_id = #{tenantId}
+          AND hii.intercept_id = hio.intercept_id
+          AND mml.TENANT_ID = hio.tenant_id
+          AND mml.LOT = hio.intercept_object
+          AND mml.MATERIAL_ID = hio.material_id
+          AND hejslm.tenant_id = mml.TENANT_ID
+          AND hejslm.is_released = 1
+          AND hejslm.release_qty > 0
+          AND hejslm.material_lot_id = mml.MATERIAL_LOT_ID
+          AND hejs.job_id = hejslm.job_id
+          AND mmlt.MATERIAL_LOT_ID = hejs.material_lot_id
+    </select>
+
+    <select id="querySnInterceptBySupplierLot" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+        mmlt.MATERIAL_LOT_CODE AS sn_number,
+        hii.`status` AS status_information,
+        hio.`status` AS status_object,
+        hii.intercept_num,
+        hii.dimension,
+        hio.intercept_object,
+        mmlt.MATERIAL_LOT_ID
+        FROM
+        hme_intercept_object hio,
+        hme_intercept_information hii,
+        mt_material_lot_attr mmla,
+        mt_material_lot mml,
+        hme_eo_job_material hejm,
+        hme_eo_job_sn hejs,
+        mt_material_lot mmlt
+        WHERE
+        hio.intercept_id = #{interceptId}
+        AND hio.material_id IN
+        <foreach collection="materialIdList" item="item"  index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND hio.tenant_id = #{tenantId}
+        AND hii.intercept_id = hio.intercept_id
+        AND mmla.ATTR_NAME = 'SUPPLIER_LOT'
+        AND mmla.ATTR_VALUE = hio.intercept_object
+        AND mmla.tenant_id = hio.tenant_id
+        AND mml.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+        and mml.MATERIAL_ID = hio.material_id
+        AND hejm.tenant_id = mml.TENANT_ID
+        AND hejm.is_issued = 1
+        AND hejm.material_lot_id = mml.MATERIAL_LOT_ID
+        AND hejs.job_id = hejm.job_id
+        AND mmlt.MATERIAL_LOT_ID = hejs.material_lot_id
+    </select>
+
+    <select id="queryLotTimeInterceptBySupplierLot" resultType="com.ruike.hme.domain.vo.HmePopupWindowVO">
+        SELECT
+        mmlt.MATERIAL_LOT_CODE AS sn_number,
+        hii.`status` AS status_information,
+        hio.`status` AS status_object,
+        hii.intercept_num,
+        hii.dimension,
+        hio.intercept_object,
+        mmlt.MATERIAL_LOT_ID
+        FROM
+        hme_intercept_object hio,
+        hme_intercept_information hii,
+        mt_material_lot_attr mmla,
+        mt_material_lot mml,
+        hme_eo_job_sn_lot_material hejslm,
+        hme_eo_job_sn hejs,
+        mt_material_lot mmlt
+        WHERE
+        hio.intercept_id = #{interceptId}
+        AND hio.material_id IN
+        <foreach collection="materialIdList" item="item"  index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND hio.tenant_id = #{tenantId}
+        AND hii.intercept_id = hio.intercept_id
+        AND mmla.ATTR_NAME = 'SUPPLIER_LOT'
+        AND mmla.ATTR_VALUE = hio.intercept_object
+        AND mmla.tenant_id = hio.tenant_id
+        AND mml.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+        and mml.MATERIAL_ID = hio.material_id
+        AND hejslm.tenant_id = mml.TENANT_ID
+        AND hejslm.is_released = 1
+        AND hejslm.release_qty > 0
+        AND hejslm.material_lot_id = mml.MATERIAL_LOT_ID
+        AND hejs.job_id = hejslm.job_id
+        AND mmlt.MATERIAL_LOT_ID = hejs.material_lot_id
+    </select>
+</mapper>

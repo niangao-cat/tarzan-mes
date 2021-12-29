@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtTagGroupMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtTagGroup">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_CODE" property="tagGroupCode" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_DESCRIPTION" property="tagGroupDescription" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_TYPE" property="tagGroupType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_GROUP_ID" property="sourceGroupId" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_TIME_CONTROL" property="collectionTimeControl" jdbcType="VARCHAR"/>
+        <result column="USER_VERIFICATION" property="userVerification" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectTagGroupByCondition" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.TAG_GROUP_ID,
+        b.TAG_GROUP_CODE,
+        t.TAG_GROUP_DESCRIPTION,
+        b.TAG_GROUP_TYPE,
+        b.SOURCE_GROUP_ID,
+        b.BUSINESS_TYPE,
+        b.STATUS,
+        b.COLLECTION_TIME_CONTROL,
+        b.USER_VERIFICATION,
+        b.CID
+        FROM
+        mt_tag_group b
+        INNER JOIN mt_tag_group_tl t ON b.TAG_GROUP_ID = t.TAG_GROUP_ID
+        AND t.LANG = #{locale}
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        <if test="tagGroupIds!=null and tagGroupIds.size()>0">
+            and b.TAG_GROUP_ID in
+            <foreach collection="tagGroupIds" index="i" item="e" open="(" close=")" separator=",">
+                #{e}
+            </foreach>
+        </if>
+    </select>
+    <select id="selectCondition" resultType="tarzan.general.domain.vo.MtTagGroupVO2">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        DISTINCT
+        tb.SOURCE_GROUP_ID,
+        tb.OBJECT_VERSION_NUMBER,
+        tb.LATEST_HIS_ID,
+        tb.BUSINESS_TYPE,
+        tb.COLLECTION_TIME_CONTROL,
+        tb.CREATED_BY,
+        tb.CREATION_DATE,
+        tb.LAST_UPDATED_BY,
+        tb.LAST_UPDATE_DATE,
+        tb.TENANT_ID,
+        tb.TAG_GROUP_ID,
+        tb.TAG_GROUP_CODE,
+        t.TAG_GROUP_DESCRIPTION,
+        tb.TAG_GROUP_TYPE,
+        tb.STATUS,
+        tb.USER_VERIFICATION,
+        tb.CID
+        FROM
+        mt_tag_group tb
+        INNER JOIN mt_tag_group_tl t ON tb.TAG_GROUP_ID = t.TAG_GROUP_ID
+        LEFT JOIN mt_tag_group_object tgo ON tgo.tag_group_id = tb.TAG_GROUP_ID
+        WHERE tb.TENANT_ID = ${tenantId}
+        AND t.LANG = #{locale}
+        <if test="dto.userVerification != null">
+            AND tb.USER_VERIFICATION = #{dto.userVerification}
+        </if>
+        <if test="dto.tagGroupId != null">
+            AND tb.TAG_GROUP_ID = #{dto.tagGroupId}
+        </if>
+        <if test="dto.tagGroupDescription != null">
+            AND t.TAG_GROUP_DESCRIPTION like concat('%',concat(#{dto.tagGroupDescription}),'%')
+        </if>
+        <if test="dto.tagGroupCode != null">
+            AND tb.TAG_GROUP_CODE like CONCAT('%',#{dto.tagGroupCode},'%')
+        </if>
+        <if test="dto.collectionTimeControl != null">
+            AND tb.COLLECTION_TIME_CONTROL = #{dto.collectionTimeControl}
+        </if>
+        <if test="dto.businessType != null">
+            AND tb.BUSINESS_TYPE = #{dto.businessType}
+        </if>
+        <if test="dto.tagGroupType != null">
+            AND tb.TAG_GROUP_TYPE = #{dto.tagGroupType}
+        </if>
+        <if test="dto.sourceGroupId != null">
+            AND tb.SOURCE_GROUP_ID = #{dto.sourceGroupId}
+        </if>
+        <choose>
+        <when  test="dto.status != null">
+            AND tb.STATUS = #{dto.status}
+        </when >
+        <otherwise >
+            AND tb.STATUS != 'INEFFECT'
+        </otherwise>
+        </choose>
+        <if test="dto.operationId != null and dto.operationId != ''">
+            AND tgo.operation_id = #{dto.operationId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND tgo.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.productionVersion != null and dto.productionVersion != ''">
+            AND tgo.production_version = #{dto.productionVersion}
+        </if>
+
+        order by tb.last_update_date desc
+    </select>
+    <select id="selectTagGroupByTagGroupCodes" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.TAG_GROUP_ID,
+        b.TAG_GROUP_CODE,
+        t.TAG_GROUP_DESCRIPTION,
+        b.TAG_GROUP_TYPE,
+        b.SOURCE_GROUP_ID,
+        b.BUSINESS_TYPE,
+        b.STATUS,
+        b.COLLECTION_TIME_CONTROL,
+        b.USER_VERIFICATION,
+        b.CID
+        FROM
+        mt_tag_group b
+        INNER JOIN mt_tag_group_tl t ON b.TAG_GROUP_ID = t.TAG_GROUP_ID
+        AND t.LANG = #{locale}
+        WHERE
+        1 = 1
+        AND b.TENANT_ID = ${tenantId}
+        <if test="tagGroupCodes!=null and tagGroupCodes.size()>0">
+            and b.TAG_GROUP_CODE in
+            <foreach collection="tagGroupCodes" index="i" item="codes" open="(" close=")" separator=",">
+                #{codes}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

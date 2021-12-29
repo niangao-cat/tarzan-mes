@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobContainerMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEoJobContainer">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="job_container_id" property="jobContainerId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="container_id" property="containerId" jdbcType="VARCHAR"/>
+        <result column="container_code" property="containerCode" jdbcType="VARCHAR"/>
+        <result column="site_in_date" property="siteInDate" jdbcType="DATE"/>
+        <result column="site_out_date" property="siteOutDate" jdbcType="DATE"/>
+        <result column="site_in_by" property="siteInBy" jdbcType="DECIMAL"/>
+        <result column="site_out_by" property="siteOutBy" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <delete id="deleteNotCurrentWkcData">
+        delete from hme_eo_job_container
+         where tenant_id = #{tenantId}
+           and container_id = #{containerId}
+           and workcell_id != #{workcellId}
+    </delete>
+
+    <update id="batchOutSite">
+        update hme_eo_job_container
+        set object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            site_out_by = #{userId},
+            site_out_date = CURRENT_TIMESTAMP
+        where job_container_id in
+        <foreach collection="jobContainerIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+         and tenant_id = #{tenantId}
+    </update>
+</mapper>

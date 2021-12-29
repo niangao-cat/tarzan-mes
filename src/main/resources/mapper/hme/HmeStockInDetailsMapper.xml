@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeStockInDetailsMapper">
+
+    <select id="queryList" resultType="com.ruike.hme.domain.vo.HmeStockInDetailsVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+            mms.SITE_CODE,
+            woa.ATTR_VALUE,
+            wo.WORK_ORDER_NUM,
+            wo.PRODUCTION_VERSION,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mgtl.description workOrderType,
+            mgsl.description workOrderStatus,
+            mmpl.PROD_LINE_NAME,
+            wo.QTY,
+            tt.ACTUAL_QTY,
+            tt.MATERIAL_LOT_CODE,
+            tt.CREATION_DATE,
+            tt.CONTAINER_CODE,
+            tt.LOCATOR_CODE,
+            tt.real_name,
+            tt.INSTRUCTION_DOC_NUM,
+            tt.INSTRUCTION_DOC_STATUS
+        FROM
+            mt_work_order wo
+            LEFT JOIN mt_work_order_attr woa ON woa.WORK_ORDER_ID = wo.WORK_ORDER_ID
+            AND woa.ATTR_NAME = 'attribute4'
+            LEFT JOIN mt_gen_type mgt ON mgt.TYPE_CODE = wo.WORK_ORDER_TYPE
+            AND mgt.TYPE_GROUP = 'WO_TYPE'
+            AND mgt.MODULE = 'ORDER'
+            LEFT JOIN mt_gen_type_tl mgtl ON mgtl.GEN_TYPE_ID = mgt.gen_type_id
+            AND mgtl.lang = #{lang}
+            LEFT JOIN mt_gen_status mgs ON mgs.status_code = wo.STATUS
+            AND mgs.STATUS_GROUP = 'WO_STATUS'
+            AND mgs.module = 'ORDER'
+            LEFT JOIN mt_gen_status_tl mgsl ON mgsl.GEN_STATUS_ID = mgs.GEN_STATUS_ID
+            AND mgsl.lang = #{lang}
+            LEFT JOIN (
+            SELECT
+                eo.work_order_id,
+                mml.MATERIAL_LOT_CODE,
+                miad.CREATION_DATE,
+                mc.CONTAINER_CODE,
+                ml.LOCATOR_ID,
+                ml.LOCATOR_CODE,
+                iu.id,
+                iu.real_name,
+                mid.INSTRUCTION_DOC_NUM,
+                mid.INSTRUCTION_DOC_STATUS,
+                miad.ACTUAL_QTY,
+                miad.ACTUAL_DETAIL_ID
+            FROM
+                mt_instruction_doc mid,
+                mt_instruction mi
+                LEFT JOIN mt_mod_locator ml ON ml.locator_id = mi.to_locator_id,
+                mt_instruction_actual mia,
+                mt_instruction_actual_detail miad
+                LEFT JOIN mt_container mc ON mc.container_id = miad.container_id,
+                iam_user iu,
+                mt_material_lot mml,
+                mt_Eo eo
+            WHERE
+                mid.INSTRUCTION_DOC_TYPE = 'PRODUCT_RECEIPT'
+                AND mid.INSTRUCTION_DOC_ID = mi.SOURCE_DOC_ID
+                AND mi.INSTRUCTION_ID = mia.INSTRUCTION_ID
+                AND mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+                AND mia.ACTUAL_ID = miad.ACTUAL_ID
+                AND mml.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+                AND miad.CREATED_BY = iu.id
+                AND eo.IDENTIFICATION = mml.MATERIAL_LOT_CODE
+            ) tt ON tt.work_order_id = wo.WORK_ORDER_ID,
+            mt_mod_site mms,
+            mt_material mm,
+            mt_mod_production_line mmpl
+        WHERE
+            wo.TENANT_ID = #{tenantId}
+            AND wo.SITE_ID = mms.SITE_ID
+            AND mm.material_Id = wo.MATERIAL_ID
+            AND wo.PRODUCTION_LINE_ID = mmpl.prod_line_id
+        <if test="dto.siteId !=null and dto.siteId !=''">
+            AND mms.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.areaName !=null and dto.areaName !=''">
+            AND woa.ATTR_VALUE = #{dto.areaName}
+        </if>
+        <if test="dto.prodLineId !=null and dto.prodLineId !=''">
+            AND mmpl.PROD_LINE_ID= #{dto.prodLineId}
+        </if>
+        <if test="dto.workOrderNumList!=null and dto.workOrderNumList.size()>0">
+            and wo.WORK_ORDER_NUM in
+            <foreach collection="dto.workOrderNumList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.productionVersion !=null and dto.productionVersion !=''">
+            AND wo.PRODUCTION_VERSION LIKE CONCAT('%',#{dto.productionVersion},'%')
+        </if>
+        <if test="dto.materialCodeList!=null and dto.materialCodeList.size()>0">
+            and mm.MATERIAL_CODE in
+            <foreach collection="dto.materialCodeList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.workOrderType !=null and dto.workOrderType !=''">
+            AND mgt.TYPE_CODE = #{dto.workOrderType}
+        </if>
+        <if test="dto.workOrderStatus !=null and dto.workOrderStatus !=''">
+            AND mgs.STATUS_CODE = #{dto.workOrderStatus}
+        </if>
+        <if test="dto.materialLotCodeList!=null and dto.materialLotCodeList.size()>0">
+            and tt.MATERIAL_LOT_CODE in
+            <foreach collection="dto.materialLotCodeList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.creationDateFrom !=null and dto.creationDateFrom !=''">
+            AND tt.CREATION_DATE &gt;= #{dto.creationDateFrom}
+        </if>
+        <if test="dto.creationDateFromTo !=null and dto.creationDateFromTo !=''">
+            AND tt.CREATION_DATE &lt;= #{dto.creationDateFromTo}
+        </if>
+        <if test="dto.containerCodeList!=null and dto.containerCodeList.size()>0">
+            and tt.CONTAINER_CODE in
+            <foreach collection="dto.containerCodeList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.locatorId !=null and dto.locatorId !=''">
+            AND tt.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.id !=null and dto.id !=''">
+            AND tt.id = #{dto.id}
+        </if>
+        <if test="dto.instructionDocNum !=null and dto.instructionDocNum !=''">
+            AND tt.INSTRUCTION_DOC_NUM LIKE CONCAT('%',#{dto.instructionDocNum},'%')
+        </if>
+        <if test="dto.instructionDocStatus !=null and dto.instructionDocStatus !=''">
+            AND tt.INSTRUCTION_DOC_STATUS = #{dto.instructionDocStatus}
+        </if>
+    </select>
+</mapper>

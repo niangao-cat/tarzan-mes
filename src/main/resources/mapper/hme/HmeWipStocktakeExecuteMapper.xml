@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWipStocktakeExecuteMapper">
+
+    <select id="selectByCondition"
+            resultType="com.ruike.hme.api.dto.HmeWipStocktakeExecuteDocRepresentationDTO">
+        select wsd.stocktake_num
+        ,wsd.stocktake_id
+        ,wsd.site_id
+        ,mms.SITE_CODE
+        ,wsd.area_id
+        ,mma.AREA_CODE
+        ,wsd.open_flag
+        ,wsd.stocktake_status
+        ,wsd.remark
+        ,date_format(wsd.creation_date,'%Y-%m-%d') as creation_date
+        from hme_wip_stocktake_doc wsd
+        ,mt_mod_site mms
+        ,mt_mod_area mma
+        ,mt_user_organization muo_site
+        where wsd.site_id = mms.SITE_ID
+        and wsd.area_id = mma.AREA_ID
+        and mms.SITE_ID = muo_site.ORGANIZATION_ID
+        and muo_site.USER_ID = #{dto.userId}
+        and muo_site.TENANT_ID = #{tenantId}
+        and muo_site.ENABLE_FLAG = 'Y'
+        and wsd.stocktake_status = 'RELEASED'
+        and wsd.tenant_id = #{tenantId}
+        <if test="dto.stocktakeNum != null">
+            and wsd.stocktake_num = #{dto.stocktakeNum}
+        </if>
+        <if test="dto.stocktakeNumLike != null">
+            <bind name="stocktakeNumLike" value="'%'+dto.stocktakeNumLike+'%'"/>
+            and wsd.stocktake_num like #{stocktakeNumLike}
+        </if>
+        <if test="dto.siteId != null">
+            and wsd.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.areaCode != null">
+            <bind name="areaCodeLike" value="'%'+dto.areaCode+'%'"/>
+            and mma.AREA_CODE like #{areaCodeLike}
+        </if>
+        <if test="dto.creationDate != null">
+            and wsd.creation_date between #{dto.creationDateFrom} and #{dto.creationDateTo}
+        </if>
+        <if test="dto.prodLineCode != null">
+            <bind name="prodLineCodeLike" value="'%'+dto.prodLineCode+'%'"/>
+            and exists (select 1
+            from hme_wip_stocktake_range wsr
+            ,mt_mod_production_line mpl
+            where wsr.range_object_type = 'PL'
+            and wsr.stocktake_id = wsd.stocktake_id
+            and wsr.range_object_id = mpl.prod_line_id
+            and mpl.prod_line_code like #{prodLineCodeLike} )
+        </if>
+        <if test="dto.workcellCode != null">
+            <bind name="workcellCodeLike" value="'%'+dto.workcellCode+'%'"/>
+            and exists (select 1
+            from hme_wip_stocktake_range wsr
+            ,mt_mod_workcell wkc
+            where wsr.range_object_type = 'WP'
+            and wsr.stocktake_id = wsd.stocktake_id
+            and wsr.range_object_id = wkc.workcell_id
+            and wkc.workcell_code like #{workcellCodeLike} )
+        </if>
+    </select>
+
+    <select id="selectNonCosMaterialLots" resultType="com.ruike.hme.domain.vo.WipStocktakeMaterialLotWorkVO">
+        select distinct mml.material_lot_id
+        , mml.material_lot_code
+        , mml.material_id
+        , mm.material_code
+        , mor_pc.organization_id as workcell_id
+        , mor_wkc.parent_organization_id as prod_line_id
+        , eo.work_order_id
+        , mm.MATERIAL_NAME
+        , mmla.ATTR_VALUE material_version
+        , uom.UOM_ID
+        , uom.UOM_CODE
+        , mml.PRIMARY_UOM_QTY quantity
+        , pl.PROD_LINE_CODE
+        , pc.WORKCELL_CODE
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla on mmla.material_lot_id = mml.material_lot_id and mmla.attr_name =
+        'MATERIAL_VERSION'
+        left join mt_eo eo on mml.IDENTIFICATION = eo.IDENTIFICATION
+        left join mt_eo_router_actual era on eo.EO_ID = era.EO_ID
+        left join mt_eo_step_actual esa on era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        left join mt_eo_step_wip esw on esa.EO_STEP_ACTUAL_ID = esw.EO_STEP_ACTUAL_ID
+        left join mt_mod_organization_rel mor_st on mor_st.TOP_SITE_ID = mml.SITE_ID
+        and mor_st.ORGANIZATION_ID = esw.WORKCELL_ID and mor_st.ORGANIZATION_TYPE = 'WORKCELL'
+        left join mt_mod_organization_rel mor_pc on mor_pc.TOP_SITE_ID = mml.SITE_ID
+        and mor_pc.ORGANIZATION_ID = mor_st.PARENT_ORGANIZATION_ID and mor_pc.ORGANIZATION_TYPE = 'WORKCELL'
+        left join mt_mod_organization_rel mor_wkc on mor_wkc.TOP_SITE_ID = mml.SITE_ID
+        and mor_wkc.ORGANIZATION_ID = mor_pc.PARENT_ORGANIZATION_ID and
+        mor_wkc.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mor_wkc.ORGANIZATION_TYPE = 'WORKCELL'
+        left join mt_mod_production_line pl on pl.PROD_LINE_ID = mor_wkc.parent_organization_id
+        left join mt_mod_workcell pc on pc.WORKCELL_ID = mor_pc.organization_id
+        , mt_material mm
+        , mt_uom uom
+        where mml.MATERIAL_ID = mm.MATERIAL_ID
+        and mml.PRIMARY_UOM_ID = uom.UOM_ID
+        and mml.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mml.TENANT_ID = #{tenantId}
+        and mml.site_id = #{siteId}
+    </select>
+
+    <select id="selectNonCosMaterialLots2" resultType="com.ruike.hme.domain.vo.WipStocktakeMaterialLotWorkVO">
+        SELECT
+            hwsa.ATTRIBUTE1 AS material_lot_id,
+            mor_pc.organization_id AS workcell_id,
+            mor_wkc.parent_organization_id AS prod_line_id,
+            pl.PROD_LINE_CODE,
+            pc.WORKCELL_CODE
+        FROM
+            hme_wip_stocktake_actual hwsa,
+            mt_material_lot mml
+        LEFT JOIN mt_eo eo ON mml.IDENTIFICATION = eo.IDENTIFICATION
+        LEFT JOIN mt_eo_router_actual era ON eo.EO_ID = era.EO_ID
+        LEFT JOIN mt_eo_step_actual esa ON era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+        LEFT JOIN mt_eo_step_wip esw ON esa.EO_STEP_ACTUAL_ID = esw.EO_STEP_ACTUAL_ID
+        LEFT JOIN mt_mod_organization_rel mor_st ON mor_st.TOP_SITE_ID = mml.SITE_ID
+        AND mor_st.ORGANIZATION_ID = esw.WORKCELL_ID
+        AND mor_st.ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_organization_rel mor_pc ON mor_pc.TOP_SITE_ID = mml.SITE_ID
+        AND mor_pc.ORGANIZATION_ID = mor_st.PARENT_ORGANIZATION_ID
+        AND mor_pc.ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_organization_rel mor_wkc ON mor_wkc.TOP_SITE_ID = mml.SITE_ID
+        AND mor_wkc.ORGANIZATION_ID = mor_pc.PARENT_ORGANIZATION_ID
+        AND mor_wkc.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_production_line pl ON pl.PROD_LINE_ID = mor_wkc.parent_organization_id
+        LEFT JOIN mt_mod_workcell pc ON pc.WORKCELL_ID = mor_pc.organization_id
+        WHERE hwsa.stocktake_id = #{stocktakeId}
+        and hwsa.ATTRIBUTE1 in
+        <foreach collection="materialLotIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        AND hwsa.tenant_id = #{tenantId}
+        AND mml.MATERIAL_LOT_ID = hwsa.material_lot_id
+    </select>
+
+    <select id="selectCosMaterialLots" resultType="com.ruike.hme.domain.vo.WipStocktakeMaterialLotWorkVO">
+        select distinct mml.material_lot_id
+        , mml.material_id
+        , mml.material_lot_code
+        , mm.material_code
+        , mor_st.parent_organization_id as workcell_id
+        , mor_wkc.parent_organization_id as prod_line_id
+        , mmla_wo.attr_value work_order_id
+        , mm.MATERIAL_NAME
+        , mmla.ATTR_VALUE material_version
+        , uom.UOM_ID
+        , uom.UOM_CODE
+        , mml.PRIMARY_UOM_QTY quantity
+        , pl.PROD_LINE_CODE
+        , pc.WORKCELL_CODE
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla_wo on mmla_wo.material_lot_id = mml.material_lot_id and mmla_wo.attr_name =
+        'WORK_ORDER_ID'
+        left join (select ejs.material_lot_id
+        ,ejs.workcell_id
+        from hme_eo_job_sn ejs
+        where ejs.material_lot_id in
+        <foreach collection="materialLotIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and ejs.site_in_date = (select max(ejs1.site_in_date)
+        from hme_eo_job_sn ejs1
+        where ejs1.material_lot_id = ejs.material_lot_id)) js on js.material_lot_id = mml.MATERIAL_LOT_ID
+        left join mt_mod_organization_rel mor_st on mor_st.TOP_SITE_ID = #{siteId}
+        and mor_st.ORGANIZATION_ID = js.WORKCELL_ID and mor_st.ORGANIZATION_TYPE = 'WORKCELL'
+        left join mt_mod_organization_rel mor_pc on mor_pc.TOP_SITE_ID = mor_st.TOP_SITE_ID
+        and mor_pc.ORGANIZATION_ID = mor_st.PARENT_ORGANIZATION_ID
+        and mor_pc.ORGANIZATION_TYPE = 'WORKCELL'
+        left join mt_mod_organization_rel mor_wkc on mor_wkc.TOP_SITE_ID = mor_st.TOP_SITE_ID
+        and mor_wkc.ORGANIZATION_ID = mor_pc.PARENT_ORGANIZATION_ID and mor_wkc.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        and mor_wkc.ORGANIZATION_TYPE = 'WORKCELL'
+        left join mt_material_lot_attr mmla on mmla.material_lot_id = mml.material_lot_id and mmla.attr_name =
+        'MATERIAL_VERSION'
+        left join mt_mod_production_line pl on pl.PROD_LINE_ID = mor_wkc.parent_organization_id
+        left join mt_mod_workcell pc on pc.WORKCELL_ID = mor_pc.organization_id
+        ,mt_material mm
+        , mt_uom uom
+        where mml.MATERIAL_ID = mm.MATERIAL_ID
+        and mml.PRIMARY_UOM_ID = uom.UOM_ID
+        and mml.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mml.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectSnDetails" resultType="com.ruike.hme.api.dto.WipStocktakeExecSnRepresentationDTO">
+        select hwsa.material_id,
+        mm.material_code,
+        mm.material_name,
+        mmla.attr_value material_version,
+        hwsa.prod_line_id,
+        mmpl.prod_line_code,
+        mmpl.prod_line_name,
+        hwsa.workcell_id,
+        mmw.workcell_code,
+        mmw.workcell_name,
+        hwsa.material_lot_id,
+        mml.material_lot_code,
+        hwsa.current_quantity,
+        hwsa.uom_id,
+        mu.uom_code,
+        hwsa.firstcount_quantity as firstcount_quantity,
+        hwsa.firstcount_prod_line_id,
+        mmpl_first.prod_line_code as firstcount_prod_line_code,
+        hwsa.firstcount_workcell_id,
+        mmw_first.workcell_code as firstcount_workcell_code,
+        hwsa.recount_quantity as recount_quantity,
+        hwsa.recount_prod_line_id,
+        mmpl_recount.prod_line_code as recount_prod_line_code,
+        hwsa.recount_workcell_id,
+        mmw_recount.workcell_code as recount_workcell_code,
+        mml.current_container_id as container_id,
+        mc.container_code
+        from hme_wip_stocktake_actual hwsa
+        join hme_wip_stocktake_doc hwsd
+        on hwsa.stocktake_id = hwsd.stocktake_id
+        join mt_material_lot mml
+        on mml.material_lot_id = hwsa.material_lot_id
+        left join mt_container mc on mml.current_container_id = mc.container_id
+        left join mt_material_lot_attr mmla on mml.material_lot_id = mmla.material_lot_id
+        and mmla.attr_name = 'MATERIAL_VERSION'
+        left join mt_material mm
+        on mm.MATERIAL_ID = hwsa.material_id
+        left join mt_uom mu
+        on mu.UOM_ID = hwsa.uom_id
+        left join mt_mod_production_line mmpl
+        on mmpl.PROD_LINE_ID = hwsa.prod_line_id
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = hwsa.workcell_id
+        left join mt_mod_production_line mmpl_first
+        on mmpl_first.PROD_LINE_ID = hwsa.firstcount_prod_line_id
+        left join mt_mod_workcell mmw_first
+        on mmw_first.WORKCELL_ID = hwsa.firstcount_workcell_id
+        left join mt_mod_production_line mmpl_recount
+        on mmpl_recount.PROD_LINE_ID = hwsa.recount_prod_line_id
+        left join mt_mod_workcell mmw_recount
+        on mmw_recount.WORKCELL_ID = hwsa.recount_workcell_id
+        where hwsd.stocktake_id = #{query.stocktakeId}
+        <if test="query.materialLotCode != null">
+            <bind name="materialLotCodeLike" value="'%'+query.materialLotCode+'%'"/>
+            and mml.material_lot_code like #{materialLotCodeLike}
+        </if>
+        and hwsd.tenant_id = #{tenantId}
+    </select>
+</mapper>

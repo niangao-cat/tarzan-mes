@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsCostCtrMaterialMapper">
+
+    <select id="selectDocCondition" resultType="com.ruike.wms.api.dto.WmsCostCtrMaterialDTO">
+        SELECT
+          mid.INSTRUCTION_DOC_ID,
+          mid.INSTRUCTION_DOC_NUM,
+          mid.INSTRUCTION_DOC_TYPE,
+          mid.INSTRUCTION_DOC_STATUS,
+          mid.SITE_ID,
+          mms.SITE_CODE,
+          mms.SITE_NAME,
+          settle_attr.ATTR_VALUE AS ORDER_TYPE,
+          CASE settle_attr.ATTR_VALUE
+          WHEN 'COST_CENTER' THEN
+            mc.COSTCENTER_CODE
+          WHEN 'INTERNAL_ORDER' THEN
+            wio.INTERNAL_ORDER
+          END AS COST_CENTER_CODE,
+          mid.REMARK,
+          settle_attr.ATTR_VALUE AS SETTLE_ACCOUNTS,
+          print_attr.ATTR_VALUE AS PRINT_FLAG,
+          order_attr.ATTR_VALUE AS INTERNAL_ORDER_ID
+        FROM
+          mt_instruction_doc mid
+        LEFT JOIN mt_mod_site mms ON mms.SITE_ID = mid.SITE_ID
+        LEFT JOIN mt_costcenter mc ON mc.COSTCENTER_ID = mid.COST_CENTER_ID
+        LEFT JOIN mt_instruction_doc_attr settle_attr ON settle_attr.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND settle_attr.ATTR_NAME = 'SETTLE_ACCOUNTS'
+        LEFT JOIN mt_instruction_doc_attr print_attr ON print_attr.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND print_attr.ATTR_NAME = 'PRINT_FLAG'
+        LEFT JOIN mt_instruction_doc_attr order_attr ON order_attr.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+        AND order_attr.ATTR_NAME = 'INTERNAL_ORDER_ID'
+        LEFT JOIN wms_internal_order wio ON wio.INTERNAL_ORDER_ID = order_attr.ATTR_VALUE
+        WHERE mid.TENANT_ID = #{tenantId}
+        <if test="instructionDocNum != null">
+            and mid.INSTRUCTION_DOC_NUM = #{instructionDocNum}
+        </if>
+    </select>
+
+    <select id="selectDocLineCondition" resultType="com.ruike.wms.api.dto.WmsCostCtrMaterialDTO2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+          mi.INSTRUCTION_ID,
+          mi.INSTRUCTION_NUM,
+          mi.INSTRUCTION_STATUS,
+          mi.MATERIAL_ID,
+          mi.SITE_ID,
+          item.MATERIAL_CODE,
+          tl.MATERIAL_NAME,
+          mi.QUANTITY,
+          mi.FROM_LOCATOR_ID AS FROM_WAREHOUSE_ID,
+          warehouse.LOCATOR_CODE AS FROM_WAREHOUSE_CODE,
+          warehouse_tl.LOCATOR_NAME AS FROM_WAREHOUSE_NAME,
+        arv1.ATTR_VALUE MATERIAL_VERSION,
+        arv2.ATTR_VALUE FROM_LOCATOR_ID,
+        mia.ACTUAL_QTY,
+        mi.UOM_ID,
+        mu.UOM_CODE,
+        (SELECT count(1) FROM mt_instruction_actual_detail WHERE ACTUAL_ID = mia.actual_id) codeQty
+        FROM
+        mt_instruction mi
+        INNER JOIN mt_uom mu on mi.UOM_ID = mu.UOM_ID
+        LEFT JOIN mt_instruction_attr arv1 ON mi.INSTRUCTION_ID = arv1.INSTRUCTION_ID AND mi.TENANT_ID = arv1.TENANT_ID
+        AND arv1.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_instruction_attr arv2 ON mi.INSTRUCTION_ID = arv2.INSTRUCTION_ID AND mi.TENANT_ID = arv2.TENANT_ID
+        AND arv2.ATTR_NAME = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_instruction_actual mia ON mi.INSTRUCTION_ID = mia.INSTRUCTION_ID
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = mi.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID AND tl.LANG = #{lang}
+        LEFT JOIN mt_mod_locator warehouse ON warehouse.LOCATOR_ID = mi.FROM_LOCATOR_ID
+        LEFT JOIN mt_mod_locator_tl warehouse_tl ON warehouse_tl.LOCATOR_ID = warehouse.LOCATOR_ID
+        AND warehouse_tl.LANG = #{lang}
+        WHERE mi.TENANT_ID = #{tenantId}
+        AND mi.INSTRUCTION_STATUS != 'COMPLETE'
+        <if test="sourceDocId != null">
+            and mi.SOURCE_DOC_ID = #{sourceDocId}
+        </if>
+        <if test="instructionId != null">
+            and mi.INSTRUCTION_ID = #{instructionId}
+        </if>
+    </select>
+
+    <select id="selectMaterialLotCondition" resultType="com.ruike.wms.api.dto.WmsCostCtrMaterialDTO3">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+          mml.MATERIAL_LOT_ID,
+          mml.MATERIAL_LOT_CODE,
+          mml.SITE_ID,
+          site.SITE_CODE,
+          mml.ENABLE_FLAG,
+          mml.QUALITY_STATUS,
+          mml.MATERIAL_ID,
+          item.MATERIAL_CODE,
+          tl.MATERIAL_NAME,
+          mml.PRIMARY_UOM_ID,
+          uom.UOM_CODE AS PRIMARY_UOM_CODE,
+          uom_tl.UOM_NAME AS PRIMARY_UOM_NAME,
+          mml.PRIMARY_UOM_QTY,
+          mla_mv.ATTR_VALUE MATERIAL_VERSION,
+          mml.LOCATOR_ID,
+          locator.LOCATOR_CODE,
+          locator.PARENT_LOCATOR_ID AS WAREHOUSE_ID,
+          warehouse.LOCATOR_CODE AS WAREHOUSE_CODE,
+          mml.LOT,
+          mml.FREEZE_FLAG,
+          mml.STOCKTAKE_FLAG
+        FROM
+          mt_material_lot mml
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = mml.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+          AND tl.LANG = #{lang}
+        LEFT JOIN mt_uom uom ON uom.UOM_ID = mml.PRIMARY_UOM_ID
+        LEFT JOIN mt_uom_tl uom_tl ON uom_tl.UOM_ID = uom.UOM_ID
+          AND uom_tl.LANG = #{lang}
+        LEFT JOIN mt_material_lot_attr mla_mv ON mla_mv.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID and mla_mv.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_mod_site site ON site.SITE_ID = mml.SITE_ID
+        LEFT JOIN mt_mod_locator locator ON locator.LOCATOR_ID = mml.LOCATOR_ID
+        LEFT JOIN mt_mod_locator warehouse ON warehouse.LOCATOR_ID = locator.PARENT_LOCATOR_ID
+        WHERE mml.TENANT_ID = #{tenantId}
+        <if test="materialLotIds != null">
+            AND mml.MATERIAL_LOT_ID in
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectExcess" resultType="java.util.Map">
+        SELECT
+            mi.instruction_id,
+			mma5.ATTR_VALUE EXCESS_SETTING,
+			mma6.ATTR_VALUE EXCESS_VALUE
+        FROM
+            mt_instruction mi
+            left join mt_instruction_attr mma5 on mma5.instruction_id = mi.INSTRUCTION_ID
+						AND mma5.ATTR_NAME = 'EXCESS_SETTING'
+            left join mt_instruction_attr mma6 on mma6.instruction_id = mi.INSTRUCTION_ID
+						AND mma6.ATTR_NAME = 'EXCESS_VALUE'
+        WHERE
+            mi.TENANT_ID = #{tenantId}
+            and mi.INSTRUCTION_ID = #{instructionId}
+    </select>
+</mapper>

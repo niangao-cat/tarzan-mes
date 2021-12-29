@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtMaterialLotHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtMaterialLotHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_LOT_HIS_ID" property="materialLotHisId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_CODE" property="materialLotCode" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="QUALITY_STATUS" property="qualityStatus" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_ID" property="primaryUomId" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_QTY" property="primaryUomQty" jdbcType="DECIMAL"/>
+        <result column="SECONDARY_UOM_ID" property="secondaryUomId" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_UOM_QTY" property="secondaryUomQty" jdbcType="DECIMAL"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_POINT_ID" property="assemblePointId" jdbcType="VARCHAR"/>
+        <result column="LOAD_TIME" property="loadTime" jdbcType="TIMESTAMP"/>
+        <result column="UNLOAD_TIME" property="unloadTime" jdbcType="TIMESTAMP"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+        <result column="LOT" property="lot" jdbcType="VARCHAR"/>
+        <result column="OVEN_NUMBER" property="ovenNumber" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="RESERVED_FLAG" property="reservedFlag" jdbcType="VARCHAR"/>
+        <result column="RESERVED_OBJECT_TYPE" property="reservedObjectType" jdbcType="VARCHAR"/>
+        <result column="RESERVED_OBJECT_ID" property="reservedObjectId" jdbcType="VARCHAR"/>
+        <result column="CREATE_REASON" property="createReason" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="IN_LOCATOR_TIME" property="inLocatorTime" jdbcType="TIMESTAMP"/>
+        <result column="FREEZE_FLAG" property="freezeFlag" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="TRX_PRIMARY_QTY" property="trxPrimaryQty" jdbcType="DECIMAL"/>
+        <result column="TRX_SECONDARY_QTY" property="trxSecondaryQty" jdbcType="DECIMAL"/>
+        <result column="STOCKTAKE_FLAG" property="stocktakeFlag" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="IN_SITE_TIME" property="inSiteTime" jdbcType="TIMESTAMP"/>
+        <result column="CURRENT_CONTAINER_ID" property="currentContainerId" jdbcType="VARCHAR"/>
+        <result column="TOP_CONTAINER_ID " property="topContainerId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_ID" property="instructionDocId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByEventIds" resultMap="BaseResultMap">
+        SELECT *
+        FROM mt_material_lot_his
+        WHERE TENANT_ID = ${tenantId}
+        AND EVENT_ID IN
+        <foreach collection="eventIds" index="i" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectMaterialLotEventLimit" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_material_lot_his t,
+        mt_event e
+        WHERE
+        t.EVENT_ID = e.EVENT_ID
+        AND t.TENANT_ID = ${tenantId}
+        AND e.TENANT_ID = ${tenantId}
+        AND t.MATERIAL_LOT_ID = #{dto.materialLotId}
+        <if test="dto.eventId != null">
+            AND t.EVENT_ID = #{dto.eventId}
+        </if>
+        <if test="dto.eventBy != null">
+            AND e.EVENT_BY = #{dto.eventBy}
+        </if>
+        <if test="dto.eventTimeFrom != null">
+            AND DATE_FORMAT(e.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &gt;= DATE_FORMAT(#{dto.eventTimeFrom},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="dto.eventTimeTo != null">
+            AND DATE_FORMAT(e.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &lt;= DATE_FORMAT(#{dto.eventTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+    <select id="materialLotLatestHisGet" resultType="tarzan.inventory.domain.vo.MtMaterialLotHisVO3">
+         SELECT
+  his.MATERIAL_LOT_HIS_ID,
+  his.EVENT_ID
+    FROM
+ mt_material_lot_his his
+  WHERE
+  his.TENANT_ID=#{tenantId}
+AND his.MATERIAL_LOT_ID = #{materialLotId}
+ORDER BY
+ CAST( his.MATERIAL_LOT_HIS_ID AS DECIMAL ( 36 ) ) DESC
+ LIMIT 1
+    </select>
+    <select id="materialLotHisBatchGet" resultMap="BaseResultMap">
+        select * from mt_material_lot_his t
+        where t.TENANT_ID = ${tenantId}
+        AND t.MATERIAL_LOT_HIS_ID IN
+        <foreach collection="hisIds" open="(" index="index" item="item" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

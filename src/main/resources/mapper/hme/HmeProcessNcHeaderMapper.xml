@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeProcessNcHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeProcessNcHeader">
+        <result column="header_id" property="headerId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="product_code" property="productCode" jdbcType="VARCHAR"/>
+        <result column="cos_model" property="cosModel" jdbcType="VARCHAR"/>
+        <result column="operation_id" property="operationId" jdbcType="VARCHAR"/>
+        <result column="data_type" property="dataType" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="chip_combination" property="chipCombination" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectProcessHeader" resultType="com.ruike.hme.domain.vo.HmeProcessNcHeaderVO">
+        SELECT
+        pnh.header_id,
+        pnh.material_id,
+        pnh.operation_id,
+        pnh.product_code,
+        pnh.cos_model,
+        pnh.chip_combination,
+        pnh.status,
+        mm.material_code,
+        mo.operation_name,
+        mo.description,
+        pnh.workcell_id,
+        mmw.WORKCELL_CODE,
+        mmw.WORKCELL_NAME
+        FROM
+        hme_process_nc_header pnh
+        left join mt_mod_workcell mmw on pnh.workcell_id = mmw.workcell_id,
+        mt_material mm,
+            mt_operation mo
+        WHERE
+            pnh.material_id = mm.material_id
+            and pnh.operation_id = mo.operation_id
+            and pnh.tenant_id = #{tenantId}
+        <if test="hmeProcessNcHeaderDTO.materialId != null and hmeProcessNcHeaderDTO.materialId != ''">
+            and pnh.material_id = #{hmeProcessNcHeaderDTO.materialId}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.productCode != null and hmeProcessNcHeaderDTO.productCode != ''">
+            and pnh.product_code = #{hmeProcessNcHeaderDTO.productCode}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.cosModel != null and hmeProcessNcHeaderDTO.cosModel != ''">
+            and pnh.cos_model = #{hmeProcessNcHeaderDTO.cosModel}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.operationId != null and hmeProcessNcHeaderDTO.operationId != ''">
+            and pnh.operation_id = #{hmeProcessNcHeaderDTO.operationId}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.workcellId != null and hmeProcessNcHeaderDTO.workcellId != ''">
+            and pnh.workcell_id = #{hmeProcessNcHeaderDTO.workcellId}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.chipCombination != null and hmeProcessNcHeaderDTO.chipCombination != ''">
+            and pnh.chip_combination LIKE CONCAT('%', #{hmeProcessNcHeaderDTO.chipCombination}, '%')
+        </if>
+        <if test="hmeProcessNcHeaderDTO.status != null and hmeProcessNcHeaderDTO.status != ''">
+            and pnh.status = #{hmeProcessNcHeaderDTO.status}
+        </if>
+    </select>
+
+    <select id="queryProcessNcHeader" resultType="com.ruike.hme.domain.entity.HmeProcessNcHeader">
+        SELECT
+        pnh.header_id
+        FROM
+        hme_process_nc_header pnh
+        WHERE pnh.tenant_id = #{tenantId}
+        AND pnh.material_id = #{importDTO.materialId}
+        AND pnh.product_code = #{importDTO.productCode}
+        AND pnh.cos_model = #{importDTO.cosModel}
+        <choose>
+            <when test="importDTO.chipCombination != null">
+                AND pnh.chip_combination = #{importDTO.chipCombination}
+            </when>
+            <otherwise>
+                AND (pnh.chip_combination is null OR pnh.chip_combination = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="importDTO.operationId != null">
+                AND pnh.operation_id = #{importDTO.operationId}
+            </when>
+            <otherwise>
+                AND (pnh.operation_id is null OR pnh.operation_id = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <update id="batchHeaderUpdate">
+        UPDATE hme_process_nc_header
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            status =
+            <foreach collection="headerList" item="item" index="index"
+                     separator=" " open="case header_id" close="end">
+                when #{item.headerId} then #{item.status}
+            </foreach>,
+            workcell_id =
+            <foreach collection="headerList" item="item" index="index"
+                     separator=" " open="case header_id" close="end">
+                when #{item.headerId} then #{item.workcellId}
+            </foreach>
+        </set>
+        <where>
+            header_id in
+            <foreach collection="headerList" item="item"
+                     separator="," open="(" close=")">
+                #{item.headerId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="processNcExport" resultType="com.ruike.hme.domain.vo.HmeProcessNcVO">
+        SELECT
+        pnh.header_id,
+        pnh.material_id,
+        pnh.operation_id,
+        pnh.product_code,
+        pnh.cos_model,
+        pnh.chip_combination,
+        pnh.status,
+        mm.material_code,
+        mo.operation_name,
+        mo.description,
+        pnh.workcell_id,
+        mmw.WORKCELL_CODE,
+        mmw.WORKCELL_NAME,
+        pnl.line_id,
+        pnl.tag_id,
+        pnl.tag_group_id,
+        pnl.priority,
+        pnl.standard_code,
+        t.tag_code,
+        t.tag_description,
+        tg.tag_group_code,
+        tg.tag_group_description,
+        pnd.detail_id,
+        pnd.standard_code as detail_standard_code,
+        pnd.max_value,
+        pnd.min_value,
+        pnd.nc_code_id,
+        nc.nc_code
+        FROM
+        hme_process_nc_header pnh
+        left join mt_mod_workcell mmw on pnh.workcell_id = mmw.workcell_id
+        left join hme_process_nc_line pnl on pnl.header_id = pnh.header_id and pnl.tenant_id = pnh.tenant_id
+        left join mt_tag_group tg ON pnl.tag_group_id = tg.tag_group_id
+        left join mt_tag t on t.tag_id = pnl.tag_id
+        left join hme_process_nc_detail pnd on pnd.line_id = pnl.line_id and pnd.tenant_id = pnl.tenant_id
+        LEFT JOIN mt_nc_code nc ON pnd.nc_code_id = nc.nc_code_id,
+        mt_material mm,
+        mt_operation mo
+        WHERE
+        pnh.material_id = mm.material_id
+        and pnh.operation_id = mo.operation_id
+        and pnh.tenant_id = #{tenantId}
+        <if test="hmeProcessNcHeaderDTO.materialId != null and hmeProcessNcHeaderDTO.materialId != ''">
+            and pnh.material_id = #{hmeProcessNcHeaderDTO.materialId}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.productCode != null and hmeProcessNcHeaderDTO.productCode != ''">
+            and pnh.product_code = #{hmeProcessNcHeaderDTO.productCode}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.cosModel != null and hmeProcessNcHeaderDTO.cosModel != ''">
+            and pnh.cos_model = #{hmeProcessNcHeaderDTO.cosModel}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.operationId != null and hmeProcessNcHeaderDTO.operationId != ''">
+            and pnh.operation_id = #{hmeProcessNcHeaderDTO.operationId}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.workcellId != null and hmeProcessNcHeaderDTO.workcellId != ''">
+            and pnh.workcell_id = #{hmeProcessNcHeaderDTO.workcellId}
+        </if>
+        <if test="hmeProcessNcHeaderDTO.chipCombination != null and hmeProcessNcHeaderDTO.chipCombination != ''">
+            and pnh.chip_combination LIKE CONCAT('%', #{hmeProcessNcHeaderDTO.chipCombination}, '%')
+        </if>
+        <if test="hmeProcessNcHeaderDTO.status != null and hmeProcessNcHeaderDTO.status != ''">
+            and pnh.status = #{hmeProcessNcHeaderDTO.status}
+        </if>
+    </select>
+
+    <resultMap id="ProcessNcInfoMap" type="com.ruike.hme.domain.vo.HmeProcessNcHeaderVO2">
+        <result column="header_id" property="headerId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="product_code" property="productCode" jdbcType="VARCHAR"/>
+        <result column="cos_model" property="cosModel" jdbcType="VARCHAR"/>
+        <result column="station_id" property="stationId" jdbcType="VARCHAR"/>
+        <result column="chip_combination" property="chipCombination" jdbcType="VARCHAR"/>
+        <result column="cos_model" property="cosModel" jdbcType="VARCHAR"/>
+        <result column="station_id" property="stationId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <collection property="lineList" resultMap="ProcessNcInfoLineMap"/>
+    </resultMap>
+    <resultMap id="ProcessNcInfoLineMap" type="com.ruike.hme.domain.vo.HmeProcessNcLineVO2">
+        <result column="line_id" property="lineId" jdbcType="VARCHAR"/>
+        <result column="tag_id" property="tagId" jdbcType="VARCHAR"/>
+        <result column="tag_group_id" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="priority" property="priority" jdbcType="VARCHAR"/>
+        <result column="standard_code" property="standardCode" jdbcType="VARCHAR"/>
+        <collection property="detailList" resultMap="ProcessNcInfoDetailMap"/>
+    </resultMap>
+    <resultMap id="ProcessNcInfoDetailMap" type="com.ruike.hme.domain.vo.HmeProcessNcDetailVO2">
+        <result column="detail_id" property="detailId" jdbcType="VARCHAR"/>
+        <result column="max_value" property="maxValue" jdbcType="DECIMAL"/>
+        <result column="min_value" property="minValue" jdbcType="DECIMAL"/>
+        <result column="nc_group_id" property="ncGroupId" jdbcType="VARCHAR"/>
+        <result column="nc_code_id" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="detail_standard_code" property="detailStandardCode" jdbcType="VARCHAR"/>
+        <result column="nc_code" property="ncCode" jdbcType="VARCHAR"/>
+        <result column="nc_description" property="ncDescription" jdbcType="VARCHAR"/>
+        <result column="rework_flag" property="reworkFlag" jdbcType="VARCHAR"/>
+        <result column="downgrade_flag" property="downgradeFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryProcessNcInfoForReflectorNcRecordValidate" resultMap="ProcessNcInfoMap">
+        select
+        pnh.header_id,
+        pnl.line_id,
+        pnl.tag_id,
+        pnl.tag_group_id,
+        pnl.priority,
+        pnl.standard_code,
+        pnd.detail_id,
+        pnd.standard_code detail_standard_code,
+        mnsc.NC_OBJECT_ID AS NC_GROUP_ID,
+        pnd.nc_code_id,
+        pnd.max_value,
+        pnd.min_value,
+        nc.nc_code,
+        pnh.chip_combination,
+        nc.DESCRIPTION AS nc_description,
+        mnca.ATTR_VALUE AS REWORK_FLAG,
+        mncat.ATTR_VALUE AS DOWNGRADE_FLAG
+        from
+        hme_process_nc_header pnh,
+        hme_process_nc_line pnl,
+        hme_process_nc_detail pnd
+        left join mt_nc_code nc on nc.nc_code_id = pnd.nc_code_id
+        LEFT JOIN mt_nc_secondary_code mnsc ON mnsc.NC_OBJECT_TYPE = 'NC_GROUP'
+        AND mnsc.NC_CODE_ID = nc.nc_code_id
+        AND mnsc.TENANT_ID = nc.TENANT_ID
+        LEFT JOIN mt_nc_code_attr mnca ON mnca.tenant_id = nc.tenant_id
+        AND mnca.NC_CODE_ID = nc.NC_CODE_ID
+        AND mnca.ATTR_NAME = 'REWORK_FLAG'
+        LEFT JOIN mt_nc_code_attr mncat ON mncat.tenant_id = nc.tenant_id
+        AND mncat.NC_CODE_ID = nc.NC_CODE_ID
+        AND mncat.ATTR_NAME = 'DOWNGRADE_FLAG'
+        where pnl.header_id = pnh.header_id
+        and pnd.header_id = pnh.header_id
+        and pnd.line_id = pnl.line_id
+        and pnh.tenant_id = #{tenantId}
+        and pnh.operation_id = #{operationId}
+        and pnh.material_id = #{materialId}
+        and pnh.cos_model = #{cosModel}
+        <if test="chipCombination != null and chipCombination != ''">
+            and pnh.chip_combination = #{chipCombination}
+        </if>
+        and pnh.status IN ( 'CREATE', 'RELEASE' )
+    </select>
+
+    <select id="queryProcessNcInfoForNcRecordValidate" resultMap="ProcessNcInfoMap">
+        select
+        pnh.header_id,
+        pnl.line_id,
+        pnl.tag_id,
+        pnl.tag_group_id,
+        pnl.priority,
+        pnl.standard_code,
+        pnd.detail_id,
+        pnd.standard_code detail_standard_code,
+        mnsc.NC_OBJECT_ID AS NC_GROUP_ID,
+        pnd.nc_code_id,
+        pnd.max_value,
+        pnd.min_value,
+        nc.nc_code,
+        pnh.chip_combination,
+        nc.DESCRIPTION AS nc_description,
+        mnca.ATTR_VALUE AS REWORK_FLAG,
+        mncat.ATTR_VALUE AS DOWNGRADE_FLAG
+        from
+        hme_process_nc_header pnh,
+        hme_process_nc_line pnl,
+        hme_process_nc_detail pnd
+        left join mt_nc_code nc on nc.nc_code_id = pnd.nc_code_id
+        LEFT JOIN mt_nc_secondary_code mnsc ON mnsc.NC_OBJECT_TYPE = 'NC_GROUP'
+        AND mnsc.NC_CODE_ID = nc.nc_code_id
+        AND mnsc.TENANT_ID = nc.TENANT_ID
+        LEFT JOIN mt_nc_code_attr mnca ON mnca.tenant_id = nc.tenant_id
+        AND mnca.NC_CODE_ID = nc.NC_CODE_ID
+        AND mnca.ATTR_NAME = 'REWORK_FLAG'
+        LEFT JOIN mt_nc_code_attr mncat ON mncat.tenant_id = nc.tenant_id
+        AND mncat.NC_CODE_ID = nc.NC_CODE_ID
+        AND mncat.ATTR_NAME = 'DOWNGRADE_FLAG'
+        where pnl.header_id = pnh.header_id
+        and pnd.header_id = pnh.header_id
+        and pnd.line_id = pnl.line_id
+        and pnh.tenant_id = #{tenantId}
+        and pnh.operation_id = #{operationId}
+        and pnh.material_id = #{materialId}
+        and pnh.product_code = #{productCode}
+        and pnh.cos_model = #{cosModel}
+        <if test="chipCombination != null and chipCombination != ''">
+            and pnh.chip_combination = #{chipCombination}
+        </if>
+        and pnh.status IN ( 'CREATE', 'RELEASE' )
+    </select>
+
+    <select id="batchQueryProcessNcInfoForNcRecordValidate" resultMap="ProcessNcInfoMap">
+        select
+            pnh.header_id,
+            pnh.material_id,
+            pnh.product_code,
+            pnh.cos_model,
+            pnl.line_id,
+            pnl.tag_id,
+            pnl.tag_group_id,
+            pnl.priority,
+            pnl.standard_code,
+            pnd.detail_id,
+            pnd.standard_code detail_standard_code,
+            mnsc.NC_OBJECT_ID AS NC_GROUP_ID,
+            pnd.nc_code_id,
+            pnd.max_value,
+            pnd.min_value,
+            nc.nc_code,
+            pnh.chip_combination,
+            nc.DESCRIPTION AS nc_description,
+        mnca.ATTR_VALUE AS REWORK_FLAG,
+        mncat.ATTR_VALUE AS DOWNGRADE_FLAG
+        from
+            hme_process_nc_header pnh,
+            hme_process_nc_line pnl,
+            hme_process_nc_detail pnd
+            left join mt_nc_code nc on nc.nc_code_id = pnd.nc_code_id
+            LEFT JOIN mt_nc_secondary_code mnsc ON mnsc.NC_OBJECT_TYPE = 'NC_GROUP'
+            AND mnsc.NC_CODE_ID = nc.nc_code_id
+            AND mnsc.TENANT_ID = nc.TENANT_ID
+        LEFT JOIN mt_nc_code_attr mnca ON mnca.tenant_id = nc.tenant_id
+        AND mnca.NC_CODE_ID = nc.NC_CODE_ID
+        AND mnca.ATTR_NAME = 'REWORK_FLAG'
+        LEFT JOIN mt_nc_code_attr mncat ON mncat.tenant_id = nc.tenant_id
+        AND mncat.NC_CODE_ID = nc.NC_CODE_ID
+        AND mncat.ATTR_NAME = 'DOWNGRADE_FLAG'
+        where pnl.header_id = pnh.header_id
+        and pnd.header_id = pnh.header_id
+        and pnd.line_id = pnl.line_id
+        and pnh.tenant_id = #{tenantId}
+        and pnh.operation_id = #{operationId}
+        and pnh.material_id in
+        <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and pnh.status IN ( 'CREATE', 'RELEASE' )
+    </select>
+
+    <select id="queryProcessNcInfoForAgeingNcRecordValidate" resultMap="ProcessNcInfoMap">
+        select
+        pnh.header_id,
+        pnh.material_id,
+        pnh.cos_model,
+        pnh.workcell_id AS station_id,
+        pnl.line_id,
+        pnl.tag_id,
+        pnl.tag_group_id,
+        pnl.priority,
+        pnl.standard_code,
+        pnd.detail_id,
+        pnd.standard_code detail_standard_code,
+        mnsc.NC_OBJECT_ID AS NC_GROUP_ID,
+        pnd.nc_code_id,
+        pnd.max_value,
+        pnd.min_value,
+        nc.nc_code,
+        mnca.ATTR_VALUE AS REWORK_FLAG,
+        mncat.ATTR_VALUE AS DOWNGRADE_FLAG,
+        nc.DESCRIPTION AS nc_description
+        from
+        hme_process_nc_header pnh,
+        hme_process_nc_line pnl,
+        hme_process_nc_detail pnd
+        left join mt_nc_code nc on nc.nc_code_id = pnd.nc_code_id
+        LEFT JOIN mt_nc_secondary_code mnsc ON mnsc.NC_OBJECT_TYPE = 'NC_GROUP'
+        AND mnsc.NC_CODE_ID = nc.nc_code_id
+        AND mnsc.TENANT_ID = nc.TENANT_ID
+        LEFT JOIN mt_nc_code_attr mnca ON mnca.tenant_id = nc.tenant_id
+        AND mnca.NC_CODE_ID = nc.NC_CODE_ID
+        AND mnca.ATTR_NAME = 'REWORK_FLAG'
+        LEFT JOIN mt_nc_code_attr mncat ON mncat.tenant_id = nc.tenant_id
+        AND mncat.NC_CODE_ID = nc.NC_CODE_ID
+        AND mncat.ATTR_NAME = 'DOWNGRADE_FLAG'
+        where pnl.header_id = pnh.header_id
+        and pnd.header_id = pnh.header_id
+        and pnd.line_id = pnl.line_id
+        and pnh.tenant_id = #{tenantId}
+        and pnh.operation_id = #{operationId}
+        <if test="stationId != null and stationId != ''">
+            and pnh.workcell_id = #{stationId}
+        </if>
+        and pnh.material_id = #{materialId}
+        <if test="cosModel != null and cosModel != ''">
+            and pnh.cos_model = #{cosModel}
+        </if>
+        and pnh.status IN ( 'CREATE', 'RELEASE' )
+    </select>
+
+    <select id="batchQueryProcessNcInfoForAgeingNcRecordValidate" resultMap="ProcessNcInfoMap">
+        select
+            pnh.header_id,
+            pnh.workcell_id station_id,
+            pnh.product_code,
+            pnl.line_id,
+            pnl.tag_id,
+            pnl.tag_group_id,
+            pnl.priority,
+            pnl.standard_code,
+            pnd.detail_id,
+            pnd.standard_code detail_standard_code,
+            mnsc.NC_OBJECT_ID AS NC_GROUP_ID,
+            pnd.nc_code_id,
+            pnd.max_value,
+            pnd.min_value,
+            nc.nc_code,
+            mnca.ATTR_VALUE AS REWORK_FLAG,
+            mncat.ATTR_VALUE AS DOWNGRADE_FLAG,
+            pnh.cos_model,
+            pnh.material_id,
+            nc.DESCRIPTION AS nc_description
+        from
+            hme_process_nc_header pnh,
+            hme_process_nc_line pnl,
+            hme_process_nc_detail pnd
+            left join mt_nc_code nc on nc.nc_code_id = pnd.nc_code_id
+            LEFT JOIN mt_nc_secondary_code mnsc ON mnsc.NC_OBJECT_TYPE = 'NC_GROUP'
+            AND mnsc.NC_CODE_ID = nc.nc_code_id
+            AND mnsc.TENANT_ID = nc.TENANT_ID
+            LEFT JOIN mt_nc_code_attr mnca ON mnca.tenant_id = nc.tenant_id
+                AND mnca.NC_CODE_ID = nc.NC_CODE_ID
+                AND mnca.ATTR_NAME = 'REWORK_FLAG'
+            LEFT JOIN mt_nc_code_attr mncat ON mncat.tenant_id = nc.tenant_id
+                AND mncat.NC_CODE_ID = nc.NC_CODE_ID
+                AND mncat.ATTR_NAME = 'DOWNGRADE_FLAG'
+        where pnl.header_id = pnh.header_id
+        and pnd.header_id = pnh.header_id
+        and pnd.line_id = pnl.line_id
+        and pnh.tenant_id = #{tenantId}
+        and pnh.operation_id = #{operationId}
+        and pnh.material_id in
+        <foreach collection="materialIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and pnh.status IN ( 'CREATE', 'RELEASE' )
+    </select>
+
+</mapper>

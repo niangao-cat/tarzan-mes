@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtDataRecordMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtDataRecord">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="DATA_RECORD_ID" property="dataRecordId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_MATERIAL_ID" property="componentMaterialId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_CONFIRM_ID" property="assembleConfirmId" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="TAG_VALUE" property="tagValue" jdbcType="VARCHAR"/>
+        <result column="TAG_CALCULATE_RESULT" property="tagCalculateResult" jdbcType="VARCHAR"/>
+        <result column="RECORD_REMARK" property="recordRemark" jdbcType="VARCHAR"/>
+        <result column="RECORD_DATE" property="recordDate" jdbcType="TIMESTAMP"/>
+        <result column="USER_ID" property="userId" jdbcType="VARCHAR"/>
+        <result column="TAG_CODE" property="tagCode" jdbcType="VARCHAR"/>
+        <result column="TAG_DESCRIPTION" property="tagDescription" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="TAG_ENABLE_FLAG" property="tagEnableFlag" jdbcType="VARCHAR"/>
+        <result column="VALUE_TYPE" property="valueType" jdbcType="VARCHAR"/>
+        <result column="TRUE_VALUE" property="trueValue" jdbcType="VARCHAR"/>
+        <result column="FALSE_VALUE" property="falseValue" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_METHOD" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="VALUE_ALLOW_MISSING" property="valueAllowMissing" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="MANDATORY_NUM" property="mandatoryNum" jdbcType="DECIMAL"/>
+        <result column="OPTIONAL_NUM" property="optionalNum" jdbcType="DECIMAL"/>
+        <result column="API_ID" property="apiId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_CODE" property="tagGroupCode" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_DESCRIPTION" property="tagGroupDescription" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_TYPE" property="tagGroupType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_GROUP_ID" property="sourceGroupId" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_STATUS" property="tagGroupStatus" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_TIME_CONTROL" property="collectionTimeControl" jdbcType="VARCHAR"/>
+        <result column="USER_VERIFICATION" property="userVerification" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdList" resultMap="BaseResultMap">
+        select * from mt_data_record
+        where TENANT_ID = ${tenantId}
+        AND DATA_RECORD_ID IN
+        <foreach collection="dataRecordIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectPropertyLimitDataRecord" resultMap="BaseResultMap">
+        select *
+        from mt_data_record
+        where TENANT_ID = ${tenantId}
+        <if test='dto.dataRecordId!=null'>
+            and DATA_RECORD_ID = #{dto.dataRecordId}
+        </if>
+        <if test='dto.eoId!=null'>
+            and EO_ID = #{dto.eoId}
+        </if>
+        <if test='dto.materialId!=null'>
+            and MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test='dto.operationId!=null'>
+            and OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test='dto.eoStepActualId!=null'>
+            and EO_STEP_ACTUAL_ID = #{dto.eoStepActualId}
+        </if>
+        <if test='dto.routerStepId!=null'>
+            and ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test='dto.workcellId!=null'>
+            and WORKCELL_ID = #{dto.workcellId}
+        </if>
+        <if test='dto.componentMaterialId!=null'>
+            and COMPONENT_MATERIAL_ID = #{dto.componentMaterialId}
+        </if>
+        <if test='dto.assembleConfirmId!=null'>
+            and ASSEMBLE_CONFIRM_ID = #{dto.assembleConfirmId}
+        </if>
+        <if test='dto.ncCodeId!=null'>
+            and NC_CODE_ID = #{dto.ncCodeId}
+        </if>
+        <if test='dto.tagGroupId!=null'>
+            and TAG_GROUP_ID = #{dto.tagGroupId}
+        </if>
+        <if test='dto.tagId!=null'>
+            and TAG_ID = #{dto.tagId}
+        </if>
+        <if test='dto.tagValue!=null'>
+            and TAG_VALUE = #{dto.tagValue}
+        </if>
+        <if test='dto.tagCalculateResult!=null'>
+            and TAG_CALCULATE_RESULT = #{dto.tagCalculateResult}
+        </if>
+        <if test='dto.recordRemark!=null'>
+            and RECORD_REMARK = #{dto.recordRemark}
+        </if>
+        <if test='dto.recordDateFrom!=null'>
+            and RECORD_DATE &gt;= DATE_FORMAT(#{dto.recordDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test='dto.recordDateTo!=null'>
+            and RECORD_DATE &lt;= DATE_FORMAT(#{dto.recordDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test='dto.userId!=null'>
+            and USER_ID = #{dto.userId}
+        </if>
+        <if test='dto.tagCode!=null'>
+            and TAG_CODE = #{dto.tagCode}
+        </if>
+        <if test='dto.tagDescription!=null'>
+            and TAG_DESCRIPTION = #{dto.tagDescription}
+        </if>
+        <if test='dto.remark!=null'>
+            and REMARK = #{dto.remark}
+        </if>
+        <if test='dto.tagEnableFlag!=null'>
+            and TAG_ENABLE_FLAG = #{dto.tagEnableFlag}
+        </if>
+        <if test='dto.valueType!=null'>
+            and VALUE_TYPE = #{dto.valueType}
+        </if>
+        <if test='dto.trueValue!=null'>
+            and TRUE_VALUE = #{dto.trueValue}
+        </if>
+        <if test='dto.falseValue!=null'>
+            and FALSE_VALUE = #{dto.falseValue}
+        </if>
+        <if test='dto.collectionMethod!=null'>
+            and COLLECTION_METHOD = #{dto.collectionMethod}
+        </if>
+        <if test='dto.valueAllowMissing!=null'>
+            and VALUE_ALLOW_MISSING = #{dto.valueAllowMissing}
+        </if>
+        <if test='dto.minimumValue!=null'>
+            and MINIMUM_VALUE = #{dto.minimumValue}
+        </if>
+        <if test='dto.maximalValue!=null'>
+            and MAXIMAL_VALUE = #{dto.maximalValue}
+        </if>
+        <if test='dto.unit!=null'>
+            and UNIT = #{dto.unit}
+        </if>
+        <if test='dto.mandatoryNum!=null'>
+            and MANDATORY_NUM = #{dto.mandatoryNum}
+        </if>
+        <if test='dto.optionalNum!=null'>
+            and OPTIONAL_NUM = #{dto.optionalNum}
+        </if>
+        <if test='dto.apiId!=null'>
+            and API_ID = #{dto.apiId}
+        </if>
+        <if test='dto.tagGroupCode!=null'>
+            and TAG_GROUP_CODE = #{dto.tagGroupCode}
+        </if>
+        <if test='dto.tagGroupDescription!=null'>
+            and TAG_GROUP_DESCRIPTION = #{dto.tagGroupDescription}
+        </if>
+        <if test='dto.tagGroupType!=null'>
+            and TAG_GROUP_TYPE = #{dto.tagGroupType}
+        </if>
+        <if test='dto.sourceGroupId!=null'>
+            and SOURCE_GROUP_ID = #{dto.sourceGroupId}
+        </if>
+        <if test='dto.businessType!=null'>
+            and BUSINESS_TYPE = #{dto.businessType}
+        </if>
+        <if test='dto.tagGroupStatus!=null'>
+            and TAG_GROUP_STATUS = #{dto.tagGroupStatus}
+        </if>
+        <if test='dto.collectionTimeControl!=null'>
+            and COLLECTION_TIME_CONTROL = #{dto.collectionTimeControl}
+        </if>
+        <if test='dto.userVerification!=null'>
+            and USER_VERIFICATION = #{dto.userVerification}
+        </if>
+        <if test="dto.materialLotId != null">
+            and MATERIAL_LOT_ID = #{dto.materialLotId}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosWorkcellExceptionMapper">
+
+    <select id="queryList" resultType="com.ruike.hme.domain.vo.HmeCosWorkcellExceptionVO">
+        SELECT
+            hcnr.job_id,
+            hcnr.status,
+            mwo.WORK_ORDER_NUM,
+            mwo.QTY,
+            hcnr.wafer_num,
+            hcnr.cos_type,
+            sum(
+            IFNULL( hcnr.defect_count, 0 )) AS defect_count_sum,
+            mnc.DESCRIPTION,
+            iu.real_name,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME
+        FROM
+            hme_cos_nc_record hcnr,
+            mt_work_order mwo,
+            mt_nc_code mnc,
+            iam_user iu,
+            mt_mod_workcell mmw,
+            mt_material mm
+        WHERE
+            hcnr.tenant_id = #{tenantId}
+            AND hcnr.work_order_id = mwo.WORK_ORDER_ID
+            AND hcnr.nc_code_id = mnc.NC_CODE_ID
+            AND hcnr.CREATED_BY = iu.id
+            AND hcnr.workcell_id = mmw.WORKCELL_ID
+            AND hcnr.COMPONENT_MATERIAL_ID = mm.MATERIAL_ID
+            <if test="dto.workcellId != null">
+                and hcnr.workcell_id = #{dto.workcellId}
+            </if>
+            <if test="dto.workOrderNum != null">
+                and mwo.WORK_ORDER_NUM LIKE CONCAT('%', #{dto.workOrderNum}, '%')
+            </if>
+            <if test="dto.cosType != null">
+                and hcnr.cos_type = #{dto.cosType}
+            </if>
+            <if test="dto.waferNum != null">
+                and hcnr.wafer_num LIKE CONCAT('%', #{dto.waferNum}, '%')
+            </if>
+            <if test="dto.materialId != null">
+                and mm.MATERIAL_ID = #{dto.materialId}
+            </if>
+            <if test="dto.id != null">
+                and iu.id = #{dto.id}
+            </if>
+            <if test="dto.ncCodeId != null">
+                and hcnr.nc_code_id = #{dto.ncCodeId}
+            </if>
+        GROUP BY
+            hcnr.job_id,
+            hcnr.status,
+            mwo.WORK_ORDER_NUM,
+            mwo.QTY,
+            hcnr.wafer_num,
+            hcnr.cos_type,
+            mnc.DESCRIPTION,
+            iu.real_name,
+            mmw.WORKCELL_CODE,
+            mmw.WORKCELL_NAME,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME
+    </select>
+
+    <select id="queryEquipment" resultType="com.ruike.hme.domain.entity.HmeEquipment">
+        SELECT
+            he.ASSET_ENCODING,
+            he.ASSET_NAME
+        FROM
+            hme_eo_job_equipment heje,
+            hme_equipment he
+        WHERE
+            heje.equipment_id = he.EQUIPMENT_ID
+            AND heje.job_id = #{jobId}
+            AND heje.tenant_id = #{tenantId}
+    </select>
+
+    <select id="batchQueryEquipment" resultType="com.ruike.hme.domain.vo.HmeEquipmentVO4">
+        SELECT
+            heje.job_id,
+            he.ASSET_ENCODING,
+            he.ASSET_NAME
+        FROM
+            hme_eo_job_equipment heje,
+            hme_equipment he
+        WHERE
+            heje.equipment_id = he.EQUIPMENT_ID
+            AND heje.job_id IN
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND heje.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryQuantity" resultType="com.ruike.hme.domain.vo.HmeCosQuantityVO">
+        SELECT
+            mwo.WORK_ORDER_NUM,
+            hcnr.wafer_num,
+            hcnr.cos_type,
+            mmw.WORKCELL_CODE,
+            SUM(
+            IFNULL( hcnr.defect_count, 0 )) AS defect_count_quantity
+        FROM
+            hme_cos_nc_record hcnr,
+            mt_work_order mwo,
+            mt_mod_workcell mmw
+        WHERE
+            hcnr.tenant_id = #{tenantId}
+            AND hcnr.work_order_id = mwo.WORK_ORDER_ID
+            AND mwo.WORK_ORDER_NUM = #{hmeCosQuantityVO.workOrderNum}
+            AND hcnr.wafer_num = #{hmeCosQuantityVO.waferNum}
+            AND hcnr.cos_type = #{hmeCosQuantityVO.cosType}
+            AND mmw.WORKCELL_CODE = #{hmeCosQuantityVO.workcellCode}
+        GROUP BY
+            mwo.WORK_ORDER_NUM,
+            hcnr.wafer_num,
+            hcnr.cos_type,
+            mmw.WORKCELL_CODE
+    </select>
+
+    <select id="batchQueryQuantity" resultType="com.ruike.hme.domain.vo.HmeCosQuantityVO">
+        SELECT
+            mwo.WORK_ORDER_NUM,
+            hcnr.wafer_num,
+            hcnr.cos_type,
+            mmw.WORKCELL_CODE,
+            SUM(
+            IFNULL( hcnr.defect_count, 0 )) AS defect_count_quantity
+        FROM
+            hme_cos_nc_record hcnr,
+            mt_work_order mwo,
+            mt_mod_workcell mmw
+        WHERE
+            hcnr.tenant_id = #{tenantId}
+            AND hcnr.work_order_id = mwo.WORK_ORDER_ID
+            AND mwo.WORK_ORDER_NUM IN
+        <foreach collection="workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            AND hcnr.wafer_num IN
+        <foreach collection="waferNumList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            AND hcnr.cos_type IN
+        <foreach collection="cosTypeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+            AND mmw.WORKCELL_CODE IN
+        <foreach collection="workCellCodeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        GROUP BY
+            mwo.WORK_ORDER_NUM,
+            hcnr.wafer_num,
+            hcnr.cos_type,
+            mmw.WORKCELL_CODE
+    </select>
+</mapper>

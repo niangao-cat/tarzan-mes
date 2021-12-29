@@ -1,0 +1,1761 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeFreezeDocMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeFreezeDoc">
+        <result column="freeze_doc_id" property="freezeDocId" jdbcType="VARCHAR"/>
+        <result column="freeze_doc_num" property="freezeDocNum" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="freeze_type" property="freezeType" jdbcType="VARCHAR"/>
+        <result column="freeze_doc_status" property="freezeDocStatus" jdbcType="VARCHAR"/>
+        <result column="approval_status" property="approvalStatus" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_version" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="production_version" property="productionVersion" jdbcType="VARCHAR"/>
+        <result column="warehouse_id" property="warehouseId" jdbcType="VARCHAR"/>
+        <result column="locator_id" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="supplier_id" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="inventory_lot" property="inventoryLot" jdbcType="VARCHAR"/>
+        <result column="supplier_lot" property="supplierLot" jdbcType="VARCHAR"/>
+        <result column="work_order_id" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="test_code" property="testCode" jdbcType="VARCHAR"/>
+        <result column="equipment_id" property="equipmentId" jdbcType="VARCHAR"/>
+        <result column="prod_line_id" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="process_id" property="processId" jdbcType="VARCHAR"/>
+        <result column="station_id" property="stationId" jdbcType="VARCHAR"/>
+        <result column="operated_by" property="operatedBy" jdbcType="DECIMAL"/>
+        <result column="cos_type" property="cosType" jdbcType="VARCHAR"/>
+        <result column="wafer" property="wafer" jdbcType="VARCHAR"/>
+        <result column="virtual_num" property="virtualNum" jdbcType="VARCHAR"/>
+        <result column="ausn_ratio" property="ausnRatio" jdbcType="DECIMAL"/>
+        <result column="hot_sink_num" property="hotSinkNum" jdbcType="VARCHAR"/>
+        <result column="cos_rule_id" property="cosRuleId" jdbcType="VARCHAR"/>
+        <result column="shift_id" property="shiftId" jdbcType="VARCHAR"/>
+        <result column="production_date_from" property="productionDateFrom" jdbcType="DATE"/>
+        <result column="production_date_to" property="productionDateTo" jdbcType="DATE"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRepresentationList" resultType="com.ruike.hme.domain.vo.HmeFreezeDocVO">
+        select doc.freeze_doc_id
+        , doc.freeze_doc_num
+        , doc.site_id
+        , mms.site_code
+        , doc.freeze_type
+        , doc.freeze_doc_status
+        , doc.approval_status
+        , doc.material_id
+        , mm.material_code
+        , mm.material_name
+        , doc.material_version
+        , doc.production_version
+        , doc.warehouse_id
+        , wh.locator_code warehouse_code
+        , doc.locator_id
+        , wh.locator_code
+        , doc.supplier_id
+        , sp.supplier_code
+        , sp.supplier_name
+        , doc.inventory_lot
+        , doc.supplier_lot
+        , doc.work_order_id
+        , wo.work_order_num
+        , doc.test_code
+        , doc.equipment_id
+        , eq.asset_encoding equipment_code
+        , doc.prod_line_id
+        , pl.prod_line_code
+        , doc.workcell_id
+        , wkc_line.workcell_code
+        , doc.process_id
+        , wkc_prc.workcell_code process_code
+        , doc.station_id
+        , wkc_st.workcell_code station_code
+        , doc.operated_by
+        , usr.login_name operated_by_name
+        , doc.cos_type
+        , doc.wafer
+        , doc.virtual_num
+        , doc.ausn_ratio
+        , doc.hot_sink_num
+        , doc.cos_rule_id
+        , crh.cos_rule_code
+        , doc.shift_id
+        , mws.shift_code
+        , doc.production_date_from
+        , doc.production_date_to
+        , doc.remark
+        , doc.tenant_id
+        , usr_c.login_name created_by_name
+        from hme_freeze_doc doc
+        join iam_user usr_c on usr_c.id = doc.created_by
+        left join mt_mod_locator wh on wh.locator_id = doc.warehouse_id
+        left join mt_mod_locator loc on loc.locator_id = doc.locator_id
+        left join mt_supplier sp on sp.supplier_id = doc.supplier_id
+        left join mt_work_order wo on wo.work_order_id = doc.work_order_id
+        left join hme_equipment eq on eq.equipment_id = doc.equipment_id
+        left join mt_mod_production_line pl on pl.prod_line_id = doc.prod_line_id
+        left join mt_mod_workcell wkc_line on wkc_line.workcell_id = doc.workcell_id
+        left join mt_mod_workcell wkc_prc on wkc_prc.workcell_id = doc.process_id
+        left join mt_mod_workcell wkc_st on wkc_st.workcell_id = doc.station_id
+        left join iam_user usr on usr.id = doc.operated_by
+        left join mt_wkc_shift mws on mws.wkc_shift_id = doc.shift_id
+        left join hme_cos_rule_head crh on doc.cos_rule_id = crh.cos_rule_id
+        left join mt_material mm on doc.material_id = mm.material_id
+        , mt_mod_site mms
+        where doc.site_id = mms.site_id
+        and doc.tenant_id = #{tenantId}
+        <if test="dto.freezeDocId != null">
+            and doc.freeze_doc_id = #{dto.freezeDocId}
+        </if>
+        <if test="dto.freezeDocNum != null">
+            <bind name="freezeDocNumLike" value="'%'+dto.freezeDocNum+'%'"/>
+            and doc.freeze_doc_num like #{freezeDocNumLike}
+        </if>
+        <if test="dto.siteId != null">
+            and doc.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.freezeType != null">
+            and doc.freeze_type = #{dto.freezeType}
+        </if>
+        <if test="dto.freezeDocStatusList != null and dto.freezeDocStatusList.size() > 0">
+            AND doc.freeze_doc_status IN
+            <foreach collection="dto.freezeDocStatusList" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.approvalStatus != null">
+            and doc.approval_status = #{dto.approvalStatus}
+        </if>
+        <if test="dto.materialId != null">
+            <bind name="materialIdLike" value="'%'+dto.materialId+'%'"/>
+            and doc.material_id like #{materialIdLike}
+        </if>
+        <if test="dto.materialVersion != null">
+            and doc.material_version = #{dto.materialVersion}
+        </if>
+        <if test="dto.productionVersion != null">
+            and doc.production_version = #{dto.productionVersion}
+        </if>
+        <if test="dto.warehouseId != null">
+            and doc.warehouse_id = #{dto.warehouseId}
+        </if>
+        <if test="dto.locatorId != null">
+            and doc.locator_id = #{dto.locatorId}
+        </if>
+        <if test="dto.supplierId != null">
+            and doc.supplier_id = #{dto.supplierId}
+        </if>
+        <if test="dto.inventoryLot != null">
+            <bind name="inventoryLotLike" value="'%'+dto.inventoryLot+'%'"/>
+            and doc.inventory_lot like #{inventoryLotLike}
+        </if>
+        <if test="dto.supplierLot != null">
+            <bind name="supplierLotLike" value="'%'+dto.supplierLot+'%'"/>
+            and doc.supplier_lot like #{supplierLotLike}
+        </if>
+        <if test="dto.workOrderNum != null">
+            <bind name="workOrderNumLike" value="'%'+dto.workOrderNum+'%'"/>
+            and wo.work_order_num like #{workOrderNumLike}
+        </if>
+        <if test="dto.testCode != null">
+            <bind name="testCodeLike" value="'%'+dto.testCode+'%'"/>
+            and doc.test_code like #{testCodeLike}
+        </if>
+        <if test="dto.equipmentId != null">
+            and doc.equipment_id = #{dto.equipmentId}
+        </if>
+        <if test="dto.prodLineId != null">
+            and doc.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null">
+            and doc.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.stationId != null">
+            and doc.station_id = #{dto.stationId}
+        </if>
+        <if test="dto.operatedBy != null">
+            and doc.operated_by = #{dto.operatedBy}
+        </if>
+        <if test="dto.productionDateFrom != null">
+            and doc.production_date_from &lt;= #{dto.productionDateFrom}
+        </if>
+        <if test="dto.productionDateTo != null">
+            and doc.production_date_to &gt;= #{dto.productionDateTo}
+        </if>
+        order by doc.creation_date desc
+    </select>
+
+    <select id="selectMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select mml.material_lot_id
+        ,case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla_mf on mml.material_lot_id = mmla_mf.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        <if test="dto.materialVersion != null or dto.productionVersion != null">
+            left join mt_material_lot_attr mmla_ver on mmla_ver.material_lot_id = mml.material_lot_id
+            and mmla_ver.attr_name = 'MATERIAL_VERSION'
+        </if>
+        <if test="dto.supplierLot != null">
+            left join mt_material_lot_attr mmla_sl on mmla_sl.material_lot_id = mml.material_lot_id
+            and mmla_sl.attr_name = 'SUPPLIER_LOT'
+        </if>
+        <if test="dto.warehouseId != null">
+            ,mt_mod_locator loc
+        </if>
+        where mml.site_id = #{dto.siteId}
+        <choose>
+            <when test='dto.materialListFlag == "N"'>
+                and mml.material_id = #{dto.materialId}
+            </when>
+            <otherwise>
+                and FIND_IN_SET(mml.material_id,#{dto.materialId})
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.freezeTypeTag == "PROCESS" or dto.freezeTypeTag == "COS_PROCESS"'>
+                and mml.ENABLE_FLAG = 'Y'
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.freezeTypeTag == "PROCESS" or dto.freezeTypeTag == "COS_PROCESS"'>and mmla_mf.attr_value ='Y'
+            </when>
+        </choose>
+        <if test="dto.materialLotIdList!=null and dto.materialLotIdList.size()>0">
+            and mml.material_lot_id in
+            <foreach collection="dto.materialLotIdList" item="item" open="(" close=")" separator="," index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.freezeTypeTag == "INVENTORY" and dto.purchasedSn != null'>
+            and FIND_IN_SET(mml.MATERIAL_LOT_CODE,#{dto.purchasedSn})
+        </if>
+        <if test="dto.materialVersion != null">
+            and mmla_ver.attr_value = #{dto.materialVersion}
+        </if>
+        <if test="dto.productionVersion != null">
+            and mmla_ver.attr_value = #{dto.productionVersion}
+        </if>
+        <if test="dto.warehouseId != null">
+            and mml.LOCATOR_ID = loc.LOCATOR_ID
+            and loc.parent_locator_id = #{dto.warehouseId}
+        </if>
+        <if test="dto.locatorId != null">
+            and mml.locator_id = #{dto.locatorId}
+        </if>
+        <if test="dto.supplierId != null">
+            and mml.supplier_id = #{dto.supplierId}
+        </if>
+        <if test="dto.inventoryLot != null">
+            and mml.lot = #{dto.inventoryLot}
+        </if>
+        <if test="dto.supplierLot != null">
+            and mmla_sl.attr_value = #{dto.supplierLot}
+        </if>
+        <if test='dto.freezeTypeTag == "INVENTORY" or dto.freezeTypeTag == "PROCESS"'>
+            <if test="dto.testCode != null">
+                and mml.material_lot_id in (
+                    select lc.material_lot_id
+                    from hme_material_lot_lab_code lc
+                    where lc.lab_code = #{dto.testCode}
+                )
+            </if>
+        </if>
+        <if test='dto.freezeTypeTag == "COS_INVENTORY" or dto.freezeTypeTag == "COS_PROCESS"'>
+            <if test="dto.testCode != null">
+                and exists (select 1
+                from hme_material_lot_load mll
+                <if test="dto.testCode != null">
+                    ,hme_material_lot_lab_code lc
+                </if>
+                where mll.material_lot_id = mml.material_lot_id
+                <if test="dto.testCode != null">
+                    and mll.load_sequence = lc.load_sequence
+                    and lc.lab_code = #{dto.testCode}
+                </if>
+                )
+            </if>
+            <if test="dto.wafer != null or dto.ausnRatio != null or dto.cosType != null or dto.virtualNum != null or dto.cosRuleId != null">
+                and exists (
+                    select 1
+                    from hme_selection_details hsd
+                        <if test="dto.wafer != null or dto.ausnRatio != null or dto.cosType != null">
+                        ,hme_material_lot_load hmll
+                        </if>
+                        <if test="dto.cosRuleId!= null">
+                            ,hme_pre_selection hps
+                            ,hme_cos_rule_head crh
+                        </if>
+                    where hsd.new_material_lot_id = mml.material_lot_id
+                    <if test="dto.wafer != null or dto.ausnRatio != null or dto.cosType != null">
+                        and hmll.load_sequence = hsd.load_sequence
+                    </if>
+                   <if test="dto.virtualNum != null">
+                       and hsd.virtual_num in
+                       <foreach collection="dto.virtualNums" separator="," item="id" open="(" close=")">
+                           #{id}
+                       </foreach>
+                   </if>
+                    <if test="dto.cosRuleId!= null">
+                        and hps.pre_selection_id = hsd.pre_selection_id
+                        and hps.ATTRIBUTE1 = crh.cos_rule_code
+                        and crh.cos_rule_id = #{dto.cosRuleId}
+                        <if test='dto.freezeType == "COS_M_INVENTORY" and dto.preSelectionDateFrom != null'>
+                            and hps.creation_date >= DATE_FORMAT(#{dto.preSelectionDateFrom}, '%Y-%m-%d %T')
+                        </if>
+                        <if test='dto.freezeType == "COS_M_INVENTORY" and dto.preSelectionDateTo != null'>
+                            and hps.creation_date &lt;= DATE_FORMAT(#{dto.preSelectionDateTo}, '%Y-%m-%d %T')
+                        </if>
+                    </if>
+                    <if test="dto.wafer != null">
+                        and hmll.ATTRIBUTE2 in
+                        <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                            #{id}
+                        </foreach>
+                    </if>
+                    <if test="dto.cosType != null">
+                        and hmll.ATTRIBUTE1 = #{dto.cosType}
+                    </if>
+                    <if test="dto.ausnRatio != null">
+                        and hmll.attribute13 = #{dto.ausnRatio}
+                    </if>
+                )
+            </if>
+        </if>
+        <if test='dto.freezeType == "M_INVENTORY" or dto.freezeType == "COS_CHIP_INVENTORY" or dto.freezeType == "COS_M_INVENTORY"'>
+            <if test="dto.workOrderId!= null or dto.prodLineId != null or dto.equipmentId != null
+                        or dto.processId != null or dto.workcellId != null or dto.shiftId != null
+                        or dto.stationId != null or dto.operatedBy != null or dto.productionDateFrom != null or dto.productionDateTo != null">
+            and mml.material_lot_id in (
+                select ejs.material_lot_id
+                from hme_eo_job_sn ejs
+                <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                    ,mt_work_order wo
+                </if>
+                <if test="dto.equipmentId != null">
+                    ,hme_eo_job_equipment eje
+                </if>
+                <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                    ,mt_mod_organization_rel mor
+                    <if test="dto.workcellId != null or dto.shiftId != null">
+                        ,mt_mod_organization_rel mor1
+                    </if>
+                    <if test="dto.shiftId != null">
+                        ,mt_wkc_shift mws
+                    </if>
+                </if>
+                where ejs.tenant_id = mml.tenant_id
+                <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                    and wo.work_order_id = ejs.work_order_id
+                    <if test="dto.workOrderId!= null">
+                        and wo.work_order_id = #{dto.workOrderId}
+                    </if>
+                    <if test="dto.prodLineId != null">
+                        and wo.production_line_id = #{dto.prodLineId}
+                    </if>
+                </if>
+                <if test="dto.equipmentId != null">
+                    and eje.job_id = ejs.job_id
+                    and eje.equipment_id = #{dto.equipmentId}
+                </if>
+                <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                    and mor.organization_id = ejs.workcell_id
+                    and mor.organization_type = 'WORKCELL'
+                    and mor.parent_organization_type = 'WORKCELL'
+                    <if test="dto.processId != null">
+                        and mor.parent_organization_id = #{dto.processId}
+                    </if>
+                    <if test="dto.workcellId != null or dto.shiftId != null">
+                        and mor1.organization_id = mor.parent_organization_id
+                        and mor1.organization_type = 'WORKCELL'
+                        and mor1.parent_organization_type = 'WORKCELL'
+                        <if test="dto.workcellId != null">
+                            and mor1.parent_organization_id = #{dto.workcellId}
+                        </if>
+                        <if test="dto.shiftId != null">
+                            and mws.WORKCELL_ID = mor1.parent_organization_id
+                            and mws.wkc_shift_id = #{dto.shiftId}
+                        </if>
+                    </if>
+                </if>
+                <if test="dto.stationId != null">
+                    and ejs.workcell_id = #{dto.stationId}
+                </if>
+                <if test="dto.operatedBy != null">
+                    and ejs.created_by = #{dto.operatedBy}
+                </if>
+                <if test="dto.productionDateFrom != null">
+                    and ejs.creation_date &gt;= #{dto.productionDateFrom}
+                </if>
+                <if test="dto.productionDateTo != null">
+                    and ejs.creation_date &lt;= #{dto.productionDateTo}
+                </if>
+            )
+            </if>
+        </if>
+    </select>
+
+    <select id="selectMaterialLotList2" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select mml.material_lot_id
+        ,case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla_mf on mml.material_lot_id = mmla_mf.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        <if test="dto.materialVersion != null or dto.productionVersion != null">
+            left join mt_material_lot_attr mmla_ver on mmla_ver.material_lot_id = mml.material_lot_id
+            and mmla_ver.attr_name = 'MATERIAL_VERSION'
+        </if>
+        <if test="dto.supplierLot != null">
+            left join mt_material_lot_attr mmla_sl on mmla_sl.material_lot_id = mml.material_lot_id
+            and mmla_sl.attr_name = 'SUPPLIER_LOT'
+        </if>
+        <if test="dto.warehouseId != null">
+            ,mt_mod_locator loc
+        </if>
+        where mml.site_id = #{dto.siteId}
+        <choose>
+            <when test='dto.materialListFlag == "N"'>
+                and mml.material_id = #{dto.materialId}
+            </when>
+            <otherwise>
+                and FIND_IN_SET(mml.material_id,#{dto.materialId})
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.freezeTypeTag == "PROCESS" or dto.freezeTypeTag == "COS_PROCESS"'>
+                and mml.ENABLE_FLAG = 'Y'
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.freezeTypeTag == "PROCESS" or dto.freezeTypeTag == "COS_PROCESS"'>and mmla_mf.attr_value ='Y'
+            </when>
+        </choose>
+        <if test='dto.freezeTypeTag == "INVENTORY" and dto.purchasedSn != null'>
+            and FIND_IN_SET(mml.MATERIAL_LOT_CODE,#{dto.purchasedSn})
+        </if>
+        <if test="dto.materialVersion != null">
+            and mmla_ver.attr_value = #{dto.materialVersion}
+        </if>
+        <if test="dto.productionVersion != null">
+            and mmla_ver.attr_value = #{dto.productionVersion}
+        </if>
+        <if test="dto.warehouseId != null">
+            and mml.LOCATOR_ID = loc.LOCATOR_ID
+            and loc.parent_locator_id = #{dto.warehouseId}
+        </if>
+        <if test="dto.locatorId != null">
+            and mml.locator_id = #{dto.locatorId}
+        </if>
+        <if test="dto.supplierId != null">
+            and mml.supplier_id = #{dto.supplierId}
+        </if>
+        <if test="dto.inventoryLot != null">
+            and mml.lot = #{dto.inventoryLot}
+        </if>
+        <if test="dto.supplierLot != null">
+            and mmla_sl.attr_value = #{dto.supplierLot}
+        </if>
+        <if test='dto.freezeTypeTag == "COS_INVENTORY" or dto.freezeTypeTag == "COS_PROCESS"'>
+            <if test="dto.testCode != null">
+                and exists (select 1
+                from hme_material_lot_load mll
+                <if test="dto.testCode != null">
+                    ,hme_material_lot_lab_code lc
+                </if>
+                where mll.material_lot_id = mml.material_lot_id
+                <if test="dto.testCode != null">
+                    and mll.load_sequence = lc.load_sequence
+                    and lc.lab_code = #{dto.testCode}
+                </if>
+                )
+            </if>
+            <if test="dto.wafer != null or dto.ausnRatio != null or dto.cosType != null">
+                and exists (
+                    select 1
+                    from hme_material_lot_load mll
+                    where mll.material_lot_id = mml.material_lot_id
+                    <if test="dto.ausnRatio != null">
+                        and mll.attribute13 = #{dto.ausnRatio}
+                    </if>
+                    <if test='dto.wafer != null'>
+                        and mll.attribute2 in
+                        <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                            #{id}
+                        </foreach>
+                    </if>
+                    <if test="dto.cosType != null">
+                        and mll.ATTRIBUTE1 = #{dto.cosType}
+                    </if>
+                )
+            </if>
+        </if>
+        <if test='dto.freezeType == "M_INVENTORY" or dto.freezeType == "COS_CHIP_INVENTORY" or dto.freezeType == "COS_M_INVENTORY"'>
+            <if test="dto.workOrderId!= null or dto.prodLineId != null or dto.equipmentId != null
+                        or dto.processId != null or dto.workcellId != null or dto.shiftId != null
+                        or dto.stationId != null or dto.operatedBy != null or dto.productionDateFrom != null or dto.productionDateTo != null">
+                and mml.material_lot_id in (
+                select ejs.material_lot_id
+                from hme_eo_job_sn ejs
+                <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                    ,mt_work_order wo
+                </if>
+                <if test="dto.equipmentId != null">
+                    ,hme_eo_job_equipment eje
+                </if>
+                <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                    ,mt_mod_organization_rel mor
+                    <if test="dto.workcellId != null or dto.shiftId != null">
+                        ,mt_mod_organization_rel mor1
+                    </if>
+                    <if test="dto.shiftId != null">
+                        ,mt_wkc_shift mws
+                    </if>
+                </if>
+                where ejs.tenant_id = mml.tenant_id
+                <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                    and wo.work_order_id = ejs.work_order_id
+                    <if test="dto.workOrderId!= null">
+                        and wo.work_order_id = #{dto.workOrderId}
+                    </if>
+                    <if test="dto.prodLineId != null">
+                        and wo.production_line_id = #{dto.prodLineId}
+                    </if>
+                </if>
+                <if test="dto.equipmentId != null">
+                    and eje.job_id = ejs.job_id
+                    and eje.equipment_id = #{dto.equipmentId}
+                </if>
+                <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                    and mor.organization_id = ejs.workcell_id
+                    and mor.organization_type = 'WORKCELL'
+                    and mor.parent_organization_type = 'WORKCELL'
+                    <if test="dto.processId != null">
+                        and mor.parent_organization_id = #{dto.processId}
+                    </if>
+                    <if test="dto.workcellId != null or dto.shiftId != null">
+                        and mor1.organization_id = mor.parent_organization_id
+                        and mor1.organization_type = 'WORKCELL'
+                        and mor1.parent_organization_type = 'WORKCELL'
+                        <if test="dto.workcellId != null">
+                            and mor1.parent_organization_id = #{dto.workcellId}
+                        </if>
+                        <if test="dto.shiftId != null">
+                            and mws.WORKCELL_ID = mor1.parent_organization_id
+                            and mws.wkc_shift_id = #{dto.shiftId}
+                        </if>
+                    </if>
+                </if>
+                <if test="dto.stationId != null">
+                    and ejs.workcell_id = #{dto.stationId}
+                </if>
+                <if test="dto.operatedBy != null">
+                    and ejs.created_by = #{dto.operatedBy}
+                </if>
+                <if test="dto.productionDateFrom != null">
+                    and ejs.site_in_date &gt;= #{dto.productionDateFrom}
+                </if>
+                <if test="dto.productionDateTo != null">
+                    and ejs.site_in_date &lt;= #{dto.productionDateTo}
+                </if>
+                )
+            </if>
+        </if>
+    </select>
+
+    <select id="selectMaterialLotList3" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select mml.material_lot_id
+        ,case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla_mf on mml.material_lot_id = mmla_mf.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        <if test="dto.materialVersion != null or dto.productionVersion != null">
+            left join mt_material_lot_attr mmla_ver on mmla_ver.material_lot_id = mml.material_lot_id
+            and mmla_ver.attr_name = 'MATERIAL_VERSION'
+        </if>
+        <if test="dto.supplierLot != null">
+            left join mt_material_lot_attr mmla_sl on mmla_sl.material_lot_id = mml.material_lot_id
+            and mmla_sl.attr_name = 'SUPPLIER_LOT'
+        </if>
+        <if test="dto.warehouseId != null">
+            ,mt_mod_locator loc
+        </if>
+        where mml.site_id = #{dto.siteId}
+        <choose>
+            <when test='dto.materialListFlag == "N"'>
+                and mml.material_id = #{dto.materialId}
+            </when>
+            <otherwise>
+                and FIND_IN_SET(mml.material_id,#{dto.materialId})
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.freezeTypeTag == "PROCESS" or dto.freezeTypeTag == "COS_PROCESS"'>
+                and mml.ENABLE_FLAG = 'Y'
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.freezeTypeTag == "PROCESS" or dto.freezeTypeTag == "COS_PROCESS"'>and mmla_mf.attr_value ='Y'
+            </when>
+        </choose>
+        <if test='dto.freezeTypeTag == "INVENTORY" and dto.purchasedSn != null'>
+            and FIND_IN_SET(mml.MATERIAL_LOT_CODE,#{dto.purchasedSn})
+        </if>
+        <if test="dto.materialVersion != null">
+            and mmla_ver.attr_value = #{dto.materialVersion}
+        </if>
+        <if test="dto.productionVersion != null">
+            and mmla_ver.attr_value = #{dto.productionVersion}
+        </if>
+        <if test="dto.warehouseId != null">
+            and mml.LOCATOR_ID = loc.LOCATOR_ID
+            and loc.parent_locator_id = #{dto.warehouseId}
+        </if>
+        <if test="dto.locatorId != null">
+            and mml.locator_id = #{dto.locatorId}
+        </if>
+        <if test="dto.supplierId != null">
+            and mml.supplier_id = #{dto.supplierId}
+        </if>
+        <if test="dto.inventoryLot != null">
+            and mml.lot = #{dto.inventoryLot}
+        </if>
+        <if test="dto.supplierLot != null">
+            and mmla_sl.attr_value = #{dto.supplierLot}
+        </if>
+        <if test='dto.freezeTypeTag == "COS_INVENTORY" or dto.freezeTypeTag == "COS_PROCESS"'>
+            <if test="dto.testCode != null">
+                and exists (select 1
+                from hme_material_lot_load mll
+                <if test="dto.testCode != null">
+                    ,hme_material_lot_lab_code lc
+                </if>
+                where mll.material_lot_id = mml.material_lot_id
+                <if test="dto.testCode != null">
+                    and mll.load_sequence = lc.load_sequence
+                    and lc.lab_code = #{dto.testCode}
+                </if>
+                )
+            </if>
+            <if test="dto.wafer != null or dto.ausnRatio != null or dto.cosType != null">
+                and exists (
+                select 1
+                from hme_selection_details hsd
+                <if test="dto.wafer != null or dto.ausnRatio != null or dto.cosType != null">
+                    ,hme_material_lot_load hmll
+                </if>
+                where hsd.old_material_lot_id = mml.material_lot_id
+                <if test="dto.wafer != null or dto.ausnRatio != null or dto.cosType != null">
+                    and hmll.load_sequence = hsd.load_sequence
+                </if>
+                <if test="dto.wafer != null">
+                    and hmll.ATTRIBUTE2 in
+                    <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                        #{id}
+                    </foreach>
+                </if>
+                <if test="dto.cosType != null">
+                    and hmll.ATTRIBUTE1 = #{dto.cosType}
+                </if>
+                <if test="dto.ausnRatio != null">
+                    and hmll.attribute13 = #{dto.ausnRatio}
+                </if>
+                )
+            </if>
+        </if>
+        <if test='dto.freezeType == "M_INVENTORY" or dto.freezeType == "COS_CHIP_INVENTORY" or dto.freezeType == "COS_M_INVENTORY"'>
+            <if test="dto.workOrderId!= null or dto.prodLineId != null or dto.equipmentId != null
+                        or dto.processId != null or dto.workcellId != null or dto.shiftId != null
+                        or dto.stationId != null or dto.operatedBy != null or dto.productionDateFrom != null or dto.productionDateTo != null">
+                and mml.material_lot_id in (
+                select ejs.material_lot_id
+                from hme_eo_job_sn ejs
+                <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                    ,mt_work_order wo
+                </if>
+                <if test="dto.equipmentId != null">
+                    ,hme_eo_job_equipment eje
+                </if>
+                <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                    ,mt_mod_organization_rel mor
+                    <if test="dto.workcellId != null or dto.shiftId != null">
+                        ,mt_mod_organization_rel mor1
+                    </if>
+                    <if test="dto.shiftId != null">
+                        ,mt_wkc_shift mws
+                    </if>
+                </if>
+                where ejs.tenant_id = mml.tenant_id
+                <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                    and wo.work_order_id = ejs.work_order_id
+                    <if test="dto.workOrderId!= null">
+                        and wo.work_order_id = #{dto.workOrderId}
+                    </if>
+                    <if test="dto.prodLineId != null">
+                        and wo.production_line_id = #{dto.prodLineId}
+                    </if>
+                </if>
+                <if test="dto.equipmentId != null">
+                    and eje.job_id = ejs.job_id
+                    and eje.equipment_id = #{dto.equipmentId}
+                </if>
+                <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                    and mor.organization_id = ejs.workcell_id
+                    and mor.organization_type = 'WORKCELL'
+                    and mor.parent_organization_type = 'WORKCELL'
+                    <if test="dto.processId != null">
+                        and mor.parent_organization_id = #{dto.processId}
+                    </if>
+                    <if test="dto.workcellId != null or dto.shiftId != null">
+                        and mor1.organization_id = mor.parent_organization_id
+                        and mor1.organization_type = 'WORKCELL'
+                        and mor1.parent_organization_type = 'WORKCELL'
+                        <if test="dto.workcellId != null">
+                            and mor1.parent_organization_id = #{dto.workcellId}
+                        </if>
+                        <if test="dto.shiftId != null">
+                            and mws.WORKCELL_ID = mor1.parent_organization_id
+                            and mws.wkc_shift_id = #{dto.shiftId}
+                        </if>
+                    </if>
+                </if>
+                <if test="dto.stationId != null">
+                    and ejs.workcell_id = #{dto.stationId}
+                </if>
+                <if test="dto.operatedBy != null">
+                    and ejs.created_by = #{dto.operatedBy}
+                </if>
+                <if test="dto.productionDateFrom != null">
+                    and ejs.site_in_date &gt;= #{dto.productionDateFrom}
+                </if>
+                <if test="dto.productionDateTo != null">
+                    and ejs.site_in_date &lt;= #{dto.productionDateTo}
+                </if>
+                )
+            </if>
+        </if>
+    </select>
+
+    <select id="selectJobFilteredList" resultType="java.lang.String">
+        select ejs.material_lot_id
+        from hme_eo_job_sn ejs
+        <if test="dto.workOrderId!= null or dto.prodLineId != null">
+            ,mt_work_order wo
+        </if>
+        <if test="dto.equipmentId != null">
+            ,hme_eo_job_equipment eje
+        </if>
+        <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+        ,mt_mod_organization_rel mor
+            <if test="dto.workcellId != null or dto.shiftId != null">
+                ,mt_mod_organization_rel mor1
+            </if>
+            <if test="dto.shiftId != null">
+                ,mt_wkc_shift mws
+            </if>
+        </if>
+        where ejs.material_lot_id in
+        <foreach collection="materialLotIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and ejs.tenant_id = #{tenantId}
+        <if test="dto.workOrderId!= null or dto.prodLineId != null">
+            and wo.work_order_id = ejs.work_order_id
+            <if test="dto.workOrderId!= null">
+                and wo.work_order_id = #{dto.workOrderId}
+            </if>
+            <if test="dto.prodLineId != null">
+                and wo.production_line_id = #{dto.prodLineId}
+            </if>
+        </if>
+        <if test="dto.equipmentId != null">
+            and eje.job_id = ejs.job_id
+            and eje.equipment_id = #{dto.equipmentId}
+        </if>
+        <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+            and mor.organization_id = ejs.workcell_id
+            and mor.organization_type = 'WORKCELL'
+            and mor.parent_organization_type = 'WORKCELL'
+            <if test="dto.processId != null">
+                and mor.parent_organization_id = #{dto.processId}
+            </if>
+            <if test="dto.workcellId != null or dto.shiftId != null">
+                and mor1.organization_id = mor.parent_organization_id
+                and mor1.organization_type = 'WORKCELL'
+                and mor1.parent_organization_type = 'WORKCELL'
+                <if test="dto.workcellId != null">
+                and mor1.parent_organization_id = #{dto.workcellId}
+                </if>
+                <if test="dto.shiftId != null">
+                    and mws.WORKCELL_ID = mor1.parent_organization_id
+                    and mws.wkc_shift_id = #{dto.shiftId}
+                </if>
+            </if>
+        </if>
+        <if test="dto.stationId != null">
+            and ejs.workcell_id = #{dto.stationId}
+        </if>
+        <if test="dto.operatedBy != null">
+            and ejs.created_by = #{dto.operatedBy}
+        </if>
+        <if test="dto.productionDateFrom != null">
+            and ejs.creation_date &gt;= #{dto.productionDateFrom}
+        </if>
+        <if test="dto.productionDateTo != null">
+            and ejs.creation_date &lt;= #{dto.productionDateTo}
+        </if>
+    </select>
+
+    <select id="selectJobMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select ejs.material_lot_id
+        ,case when mmla.attr_value = '' or mmla.attr_value is null then 'N' else mmla.attr_value end mf_flag
+        from hme_eo_job_sn_lot_material slm
+        ,hme_eo_job_sn ejs
+        ,mt_material_lot mml
+        left join mt_material_lot_attr mmla on mmla.MATERIAL_LOT_ID = mml.material_lot_id and mmla.ATTR_NAME = 'MF_FLAG'
+        where slm.job_id = ejs.job_id
+        and slm.material_lot_id in
+        <foreach collection="ids" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        and slm.release_qty > 0
+        and slm.is_released = 1
+        and mml.MATERIAL_LOT_ID = ejs.material_lot_id
+        union
+        select ejs.material_lot_id
+        ,case when mmla.attr_value = '' or mmla.attr_value is null then 'N' else mmla.attr_value end mf_flag
+        from hme_eo_job_material slm
+        ,hme_eo_job_sn ejs
+        ,mt_material_lot mml
+        left join mt_material_lot_attr mmla on mmla.MATERIAL_LOT_ID = mml.material_lot_id and mmla.ATTR_NAME = 'MF_FLAG'
+        where slm.job_id = ejs.job_id
+        and slm.material_lot_id in
+        <foreach collection="ids" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        and slm.release_qty > 0
+        and slm.is_issued = 1
+        and mml.MATERIAL_LOT_ID = ejs.material_lot_id
+    </select>
+
+    <select id="selectEoJobSnLotMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select ejs.material_lot_id
+        ,case when mmla.attr_value = '' or mmla.attr_value is null then 'N' else mmla.attr_value end mf_flag
+        from hme_eo_job_sn_lot_material slm
+        ,hme_eo_job_sn ejs
+        left join mt_material_lot_attr mmla on mmla.MATERIAL_LOT_ID = ejs.material_lot_id and mmla.ATTR_NAME = 'MF_FLAG'
+        where slm.material_lot_id in
+        <foreach collection="ids" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        and slm.is_released = 1
+        and slm.release_qty > 0
+        and slm.tenant_id = #{tenantId}
+        and ejs.job_id = slm.job_id
+    </select>
+
+    <select id="selectEoJobMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select ejs.material_lot_id
+        ,case when mmla.attr_value = '' or mmla.attr_value is null then 'N' else mmla.attr_value end mf_flag
+        from hme_eo_job_material slm
+        ,hme_eo_job_sn ejs
+        left join mt_material_lot_attr mmla on mmla.MATERIAL_LOT_ID = ejs.material_lot_id and mmla.ATTR_NAME = 'MF_FLAG'
+        where slm.material_lot_id in
+        <foreach collection="ids" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        and slm.is_issued = 1
+        and slm.release_qty > 0
+        and slm.tenant_id = #{tenantId}
+        and ejs.job_id = slm.job_id
+    </select>
+
+    <select id="selectMaterialLotMainList" resultType="com.ruike.hme.domain.vo.HmeFreezeDocCreateSnVO">
+        select mml.material_lot_id
+        , mml.material_lot_code
+        , case when mml.freeze_flag is null or mml.freeze_flag = '' then 'N' else mml.freeze_flag end AS sn_freeze_flag
+        , mml.primary_uom_qty
+        , mml.material_id
+        , mm.material_code
+        , mm.material_name
+        , mmla_ver.attr_value material_version
+        , mmla_ver.attr_value production_version
+        , mml.locator_id
+        , loc.locator_code
+        , wh.locator_id warehouse_id
+        , wh.locator_code warehouse_code
+        , mml.supplier_id
+        , sup.supplier_code
+        , sup.supplier_name
+        , mml.lot inventory_lot
+        , mmla_sl.attr_value supplier_lot
+        , mmla_ct.attr_value cos_type
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        , group_concat(lc.lab_code separator '/') test_code
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla_ver on mmla_ver.material_lot_id = mml.material_lot_id
+        and mmla_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_material_lot_attr mmla_sl on mmla_sl.material_lot_id = mml.material_lot_id
+        and mmla_sl.attr_name = 'SUPPLIER_LOT'
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = mml.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        left join mt_material_lot_attr mmla_ct on mmla_ct.material_lot_id = mml.material_lot_id
+        and mmla_ct.attr_name = 'COS_TYPE'
+        left join mt_supplier sup on sup.supplier_id = mml.supplier_id
+        <choose>
+            <when test='freezeTypeTag == "PROCESS" or freezeTypeTag == "INVENTORY"'>
+                left join hme_material_lot_lab_code lc on lc.material_lot_id = mml.material_lot_id
+            </when>
+            <otherwise>
+                left join hme_material_lot_load mll on mll.material_lot_id = mml.MATERIAL_LOT_ID
+                left join hme_material_lot_lab_code lc on lc.load_sequence = mll.load_sequence
+            </otherwise>
+        </choose>
+        , mt_material mm
+        , mt_mod_locator loc
+        , mt_mod_locator wh
+        where mml.material_id = mm.material_id
+        and mml.locator_id = loc.locator_id
+        and loc.parent_locator_id = wh.locator_id
+        and mml.ENABLE_FLAG = 'Y'
+        and mml.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        group by mml.material_lot_id
+        , mmla_ver.attr_value
+        , mmla_sl.attr_value
+        , mmla_mf.attr_value
+        , mmla_ct.attr_value
+    </select>
+
+    <select id="selectMaterialLotTrxList" resultType="com.ruike.hme.domain.vo.HmeFreezeDocTrxVO">
+        select mml.material_lot_id
+        ,mml.material_id
+        ,mml.primary_uom_qty transaction_qty
+        ,mml.lot lot_number
+        ,uom.uom_code transaction_uom
+        ,mml.site_id plant_id
+        ,loc.locator_code
+        ,wh.locator_id warehouse_id
+        ,wh.locator_code warehouse_code
+        ,wh.locator_code transfer_warehouse_code
+        ,ms.supplier_code
+        ,mml.locator_id reduce_locator_id
+        from mt_material_lot mml
+        left join mt_supplier ms on ms.supplier_id = mml.supplier_id
+        ,mt_uom uom
+        ,mt_mod_locator loc
+        ,mt_mod_locator wh
+        where mml.primary_uom_id = uom.uom_id
+        and loc.locator_id = mml.locator_id
+        and loc.parent_locator_id = wh.locator_id
+        and mml.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectFreezeLocatorList" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        select loc.parent_locator_id
+             , loc.locator_code
+             , loc.locator_id
+        from mt_mod_locator loc
+           , mt_mod_locator wh
+        where loc.parent_locator_id = wh.locator_id
+          and loc.locator_type = '19'
+          and loc.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectMaterialLotUnfreezeTrxList" resultType="com.ruike.hme.domain.vo.HmeFreezeDocTrxVO">
+        select mml.material_lot_id
+        ,mml.material_id
+        ,mml.primary_uom_qty transaction_qty
+        ,mml.lot lot_number
+        ,uom.uom_code transaction_uom
+        ,mml.site_id plant_id
+        ,loc.locator_id
+        ,loc.locator_code
+        ,wh.locator_id warehouse_id
+        ,wh.locator_code warehouse_code
+        ,loc_tsf.locator_code transfer_locator_code
+        ,wh_tsf.locator_code transfer_warehouse_code
+        ,ms.supplier_code
+        ,mml.locator_id reduce_locator_id
+        ,mmla_fl.attr_value increase_locator_id
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla_fl on mmla_fl.material_lot_id = mml.material_lot_id
+        and mmla_fl.attr_name = 'FREEZE_LOCATOR'
+        left join mt_mod_locator loc_tsf on loc_tsf.locator_id = mmla_fl.attr_value
+        left join mt_mod_locator wh_tsf on loc_tsf.parent_locator_id = wh_tsf.locator_id
+        left join mt_supplier ms on ms.supplier_id = mml.supplier_id
+        , mt_uom uom
+        , mt_mod_locator loc
+        , mt_mod_locator wh
+        where mml.primary_uom_id = uom.uom_id
+        and mml.locator_id = loc.locator_id
+        and loc.parent_locator_id = wh.locator_id
+        and mml.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectCosRelationMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select hsd.new_material_lot_id as material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot_attr mla
+        join mt_material_lot_attr mla_wf ON mla_wf.material_lot_id = mla.material_lot_id
+        and mla_wf.attr_name = 'WAFER_NUM'
+        join hme_material_lot_load mll ON mla_wf.attr_value = mll.attribute2
+        join hme_selection_details hsd ON hsd.load_sequence = mll.load_sequence
+        join mt_material_lot mml ON mml.material_lot_id = hsd.new_material_lot_id
+        left join mt_material_lot_attr mmla_mf ON mmla_mf.material_lot_id = hsd.new_material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mla.attr_name = 'ORIGINAL_ID'
+        and mll.tenant_id = #{tenantId}
+        <if test='dto.wafer != null'>
+            and mll.attribute2 in
+            <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        AND mla.attr_value in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        union all
+        select mll.material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot_attr mla
+        join mt_material_lot_attr mla_wf ON mla_wf.material_lot_id = mla.material_lot_id
+        and mla_wf.attr_name = 'WAFER_NUM'
+        join hme_material_lot_load mll ON mla_wf.attr_value = mll.attribute2
+        join mt_material_lot mml ON mml.material_lot_id = mll.material_lot_id
+        left join mt_material_lot_attr mmla_mf ON mmla_mf.material_lot_id = mll.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mla.attr_name = 'ORIGINAL_ID'
+        and mll.tenant_id = #{tenantId}
+        <if test='dto.wafer != null'>
+            and mll.attribute2 in
+            <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        AND mla.attr_value in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        union all
+        select hsd.new_material_lot_id as material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from hme_material_lot_load mll
+        join mt_material_lot mml on mll.attribute4 = mml.material_lot_code
+        join hme_selection_details hsd ON hsd.load_sequence = mll.load_sequence
+        join mt_material_lot mml2 ON mml2.material_lot_id = hsd.new_material_lot_id
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = hsd.new_material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mll.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        union all
+        select mll.material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from hme_material_lot_load mll
+        join mt_material_lot mml on mll.attribute4 = mml.material_lot_code
+        join mt_material_lot mml2 ON mml2.material_lot_id = mll.material_lot_id
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = mll.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mll.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+
+        union all
+        select hsd.new_material_lot_id as material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from hme_material_lot_load mll
+        join mt_material_lot mml on mll.attribute7 = mml.material_lot_code
+        join hme_selection_details hsd ON hsd.load_sequence = mll.load_sequence
+        join mt_material_lot mml2 ON mml2.material_lot_id = hsd.new_material_lot_id
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = hsd.new_material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mll.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        union
+        select mll.material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from hme_material_lot_load mll
+        join mt_material_lot mml on mll.attribute7 = mml.material_lot_code
+        join mt_material_lot mml2 ON mml2.material_lot_id = mll.material_lot_id
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = mll.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mll.tenant_id = #{tenantId}
+        and mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+
+    </select>
+
+    <select id="selectChipAfterReleaseMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select hsd.new_material_lot_id as material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot_attr mla
+        ,mt_material_lot_attr mla_wf
+        ,hme_material_lot_load mll
+        ,hme_selection_details hsd
+        left join mt_material_lot_attr mmla_mf ON mmla_mf.material_lot_id = hsd.new_material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mla.attr_name = 'ORIGINAL_ID'
+        AND mla.attr_value in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mla.tenant_id = #{tenantId}
+        and mla_wf.material_lot_id = mla.material_lot_id
+        and mla_wf.attr_name = 'WAFER_NUM'
+        and mla_wf.TENANT_ID = mla.TENANT_ID
+        and mll.attribute2 = mla_wf.attr_value
+        and mll.TENANT_ID = mla_wf.TENANT_ID
+        and hsd.load_sequence = mll.load_sequence
+        and hsd.TENANT_ID = mll.TENANT_ID
+        <if test='dto.wafer != null'>
+            and mll.attribute2 in
+            <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test='dto.workOrderId != null'>
+            and mll.ATTRIBUTE3 = #{dto.workOrderId}
+        </if>
+    </select>
+
+    <select id="selectChipBeforeReleaseMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select mll.material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot_attr mla
+        ,mt_material_lot_attr mla_wf
+        ,hme_material_lot_load mll
+        left join mt_material_lot_attr mmla_mf ON mmla_mf.material_lot_id = mll.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mla.attr_name = 'ORIGINAL_ID'
+        AND mla.attr_value in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mla.tenant_id = #{tenantId}
+        and mla_wf.material_lot_id = mla.material_lot_id
+        and mla_wf.attr_name = 'WAFER_NUM'
+        and mla_wf.TENANT_ID = mla.TENANT_ID
+        and mll.attribute2 = mla_wf.attr_value
+        and mll.TENANT_ID = mla_wf.TENANT_ID
+        <if test='dto.wafer != null'>
+            and mll.attribute2 in
+            <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test='dto.workOrderId != null'>
+            and mll.ATTRIBUTE3 = #{dto.workOrderId}
+        </if>
+        <if test='dto.freezeType == "COS_CHIP_INVENTORY" or dto.freezeType == "COS_M_INVENTORY"'>
+            and mll.material_lot_id in (
+            select ejs.material_lot_id
+            from hme_eo_job_sn ejs
+            <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                ,mt_work_order wo
+            </if>
+            <if test="dto.equipmentId != null">
+                ,hme_eo_job_equipment eje
+            </if>
+            <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                ,mt_mod_organization_rel mor
+                <if test="dto.workcellId != null or dto.shiftId != null">
+                    ,mt_mod_organization_rel mor1
+                </if>
+                <if test="dto.shiftId != null">
+                    ,mt_wkc_shift mws
+                </if>
+            </if>
+            where ejs.tenant_id = #{tenantId}
+            <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                and wo.work_order_id = ejs.work_order_id
+                <if test="dto.workOrderId!= null">
+                    and wo.work_order_id = #{dto.workOrderId}
+                </if>
+                <if test="dto.prodLineId != null">
+                    and wo.production_line_id = #{dto.prodLineId}
+                </if>
+            </if>
+            <if test="dto.equipmentId != null">
+                and eje.job_id = ejs.job_id
+                and eje.equipment_id = #{dto.equipmentId}
+            </if>
+            <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                and mor.organization_id = ejs.workcell_id
+                and mor.organization_type = 'WORKCELL'
+                and mor.parent_organization_type = 'WORKCELL'
+                <if test="dto.processId != null">
+                    and mor.parent_organization_id = #{dto.processId}
+                </if>
+                <if test="dto.workcellId != null or dto.shiftId != null">
+                    and mor1.organization_id = mor.parent_organization_id
+                    and mor1.organization_type = 'WORKCELL'
+                    and mor1.parent_organization_type = 'WORKCELL'
+                    <if test="dto.workcellId != null">
+                        and mor1.parent_organization_id = #{dto.workcellId}
+                    </if>
+                    <if test="dto.shiftId != null">
+                        and mws.WORKCELL_ID = mor1.parent_organization_id
+                        and mws.wkc_shift_id = #{dto.shiftId}
+                    </if>
+                </if>
+            </if>
+            <if test="dto.stationId != null">
+                and ejs.workcell_id = #{dto.stationId}
+            </if>
+            <if test="dto.operatedBy != null">
+                and ejs.created_by = #{dto.operatedBy}
+            </if>
+            <if test="dto.productionDateFrom != null">
+                and ejs.creation_date &gt;= #{dto.productionDateFrom}
+            </if>
+            <if test="dto.productionDateTo != null">
+                and ejs.creation_date &lt;= #{dto.productionDateTo}
+            </if>
+            )
+        </if>
+    </select>
+
+    <select id="selectHotSinkAfterReleaseMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select hsd.new_material_lot_id as material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot mml,
+        hme_material_lot_load mll,
+        hme_selection_details hsd
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = hsd.new_material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mll.attribute4 = mml.material_lot_code
+        and mll.tenant_id = mml.TENANT_ID
+        and hsd.load_sequence = mll.load_sequence
+        and hsd.tenant_id = mll.tenant_id
+    </select>
+
+    <select id="selectHotSinkBeforeReleaseMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select mll.material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot mml,
+        hme_material_lot_load mll
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = mll.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mll.attribute4 = mml.material_lot_code
+        and mll.tenant_id = mml.TENANT_ID
+        <if test='dto.freezeType == "COS_CHIP_INVENTORY" or dto.freezeType == "COS_M_INVENTORY"'>
+            and mll.material_lot_id in (
+            select ejs.material_lot_id
+            from hme_eo_job_sn ejs
+            <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                ,mt_work_order wo
+            </if>
+            <if test="dto.equipmentId != null">
+                ,hme_eo_job_equipment eje
+            </if>
+            <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                ,mt_mod_organization_rel mor
+                <if test="dto.workcellId != null or dto.shiftId != null">
+                    ,mt_mod_organization_rel mor1
+                </if>
+                <if test="dto.shiftId != null">
+                    ,mt_wkc_shift mws
+                </if>
+            </if>
+            where ejs.tenant_id = #{tenantId}
+            <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                and wo.work_order_id = ejs.work_order_id
+                <if test="dto.workOrderId!= null">
+                    and wo.work_order_id = #{dto.workOrderId}
+                </if>
+                <if test="dto.prodLineId != null">
+                    and wo.production_line_id = #{dto.prodLineId}
+                </if>
+            </if>
+            <if test="dto.equipmentId != null">
+                and eje.job_id = ejs.job_id
+                and eje.equipment_id = #{dto.equipmentId}
+            </if>
+            <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                and mor.organization_id = ejs.workcell_id
+                and mor.organization_type = 'WORKCELL'
+                and mor.parent_organization_type = 'WORKCELL'
+                <if test="dto.processId != null">
+                    and mor.parent_organization_id = #{dto.processId}
+                </if>
+                <if test="dto.workcellId != null or dto.shiftId != null">
+                    and mor1.organization_id = mor.parent_organization_id
+                    and mor1.organization_type = 'WORKCELL'
+                    and mor1.parent_organization_type = 'WORKCELL'
+                    <if test="dto.workcellId != null">
+                        and mor1.parent_organization_id = #{dto.workcellId}
+                    </if>
+                    <if test="dto.shiftId != null">
+                        and mws.WORKCELL_ID = mor1.parent_organization_id
+                        and mws.wkc_shift_id = #{dto.shiftId}
+                    </if>
+                </if>
+            </if>
+            <if test="dto.stationId != null">
+                and ejs.workcell_id = #{dto.stationId}
+            </if>
+            <if test="dto.operatedBy != null">
+                and ejs.created_by = #{dto.operatedBy}
+            </if>
+            <if test="dto.productionDateFrom != null">
+                and ejs.creation_date &gt;= #{dto.productionDateFrom}
+            </if>
+            <if test="dto.productionDateTo != null">
+                and ejs.creation_date &lt;= #{dto.productionDateTo}
+            </if>
+            )
+        </if>
+    </select>
+
+    <select id="selectGoldWireAfterReleaseMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select hsd.new_material_lot_id as material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot mml,
+        hme_material_lot_load mll,
+        hme_selection_details hsd
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = hsd.new_material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mll.attribute7 = mml.material_lot_code
+        and mll.tenant_id = mml.TENANT_ID
+        and hsd.load_sequence = mll.load_sequence
+        and hsd.tenant_id = mll.tenant_id
+    </select>
+
+    <select id="selectGoldWireBeforeReleaseMaterialLotList" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select mll.material_lot_id
+        , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot mml,
+        hme_material_lot_load mll
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = mll.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mml.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mll.attribute7 = mml.material_lot_code
+        and mll.tenant_id = mml.TENANT_ID
+        <if test='dto.freezeType == "COS_CHIP_INVENTORY" or dto.freezeType == "COS_M_INVENTORY"'>
+            and mll.material_lot_id in (
+            select ejs.material_lot_id
+            from hme_eo_job_sn ejs
+            <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                ,mt_work_order wo
+            </if>
+            <if test="dto.equipmentId != null">
+                ,hme_eo_job_equipment eje
+            </if>
+            <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                ,mt_mod_organization_rel mor
+                <if test="dto.workcellId != null or dto.shiftId != null">
+                    ,mt_mod_organization_rel mor1
+                </if>
+                <if test="dto.shiftId != null">
+                    ,mt_wkc_shift mws
+                </if>
+            </if>
+            where ejs.tenant_id = #{tenantId}
+            <if test="dto.workOrderId!= null or dto.prodLineId != null">
+                and wo.work_order_id = ejs.work_order_id
+                <if test="dto.workOrderId!= null">
+                    and wo.work_order_id = #{dto.workOrderId}
+                </if>
+                <if test="dto.prodLineId != null">
+                    and wo.production_line_id = #{dto.prodLineId}
+                </if>
+            </if>
+            <if test="dto.equipmentId != null">
+                and eje.job_id = ejs.job_id
+                and eje.equipment_id = #{dto.equipmentId}
+            </if>
+            <if test="dto.processId != null or dto.workcellId != null or dto.shiftId != null">
+                and mor.organization_id = ejs.workcell_id
+                and mor.organization_type = 'WORKCELL'
+                and mor.parent_organization_type = 'WORKCELL'
+                <if test="dto.processId != null">
+                    and mor.parent_organization_id = #{dto.processId}
+                </if>
+                <if test="dto.workcellId != null or dto.shiftId != null">
+                    and mor1.organization_id = mor.parent_organization_id
+                    and mor1.organization_type = 'WORKCELL'
+                    and mor1.parent_organization_type = 'WORKCELL'
+                    <if test="dto.workcellId != null">
+                        and mor1.parent_organization_id = #{dto.workcellId}
+                    </if>
+                    <if test="dto.shiftId != null">
+                        and mws.WORKCELL_ID = mor1.parent_organization_id
+                        and mws.wkc_shift_id = #{dto.shiftId}
+                    </if>
+                </if>
+            </if>
+            <if test="dto.stationId != null">
+                and ejs.workcell_id = #{dto.stationId}
+            </if>
+            <if test="dto.operatedBy != null">
+                and ejs.created_by = #{dto.operatedBy}
+            </if>
+            <if test="dto.productionDateFrom != null">
+                and ejs.creation_date &gt;= #{dto.productionDateFrom}
+            </if>
+            <if test="dto.productionDateTo != null">
+                and ejs.creation_date &lt;= #{dto.productionDateTo}
+            </if>
+            )
+        </if>
+    </select>
+
+    <select id="selectRelationLoadList" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select mll.material_lot_load_id
+        from hme_material_lot_load mll
+        <if test="dto.testCode != null">
+            ,hme_material_lot_lab_code lc
+        </if>
+        <if test="dto.virtualNum != null or dto.cosRuleId!= null">
+            ,hme_selection_details hsd
+            <if test="dto.cosRuleId!= null">
+                ,hme_pre_selection hps
+                ,hme_cos_rule_head crh
+            </if>
+        </if>
+        where mll.tenant_id = #{tenantId}
+        and mll.material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        <if test="dto.testCode != null">
+            and mll.load_sequence = lc.load_sequence
+            and lc.lab_code = #{dto.testCode}
+        </if>
+        <if test='dto.wafer != null'>
+            and mll.attribute2 in
+            <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.ausnRatio != null">
+            and mll.attribute13 = #{dto.ausnRatio}
+        </if>
+        <if test="dto.hotSinkNum != null">
+            and mll.hot_sink_code in
+            <foreach collection="dto.hotSinkNums" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.virtualNum != null or dto.cosRuleId!= null">
+            and hsd.load_sequence = mll.load_sequence
+            <if test="dto.virtualNum!= null">
+                and hsd.virtual_num in
+                <foreach collection="dto.virtualNums" separator="," item="id" open="(" close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="dto.cosRuleId!= null">
+                and hps.pre_selection_id = hsd.pre_selection_id
+                and hps.attribute1 = crh.cos_rule_code
+                and crh.cos_rule_id = #{dto.cosRuleId}
+                <if test='dto.freezeType == "COS_M_INVENTORY" and dto.productionDateFrom != null'>
+                    and hps.creation_date >= DATE_FORMAT(#{dto.productionDateFrom}, '%Y-%m-%d %T')
+                </if>
+                <if test='dto.freezeType == "COS_M_INVENTORY" and dto.productionDateTo != null'>
+                    and hps.creation_date &lt;= DATE_FORMAT(#{dto.productionDateTo}, '%Y-%m-%d %T')
+                </if>
+            </if>
+        </if>
+    </select>
+
+    <select id="selectRelationLoadList2" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.material_lot_load_id
+        from hme_selection_details hsd,
+        hme_material_lot_load hmll
+        <if test="dto.testCode != null">
+            ,hme_material_lot_lab_code lc
+        </if>
+        <if test="dto.virtualNum != null or dto.cosRuleId!= null">
+            ,hme_selection_details hsd2
+            <if test="dto.cosRuleId!= null">
+                ,hme_pre_selection hps
+                ,hme_cos_rule_head crh
+            </if>
+        </if>
+        where hsd.tenant_id = #{tenantId}
+        and hsd.new_material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and hmll.load_sequence = hsd.load_sequence
+        <if test="dto.wafer != null">
+            and hmll.ATTRIBUTE2 in
+            <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.ausnRatio != null">
+            and hmll.attribute13 = #{dto.ausnRatio}
+        </if>
+        <if test="dto.hotSinkNum != null">
+            and hmll.hot_sink_code in
+            <foreach collection="dto.hotSinkNums" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.testCode != null">
+            and mll.load_sequence = lc.load_sequence
+            and lc.lab_code = #{dto.testCode}
+        </if>
+        <if test="dto.virtualNum != null or dto.cosRuleId!= null">
+            and hsd2.load_sequence = hmll.load_sequence
+            <if test="dto.virtualNum!= null">
+                and hsd2.virtual_num in
+                <foreach collection="dto.virtualNums" separator="," item="id" open="(" close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="dto.cosRuleId!= null">
+                and hps.pre_selection_id = hsd2.pre_selection_id
+                and hps.attribute1 = crh.cos_rule_code
+                and crh.cos_rule_id = #{dto.cosRuleId}
+                <if test='dto.freezeType == "COS_M_INVENTORY" and dto.productionDateFrom != null'>
+                    and hps.creation_date >= DATE_FORMAT(#{dto.productionDateFrom}, '%Y-%m-%d %T')
+                </if>
+                <if test='dto.freezeType == "COS_M_INVENTORY" and dto.productionDateTo != null'>
+                    and hps.creation_date &lt;= DATE_FORMAT(#{dto.productionDateTo}, '%Y-%m-%d %T')
+                </if>
+            </if>
+        </if>
+    </select>
+
+    <select id="selectRelationLoadList3" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.material_lot_load_id
+        from hme_selection_details hsd,
+        hme_material_lot_load hmll
+        <if test="dto.testCode != null">
+            ,hme_material_lot_lab_code lc
+        </if>
+        <if test="dto.virtualNum != null or dto.cosRuleId!= null">
+            ,hme_selection_details hsd2
+            <if test="dto.cosRuleId!= null">
+                ,hme_pre_selection hps
+                ,hme_cos_rule_head crh
+            </if>
+        </if>
+        where hsd.tenant_id = #{tenantId}
+        and hsd.old_material_lot_id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and hmll.load_sequence = hsd.load_sequence
+        <if test="dto.wafer != null">
+            and hmll.ATTRIBUTE2 in
+            <foreach collection="dto.wafers" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.ausnRatio != null">
+            and hmll.attribute13 = #{dto.ausnRatio}
+        </if>
+        <if test="dto.hotSinkNum != null">
+            and hmll.hot_sink_code in
+            <foreach collection="dto.hotSinkNums" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.testCode != null">
+            and mll.load_sequence = lc.load_sequence
+            and lc.lab_code = #{dto.testCode}
+        </if>
+        <if test="dto.virtualNum != null or dto.cosRuleId!= null">
+            and hsd2.load_sequence = hmll.load_sequence
+            <if test="dto.virtualNum!= null">
+                and hsd2.virtual_num in
+                <foreach collection="dto.virtualNums" separator="," item="id" open="(" close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="dto.cosRuleId!= null">
+                and hps.pre_selection_id = hsd2.pre_selection_id
+                and hps.attribute1 = crh.cos_rule_code
+                and crh.cos_rule_id = #{dto.cosRuleId}
+                <if test='dto.freezeType == "COS_M_INVENTORY" and dto.productionDateFrom != null'>
+                    and hps.creation_date >= DATE_FORMAT(#{dto.productionDateFrom}, '%Y-%m-%d %T')
+                </if>
+                <if test='dto.freezeType == "COS_M_INVENTORY" and dto.productionDateTo != null'>
+                    and hps.creation_date &lt;= DATE_FORMAT(#{dto.productionDateTo}, '%Y-%m-%d %T')
+                </if>
+            </if>
+        </if>
+    </select>
+
+    <select id="batchUpdateMaterialLotLoad">
+        <bind name="temp" value="@io.choerodon.mybatis.helper.AuditHelper@audit()"/>
+        update hme_material_lot_load
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{temp.user},
+            last_update_date = CURRENT_TIMESTAMP,
+            ATTRIBUTE14 = #{flag}
+        </set>
+        <where>
+            material_lot_load_id in
+            <foreach collection="materialLotLoadIds" item="materialLotLoadId" open="(" separator="," close=")">
+                #{materialLotLoadId}
+            </foreach>
+        </where>
+    </select>
+
+    <select id="materialInfoBatchQuery" resultType="tarzan.material.domain.entity.MtMaterial">
+        select mm.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME
+        from mt_material mm
+        where mm.MATERIAL_ID in
+        <foreach collection="materialIds" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectBeforeReleaseMaterialLotList" resultType="com.ruike.hme.domain.entity.HmeSelectionDetails">
+        SELECT hsd.new_material_lot_id, hsd.old_material_lot_id
+        from hme_material_lot_load hmll,
+             hme_selection_details hsd
+        where hmll.material_lot_id in
+        <foreach collection="materialLotIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        and hmll.tenant_id = #{tenantId}
+        and hsd.load_sequence = hmll.load_sequence
+    </select>
+
+    <select id="selectAfterReleaseMaterialLotList" resultType="java.lang.String">
+        SELECT hsd.new_material_lot_id
+        from hme_selection_details hsd
+        where hsd.old_material_lot_id in
+        <foreach collection="materialLotIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        and hsd.tenant_id = #{tenantId}
+    </select>
+
+    <select id="mfFlagBatchQuery" resultType="com.ruike.hme.domain.vo.HmeMaterialLotVO">
+        select mml.material_lot_id
+               ,case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = mml.material_lot_id
+        and mmla_mf.attr_name = 'MF_FLAG'
+        where mml.material_lot_id in
+        <foreach collection="materialLotIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectFreezeMaterialLotIdList" resultType="java.lang.String">
+        select mml.material_lot_id
+        from mt_material_lot mml
+        , mt_mod_locator loc
+        , mt_mod_locator wh
+        where mml.material_lot_id in
+        <foreach collection="materialLotIdList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and mml.ENABLE_FLAG = 'Y'
+        and mml.locator_id = loc.locator_id
+        and loc.parent_locator_id = wh.locator_id
+    </select>
+
+    <select id="selectFreeLineInfo" resultType="com.ruike.hme.domain.vo.HmeFreezeDocVO2">
+        select hfdl.freeze_doc_line_id, hfdl.material_lot_id
+               , case when mml.freeze_flag is null or mml.freeze_flag = '' then 'N' else mml.freeze_flag end AS sn_freeze_flag
+               , case when mmla_mf.attr_value = '' or mmla_mf.attr_value is null then 'N' else mmla_mf.attr_value end mf_flag
+        from hme_freeze_doc_line hfdl,
+             mt_material_lot mml
+             left join mt_material_lot_attr mmla_mf on mmla_mf.material_lot_id = mml.material_lot_id
+             and mmla_mf.attr_name = 'MF_FLAG'
+        where hfdl.freeze_doc_id = #{freezeDocId}
+        and mml.MATERIAL_LOT_ID = hfdl.material_lot_id
+    </select>
+
+    <update id="batchUpdataFreezeDocLine">
+        update hme_freeze_doc_line
+        <set>
+            freeze_flag = 'Y'
+            , ATTRIBUTE1 = DATE_FORMAT(CURRENT_TIMESTAMP,'%Y-%m-%d %T')
+        </set>
+        <where>
+            freeze_doc_line_id in
+            <foreach collection="freezeDocLineIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="getNewMaterialLotByHotSinkCode" resultType="java.lang.String">
+        select hsd.new_material_lot_id
+        from hme_material_lot_load hmll,
+             hme_selection_details hsd
+        where FIND_IN_SET(hmll.hot_sink_code,#{hotSinkCode})
+        and hmll.tenant_id = #{tenantId}
+        and hsd.load_sequence = hmll.load_sequence
+        and hsd.tenant_id = hmll.tenant_id
+    </select>
+    <select id="getMaterialLotByHotSinkCode2" resultType="java.lang.String">
+        select hmll.material_lot_id
+        from hme_material_lot_load hmll
+        left join hme_selection_details hsd on hsd.load_sequence = hmll.load_sequence and hsd.tenant_id = hmll.tenant_id
+        where FIND_IN_SET(hmll.hot_sink_code,#{hotSinkCode})
+        and hmll.tenant_id = #{tenantId}
+        and hsd.selection_details_id is null
+    </select>
+</mapper>

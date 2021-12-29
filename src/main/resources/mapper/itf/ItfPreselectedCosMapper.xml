@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfPreselectedCosMapper">
+
+    <select id="getVirtualNumList" resultType="String">
+    SELECT
+      hsd.virtual_num
+    FROM
+        hme_selection_details hsd
+    WHERE hsd.new_material_lot_id is NULL
+    AND hsd.load_sequence  in
+    <foreach collection="loadSequenceList" index="index" item="item" open="(" separator="," close=")">
+        #{item}
+    </foreach>
+    GROUP BY hsd.virtual_num
+    </select>
+
+    <select id="getMaterialLotList" resultType="com.ruike.itf.api.dto.ItfPreselectedCosTwoShowDTO">
+        SELECT
+            hsd.virtual_num,
+            hsd.old_load,
+            mml.MATERIAL_LOT_CODE,
+            mm.MATERIAL_CODE,
+            hmll.load_row,
+            hmll.load_column,
+            hmll.hot_sink_code HOT_SINK,
+            hcrh.cos_num TOTAL_NUM,
+            hsd.ATTRIBUTE2 cos_Pos
+        FROM
+            hme_selection_details hsd
+        LEFT JOIN mt_material_lot mml ON hsd.old_material_lot_id = mml.MATERIAL_LOT_ID
+        LEFT JOIN hme_material_lot_load hmll ON hsd.load_sequence = hmll.load_sequence
+        LEFT JOIN hme_pre_selection hps ON hsd.pre_selection_id = hps.pre_selection_id
+        LEFT JOIN hme_cos_rule_head hcrh ON hps.ATTRIBUTE1 = hcrh.cos_rule_code
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = hcrh.MATERIAL_ID
+        where
+          hsd.virtual_num = #{virtualNum}
+        ORDER BY
+        LENGTH(hsd.ATTRIBUTE2) DESC,
+        hsd.ATTRIBUTE2 desc
+    </select>
+
+    <select id="getVirtualNumListNew" resultType="com.ruike.itf.api.dto.ItfPreselectedCosSelectShowDTO">
+        SELECT
+        hsd.virtual_num,
+        hsd.old_load,
+        mml.MATERIAL_LOT_CODE,
+        mm.MATERIAL_CODE,
+        hmll.load_row,
+        hmll.load_column,
+        hmll.hot_sink_code HOT_SINK,
+        hcrh.cos_num TOTAL_NUM,
+        hsd.ATTRIBUTE2 cos_Pos
+        FROM
+        hme_selection_details hsd
+        LEFT JOIN mt_material_lot mml ON hsd.old_material_lot_id = mml.MATERIAL_LOT_ID
+        LEFT JOIN hme_material_lot_load hmll ON hsd.load_sequence = hmll.load_sequence
+        LEFT JOIN hme_pre_selection hps ON hsd.pre_selection_id = hps.pre_selection_id
+        LEFT JOIN hme_cos_rule_head hcrh ON hps.ATTRIBUTE1 = hcrh.cos_rule_code
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = hcrh.MATERIAL_ID
+        WHERE hsd.new_material_lot_id is NULL
+        AND hsd.load_sequence in
+        <foreach collection="loadSequenceList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY
+        LENGTH(hsd.ATTRIBUTE2) DESC,
+        hsd.ATTRIBUTE2 desc
+    </select>
+</mapper>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosBarCodeExceptionMapper">
+
+    <select id="queryList" resultType="com.ruike.hme.domain.vo.HmeCosBarCodeExceptionVO">
+        SELECT
+        mwo.WORK_ORDER_NUM,
+        mwo.QTY,
+        mml.MATERIAL_LOT_CODE,
+        mml.MATERIAL_LOT_CODE SOURCE_MATERIAL_LOT_CODE,
+        hcnr.wafer_num,
+        hcnr.cos_type,
+        COUNT( hcnr2.nc_code_id ) defect_count_sum,
+        mnc.DESCRIPTION,
+        hcnr.defect_count,
+        hmll.ATTRIBUTE4 heatSinkLot,
+        hmll.ATTRIBUTE7 goldWireLot,
+        iu.real_name,
+        mmw.WORKCELL_NAME,
+        hcnr2.creation_date,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        CONCAT(hmll.load_row,hmll.load_column) location,
+        hcnr.job_id
+        FROM
+        hme_cos_nc_record hcnr,
+        mt_work_order mwo,
+        mt_material_lot mml,
+        hme_material_lot_load hmll
+        LEFT JOIN mt_material_lot mml2 ON mml2.material_lot_id = hmll.source_material_lot_id,
+        hme_cos_nc_record hcnr2,
+        mt_nc_code mnc,
+        iam_user iu,
+        mt_mod_workcell mmw,
+        mt_material mm
+        WHERE 1=1
+        AND hcnr.work_order_id = mwo.work_order_id
+        AND hcnr.material_lot_id = mml.MATERIAL_LOT_ID
+        <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+            and mwo.WORK_ORDER_NUM LIKE CONCAT(#{dto.workOrderNum}, '%')
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            and mml.MATERIAL_LOT_CODE LIKE CONCAT(#{dto.materialLotCode}, '%')
+        </if>
+        <if test="dto.beginTime != null and dto.beginTime != ''">
+            and hcnr.creation_date &gt;= #{dto.beginTime}
+        </if>
+        <if test="dto.endTime != null and dto.endTime != ''">
+            and hcnr.creation_date &lt;= #{dto.endTime}
+        </if>
+        AND mml.TENANT_ID = hmll.tenant_id
+        AND mml.MATERIAL_LOT_ID = hmll.material_lot_id
+        AND hcnr2.tenant_id = hmll.tenant_id
+        AND hcnr2.load_sequence = hmll.load_sequence
+        AND mnc.NC_CODE_ID = hcnr2.nc_code_id
+        AND hcnr.user_id = iu.id
+        AND hcnr.workcell_id = mmw.WORKCELL_ID
+        AND hcnr.component_material_id = mm.MATERIAL_ID
+        and mml.tenant_id = #{tenantId}
+        <if test="dto.waferNum != null and dto.waferNum != ''">
+            and hcnr.wafer_num LIKE CONCAT('%', #{dto.waferNum}, '%')
+        </if>
+        <if test="dto.cosType != null and dto.cosType != ''">
+            and hcnr.cos_type = #{dto.cosType}
+        </if>
+        <if test="dto.heatSinkLot != null and dto.heatSinkLot != ''">
+            and hmll.ATTRIBUTE4 LIKE CONCAT('%', #{dto.heatSinkLot}, '%')
+        </if>
+        <if test="dto.goldWireLot != null and dto.goldWireLot != ''">
+            and hmll.ATTRIBUTE7 LIKE CONCAT('%', #{dto.goldWireLot}, '%')
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mm.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.assetEncoding != null and dto.assetEncoding != ''">
+            AND EXISTS (
+                SELECT
+                1
+                FROM
+                hme_eo_job_equipment heje,
+                hme_equipment he
+                WHERE he.ASSET_ENCODING = #{dto.assetEncoding}
+                AND heje.equipment_id = he.EQUIPMENT_ID
+                AND heje.tenant_id = hcnr.tenant_id
+                AND heje.job_id = hcnr.job_id
+            )
+        </if>
+        <if test="dto.realName != null and dto.realName != ''">
+            and iu.real_name LIKE CONCAT('%', #{dto.realName}, '%')
+        </if>
+        GROUP BY
+        mwo.WORK_ORDER_NUM,
+        mwo.QTY,
+        mml.MATERIAL_LOT_CODE,
+        mml.MATERIAL_LOT_CODE,
+        hcnr.wafer_num,
+        hcnr.cos_type,
+        mnc.DESCRIPTION,
+        hcnr.defect_count,
+        hmll.ATTRIBUTE4,
+        hmll.ATTRIBUTE7,
+        iu.real_name,
+        mmw.WORKCELL_NAME,
+        hcnr2.creation_date,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        location,
+        hcnr.job_id
+    </select>
+
+    <select id="queryEquipmentList" resultType="com.ruike.hme.domain.vo.HmeCosBarCodeExceptionVO">
+        SELECT
+        heje.job_id,
+        GROUP_CONCAT( DISTINCT he.ASSET_ENCODING ORDER BY he.ASSET_ENCODING SEPARATOR '/' ) as ASSET_ENCODING
+    FROM
+        hme_eo_job_equipment heje,
+        hme_equipment he
+    WHERE
+        he.equipment_id = heje.EQUIPMENT_ID
+        AND heje.tenant_id = #{tenantId}
+        AND heje.job_id IN
+        <foreach collection="jobIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    GROUP BY
+        heje.job_id
+    </select>
+
+</mapper>

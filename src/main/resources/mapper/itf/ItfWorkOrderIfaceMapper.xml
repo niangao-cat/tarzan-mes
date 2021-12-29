@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfWorkOrderIfaceMapper">
+
+    <!-- 根据最后修改时间查询状态 -->
+    <resultMap id="ErpStatusResultMap" type="com.ruike.itf.domain.vo.ItfWoStatusSendErp">
+        <result column="PLANT_CODE" property="plantCode" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_NUM" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="WO_STATUS" property="woStatus" jdbcType="VARCHAR"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectWoStatusByLastUpdate" resultMap="ErpStatusResultMap" parameterType="java.util.Date">
+        SELECT mwo.WORK_ORDER_NUM,
+               LEFT(mwo.`STATUS`, 4) AS wo_status,
+               mspr.PLANT_CODE,
+               mwo.LAST_UPDATE_DATE
+        FROM mt_work_order mwo,
+             mt_site_plant_releation mspr
+        WHERE mspr.TENANT_ID = mwo.TENANT_ID
+          AND mspr.SITE_ID = mwo.SITE_ID
+          AND mwo.LAST_UPDATE_DATE >= #{lastUpdate}
+        ORDER BY mwo.LAST_UPDATE_DATE DESC
+    </select>
+    <!--  插入之前先根据批次日期删除之前的批次  -->
+    <delete id="deleteBatchDate">
+        DELETE
+        FROM ${tableName}
+        WHERE BATCH_DATE = #{batchDate}
+    </delete>
+
+    <insert id="batchInsertWorkOrderIface" parameterType="com.ruike.itf.domain.entity.ItfWorkOrderIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="woIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.plantCode},
+            #{item.workOrderId},
+            #{item.itemCode},
+            #{item.workOrderNum},
+            #{item.quantity},
+            #{item.workOrderType},
+            #{item.workOrderStatus},
+            #{item.scheduleStartDate},
+            #{item.scheduleEndDate},
+            #{item.completeLocator},
+            #{item.prodLineCode},
+            #{item.productionVersion},
+            #{item.remark},
+            #{item.erpCreationDate},
+            #{item.erpCreatedBy},
+            #{item.erpLastUpdatedBy},
+            #{item.erpLastUpdateDate},
+            #{item.batchId},
+            #{item.batchDate},
+            #{item.status},
+            #{item.message},
+            #{item.completeControlType},
+            #{item.completeControlQty},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertWorkOrder" parameterType="com.ruike.itf.domain.entity.ItfWorkOrderIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="woIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.plantCode},
+            #{item.workOrderId},
+            #{item.itemCode},
+            #{item.workOrderNum},
+            #{item.quantity},
+            #{item.workOrderType},
+            #{item.workOrderStatus},
+            #{item.scheduleStartDate},
+            #{item.scheduleEndDate},
+            #{item.completeLocator},
+            #{item.prodLineCode},
+            #{item.productionVersion},
+            #{item.remark},
+            #{item.erpCreationDate},
+            #{item.erpCreatedBy},
+            #{item.erpLastUpdatedBy},
+            #{item.erpLastUpdateDate},
+            #{item.batchId},
+            #{item.status},
+            #{item.message},
+            #{item.completeControlType},
+            #{item.completeControlQty},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectProdLineCode" resultType="java.lang.String">
+        SELECT mmpl.PROD_LINE_CODE
+        FROM mt_site_plant_releation mspr
+                 JOIN mt_material_site mms ON mms.SITE_ID = mspr.SITE_ID
+            AND mms.MATERIAL_ID = #{materialId} AND mms.TENANT_ID = #{tenantId}
+                 JOIN mt_pfep_manufacturing mpm ON mpm.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+            AND mpm.ORGANIZATION_TYPE = 'PRODUCTIONLINE' AND mpm.TENANT_ID = #{tenantId}
+                 JOIN mt_mod_production_line mmpl
+                      ON mmpl.PROD_LINE_ID = mpm.ORGANIZATION_ID AND mmpl.TENANT_ID = #{tenantId}
+        WHERE mspr.TENANT_ID = #{tenantId}
+          AND mspr.SITE_TYPE = 'MANUFACTURING'
+          AND mspr.PLANT_CODE = #{plantCode}
+    </select>
+
+    <select id="selectOperationDesc" resultType="java.lang.String">
+        SELECT mo.DESCRIPTION
+        FROM mt_site_plant_releation mspr
+                 JOIN mt_operation mo ON mspr.SITE_ID = mo.SITE_ID
+            AND mspr.TENANT_ID = mo.TENANT_ID
+            AND mo.REVISION = 'MAIN'
+            AND mo.OPERATION_NAME = #{operationName}
+        WHERE mspr.TENANT_ID = #{tenantId}
+          AND mspr.SITE_TYPE = 'MANUFACTURING'
+          AND mspr.PLANT_CODE = #{plantCode}
+    </select>
+
+    <select id="selectWoStatus" resultType="java.lang.String">
+        SELECT wo.STATUS
+        FROM mt_work_order wo,
+             mt_site_plant_releation rel
+        WHERE wo.TENANT_ID = #{tenantId}
+          AND wo.SITE_ID = rel.SITE_ID
+          AND rel.SITE_TYPE = 'MANUFACTURING'
+          AND rel.PLANT_CODE = #{plantCode}
+          AND wo.WORK_ORDER_NUM = #{workOrderNum}
+    </select>
+    <select id="selectBomId" resultType="java.lang.String">
+        SELECT BOM_ID FROM MT_BOM WHERE BOM_NAME IN
+        <foreach collection="workOrderNums" index="index" item="bomName" open="(" separator="," close=")">
+            #{bomName}
+        </foreach>
+    </select>
+    <select id="selectBomId2" resultType="java.lang.String">
+        SELECT BOM_ID FROM MT_BOM WHERE BOM_NAME IN
+        <foreach collection="workOrderNums" index="index" item="bomName" open="(" separator="," close=")">
+            #{bomName}
+        </foreach>
+        AND BOM_TYPE = 'WO'
+    </select>
+    <select id="selectBomComponentId" resultType="java.lang.String">
+        SELECT BOM_COMPONENT_ID FROM MT_BOM_COMPONENT WHERE BOM_ID IN
+        <foreach collection="bomIds" index="index" item="bomId" open="(" separator="," close=")">
+            #{bomId}
+        </foreach>
+    </select>
+    <select id="selectBomSubstituteGroupId" resultType="java.lang.String">
+        SELECT BOM_SUBSTITUTE_GROUP_ID FROM MT_BOM_SUBSTITUTE_GROUP WHERE BOM_COMPONENT_ID IN
+        <foreach collection="bomComponentIds" index="index" item="bomComponentId" open="(" separator="," close=")">
+            #{bomComponentId}
+        </foreach>
+    </select>
+    <select id="selectRouterStepId" resultType="java.lang.String">
+        SELECT ROUTER_STEP_ID FROM MT_ROUTER_STEP WHERE ROUTER_ID IN (SELECT ROUTER_ID FROM MT_ROUTER WHERE ROUTER_NAME
+        IN
+        <foreach collection="workOrderNums" index="index" item="routerName" open="(" separator="," close=")">
+            #{routerName}
+        </foreach>
+        )
+    </select>
+    <select id="selectRouterStepId2" resultType="java.lang.String">
+        SELECT
+        mrs.ROUTER_STEP_ID
+        FROM
+        MT_ROUTER_STEP mrs
+        WHERE
+        mrs.ROUTER_ID IN (
+        SELECT
+        mr.ROUTER_ID
+        FROM
+        MT_ROUTER mr
+        WHERE
+        ( mr.ROUTER_NAME, mr.REVISION ) IN
+        <foreach collection="routers" index="index" item="item" open="(" close=")" separator=",">
+            (#{item.routerName},#{item.revision})
+        </foreach>
+        AND mr.TENANT_ID = mrs.TENANT_ID
+        )
+        AND mrs.TENANT_ID = #{tenantId}
+    </select>
+    <select id="selectWoStatusByIds" resultType="com.ruike.itf.domain.vo.ItfWoStatusSendErp">
+        SELECT
+        mwo.WORK_ORDER_NUM,
+        LEFT ( mwo.`STATUS`, 4 ) AS wo_status,
+        mspr.PLANT_CODE,
+        mwo.LAST_UPDATE_DATE
+        FROM
+        mt_work_order mwo,
+        mt_site_plant_releation mspr
+        WHERE
+        mspr.TENANT_ID = mwo.TENANT_ID
+        AND mspr.SITE_ID = mwo.SITE_ID
+        AND mwo.work_order_id in
+        <foreach collection="workOrderIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+
+
+    </select>
+
+    <select id="selectDefaultProdLine" resultType="tarzan.modeling.domain.entity.MtModProductionLine">
+        SELECT mmpl.PROD_LINE_ID,
+               mmpl.PROD_LINE_CODE
+        from mt_mod_organization_rel mmor,
+             mt_mod_organization_rel mmor2,
+             mt_mod_production_line mmpl,
+             mt_mod_site mms,
+             mt_mod_production_line_attr la,
+             mt_mod_area mma
+        where mms.SITE_ID = mmor.TOP_SITE_ID
+          and mmor.TOP_SITE_ID = mmor2.TOP_SITE_ID
+          and mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+          and mmor2.TENANT_ID = mmor.TENANT_ID
+          and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+          and mmor2.PARENT_ORGANIZATION_TYPE = 'AREA'
+          and mmor2.ORGANIZATION_TYPE = 'PROD_LINE'
+          and mmpl.PROD_LINE_ID = mmor2.ORGANIZATION_ID
+          and mmpl.ENABLE_FLAG = 'Y'
+          and mmpl.PROD_LINE_ID = la.PROD_LINE_ID
+          and la.ATTR_NAME = 'DEFAULT_PRODLINE_FLAG'
+          and la.ATTR_VALUE = 'Y'
+          and mmor.PARENT_ORGANIZATION_ID = mma.AREA_ID
+          and mmor.TENANT_ID = #{tenantId}
+          and mms.SITE_CODE = #{plantCode}
+          and mma.area_code = #{workshop}
+        limit 1
+    </select>
+
+    <delete id="deleteBomRelTable">
+        ${sql}
+    </delete>
+
+</mapper>

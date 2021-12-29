@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEoJobBeyondMaterialMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEoJobBeyondMaterial">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="byd_material_id" property="bydMaterialId" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_type" property="materialType" jdbcType="VARCHAR"/>
+        <result column="available_time" property="availableTime" jdbcType="VARCHAR"/>
+        <result column="unit_qty" property="unitQty" jdbcType="DECIMAL"/>
+        <result column="assemble_location" property="assembleLocation" jdbcType="VARCHAR"/>
+        <result column="is_beyond" property="isBeyond" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="material_code" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="material_name" property="materialName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectByWkc"
+            resultMap="BaseResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+	select beyond.tenant_id,
+           beyond.byd_material_id,
+           beyond.workcell_id,
+           beyond.material_id,
+           item.material_code,
+           tl.material_name,
+           beyond.material_type,
+           beyond.available_time,
+           beyond.unit_qty,
+           beyond.assemble_location,
+           beyond.is_beyond,
+           beyond.remark,
+           beyond.cid,
+           beyond.object_version_number,
+           beyond.creation_date,
+           beyond.created_by,
+           beyond.last_updated_by,
+           beyond.last_update_date
+	from hme_eo_job_beyond_material beyond,
+		 mt_material item
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID AND tl.LANG = #{lang}
+	where beyond.MATERIAL_ID = item.MATERIAL_ID
+      and beyond.tenant_id = #{tenantId}
+      and beyond.workcell_id = #{dto.workcellId}
+        <if test="dto.materialType != null and dto.materialType != ''">
+            AND beyond.material_type = #{dto.materialType}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND beyond.material_id = #{dto.materialId}
+        </if>
+    </select>
+</mapper>

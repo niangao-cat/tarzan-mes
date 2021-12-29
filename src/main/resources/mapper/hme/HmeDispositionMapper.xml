@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeDispositionMapper">
+    <select id="queryFunctionByCondition" resultType="com.ruike.hme.api.dto.HmeDispositionFunctionDTO">
+        SELECT
+            mdf.DISPOSITION_FUNCTION_ID,
+            mdf.SITE_ID,
+            mms.SITE_CODE,
+            mms.SITE_NAME,
+            mdf.DISPOSITION_FUNCTION,
+            mdf.DESCRIPTION,
+            mdf.ROUTER_ID,
+            mr.ROUTER_NAME,
+            mr.DESCRIPTION ROUTER_DESCRIPTION,
+            mdf.FUNCTION_TYPE,
+            mgtl.DESCRIPTION FUNCTION_TYPE_DESCRIPTION
+        FROM
+            mt_disposition_function mdf
+            LEFT JOIN mt_mod_site mms ON mdf.SITE_ID = mms.SITE_ID
+            LEFT JOIN mt_router mr ON mdf.ROUTER_ID = mr.ROUTER_ID
+            LEFT JOIN mt_gen_type mgt ON mgt.TYPE_GROUP = 'FUNCTION_TYPE'
+            AND mgt.TYPE_CODE = mdf.FUNCTION_TYPE
+            AND mgt.TENANT_ID = mdf.TENANT_ID
+            LEFT JOIN mt_gen_type_tl mgtl ON mgt.GEN_TYPE_ID = mgtl.GEN_TYPE_ID
+            AND mgtl.LANG = 'zh_CN'
+        WHERE
+            mdf.TENANT_ID = #{tenantId}
+            <if test="hmeDispositionFunctionDTO.siteId != null and hmeDispositionFunctionDTO.siteId != ''">
+                and mdf.SITE_ID = #{hmeDispositionFunctionDTO.siteId}
+            </if>
+            <if test="hmeDispositionFunctionDTO.dispositionFunction != null and hmeDispositionFunctionDTO.dispositionFunction != ''">
+                <bind name="dispositionFunctionLike" value="'%' + hmeDispositionFunctionDTO.dispositionFunction + '%'"/>
+                and mdf.DISPOSITION_FUNCTION like #{dispositionFunctionLike}
+            </if>
+            <if test="hmeDispositionFunctionDTO.functionType != null and hmeDispositionFunctionDTO.functionType != ''">
+                and mdf.FUNCTION_TYPE = #{hmeDispositionFunctionDTO.functionType}
+            </if>
+            <if test="hmeDispositionFunctionDTO.description != null and hmeDispositionFunctionDTO.description != ''">
+                <bind name="descriptionLike" value="'%' + hmeDispositionFunctionDTO.description + '%'"/>
+                and mdf.DESCRIPTION like #{descriptionLike}
+            </if>
+            <if test="hmeDispositionFunctionDTO.routerId != null and hmeDispositionFunctionDTO.routerId != ''">
+                and mdf.ROUTER_ID = #{hmeDispositionFunctionDTO.routerId}
+            </if>
+    </select>
+    <select id="queryGroupByCondition" resultType="com.ruike.hme.api.dto.HmeDispositionGroupDTO">
+        SELECT
+            mdg.DISPOSITION_GROUP_ID,
+            mdg.DISPOSITION_GROUP,
+            mdg.DESCRIPTION,
+            mms.SITE_ID,
+            mms.SITE_CODE,
+            mms.SITE_NAME
+        FROM
+            mt_disposition_group mdg
+            LEFT JOIN mt_mod_site mms ON mdg.SITE_ID = mms.SITE_ID
+        where
+            mdg.TENANT_ID = #{tenantId}
+        <if test="hmeDispositionGroupDTO.siteId != null and hmeDispositionGroupDTO.siteId != ''">
+            and mdg.SITE_ID = #{HmeDispositionGroupDTO.siteId}
+        </if>
+        <if test="hmeDispositionGroupDTO.dispositionGroupId != null and hmeDispositionGroupDTO.dispositionGroupId != ''">
+            and mdg.DISPOSITION_GROUP_ID = #{hmeDispositionGroupDTO.dispositionGroupId}
+        </if>
+        <if test="hmeDispositionGroupDTO.dispositionGroup != null and hmeDispositionGroupDTO.dispositionGroup != ''">
+            <bind name="dispositionGroupLike" value="'%' + hmeDispositionGroupDTO.dispositionGroup + '%'"/>
+            and mdg.DISPOSITION_GROUP like #{dispositionGroupLike}
+        </if>
+        <if test="hmeDispositionGroupDTO.description != null and hmeDispositionGroupDTO.description != ''">
+            <bind name="descriptionLike" value="'%' + hmeDispositionGroupDTO.description + '%'"/>
+            and mdg.DESCRIPTION like #{descriptionLike}
+        </if>
+    </select>
+    <select id="groupDetailQuery" resultType="com.ruike.hme.api.dto.HmeDispositionFunctionDTO">
+        SELECT
+            mdgm.DISPOSITION_GROUP_MEMBER_ID,
+	        mdgm.SEQUENCE,
+            mdf.DISPOSITION_FUNCTION_ID,
+            mdf.SITE_ID,
+            mms.SITE_CODE,
+            mms.SITE_NAME,
+            mdf.DISPOSITION_FUNCTION,
+            mdf.DESCRIPTION,
+            mdf.ROUTER_ID,
+            mr.ROUTER_NAME,
+            mr.DESCRIPTION ROUTER_DESCRIPTION,
+            mdf.FUNCTION_TYPE,
+            mgtl.DESCRIPTION FUNCTION_TYPE_DESCRIPTION
+        FROM
+            mt_disposition_group_member mdgm
+            LEFT JOIN mt_disposition_function mdf ON mdf.DISPOSITION_FUNCTION_ID = mdgm.DISPOSITION_FUNCTION_ID
+            LEFT JOIN mt_mod_site mms ON mdf.SITE_ID = mms.SITE_ID
+            LEFT JOIN mt_router mr ON mdf.ROUTER_ID = mr.ROUTER_ID
+            LEFT JOIN mt_gen_type mgt ON mgt.TYPE_GROUP = 'FUNCTION_TYPE'
+            AND mgt.TYPE_CODE = mdf.FUNCTION_TYPE
+            AND mgt.TENANT_ID = mdf.TENANT_ID
+            LEFT JOIN mt_gen_type_tl mgtl ON mgt.GEN_TYPE_ID = mgtl.GEN_TYPE_ID
+            AND mgtl.LANG = 'zh_CN'
+        WHERE
+            mdgm.TENANT_ID = #{tenantId} and mdgm.DISPOSITION_GROUP_ID = #{dispositionGroupId}
+    </select>
+</mapper>

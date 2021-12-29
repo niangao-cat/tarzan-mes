@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeChipImportDataMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeChipImportData">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="KID" property="kid" jdbcType="VARCHAR"/>
+        <result column="PRINT_FLAG" property="printFlag" jdbcType="VARCHAR"/>
+        <result column="WORK_NUM" property="workNum" jdbcType="VARCHAR"/>
+        <result column="COS_TYPE" property="cosType" jdbcType="VARCHAR"/>
+        <result column="WORKCELL" property="workcell" jdbcType="VARCHAR"/>
+        <result column="IMPORT_LOT" property="importLot" jdbcType="VARCHAR"/>
+        <result column="TARGET_BARCODE" property="targetBarcode" jdbcType="VARCHAR"/>
+        <result column="SOURCE_BARCODE" property="sourceBarcode" jdbcType="VARCHAR"/>
+        <result column="FOX_NUM" property="foxNum" jdbcType="VARCHAR"/>
+        <result column="WAFER" property="wafer" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE" property="containerType" jdbcType="VARCHAR"/>
+        <result column="LOTNO" property="lotno" jdbcType="VARCHAR"/>
+        <result column="AVG_WAVELENGHT" property="avgWavelenght" jdbcType="VARCHAR"/>
+        <result column="TYPE" property="type" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="POSITION" property="position" jdbcType="VARCHAR"/>
+        <result column="BAR_NUM" property="barNum" jdbcType="DECIMAL"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="A001" property="a001" jdbcType="DECIMAL"/>
+        <result column="A002" property="a002" jdbcType="DECIMAL"/>
+        <result column="A003" property="a003" jdbcType="DECIMAL"/>
+        <result column="A004" property="a004" jdbcType="DECIMAL"/>
+        <result column="A005" property="a005" jdbcType="DECIMAL"/>
+        <result column="A006" property="a006" jdbcType="DECIMAL"/>
+        <result column="A007" property="a007" jdbcType="DECIMAL"/>
+        <result column="A008" property="a008" jdbcType="DECIMAL"/>
+        <result column="A009" property="a009" jdbcType="DECIMAL"/>
+        <result column="A010" property="a010" jdbcType="DECIMAL"/>
+        <result column="A011" property="a011" jdbcType="DECIMAL"/>
+        <result column="A012" property="a012" jdbcType="DECIMAL"/>
+        <result column="A013" property="a013" jdbcType="DECIMAL"/>
+        <result column="A014" property="a014" jdbcType="DECIMAL"/>
+        <result column="A015" property="a015" jdbcType="DECIMAL"/>
+        <result column="A016" property="a016" jdbcType="DECIMAL"/>
+        <result column="A017" property="a017" jdbcType="DECIMAL"/>
+        <result column="A018" property="a018" jdbcType="DECIMAL"/>
+        <result column="A019" property="a019" jdbcType="DECIMAL"/>
+        <result column="A020" property="a020" jdbcType="DECIMAL"/>
+        <result column="A021" property="a021" jdbcType="DECIMAL"/>
+        <result column="A022" property="a022" jdbcType="DECIMAL"/>
+        <result column="A023" property="a023" jdbcType="DECIMAL"/>
+        <result column="A024" property="a024" jdbcType="DECIMAL"/>
+        <result column="A025" property="a025" jdbcType="DECIMAL"/>
+        <result column="A026" property="a026" jdbcType="DECIMAL"/>
+        <result column="A027" property="a027" jdbcType="DECIMAL"/>
+        <result column="A028" property="a028" jdbcType="DECIMAL"/>
+        <result column="A029" property="a029" jdbcType="DECIMAL"/>
+        <result column="A030" property="a030" jdbcType="DECIMAL"/>
+        <result column="A031" property="a031" jdbcType="DECIMAL"/>
+        <result column="A032" property="a032" jdbcType="DECIMAL"/>
+        <result column="A033" property="a033" jdbcType="DECIMAL"/>
+        <result column="A034" property="a034" jdbcType="DECIMAL"/>
+        <result column="A035" property="a035" jdbcType="DECIMAL"/>
+        <result column="A036" property="a036" jdbcType="DECIMAL"/>
+        <result column="A037" property="a037" jdbcType="DECIMAL"/>
+        <result column="A038" property="a038" jdbcType="DECIMAL"/>
+        <result column="A039" property="a039" jdbcType="DECIMAL"/>
+        <result column="A040" property="a040" jdbcType="DECIMAL"/>
+        <result column="A041" property="a041" jdbcType="DECIMAL"/>
+        <result column="A042" property="a042" jdbcType="DECIMAL"/>
+        <result column="A043" property="a043" jdbcType="DECIMAL"/>
+        <result column="A044" property="a044" jdbcType="DECIMAL"/>
+        <result column="A045" property="a045" jdbcType="DECIMAL"/>
+        <result column="A046" property="a046" jdbcType="DECIMAL"/>
+        <result column="A047" property="a047" jdbcType="DECIMAL"/>
+        <result column="A048" property="a048" jdbcType="DECIMAL"/>
+        <result column="A049" property="a049" jdbcType="DECIMAL"/>
+        <result column="A050" property="a050" jdbcType="DECIMAL"/>
+        <result column="A051" property="a051" jdbcType="DECIMAL"/>
+        <result column="A052" property="a052" jdbcType="DECIMAL"/>
+        <result column="A053" property="a053" jdbcType="DECIMAL"/>
+        <result column="A054" property="a054" jdbcType="DECIMAL"/>
+        <result column="A055" property="a055" jdbcType="DECIMAL"/>
+        <result column="A056" property="a056" jdbcType="DECIMAL"/>
+        <result column="A057" property="a057" jdbcType="DECIMAL"/>
+        <result column="A058" property="a058" jdbcType="DECIMAL"/>
+        <result column="A059" property="a059" jdbcType="DECIMAL"/>
+        <result column="A060" property="a060" jdbcType="DECIMAL"/>
+        <result column="A061" property="a061" jdbcType="DECIMAL"/>
+        <result column="A062" property="a062" jdbcType="DECIMAL"/>
+        <result column="A063" property="a063" jdbcType="DECIMAL"/>
+        <result column="A064" property="a064" jdbcType="DECIMAL"/>
+        <result column="A065" property="a065" jdbcType="DECIMAL"/>
+        <result column="A066" property="a066" jdbcType="DECIMAL"/>
+        <result column="A067" property="a067" jdbcType="DECIMAL"/>
+        <result column="A068" property="a068" jdbcType="DECIMAL"/>
+        <result column="A069" property="a069" jdbcType="DECIMAL"/>
+        <result column="A070" property="a070" jdbcType="DECIMAL"/>
+        <result column="A071" property="a071" jdbcType="DECIMAL"/>
+        <result column="A072" property="a072" jdbcType="DECIMAL"/>
+        <result column="A073" property="a073" jdbcType="DECIMAL"/>
+        <result column="A074" property="a074" jdbcType="DECIMAL"/>
+        <result column="A075" property="a075" jdbcType="DECIMAL"/>
+        <result column="A076" property="a076" jdbcType="DECIMAL"/>
+        <result column="A077" property="a077" jdbcType="DECIMAL"/>
+        <result column="A078" property="a078" jdbcType="DECIMAL"/>
+        <result column="A079" property="a079" jdbcType="DECIMAL"/>
+        <result column="A080" property="a080" jdbcType="DECIMAL"/>
+        <result column="A081" property="a081" jdbcType="DECIMAL"/>
+        <result column="A082" property="a082" jdbcType="DECIMAL"/>
+        <result column="A083" property="a083" jdbcType="DECIMAL"/>
+        <result column="A084" property="a084" jdbcType="DECIMAL"/>
+        <result column="A085" property="a085" jdbcType="DECIMAL"/>
+        <result column="A086" property="a086" jdbcType="DECIMAL"/>
+        <result column="A087" property="a087" jdbcType="DECIMAL"/>
+        <result column="A088" property="a088" jdbcType="DECIMAL"/>
+        <result column="A089" property="a089" jdbcType="DECIMAL"/>
+        <result column="A090" property="a090" jdbcType="DECIMAL"/>
+        <result column="A091" property="a091" jdbcType="DECIMAL"/>
+        <result column="A092" property="a092" jdbcType="DECIMAL"/>
+        <result column="A093" property="a093" jdbcType="DECIMAL"/>
+        <result column="A094" property="a094" jdbcType="DECIMAL"/>
+        <result column="A095" property="a095" jdbcType="DECIMAL"/>
+        <result column="A096" property="a096" jdbcType="DECIMAL"/>
+        <result column="A097" property="a097" jdbcType="DECIMAL"/>
+        <result column="A098" property="a098" jdbcType="DECIMAL"/>
+        <result column="A099" property="a099" jdbcType="DECIMAL"/>
+        <result column="A100" property="a100" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="headDataQuery" resultType="com.ruike.hme.domain.vo.HmeChipImportVO">
+        SELECT
+            hcid.target_barcode,
+            hcid.source_barcode,
+            hcid.work_num,
+            hcid.cos_type,
+            hcid.workcell,
+            hcid.import_lot,
+            hcid.fox_num,
+            hcid.wafer,
+            hcid.container_type,
+            hcid.lotno,
+            hcid.avg_wavelenght,
+            hcid.type,
+            hcid.remark
+        FROM
+            hme_chip_import_data hcid
+        WHERE
+            hcid.tenant_id = #{tenantId}
+        AND hcid.print_flag = #{dto.printFlag}
+        <if test="dto.workNum != null and dto.workNum != ''">
+            AND hcid.work_num LIKE CONCAT('%',#{dto.workNum},'%')
+        </if>
+        <if test="dto.creationDateFrom != null">
+            AND hcid.creation_date >= DATE_FORMAT(#{dto.creationDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.creationDateTo != null">
+            AND hcid.creation_date &lt;= DATE_FORMAT(#{dto.creationDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        GROUP BY
+            hcid.target_barcode,
+            hcid.source_barcode,
+            hcid.work_num,
+            hcid.cos_type,
+            hcid.workcell,
+            hcid.import_lot,
+            hcid.fox_num,
+            hcid.wafer,
+            hcid.container_type,
+            hcid.lotno,
+            hcid.avg_wavelenght,
+            hcid.type,
+            hcid.remark
+    </select>
+
+    <select id="lineDataQuery" resultType="com.ruike.hme.domain.entity.HmeChipImportData">
+        SELECT
+            hcid.kid,
+            hcid.position,
+            hcid.bar_num,
+            hcid.qty,
+            hcid.a001,
+            hcid.a002,
+            hcid.a003,
+            hcid.a004,
+            hcid.a005,
+            hcid.a006,
+            hcid.a007,
+            hcid.a008,
+            hcid.a009,
+            hcid.a010,
+            hcid.a011,
+            hcid.a012,
+            hcid.a013,
+            hcid.a014,
+            hcid.a015,
+            hcid.a016,
+            hcid.a017,
+            hcid.a018,
+            hcid.a019,
+            hcid.a020,
+            hcid.a021,
+            hcid.a022,
+            hcid.a023,
+            hcid.a024,
+            hcid.a025,
+            hcid.a026,
+            hcid.a027,
+            hcid.a028,
+            hcid.a029,
+            hcid.a030,
+            hcid.a031,
+            hcid.a032,
+            hcid.a033,
+            hcid.a034,
+            hcid.a035,
+            hcid.a036,
+            hcid.a037,
+            hcid.a038,
+            hcid.a039,
+            hcid.a040,
+            hcid.a041,
+            hcid.a042,
+            hcid.a043,
+            hcid.a044,
+            hcid.a045,
+            hcid.a046,
+            hcid.a047,
+            hcid.a048,
+            hcid.a049,
+            hcid.a050,
+            hcid.a051,
+            hcid.a052,
+            hcid.a053,
+            hcid.a054,
+            hcid.a055,
+            hcid.a056,
+            hcid.a057,
+            hcid.a058,
+            hcid.a059,
+            hcid.a060,
+            hcid.a061,
+            hcid.a062,
+            hcid.a063,
+            hcid.a064,
+            hcid.a065,
+            hcid.a066,
+            hcid.a067,
+            hcid.a068,
+            hcid.a069,
+            hcid.a070,
+            hcid.a071,
+            hcid.a072,
+            hcid.a073,
+            hcid.a074,
+            hcid.a075,
+            hcid.a076,
+            hcid.a077,
+            hcid.a078,
+            hcid.a079,
+            hcid.a080,
+            hcid.a081,
+            hcid.a082,
+            hcid.a083,
+            hcid.a084,
+            hcid.a085,
+            hcid.a086,
+            hcid.a087,
+            hcid.a088,
+            hcid.a089,
+            hcid.a090,
+            hcid.a091,
+            hcid.a092,
+            hcid.a093,
+            hcid.a094,
+            hcid.a095,
+            hcid.a096,
+            hcid.a097,
+            hcid.a098,
+            hcid.a099,
+            hcid.a100
+        FROM
+            hme_chip_import_data hcid
+        WHERE
+            hcid.tenant_id = #{tenantId}
+        AND hcid.print_flag = #{dto.printFlag}
+        AND hcid.target_barcode = #{dto.targetBarcode}
+        AND hcid.source_barcode = #{dto.sourceBarcode}
+        AND hcid.work_num = #{dto.workNum}
+        AND hcid.cos_type = #{dto.cosType}
+        AND hcid.workcell = #{dto.workcell}
+        AND hcid.fox_num = #{dto.foxNum}
+        AND hcid.wafer = #{dto.wafer}
+        AND hcid.container_type = #{dto.containerType}
+        <choose>
+            <when test="dto.lotno != null and dto.lotno != ''">
+                AND hcid.lotno = #{dto.lotno}
+            </when>
+            <otherwise>
+                AND (hcid.lotno is null OR hcid.lotno = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.avgWavelenght != null and dto.avgWavelenght != ''">
+                AND hcid.avg_wavelenght = #{dto.avgWavelenght}
+            </when>
+            <otherwise>
+                AND (hcid.avg_wavelenght is null OR hcid.avg_wavelenght = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.importLot != null and dto.importLot != ''">
+                AND hcid.import_lot = #{dto.importLot}
+            </when>
+            <otherwise>
+                AND (hcid.import_lot is null OR hcid.import_lot = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.type != null and dto.type != ''">
+                AND hcid.type = #{dto.type}
+            </when>
+            <otherwise>
+                AND (hcid.type is null OR hcid.type = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.remark != null and dto.remark != ''">
+                AND hcid.remark = #{dto.remark}
+            </when>
+            <otherwise>
+                AND (hcid.remark is null OR hcid.remark = '')
+            </otherwise>
+        </choose>
+        <if test="dto.creationDateFrom != null">
+            AND hcid.creation_date >= DATE_FORMAT(#{dto.creationDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.creationDateTo != null">
+            AND hcid.creation_date &lt;= DATE_FORMAT(#{dto.creationDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+    <select id="printDataQuery" resultType="com.ruike.hme.domain.vo.HmeChipImportVO2">
+        SELECT
+        hcid.kid,
+        mml.MATERIAL_LOT_ID
+        FROM
+        hme_chip_import_data hcid
+        LEFT JOIN mt_material_lot mml ON mml.TENANT_ID = hcid.tenant_id
+        AND mml.MATERIAL_LOT_CODE = hcid.target_barcode
+        WHERE
+        hcid.tenant_id = #{tenantId}
+        AND hcid.print_flag = #{dto.printFlag}
+        AND hcid.target_barcode = #{dto.targetBarcode}
+        AND hcid.source_barcode = #{dto.sourceBarcode}
+        AND hcid.work_num = #{dto.workNum}
+        AND hcid.cos_type = #{dto.cosType}
+        AND hcid.workcell = #{dto.workcell}
+        AND hcid.import_lot = #{dto.importLot}
+        AND hcid.fox_num = #{dto.foxNum}
+        AND hcid.wafer = #{dto.wafer}
+        AND hcid.container_type = #{dto.containerType}
+        AND hcid.lotno = #{dto.lotno}
+        AND hcid.avg_wavelenght = #{dto.avgWavelenght}
+        AND hcid.type = #{dto.type}
+        AND hcid.remark = #{dto.remark}
+        <if test="creationDateFrom != null">
+            AND hcid.creation_date >= DATE_FORMAT(#{creationDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="creationDateTo != null">
+            AND hcid.creation_date &lt;= DATE_FORMAT(#{creationDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+    <select id="updatePrintFlag">
+        UPDATE hme_chip_import_data hcid
+        SET hcid.print_flag = 'Y'
+        WHERE hcid.kid IN
+        <foreach collection="kids" open="(" close=")" separator="," item="kid" index="index">
+            #{kid}
+        </foreach>
+    </select>
+
+    <select id="getItemGropByMaterial" resultType="java.lang.String">
+        select mmb.ITEM_GROUP
+        from mt_material_site mms
+        left join mt_material_basic mmb
+        on mmb.TENANT_ID = mms.TENANT_ID
+        and mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        where mms.TENANT_ID = #{tenantId}
+        and mms.MATERIAL_ID = #{materialId}
+        and mms.SITE_ID = #{siteId}
+    </select>
+
+    <select id="getBomMaterialByBomId" resultType="java.lang.String">
+        select mbc.MATERIAL_ID
+        from mt_bom_component mbc
+        where mbc.TENANT_ID = #{tenantId}
+        and mbc.BOM_ID = #{bomId}
+    </select>
+
+    <select id="getRouterStepId" resultType="java.lang.String">
+        select mro.ROUTER_STEP_ID
+        from mt_router_step mrs,
+        mt_router_operation mro
+        where mrs.TENANT_ID = #{tenantId}
+        and mrs.ROUTER_ID = #{routerId}
+        and mro.TENANT_ID = mrs.TENANT_ID
+        and mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        and mro.OPERATION_ID = #{operationId}
+        and mro.ROUTER_OPERATION_ID is not null
+        limit 1
+    </select>
+
+    <select id="getRouterOperationId" resultType="java.lang.String">
+        select mro.ROUTER_OPERATION_ID
+        from mt_router_step mrs,
+        mt_router_operation mro
+        where mrs.TENANT_ID = #{tenantId}
+        and mrs.ROUTER_ID = #{routerId}
+        and mro.TENANT_ID = mrs.TENANT_ID
+        and mro.ROUTER_STEP_ID = mrs.ROUTER_STEP_ID
+        and mro.OPERATION_ID = #{operationId}
+        and mro.ROUTER_OPERATION_ID is not null
+        limit 1
+    </select>
+
+    <select id="getBomComponentId" resultType="java.lang.String">
+        select mbc.BOM_COMPONENT_ID
+        from mt_bom_component mbc,
+        mt_router_operation_component mroc
+        where mbc.TENANT_ID = #{tenantId}
+        and mbc.BOM_ID = #{bomId}
+        and mbc.MATERIAL_ID = #{materialId}
+        and mroc.TENANT_ID = mbc.TENANT_ID
+        and mroc.BOM_COMPONENT_ID = mbc.BOM_COMPONENT_ID
+        and mroc.ROUTER_OPERATION_ID = #{routerOperationId}
+        and mroc.ROUTER_OPERATION_COMPONENT_ID is not NULL
+        limit 1
+    </select>
+
+    <select id="getAssembleQtySum" resultType="java.math.BigDecimal">
+        SELECT IFNULL(Sum(t.ASSEMBLE_QTY),0)
+        from mt_work_order_component_actual t
+        where t.TENANT_ID = #{tenantId}
+        and t.WORK_ORDER_ID = #{workOrderId}
+        and t.BOM_COMPONENT_ID = #{bomComponentId}
+    </select>
+
+    <select id="queryTargetBarcodeInfoList" resultType="com.ruike.hme.domain.vo.HmeChipImportVO">
+        SELECT
+        	mml.MATERIAL_LOT_ID TARGET_BARCODE_ID,
+            mml.MATERIAL_LOT_CODE TARGET_BARCODE,
+        	mml.PRIMARY_UOM_QTY,
+        	mm.MATERIAL_CODE,
+        	mm.MATERIAL_NAME,
+        	attr.ATTR_VALUE PRODUCT_DATE
+        FROM
+        	mt_material_lot mml
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mml.MATERIAL_ID
+        LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'PRODUCT_DATE'
+        WHERE
+        mml.TENANT_ID = #{tenantId}
+        AND mml.MATERIAL_LOT_CODE IN
+        <foreach collection="targetBarcodeList" item="item" index="index" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

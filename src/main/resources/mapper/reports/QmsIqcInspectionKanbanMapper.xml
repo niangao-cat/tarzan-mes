@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.reports.infra.mapper.QmsIqcInspectionKanbanMapper">
+
+    <select id="selectKanbanList" resultType="com.ruike.reports.domain.vo.QmsIqcInspectionKanbanVO">
+        select usr.real_name inspector_name
+        , ms.SUPPLIER_NAME
+        , mm.MATERIAL_NAME
+        , count(*) total_num
+        , sum(case when qih.INSPECTION_RESULT = 'OK' then 1 else 0 end) ok_num
+        , sum(case when qih.INSPECTION_RESULT = 'NG' then 1 else 0 end) ng_num
+        from qms_iqc_header qih
+        , mt_supplier ms
+        , mt_material mm
+        , mt_material_site mms
+        , mt_material_site_attr mmsa
+        , iam_user usr
+        , hiam_user_group hug
+        , hiam_user_group_assign huga
+        where qih.SUPPLIER_ID = ms.SUPPLIER_ID
+        and qih.MATERIAL_ID = mm.MATERIAL_ID
+        and qih.last_updated_by = usr.id
+        and qih.inspection_status = 'COMPLETED'
+        AND mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mmsa.ATTR_NAME = 'IQC_ACTIVE'
+        AND mmsa.TENANT_ID = mms.TENANT_ID
+        AND mmsa.ATTR_VALUE = 'X'
+        AND mms.MATERIAL_ID = mm.MATERIAL_ID
+        <if test="siteId != null and siteId != ''">
+            AND mms.SITE_ID = #{siteId}
+        </if>
+        AND mms.TENANT_ID = mm.TENANT_ID
+        AND mms.ENABLE_FLAG = 'Y'
+        AND mm.ENABLE_FLAG = 'Y'
+        AND mm.TENANT_ID = #{tenantId}
+        AND huga.user_id = usr.id
+        AND huga.user_group_id = hug.user_group_id
+        and huga.tenant_id = hug.tenant_id
+        AND hug.group_code = 'IQC'
+        AND hug.tenant_id = #{tenantId}
+        <if test="dto.materialIdList != null and dto.materialIdList.size() > 0">
+            and qih.MATERIAL_ID in
+            <foreach collection="dto.materialIdList" item="materialId" separator="," open="(" close=")">
+                #{materialId}
+            </foreach>
+        </if>
+        <if test="dto.supplierIdList != null and dto.supplierIdList.size() > 0">
+            and qih.SUPPLIER_ID in
+            <foreach collection="dto.supplierIdList" item="supplierId" separator="," open="(" close=")">
+                #{supplierId}
+            </foreach>
+        </if>
+        <if test="dto.inspectorIdList != null and dto.inspectorIdList.size() > 0">
+            and qih.last_updated_by in
+            <foreach collection="dto.inspectorIdList" item="inspectorId" separator="," open="(" close=")">
+                #{inspectorId}
+            </foreach>
+        </if>
+        and qih.inspection_finish_date between #{dto.inspectionDateFrom} and #{dto.inspectionDateTo}
+        group by usr.real_name
+        , ms.SUPPLIER_NAME
+        , mm.MATERIAL_NAME
+    </select>
+
+    <select id="selectQualityList" resultType="com.ruike.reports.domain.vo.QmsIqcInspectionKanbanVO">
+        select ms.SUPPLIER_NAME
+        , mm.MATERIAL_NAME
+        , count(*) total_num
+        , sum(case when qih.INSPECTION_RESULT = 'OK' then 1 else 0 end) ok_num
+        , sum(case when qih.INSPECTION_RESULT = 'NG' then 1 else 0 end) ng_num
+        from qms_iqc_header qih
+        , mt_supplier ms
+        , mt_material mm
+        , mt_material_site mms
+        , mt_material_site_attr mmsa
+        where qih.SUPPLIER_ID = ms.SUPPLIER_ID
+        and qih.MATERIAL_ID = mm.MATERIAL_ID
+        and qih.inspection_status = 'COMPLETED'
+        and mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and mmsa.ATTR_NAME = 'IQC_ACTIVE'
+        and mmsa.TENANT_ID = mms.TENANT_ID
+        and mmsa.ATTR_VALUE = 'X'
+        and mms.MATERIAL_ID = mm.MATERIAL_ID
+        <if test="siteId != null and siteId != ''">
+            and mms.SITE_ID = #{siteId}
+        </if>
+        and mms.TENANT_ID = mm.TENANT_ID
+        and mms.ENABLE_FLAG = 'Y'
+        and mm.ENABLE_FLAG = 'Y'
+        and mm.TENANT_ID = #{tenantId}
+        <if test="dto.materialIdList != null and dto.materialIdList.size() > 0">
+            and qih.MATERIAL_ID in
+            <foreach collection="dto.materialIdList" item="materialId" separator="," open="(" close=")">
+                #{materialId}
+            </foreach>
+        </if>
+        <if test="dto.supplierIdList != null and dto.supplierIdList.size() > 0">
+            and qih.SUPPLIER_ID in
+            <foreach collection="dto.supplierIdList" item="supplierId" separator="," open="(" close=")">
+                #{supplierId}
+            </foreach>
+        </if>
+        and qih.inspection_finish_date between #{dto.inspectionDateFrom} and #{dto.inspectionDateTo}
+        group by ms.SUPPLIER_NAME
+        , mm.MATERIAL_NAME
+    </select>
+
+</mapper>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtPfepShippingCategoryMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtPfepShippingCategory">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_SHIPPING_CATEGORY_ID" property="pfepShippingCategoryId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_SITE_ID" property="materialCategorySiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="SHIPPING_CHANNEL" property="shippingChannel" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_GOODS_CODE" property="customerGoodsCode" jdbcType="VARCHAR"/>
+        <result column="PACKAGE_LIST_ID" property="packageListId" jdbcType="VARCHAR"/>
+        <result column="ATTACHMENT_LIST_ID" property="attachmentListId" jdbcType="VARCHAR"/>
+        <result column="TRANSPORT_MODE" property="transportMode" jdbcType="VARCHAR"/>
+        <result column="TRANSPORT_COMPANY" property="transportCompany" jdbcType="VARCHAR"/>
+        <result column="SHIPPING_CALENDAR_ID" property="shippingCalendarId" jdbcType="VARCHAR"/>
+        <result column="PACKAGE_STRATEGY" property="packageStrategy" jdbcType="VARCHAR"/>
+        <result column="PACKAGE_IDENTIFY_ID" property="packageIdentifyId" jdbcType="VARCHAR"/>
+        <result column="PRODUCT_IDENTIFY_ID" property="productIdentifyId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

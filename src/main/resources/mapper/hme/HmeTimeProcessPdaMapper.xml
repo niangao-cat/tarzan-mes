@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeTimeProcessPdaMapper">
+
+    <select id="siteInDateQuery" resultType="java.util.Date">
+        select hejs.site_in_date
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materialLotId}
+        and hejs.operation_id = #{operationId}
+        and hejs.site_in_date is not null
+        and hejs.site_out_date is null
+    </select>
+
+    <select id="siteOutDateQuery" resultType="java.lang.String">
+        select hejs.job_id
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materialLotId}
+        and hejs.operation_id = #{operationId}
+        and hejs.job_type = 'TIME_PROCESS_PDA'
+        and hejs.site_out_date is null
+    </select>
+
+    <select id="maxEoStepNum" resultType="java.lang.Integer">
+        select IFNULL(max(hejs.eo_step_num), 0)
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materialLotId}
+        and hejs.operation_id = #{operationId}
+        and hejs.workcell_id = #{workcellId}
+    </select>
+
+    <select id="equipmentQuery" resultType="com.ruike.hme.domain.vo.HmeTimeProcessPdaVO4">
+        select he.ASSET_ENCODING as equipment_code, he.ASSET_NAME as equipment_name
+        from hme_equipment_wkc_rel hewr
+        left join hme_equipment he
+        on he.equipment_id = hewr.equipment_id
+        where hewr.TENANT_ID = #{tenantId}
+        and hewr.station_id = #{dto.workcellId}
+        <if test="dto.equipmentCode!=null">
+            and he.ASSET_ENCODING Like CONCAT('%',CONCAT(#{dto.equipmentCode},'%'))
+        </if>
+        <if test="dto.equipmentName!=null">
+            and he.ASSET_NAME Like CONCAT('%',CONCAT(#{dto.equipmentName},'%'))
+        </if>
+        order by hewr.CREATION_DATE asc
+    </select>
+
+    <select id="eoJobSnQuery" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        select hejs.operation_id, hejs.job_type
+        from hme_eo_job_sn hejs
+        where hejs.tenant_id = #{tenantId}
+        and hejs.material_lot_id = #{materialLotId}
+        and hejs.site_out_date is null
+    </select>
+
+    <select id="defectEquipmentQuery" resultType="com.ruike.hme.domain.vo.HmeTimeProcessPdaVO4">
+        select he.ASSET_ENCODING as equipment_code, he.ASSET_NAME as equipment_name
+        from hme_equipment_wkc_rel hewr
+        left join hme_equipment he
+        on he.equipment_id = hewr.equipment_id
+        where hewr.TENANT_ID = #{tenantId}
+        and hewr.station_id = #{dto.workcellId}
+        order by hewr.CREATION_DATE asc
+        limit 1
+    </select>
+</mapper>

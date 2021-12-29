@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsProductionExecutionWholeProcessMonitoringReportMapper">
+
+    <select id="list" resultType="com.ruike.wms.domain.vo.WmsProductionExecutionWholeProcessMonitoringReportVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mms.site_code,
+        mma.area_code,
+        mmpl.PROD_LINE_CODE,
+        wo.WORK_ORDER_ID,
+        wo.work_order_num,
+        wo.production_version,
+        mgtl.description workoder_type,
+        mgsl.description workoder_status,
+        mm.material_code,
+        mm.material_name,
+        mmb_wo.ITEM_GROUP,
+        wig_wo.item_group_description,
+        wo.qty,
+        mwoa.released_qty,
+        (
+        SELECT
+        count(1)
+        FROM
+        mt_eo_step_wip sw,
+        mt_eo_step_actual sa,
+        mt_eo_router_actual ra,
+        mt_eo eo1
+        WHERE
+        eo1.`STATUS` = 'WORKING'
+        AND eo1.work_order_id = wo.work_order_id
+        AND eo1.EO_ID = ra.EO_ID
+        AND ra.EO_ROUTER_ACTUAL_ID = sa.EO_ROUTER_ACTUAL_ID
+        AND sa.EO_STEP_ACTUAL_ID = sw.EO_STEP_ACTUAL_ID
+        ) wip_qty,
+        (
+        SELECT
+        count(1)
+        FROM
+        mt_eo eo2
+        WHERE
+        eo2.`status` = 'ABANDON'
+        AND eo2.work_order_id = wo.work_order_id
+        ) abandon_qty,
+        mwoa.COMPLETED_QTY,
+        CONCAT(
+        ROUND(
+        mwoa.COMPLETED_QTY / wo.qty * 100,
+        2
+        ),
+        '',
+        '%'
+        ) wo_complete_rate,
+        CONCAT(
+        ROUND(
+        mwoa.COMPLETED_QTY / mwoa.released_qty * 100,
+        2
+        ),
+        '',
+        '%'
+        ) eo_complete_rate,
+        (
+        SELECT
+        ifnull(sum(eo3.qty), 0)
+        FROM
+        mt_eo eo3,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr la ON mml.material_lot_id = la.material_lot_id
+        AND la.attr_name = 'MF_FLAG',
+        mt_mod_locator mml_s,
+        mt_mod_locator mml_p
+        WHERE
+        eo3.identification = mml.material_lot_code
+        and eo3.TENANT_ID = mml.TENANT_ID
+        AND (
+        la.attr_value = ''
+        OR la.attr_value IS NULL
+        )
+        AND mml_s.locator_id = mml.locator_id
+        AND mml_s.parent_locator_id = mml_p.locator_id
+        AND mml_p.locator_type &lt;&gt; '14'
+        AND eo3.work_order_id = wo.work_order_id
+        ) woinstork_qty,
+        (
+        SELECT
+        ifnull(sum(eo3.qty), 0)
+        FROM
+        mt_eo eo3,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr la ON mml.material_lot_id = la.material_lot_id
+        AND la.attr_name = 'MF_FLAG',
+        mt_mod_locator mml_s,
+        mt_mod_locator mml_p
+        WHERE
+        eo3.identification = mml.material_lot_code
+        and eo3.TENANT_ID = mml.TENANT_ID
+        AND (
+        la.attr_value = ''
+        OR la.attr_value IS NULL
+        )
+        AND mml_s.locator_id = mml.locator_id
+        AND mml_s.parent_locator_id = mml_p.locator_id
+        AND mml_p.locator_type = '14'
+        AND eo3.work_order_id = wo.work_order_id
+        ) wonotinstork_qty,
+        CONCAT(
+        ROUND(
+        (
+        SELECT
+        ifnull(sum(eo3.qty), 0)
+        FROM
+        mt_eo eo3,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr la ON mml.material_lot_id = la.material_lot_id
+        AND la.attr_name = 'MF_FLAG',
+        mt_mod_locator mml_s,
+        mt_mod_locator mml_p
+        WHERE
+        eo3.identification = mml.material_lot_code
+        and eo3.TENANT_ID = mml.TENANT_ID
+        AND (
+        la.attr_value = ''
+        OR la.attr_value IS NULL
+        )
+        AND mml_s.locator_id = mml.locator_id
+        AND mml_s.parent_locator_id = mml_p.locator_id
+        AND mml_p.locator_type = '14'
+        AND eo3.work_order_id = wo.work_order_id
+        ) / wo.qty * 100,
+        2
+        ),
+        '',
+        '%'
+        ) wonotinstork_rate,
+
+        IF (
+        wo.MATERIAL_ID = attrtable.material_id,
+        '是',
+        '否'
+        ) flag,
+        wo_worknum.ATTR_VALUE work_num,
+        so_num.ATTR_VALUE so_num,
+        so_line.ATTR_VALUE so_line_num,
+        mwoa.ACTUAL_END_DATE,
+        erp_c.ATTR_VALUE erp_create_date,
+        erp_r.ATTR_VALUE erp_realese_date,
+        wo.REMARK,
+        long_txt.ATTR_VALUE long_text,
+        prod_mang.ATTR_VALUE user_code,
+        ifnull(attrtable.count_qty, 0) count_qty,
+        CONCAT(
+        ROUND(
+        attrtable.count_qty / wo.qty * 100,
+        2
+        ),
+        '',
+        '%'
+        ) count_qty_rate,
+        (
+        SELECT
+        ifnull(sum(eo3.qty), 0)
+        FROM
+        mt_eo eo3,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr la ON mml.material_lot_id = la.material_lot_id
+        AND la.attr_name = 'MF_FLAG',
+        mt_mod_locator mml_s,
+        mt_mod_locator mml_p
+        WHERE
+        eo3.identification = mml.material_lot_code
+        and eo3.TENANT_ID = mml.TENANT_ID
+        AND (
+        la.attr_value = ''
+        OR la.attr_value IS NULL
+        )
+        AND mml_s.locator_id = mml.locator_id
+        AND mml_s.parent_locator_id = mml_p.locator_id
+        AND mml_p.locator_type = '14'
+        AND eo3.MATERIAL_ID = attrtable.material_id
+        AND eo3.WORK_ORDER_ID = attrtable.WORK_ORDER_ID
+        ) eonotinstork_qty,
+        (
+        SELECT
+        ifnull(sum(eo3.qty), 0)
+        FROM
+        mt_eo eo3,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr la ON mml.material_lot_id = la.material_lot_id
+        AND la.attr_name = 'MF_FLAG',
+        mt_mod_locator mml_s,
+        mt_mod_locator mml_p
+        WHERE
+        eo3.identification = mml.material_lot_code
+        AND (
+        la.attr_value = ''
+        OR la.attr_value IS NULL
+        )
+        AND mml_s.locator_id = mml.locator_id
+        AND mml_s.parent_locator_id = mml_p.locator_id
+        AND mml_p.locator_type &lt;&gt; '14'
+        AND eo3.MATERIAL_ID = attrtable.material_id
+        AND eo3.WORK_ORDER_ID = attrtable.WORK_ORDER_ID
+        ) eotinstork_qty,
+        attrtable.MATERIAL_CODE pro_material_code,
+        attrtable.pro_item_group,
+        attrtable.pro_item_group_description
+        FROM
+        mt_work_order wo
+        LEFT JOIN mt_gen_type mgt ON mgt.TYPE_CODE = wo.WORK_ORDER_TYPE
+        AND mgt.TYPE_GROUP = 'WO_TYPE'
+        AND mgt.MODULE = 'ORDER'
+        LEFT JOIN mt_gen_type_tl mgtl ON mgtl.GEN_TYPE_ID = mgt.gen_type_id
+        AND mgtl.lang = #{lang}
+        LEFT JOIN mt_gen_status mgs ON mgs.status_code = wo. STATUS
+        AND mgs.STATUS_GROUP = 'WO_STATUS'
+        AND mgs.module = 'ORDER'
+        LEFT JOIN mt_gen_status_tl mgsl ON mgsl.GEN_STATUS_ID = mgs.GEN_STATUS_ID
+        AND mgsl.lang = #{lang}
+        LEFT JOIN mt_mod_organization_rel mor4 ON mor4.ORGANIZATION_ID = wo.PRODUCTION_LINE_ID
+        AND mor4.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor4.top_site_id = wo.SITE_ID
+        LEFT JOIN mt_mod_organization_rel mor5 ON mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+        AND mor5.ORGANIZATION_TYPE = 'AREA'
+        AND mor5.top_site_id = wo.SITE_ID
+        LEFT JOIN mt_mod_Area mma ON mma.AREA_ID = mor5.PARENT_ORGANIZATION_ID
+        LEFT JOIN mt_work_order_actual mwoa ON mwoa.work_order_id = wo.work_order_id
+        LEFT JOIN mt_work_order_attr wo_worknum ON wo_worknum.work_order_id = wo.work_order_id
+        AND wo_worknum.attr_name = 'attribute2'
+        LEFT JOIN mt_work_order_attr so_num ON so_num.work_order_id = wo.work_order_id
+        AND so_num.attr_name = 'attribute1'
+        LEFT JOIN mt_work_order_attr so_line ON so_line.work_order_id = wo.work_order_id
+        AND so_line.attr_name = 'attribute7'
+        LEFT JOIN mt_work_order_attr erp_c ON erp_c.work_order_id = wo.work_order_id
+        AND erp_c.attr_name = 'attribute12'
+        LEFT JOIN mt_work_order_attr erp_r ON erp_r.work_order_id = wo.work_order_id
+        AND erp_r.attr_name = 'attribute13'
+        LEFT JOIN mt_work_order_attr long_txt ON long_txt.work_order_id = wo.work_order_id
+        AND long_txt.attr_name = 'attribute8'
+        LEFT JOIN mt_work_order_attr prod_mang ON prod_mang.work_order_id = wo.work_order_id
+        AND prod_mang.attr_name = 'attribute5'
+        LEFT JOIN mt_material_site mms_wo ON mms_wo.material_id = wo.material_id
+        AND wo.site_id = mms_wo.site_id
+        LEFT JOIN mt_material_basic mmb_wo ON mmb_wo.material_site_id = mms_wo.material_site_id
+        LEFT JOIN wms_item_group wig_wo ON wig_wo.item_group_code = mmb_wo.item_group
+        JOIN mt_mod_production_line mmpl ON wo.PRODUCTION_LINE_ID = mmpl.PROD_LINE_ID
+        JOIN mt_material mm ON wo.MATERIAL_ID = mm.MATERIAL_ID
+        JOIN mt_mod_site mms ON wo.SITE_ID = mms.SITE_ID
+        LEFT JOIN (
+        SELECT
+        ifnull(sum(eo.qty), 0) count_qty,
+        mm.MATERIAL_CODE,
+        eo.material_id,
+        eo.WORK_ORDER_ID,
+        mmb_eo.ITEM_GROUP pro_item_group,
+        wig_eo.item_group_description pro_item_group_description
+        FROM
+        mt_eo eo
+        JOIN mt_material_lot mml ON eo.identification = mml.material_lot_code AND mml.TENANT_ID = eo.TENANT_ID
+        LEFT JOIN mt_material_lot_attr la ON mml.material_lot_id = la.material_lot_id
+        AND la.attr_name = 'MF_FLAG'
+        JOIN mt_mod_locator mml_s ON mml_s.locator_id = mml.locator_id
+        JOIN mt_mod_locator mml_p ON mml_s.parent_locator_id = mml_p.locator_id
+        JOIN mt_material mm ON eo.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_material_site mms_eo ON mms_eo.material_id = eo.material_id
+        AND eo.SITE_ID = mms_eo.site_id
+        LEFT JOIN mt_material_basic mmb_eo ON mmb_eo.material_site_id = mms_eo.material_site_id
+        LEFT JOIN wms_item_group wig_eo ON wig_eo.item_group_code = mmb_eo.item_group
+        WHERE
+        la.attr_value = ''
+        OR la.attr_value IS NULL
+        GROUP BY
+        mm.MATERIAL_CODE,
+        eo.material_id,
+        eo.WORK_ORDER_ID,
+        mmb_eo.ITEM_GROUP,
+        wig_eo.item_group_description
+        ) attrtable ON wo.WORK_ORDER_ID = attrtable.WORK_ORDER_ID
+        where  wo.SITE_ID = #{dto.siteId}
+        <if test="dto.areaCode!=null">
+            AND mma.AREA_ID = #{dto.areaCode}
+        </if>
+        <if test="dto.prodLineId!=null">
+            AND wo.PRODUCTION_LINE_ID = #{dto.prodLineId}
+        </if>
+        <if test="dto.workoderList!=null">
+            AND wo.WORK_ORDER_NUM IN (
+            <foreach collection="dto.workoderList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.version!=null">
+            AND wo.PRODUCTION_VERSION  like CONCAT('%',#{dto.version},'%')
+        </if>
+        <if test="dto.materialCodeList!=null">
+            AND mm.MATERIAL_CODE IN (
+            <foreach collection="dto.materialCodeList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.workoderType!=null">
+            AND wo.WORK_ORDER_TYPE = #{dto.workoderType}
+        </if>
+        <if test="dto.workoderStatus!=null">
+            AND wo.STATUS = #{dto.workoderStatus}
+        </if>
+        <if test="dto.flag!=null">
+            AND IF (wo.MATERIAL_ID = attrtable.material_id,'Y','N')= #{dto.flag}
+        </if>
+        <if test="dto.itemMaterialList!=null">
+            AND wig_wo.item_group_id  IN (
+            <foreach collection="dto.itemMaterialList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.completeRateFrom!=null">
+            AND (mwoa.COMPLETED_QTY / wo.qty * 100) &gt;= #{dto.completeRateFrom}
+        </if>
+        <if test="dto.inRateFrom!=null">
+            AND ((
+            SELECT
+            ifnull(sum(eo3.qty), 0)
+            FROM
+            mt_eo eo3,
+            mt_material_lot mml
+            LEFT JOIN mt_material_lot_attr la ON mml.material_lot_id = la.material_lot_id
+            AND la.attr_name = 'MF_FLAG',
+            mt_mod_locator mml_s,
+            mt_mod_locator mml_p
+            WHERE
+            eo3.identification = mml.material_lot_code
+            and eo3.TENANT_ID = mml.TENANT_ID
+            AND (
+            la.attr_value = ''
+            OR la.attr_value IS NULL
+            )
+            AND mml_s.locator_id = mml.locator_id
+            AND mml_s.parent_locator_id = mml_p.locator_id
+            AND mml_p.locator_type = '14'
+            AND eo3.work_order_id = wo.work_order_id
+            ) / wo.qty * 100) &gt;= #{dto.inRateFrom}
+        </if>
+        <if test="dto.planStartTimeFrom != null">
+            and STR_TO_DATE(wo.PLAN_START_TIME,'%Y-%m-%d %H:%i:%S') &gt;= STR_TO_DATE(#{dto.planStartTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.planStartTimeTo != null">
+            and STR_TO_DATE(wo.PLAN_START_TIME,'%Y-%m-%d %H:%i:%S') &lt;= STR_TO_DATE(#{dto.planStartTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.planCompleteTimeFrom != null">
+            and STR_TO_DATE(wo.PLAN_END_TIME,'%Y-%m-%d %H:%i:%S') &gt;= STR_TO_DATE(#{dto.planCompleteTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.planCompleteTimeTo != null">
+            and STR_TO_DATE(wo.PLAN_END_TIME,'%Y-%m-%d %H:%i:%S') &lt;= STR_TO_DATE(#{dto.planCompleteTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.actualCompleteTimeFrom != null">
+            and STR_TO_DATE(mwoa.ACTUAL_END_DATE,'%Y-%m-%d %H:%i:%S') &gt;= STR_TO_DATE(#{dto.actualCompleteTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.actualCompleteTimeTo != null">
+            and STR_TO_DATE(mwoa.ACTUAL_END_DATE,'%Y-%m-%d %H:%i:%S') &lt;= STR_TO_DATE(#{dto.actualCompleteTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.erpCreateTimeFrom != null">
+            and STR_TO_DATE(erp_c.ATTR_VALUE,'%Y-%m-%d %H:%i:%S') &gt;= STR_TO_DATE(#{dto.erpCreateTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.erpCreateTimeTo != null">
+            and STR_TO_DATE(erp_c.ATTR_VALUE,'%Y-%m-%d %H:%i:%S') &lt;= STR_TO_DATE(#{dto.erpCreateTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.erpRealseTimeFrom != null">
+            and STR_TO_DATE(erp_r.ATTR_VALUE,'%Y-%m-%d %H:%i:%S') &gt;= STR_TO_DATE(#{dto.erpRealseTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.erpRealseTimeTo != null">
+            and STR_TO_DATE(erp_r.ATTR_VALUE,'%Y-%m-%d %H:%i:%S') &lt;= STR_TO_DATE(#{dto.erpRealseTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+</mapper>

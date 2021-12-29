@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.order.infra.mapper.MtEoRouterHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.order.domain.entity.MtEoRouterHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_ROUTER_HIS_ID" property="eoRouterHisId" jdbcType="VARCHAR"/>
+        <result column="EO_ROUTER_ID" property="eoRouterId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByConditionCustom" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_eo_router_his t,
+        mt_event e
+        WHERE
+        t.EVENT_ID = e.EVENT_ID
+        AND t.TENANT_ID=${tenantId}
+        AND e.TENANT_ID=${tenantId}
+        <if test="condition.eoRouterId!=null">
+            and t.EO_ROUTER_ID = #{condition.eoRouterId}
+        </if>
+        <if test="condition.eventId!=null">
+            and t.EVENT_ID = #{condition.eventId}
+        </if>
+        <if test="condition.eventTimeFrom!=null">
+            and DATE_FORMAT(e.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &gt;= DATE_FORMAT(#{condition.eventTimeFrom},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="condition.eventTimeTo!=null">
+            and DATE_FORMAT(e.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &lt;= DATE_FORMAT(#{condition.eventTimeTo},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="condition.eventBy!=null">
+            and e.EVENT_BY = #{condition.eventBy}
+        </if>
+    </select>
+</mapper>

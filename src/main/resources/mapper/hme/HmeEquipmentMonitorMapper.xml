@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEquipmentMonitorMapper">
+
+    <select id="equipmentStatusQuery" resultType="com.ruike.hme.domain.vo.HmeEquipmentMonitorVO4">
+        select hewr.station_id AS workcell_id, mmw.WORKCELL_NAME, hewr.equipment_id,
+               he.ASSET_ENCODING AS equipment_code, he.DESCRIPTIONS AS equipment_name
+        from hme_equipment_wkc_rel hewr
+        left join hme_equipment he
+        on he.EQUIPMENT_ID = hewr.equipment_id
+        left join mt_mod_workcell mmw
+        on mmw.WORKCELL_ID = hewr.station_id
+        where hewr.TENANT_ID = #{tenantId}
+        and hewr.station_id = #{stationId}
+    </select>
+
+    <select id="shiftStartTimeQuery" resultType="java.util.Date">
+        select mws.SHIFT_START_TIME
+        from mt_wkc_shift mws
+        where mws.TENANT_ID = #{tenantId}
+        and current_timestamp > mws.SHIFT_START_TIME
+        and (current_timestamp &lt;= mws.SHIFT_END_TIME OR mws.SHIFT_END_TIME is null)
+        and mws.WORKCELL_ID = #{workcrllId}
+    </select>
+
+    <select id="equExcRecordQuery" resultType="com.ruike.hme.domain.entity.HmeExcWkcRecord">
+        select hewr.creation_date, IFNULL(hewr.close_time, current_timestamp)
+        from hme_exc_wkc_record hewr
+        where hewr.tenant_id = #{tenantId}
+        and (hewr.close_time >= DATE_FORMAT(#{closeTime}, '%Y-%m-%d %H:%i:%S') or hewr.close_time is null)
+        and hewr.equipment_id = #{equipmentId}
+        and hewr.workcell_id = #{workcrllId}
+    </select>
+
+    <select id="errorEquipmentCount" resultType="java.lang.Long">
+        select count(*)
+        from hme_exc_wkc_record hewr
+        where hewr.tenant_id = #{tenantId}
+        and hewr.exception_status != 'CLOSE'
+        and hewr.equipment_id = #{equipmentId}
+        and hewr.workcell_id = #{workcrllId}
+    </select>
+
+    <select id="downEquipmentQuery" resultType="com.ruike.hme.domain.vo.HmeEquipmentMonitorVO7">
+        SELECT
+        hewr.exception_wkc_record_id AS record_Id,
+        hewr.equipment_id,
+        he.ASSET_NAME AS equipment_name,
+        he.ASSET_ENCODING AS equipment_code,
+        hewr.workcell_id,
+        mmw.WORKCELL_NAME,
+        IFNULL(hewr.close_time, CURRENT_TIMESTAMP) AS close_time,
+        hewr.respond_time,
+        hewr.creation_date,
+        IFNULL(hewr.close_time, CURRENT_TIMESTAMP) - hewr.creation_date AS down_time
+        FROM
+        hme_exc_wkc_record hewr
+        LEFT JOIN hme_equipment he ON he.equipment_id = hewr.equipment_id AND he.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_mod_workcell mmw ON mmw.workcell_id = hewr.workcell_id ANd mmw.TENANT_ID = #{tenantId}
+        WHERE
+        hewr.tenant_id = #{tenantId}
+        AND hewr.equipment_id = #{equipmentId}
+        AND hewr.creation_date >= DATE_FORMAT(#{creationDateFrom},'%Y-%m-%d %H:%i:%S')
+        AND hewr.creation_date &lt;= DATE_FORMAT(#{creationDateTo},'%Y-%m-%d %H:%i:%S')
+    </select>
+
+    <select id="exceptionHistoryQuery" resultType="com.ruike.hme.domain.vo.HmeEquipmentMonitorVO10">
+        select
+            hewr.creation_date,
+            hewr.exception_group_id,
+            heg.exception_group_name,
+            IFNULL(hewr.close_time,CURRENT_TIMESTAMP) AS close_time,
+            hewr.responded_by
+        from hme_exc_wkc_record hewr
+        left join hme_exception_group heg
+        on heg.exception_group_id = hewr.exception_group_id
+        and heg.tenant_id = #{tenantId}
+        where hewr.tenant_id = #{tenantId}
+        and hewr.equipment_id = #{equipmentId}
+        and hewr.creation_date >= DATE_FORMAT(#{creationDateFrom},'%Y-%m-%d %H:%i:%S')
+        and hewr.creation_date &lt;= DATE_FORMAT(#{creationDateTo},'%Y-%m-%d %H:%i:%S')
+        order by hewr.creation_date desc
+    </select>
+
+    <select id="sameExceptionTypeQuery" resultType="com.ruike.hme.domain.vo.HmeEquipmentMonitorVO11">
+        select hewr.creation_date, IFNULL(hewr.close_time,CURRENT_TIMESTAMP) AS close_time, hewr.responded_by, hewr.respond_remark
+        from hme_exc_wkc_record hewr
+        where hewr.tenant_id = #{tenantId}
+        and hewr.equipment_id = #{equipmentId}
+        and hewr.exception_group_id = #{exceptionGroupId}
+        order by hewr.creation_date desc
+        limit 3
+    </select>
+
+    <select id="departmentDataQuery" resultType="com.ruike.hme.domain.vo.HmeEquipmentMonitorVO">
+        SELECT
+         mma.AREA_ID departmentId,
+         mma.AREA_CODE departmentCode,
+         mma.AREA_NAME departmentName,
+         mma.AREA_CATEGORY departmentCategory
+        from
+         mt_mod_organization_rel mmor,
+         mt_mod_area mma
+        where
+             mmor.tenant_id = #{tenantId}
+         and mmor.ORGANIZATION_ID = mma.AREA_ID
+         and mmor.ORGANIZATION_TYPE = 'AREA'
+         and mmor.TOP_SITE_ID = #{siteId}
+         <if test="areaCategory != null and areaCategory != ''">
+             and mma. AREA_CATEGORY = #{areaCategory}
+         </if>
+         and mma.ENABLE_FLAG = 'Y'
+         order by mma.CREATION_DATE
+    </select>
+</mapper>

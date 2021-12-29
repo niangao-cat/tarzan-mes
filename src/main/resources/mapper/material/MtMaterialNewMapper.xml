@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtMaterialNewMapper">
+
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.vo.MtMaterialVO6">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_DESIGN_CODE" property="materialDesignCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_IDENTIFY_CODE" property="materialIdentifyCode" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="VOLUME" property="volume" jdbcType="DECIMAL"/>
+        <result column="VOLUME_UOM_ID" property="volumeUomId" jdbcType="VARCHAR"/>
+        <result column="WEIGHT" property="weight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="SHELF_LIFE" property="shelfLife" jdbcType="DECIMAL"/>
+        <result column="SHELF_LIFE_UOM_ID" property="shelfLifeUomId" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_ID" property="primaryUomId" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_UOM_ID" property="secondaryUomId" jdbcType="VARCHAR"/>
+        <result column="CONVERSION_RATE" property="conversionRate" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <insert id="batchInsert" parameterType="tarzan.material.domain.vo.MtMaterialVO6">
+        insert into mt_material values
+        <foreach collection="materials" item="item" separator="," index="index">
+            (
+            #{item.tenantId},
+            #{item.materialId},
+            #{item.materialCode},
+            #{item.materialName},
+            #{item.materialDesignCode},
+            #{item.materialIdentifyCode},
+            #{item.length},
+            #{item.width},
+            #{item.height},
+            #{item.sizeUomId},
+            #{item.model},
+            #{item.volume},
+            #{item.volumeUomId},
+            #{item.weight},
+            #{item.weightUomId},
+            #{item.shelfLife},
+            #{item.shelfLifeUomId},
+            #{item.primaryUomId},
+            #{item.secondaryUomId},
+            #{item.conversionRate},
+            #{item.enableFlag},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="batchInsertTl">
+        insert into mt_material_tl values
+        <foreach collection="materials" item="item" separator="," index="index">
+            (
+            #{item.materialId},
+            'zh_CN',
+            #{item.materialCode}
+            ),
+            (
+            #{item.materialId},
+            'en_US',
+            #{item.materialCode}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

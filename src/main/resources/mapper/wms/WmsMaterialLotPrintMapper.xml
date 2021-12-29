@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialLotPrintMapper">
+
+    <select id="materialLotPrint"
+            resultType="com.ruike.wms.domain.vo.WmsMaterialLotPrintVO">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()" />
+        SELECT
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        mml.MATERIAL_LOT_CODE,
+        mm.MATERIAL_CODE,
+        mmla.ATTR_VALUE AS MATERIAL_VERSION,
+        mm.MATERIAL_NAME,
+        round( mml.PRIMARY_UOM_QTY, 2 ) AS QTY,
+        mu.UOM_NAME,
+        mml.LOT,
+        mmlaa.ATTR_VALUE AS SUPPLIER_LOT,
+        DATE_FORMAT( mml.CREATION_DATE, '%Y-%m-%d' ) AS CREATION_DATE,
+        '' OUT_MATERIAL_LOT_CODE
+        FROM
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr mmla ON mmla.TENANT_ID = mml.TENANT_ID
+        AND mmla.ATTR_NAME = 'MATERIAL_VERSION'
+        AND mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        LEFT JOIN mt_material_lot_attr mmlaa ON mmlaa.TENANT_ID = mml.TENANT_ID
+        AND mmlaa.ATTR_NAME = 'SUPPLIER_LOT'
+        AND mmlaa.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        INNER JOIN mt_material mm ON mm.ENABLE_FLAG = 'Y'
+        AND mm.TENANT_ID = mml.TENANT_ID
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        LEFT JOIN mt_supplier ms ON ms.TENANT_ID = mml.TENANT_ID
+        AND ms.SUPPLIER_ID = mml.SUPPLIER_ID
+        LEFT JOIN mt_uom mu ON mu.TENANT_ID = mml.TENANT_ID
+        AND mu.ENABLE_FLAG = 'Y'
+        AND mu.UOM_ID = mml.PRIMARY_UOM_ID
+        WHERE
+        mml.TENANT_ID = #{tenantId}
+        <choose>
+            <when test="materialLotIds != null and materialLotIds.size() > 0">
+                AND mml.MATERIAL_LOT_ID IN
+                <foreach collection="materialLotIds" item="materialLotId" open="(" separator="," close=")">
+                    #{materialLotId}
+                </foreach>
+            </when>
+            <otherwise>
+                and 1=2
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

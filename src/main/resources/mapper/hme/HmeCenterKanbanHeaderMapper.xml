@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCenterKanbanHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCenterKanbanHeader">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CENTER_KANBAN_HEADER_ID" property="centerKanbanHeaderId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="KANBAN_AREA" property="kanbanArea" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_ID" property="businessId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="PRODUCTION_GROUP_ID" property="productionGroupId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="THROUGH_RATE" property="throughRate" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="headPageQuery" resultType="com.ruike.hme.domain.vo.HmeCenterKanbanHeaderVO">
+        select hckh.CENTER_KANBAN_HEADER_ID, hckh.SITE_ID, mms.SITE_CODE, mms.SITE_NAME,
+               hckh.KANBAN_AREA, hckh.PROD_LINE_ID, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME,
+               hckh.BUSINESS_ID, area.AREA_CODE as business_code, area.AREA_NAME as business_name,
+               hckh.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME, hckh.PRODUCTION_GROUP_ID,
+               hpg.PRODUCTION_GROUP_CODE,hpg.DESCRIPTION as PRODUCTION_GROUP_NAME,
+               hckh.WORKCELL_ID, mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, hckh.ENABLE_FLAG,
+               hckh.THROUGH_RATE
+        from hme_center_kanban_header hckh
+             left join mt_mod_production_line mmpl on mmpl.PROD_LINE_ID = hckh.PROD_LINE_ID
+             left join mt_mod_area area on area.AREA_ID = hckh.BUSINESS_ID
+             left join mt_material mm on mm.MATERIAL_ID = hckh.MATERIAL_ID
+             left join hme_production_group hpg on hpg.PRODUCTION_GROUP_ID = hckh.PRODUCTION_GROUP_ID
+             left join mt_mod_workcell mmw on mmw.WORKCELL_ID = hckh.WORKCELL_ID,
+             mt_mod_site mms
+        where hckh.TENANT_ID = #{tenantId}
+        and mms.SITE_ID = hckh.SITE_ID
+        <if test="dto.siteId != null and dto.siteId != ''">
+            and hckh.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.kanbanArea != null and dto.kanbanArea != ''">
+            and hckh.KANBAN_AREA = #{dto.kanbanArea}
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and hckh.PROD_LINE_ID = #{dto.prodLineId}
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and hckh.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.productionGroupId != null and dto.productionGroupId != ''">
+            and hckh.PRODUCTION_GROUP_ID = #{dto.productionGroupId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hckh.WORKCELL_ID = #{dto.workcellId}
+        </if>
+        order by hckh.creation_date desc
+    </select>
+
+    <select id="linePageQuery" resultType="com.ruike.hme.domain.vo.HmeCenterKanbanLineVO">
+        select hckl.CENTER_KANBAN_HEADER_ID, hckl.CENTER_KANBAN_LINE_ID, hckl.WORKCELL_ID,
+               mmw.WORKCELL_CODE, mmw.WORKCELL_NAME, hckl.THROUGH_RATE, hckl.ENABLE_FLAG
+        from hme_center_kanban_line hckl,
+             mt_mod_workcell mmw
+        where hckl.TENANT_ID = #{tenantId}
+        and hckl.CENTER_KANBAN_HEADER_ID = #{centerKanbanHeaderId}
+        and mmw.WORKCELL_ID = hckl.WORKCELL_ID
+    </select>
+</mapper>

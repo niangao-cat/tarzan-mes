@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialPostingMapper">
+
+    <select id="selectInstructionByCondition" resultType="com.ruike.wms.domain.vo.WmsInstructionLineVO">
+        select doc.INSTRUCTION_DOC_ID,
+        doc.INSTRUCTION_DOC_NUM,
+        doc.INSTRUCTION_DOC_TYPE,
+        doc.INSTRUCTION_DOC_STATUS,
+        ins.INSTRUCTION_ID,
+        ins.INSTRUCTION_NUM,
+        ins.SITE_ID,
+        ins.INSTRUCTION_TYPE,
+        ins.INSTRUCTION_STATUS,
+        ins.MATERIAL_ID,
+        m.MATERIAL_CODE,
+        m.MATERIAL_NAME,
+        mia_ver.ATTR_VALUE MATERIAL_VERSION,
+        mia_loc.ATTR_VALUE LOCATOR_ID,
+        ins.QUANTITY,
+        ins.UOM_ID,
+        uom.UOM_CODE,
+        ins.SUPPLIER_ID,
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        mia_ard.ATTR_VALUE ACTUAL_RECEIVED_DATE,
+        mia_emf.ATTR_VALUE EXEMPTION_FLAG,
+        iqch.IQC_HEADER_ID,
+        iqch.IQC_NUMBER,
+        iqch.INSPECTION_TYPE,
+        iqch.INSPECTION_STATUS,
+        iqch.INSPECTION_RESULT,
+        iqch.FINAL_DECISION,
+        iqch.inspection_finish_date,
+        mia_iln.ATTR_VALUE INSTRUCTION_LINE_NUM,
+        ifnull(mia_eq.ATTR_VALUE + 0, 0) EXCHANGE_QTY,
+        ifnull(miaa_arq.ATTR_VALUE + 0, 0) ACTUAL_RECEIVE_QTY,
+        ifnull(miaa_eq.ATTR_VALUE + 0, 0) EXCHANGED_QTY,
+        ifnull(miaa_sie.ATTR_VALUE + 0, 0) STOCK_IN_EXCHANGEED_QTY,
+        loc.LOCATOR_CODE,
+        loc.LOCATOR_NAME,
+        wh.LOCATOR_ID warehouse_id,
+        wh.locator_code warehouse_code
+        from mt_material m
+        , mt_uom uom
+        , mt_instruction_doc doc
+        , mt_instruction ins
+        left join mt_mod_locator wh on ins.TO_LOCATOR_ID = wh.LOCATOR_ID
+        left join mt_supplier ms on ins.SUPPLIER_ID = ms.SUPPLIER_ID
+        LEFT JOIN mt_instruction_attr mia_emf ON mia_emf.INSTRUCTION_ID = ins.INSTRUCTION_ID AND mia_emf.ATTR_NAME =
+        'EXEMPTION_FLAG'
+        left join mt_instruction_attr mia_ver on ins.INSTRUCTION_ID = mia_ver.INSTRUCTION_ID and mia_ver.ATTR_NAME =
+        'MATERIAL_VERSION'
+        left join mt_instruction_attr mia_loc on ins.INSTRUCTION_ID = mia_loc.INSTRUCTION_ID and mia_loc.ATTR_NAME =
+        'TO_LOCATOR_ID'
+        left join mt_instruction_attr mia_ard on ins.INSTRUCTION_ID = mia_ard.INSTRUCTION_ID and mia_ard.ATTR_NAME =
+        'ACTUAL_RECEIVED_DATE'
+        left join mt_instruction_attr mia_iln on ins.INSTRUCTION_ID = mia_iln.INSTRUCTION_ID and mia_iln.ATTR_NAME =
+        'INSTRUCTION_LINE_NUM'
+        left join mt_instruction_attr mia_eq on ins.INSTRUCTION_ID = mia_eq.INSTRUCTION_ID and mia_eq.ATTR_NAME =
+        'EXCHANGE_QTY'
+        left join mt_instruction_actual mia on mia.INSTRUCTION_ID = ins.INSTRUCTION_ID
+        left join mt_instruction_actual_attr miaa_arq on mia.ACTUAL_ID = miaa_arq.ACTUAL_ID and miaa_arq.ATTR_NAME =
+        'ACTUAL_RECEIVE_QTY'
+        left join mt_instruction_actual_attr miaa_eq on mia.ACTUAL_ID = miaa_eq.ACTUAL_ID and miaa_eq.ATTR_NAME =
+        'EXCHANGED_QTY'
+        left join mt_instruction_actual_attr miaa_sie on mia.ACTUAL_ID = miaa_sie.ACTUAL_ID and miaa_sie.ATTR_NAME =
+        'STOCK_IN_EXCHANGEED_QTY'
+        left join mt_mod_locator loc on mia_loc.ATTR_VALUE = loc.LOCATOR_ID
+        LEFT JOIN qms_iqc_header iqch on ins.INSTRUCTION_ID = iqch.DOC_LINE_ID
+        where ins.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        and doc.tenant_id = #{tenantId}
+        and doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        and doc.INSTRUCTION_DOC_TYPE in ('DELIVERY_DOC', 'OUTSOURCING_DELIVERY_DOC', 'SRM_SUPP_EXCH_DOC')
+        and ins.material_id = m.material_id
+        and ins.uom_id = uom.uom_id
+        <if test="dto.instructionIds != null">
+            AND ins.INSTRUCTION_ID in
+            <foreach collection="dto.instructionIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.instructionDocNum!=null">
+            and doc.INSTRUCTION_DOC_NUM like CONCAT(#{dto.instructionDocNum},'%')
+        </if>
+        <if test="dto.instructionDocStatus != null">
+            AND doc.INSTRUCTION_DOC_STATUS in
+            <foreach collection="dto.instructionDocStatus" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.instructionStatus != null">
+            AND ins.INSTRUCTION_STATUS in
+            <foreach collection="dto.instructionStatus" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.materialId != null">
+            AND ins.MATERIAL_ID in
+            <foreach collection="dto.materialId" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.materialVersion!=null">
+            and mia_ver.ATTR_VALUE = #{dto.materialVersion}
+        </if>
+        <if test="dto.siteId!=null">
+            and ins.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.toLocatorId!=null">
+            and mia.TO_LOCATOR_ID = #{dto.toLocatorId}
+        </if>
+        <if test="dto.supplierId!=null">
+            and ins.SUPPLIER_ID = #{dto.supplierId}
+        </if>
+        <if test="dto.iqcNumber!=null">
+            and iqch.IQC_NUMBER = #{dto.iqcNumber}
+        </if>
+        <if test="dto.inspectionType != null">
+            AND iqch.INSPECTION_TYPE in
+            <foreach collection="dto.inspectionType" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.inspectionStatus != null">
+            AND iqch.INSPECTION_STATUS in
+            <foreach collection="dto.inspectionStatus" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.inspectionFinishDateFrom != null">
+            and iqch.inspection_finish_date &gt;= #{dto.inspectionFinishDateFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="dto.inspectionFinishDateTo != null">
+            and iqch.inspection_finish_date &lt;= #{dto.inspectionFinishDateTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="dto.actualReceivedDateFrom != null">
+            AND DATE_FORMAT(mia_ard.attr_value, '%Y-%m-%d %T:%f') &gt;= #{dto.actualReceivedDateFrom}
+        </if>
+        <if test="dto.actualReceivedDateTo != null">
+            AND DATE_FORMAT(mia_ard.attr_value, '%Y-%m-%d %T:%f') &lt;= #{dto.actualReceivedDateTo}
+        </if>
+    </select>
+
+    <select id="selectMaterialLotQty" resultType="com.ruike.wms.domain.vo.WmsMaterialLotLineVO">
+        SELECT IFNULL(sum(mml.PRIMARY_UOM_QTY), 0) PRIMARY_UOM_QTY
+        FROM mt_instruction_actual ia
+                 JOIN mt_instruction_actual_detail iad ON ia.ACTUAL_ID = iad.ACTUAL_ID
+            AND ia.TENANT_ID = iad.TENANT_ID
+                 JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = iad.MATERIAL_LOT_ID
+            AND mml.TENANT_ID = iad.TENANT_ID
+                 LEFT JOIN mt_material_lot_attr MMLA ON MML.MATERIAL_LOT_ID = MMLA.MATERIAL_LOT_ID
+            AND MMLA.ATTR_NAME = 'STATUS'
+            AND MMLA.ATTR_VALUE = 'MINSTOCK'
+            AND mmla.TENANT_ID = mml.TENANT_ID
+        where ia.INSTRUCTION_ID = #{instructionId}
+          and ia.TENANT_ID = #{tenantId}
+          and mml.QUALITY_STATUS = 'OK'
+          and mml.ENABLE_FLAG = 'Y'
+    </select>
+
+    <select id="selectInstructionActualQty" resultType="com.ruike.wms.domain.vo.WmsMaterialLotLineVO">
+        select CAST(IFNULL(attr.ATTR_VALUE, 0) AS DECIMAL(10,2))  ACTUAL_RECEIVE_QTY,
+               CAST(IFNULL(attr2.ATTR_VALUE, 0) AS DECIMAL(10,2)) EXCHANGED_QTY,
+               CAST(IFNULL(attr3.ATTR_VALUE, 0) AS DECIMAL(10,2)) STOCK_IN_EXCHANGED_QTY
+        from mt_instruction_actual ia
+                 left join mt_instruction_actual_attr attr
+                           on attr.ACTUAL_ID = ia.ACTUAL_ID and attr.ATTR_NAME = 'ACTUAL_RECEIVE_QTY'
+                 left join mt_instruction_actual_attr attr2
+                           on attr2.ACTUAL_ID = ia.ACTUAL_ID and attr2.ATTR_NAME = 'EXCHANGED_QTY'
+                 left join mt_instruction_actual_attr attr3
+                           on attr3.ACTUAL_ID = ia.ACTUAL_ID and attr3.ATTR_NAME = 'STOCK_IN_EXCHANGEED_QTY'
+        where ia.INSTRUCTION_ID = #{instructionId}
+          and ia.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="selectMaterialLotByInstructionId" resultType="com.ruike.wms.domain.vo.WmsMaterialLotLineVO">
+        SELECT mml.MATERIAL_LOT_ID,
+               mml.MATERIAL_LOT_CODE,
+               mml.PRIMARY_UOM_QTY,
+               mml.PRIMARY_UOM_ID       UOM_ID,
+               uom.UOM_CODE,
+               mml.MATERIAL_ID,
+               ma.MATERIAL_CODE,
+               ma.MATERIAL_NAME,
+               mml.LOCATOR_ID           MATERIAL_LOT_LOCATOR_ID,
+               LOC.LOCATOR_CODE         MATERIAL_LOT_LOCATOR_CODE,
+               LOC.LOCATOR_NAME         MATERIAL_LOT_LOCATOR_NAME,
+               LOC2.LOCATOR_ID          WAREHOUSE_ID,
+               LOC2.LOCATOR_CODE        WAREHOUSE_CODE,
+               mml.ENABLE_FLAG,
+               mml.lot,
+               mml.CURRENT_CONTAINER_ID,
+               mmla_status.ATTR_VALUE   MATERIAL_LOT_STATUS,
+               mmlt.LOCATOR_ID          TRANSFER_LOCATOR_ID,
+               mmlt.LOCATOR_CODE        TRANSFER_LOCATOR_CODE,
+               mml_p.LOCATOR_ID         TRANSFER_WAREHOUSE_ID,
+               mml_p.LOCATOR_CODE       TRANSFER_WAREHOUSE_CODE,
+               mml.SITE_ID,
+               mml.SUPPLIER_ID,
+               ms.SUPPLIER_CODE,
+               mms.SITE_CODE,
+               mmla_insp_scr.ATTR_VALUE INSPECT_SCRAP_QTY,
+               mmla_so.ATTR_VALUE       SO_NUM,
+               mmla_sol.ATTR_VALUE      SO_LINE_NUM,
+               la.ATTR_VALUE            ACTUAL_LOCATOR_CODE
+        FROM MT_UOM uom,
+             MT_MATERIAL ma,
+             MT_MOD_LOCATOR LOC,
+             MT_MOD_LOCATOR LOC2,
+             mt_instruction_actual ia,
+             mt_instruction_actual_detail iad,
+             mt_mod_site mms,
+             mt_material_lot mml
+                 left join mt_material_lot_attr mmla_status on mml.MATERIAL_LOT_ID = mmla_status.MATERIAL_LOT_ID
+                 and mmla_status.ATTR_NAME = 'STATUS'
+                 left join mt_material_lot_attr mmla_insp_scr on mml.MATERIAL_LOT_ID = mmla_insp_scr.MATERIAL_LOT_ID
+                 and mmla_insp_scr.ATTR_NAME = 'INSPECT_SCRAP_QTY'
+                 left join mt_material_lot_attr mmla_so on mml.MATERIAL_LOT_ID = mmla_so.MATERIAL_LOT_ID
+                 and mmla_so.ATTR_NAME = 'SO_NUM'
+                 left join mt_material_lot_attr mmla_sol on mml.MATERIAL_LOT_ID = mmla_sol.MATERIAL_LOT_ID
+                 and mmla_sol.ATTR_NAME = 'SO_LINE_NUM'
+                 left join mt_material_lot_attr mmla_act_loc on mml.MATERIAL_LOT_ID = mmla_act_loc.MATERIAL_LOT_ID
+                 and mmla_act_loc.ATTR_NAME = 'ACTUAL_LOCATOR'
+                 LEFT JOIN mt_mod_locator mmlt ON mmlt.ENABLE_FLAG = 'Y' AND mmlt.LOCATOR_CODE = mmla_act_loc.ATTR_VALUE
+                 left join mt_mod_locator mml_p on mml_p.LOCATOR_ID = mmlt.PARENT_LOCATOR_ID
+                 LEFT JOIN mt_supplier ms ON ms.SUPPLIER_ID = mml.SUPPLIER_ID
+                 LEFT JOIN mt_material_lot_attr la
+                           ON la.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND la.ATTR_NAME = 'ACTUAL_LOCATOR'
+        WHERE mml.material_lot_id = iad.material_lot_id
+          AND mms.ENABLE_FLAG = 'Y'
+          AND mms.SITE_ID = mml.SITE_ID
+          AND ia.TENANT_ID = uom.TENANT_ID
+          AND ia.TENANT_ID = ma.TENANT_ID
+          AND ia.TENANT_ID = loc.TENANT_ID
+          AND ia.TENANT_ID = loc2.TENANT_ID
+          AND ia.TENANT_ID = iad.TENANT_ID
+          AND ia.TENANT_ID = mml.TENANT_ID
+          AND mml.PRIMARY_UOM_ID = uom.UOM_ID
+          AND mml.ENABLE_FLAG = 'Y'
+          AND ma.ENABLE_FLAG = 'Y'
+          AND mml.MATERIAL_ID = MA.MATERIAL_ID
+          AND loc.ENABLE_FLAG = 'Y'
+          AND mml.LOCATOR_ID = LOC.LOCATOR_ID
+          AND LOC2.ENABLE_FLAG = 'Y'
+          AND LOC.PARENT_LOCATOR_ID = LOC2.LOCATOR_ID
+          AND ia.actual_id = iad.actual_id
+          and ia.INSTRUCTION_ID = #{instructionId}
+          and ia.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="selectOutsourcingByInstructionId" resultType="com.ruike.wms.domain.vo.WmsMaterialPostingVO3">
+        select ins.site_id,
+               ins.material_id,
+               attr.attr_value bom_usage,
+               ins.UOM_ID,
+               mu.UOM_CODE
+        from mt_instruction ins
+        left join mt_instruction_attr ATTR
+        ON ins.INSTRUCTION_ID = ATTR.INSTRUCTION_ID AND ATTR.ATTR_NAME = 'BOM_USUAGE'
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = ins.UOM_ID,
+        wms_po_delivery_rel pdr
+        where ins.SOURCE_INSTRUCTION_ID = pdr.po_line_id
+          and pdr.tenant_id = #{tenantId}
+          and pdr.delivery_doc_id = #{instructionDocId}
+          and pdr.delivery_doc_line_id = #{instructionId}
+    </select>
+
+    <select id="selectTolInstructionByRsfIds" resultType="com.ruike.wms.domain.vo.WmsInstructionLineVO">
+        select doc.INSTRUCTION_DOC_ID,
+        doc.INSTRUCTION_DOC_NUM,
+        doc.INSTRUCTION_DOC_TYPE,
+        doc.INSTRUCTION_DOC_STATUS,
+        ins.INSTRUCTION_ID,
+        ins.INSTRUCTION_NUM,
+        ins.SITE_ID,
+        ins.INSTRUCTION_TYPE,
+        ins.INSTRUCTION_STATUS,
+        ins.MATERIAL_ID,
+        src_ins.INSTRUCTION_ID trans_Over_Instruction_Id
+        from mt_instruction_doc doc
+        , mt_instruction ins
+        left join mt_instruction_attr mia on ins.INSTRUCTION_ID = mia.INSTRUCTION_ID and mia.ATTR_NAME =
+        'MATERIAL_VERSION'
+        , mt_instruction src_ins
+        left join mt_instruction_attr src_mia on src_ins.INSTRUCTION_ID = src_mia.INSTRUCTION_ID and src_mia.ATTR_NAME =
+        'MATERIAL_VERSION'
+        where doc.INSTRUCTION_DOC_ID = ins.SOURCE_DOC_ID
+        and doc.INSTRUCTION_DOC_ID = src_ins.SOURCE_DOC_ID
+        and ins.INSTRUCTION_TYPE = 'TRANSFER_OVER_LOCATOR'
+        and src_ins.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        and ins.MATERIAL_ID = src_ins.MATERIAL_ID
+        and ifnull(mia.ATTR_VALUE,'') = ifnull(src_mia.ATTR_VALUE,'')
+        and ins.INSTRUCTION_STATUS != 'CANCEL'
+        and doc.tenant_id = #{tenantId}
+        and src_ins.INSTRUCTION_ID in (
+        <foreach collection="idList" item="id" separator=",">
+            #{id}
+        </foreach>
+        )
+    </select>
+    <select id="selectPoByDeliveryId" resultType="com.ruike.wms.domain.vo.WmsDeliveryPoRelVo">
+        select pdr.delivery_doc_id
+             , pdr.delivery_doc_line_id delivery_id
+             , pdr.po_id
+             , pdr.po_line_id
+             , po.INSTRUCTION_DOC_NUM   po_number
+             , miav.ATTR_VALUE          po_line_number
+             , pdr.quantity             distribute_qty
+             , pdr.po_stock_in_qty      stock_in_qty
+        from wms_po_delivery_rel pdr
+                 join mt_instruction_doc po on po.INSTRUCTION_DOC_ID = pdr.po_id
+                 join mt_instruction_attr miav
+                      on pdr.po_line_id = miav.INSTRUCTION_ID and miav.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        where pdr.tenant_id = #{tenantId}
+          and pdr.delivery_doc_line_id = #{deliveryId}
+    </select>
+    <select id="selectPoByDeliveryIdList" resultType="com.ruike.wms.domain.vo.WmsDeliveryPoRelVo">
+        select pdr.delivery_doc_id
+        , pdr.delivery_doc_line_id delivery_id
+        , pdr.po_id
+        , pdr.po_line_id
+        , po.INSTRUCTION_DOC_NUM po_number
+        , miav.ATTR_VALUE po_line_number
+        , pdr.quantity distribute_qty
+        , pdr.po_stock_in_qty stock_in_qty
+        from wms_po_delivery_rel pdr
+        join mt_instruction_doc po on po.INSTRUCTION_DOC_ID = pdr.po_id
+        join mt_instruction_attr miav on pdr.po_line_id = miav.INSTRUCTION_ID and miav.ATTR_NAME =
+        'INSTRUCTION_LINE_NUM'
+        where pdr.tenant_id = #{tenantId}
+        and pdr.delivery_doc_line_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectPoByLineId" resultType="com.ruike.wms.domain.vo.WmsDeliveryPoRelVo">
+        select po.INSTRUCTION_DOC_ID  po_id
+             , pol.INSTRUCTION_ID     po_line_id
+             , po.INSTRUCTION_DOC_NUM po_number
+             , miav.ATTR_VALUE        po_line_number
+        from mt_instruction_doc po
+                 join mt_instruction pol on po.INSTRUCTION_DOC_ID = pol.SOURCE_DOC_ID
+                 join mt_instruction_attr miav
+                      on pol.INSTRUCTION_ID = miav.INSTRUCTION_ID and miav.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        where po.tenant_id = #{tenantId}
+          and pol.INSTRUCTION_ID = #{poLineId}
+    </select>
+
+    <select id="selectTransInstructionByIdList" resultType="com.ruike.wms.domain.vo.WmsInstructionLineVO">
+        select ins.instruction_id
+        ,trans_ins.instruction_id trans_over_instruction_id
+        ,trans_ins.instruction_status trans_over_instruction_status
+        ,iqch.inspection_status trans_over_inspection_status
+        from mt_instruction ins
+        left join mt_instruction_attr mia on ins.instruction_id = mia.instruction_id and mia.attr_name =
+        'MATERIAL_VERSION'
+        ,mt_instruction trans_ins
+        left join mt_instruction_attr trans_mia on trans_ins.instruction_id = trans_mia.instruction_id and
+        trans_mia.attr_name = 'MATERIAL_VERSION'
+        left join qms_iqc_header iqch on trans_ins.instruction_id = iqch.doc_line_id
+        where ins.source_doc_id = trans_ins.source_doc_id
+        and ifnull(ins.material_id,'') = ifnull(trans_ins.material_id,'')
+        and ifnull(mia.attr_value,'') = ifnull(trans_mia.attr_value,'')
+        and trans_ins.instruction_type = 'TRANSFER_OVER_LOCATOR'
+        and ins.instruction_id in
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="queryScrapQty" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(da.ATTR_VALUE), 0)
+        FROM mt_instruction mi,
+             mt_instruction_actual ia,
+             mt_instruction_actual_detail ad,
+             mt_instruct_act_detail_attr da
+        WHERE ia.ACTUAL_ID = ad.ACTUAL_ID
+          AND mi.INSTRUCTION_ID = ia.INSTRUCTION_ID
+          AND ad.ACTUAL_DETAIL_ID = da.ACTUAL_DETAIL_ID
+          AND ad.MATERIAL_LOT_ID = #{materialLotId}
+          AND da.ATTR_NAME = 'SCRAP_QTY'
+          AND mi.INSTRUCTION_ID = #{instructionId}
+          AND ia.TENANT_ID = #{tenantId}
+          AND mi.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+    </select>
+
+    <select id="queryOutsourceLocator" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT mml.*
+        FROM mt_mod_locator_org_rel lor,
+             mt_mod_locator ml,
+             mt_mod_locator mml
+        WHERE lor.LOCATOR_ID = ml.LOCATOR_ID
+          AND ml.LOCATOR_ID = mml.PARENT_LOCATOR_ID
+          AND lor.ORGANIZATION_TYPE = 'SITE'
+          AND ml.LOCATOR_TYPE = '20'
+          AND mml.LOCATOR_TYPE = '20'
+          AND lor.ORGANIZATION_ID = #{siteId}
+    </select>
+
+    <update id="updateStockInExchangeedQty">
+        update mt_instruction_actual_attr
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            ATTR_VALUE = #{attrValue}
+        </set>
+        <where>
+            ACTUAL_ID = #{actualId}
+            AND TENANT_ID = #{tenantId}
+            AND ATTR_NAME = #{attrName}
+        </where>
+    </update>
+
+    <select id="queryPoNum" resultType="java.lang.String">
+        SELECT
+	        mid.INSTRUCTION_DOC_NUM
+        FROM
+	        wms_po_delivery_rel dr,
+	        mt_instruction_doc mid
+        WHERE dr.tenant_id = #{tenantId}
+        AND dr.po_id = mid.INSTRUCTION_DOC_ID
+        AND dr.delivery_doc_line_id = #{docLineId}
+    </select>
+
+    <select id="queryPoLineNum" resultType="java.lang.String">
+        SELECT mid.ATTR_VALUE
+        FROM wms_po_delivery_rel dr,
+             mt_instruction_attr mid
+        WHERE dr.tenant_id = #{tenantId}
+          AND dr.po_line_id = mid.INSTRUCTION_ID
+          AND mid.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+          AND dr.delivery_doc_line_id = #{docLineId}
+    </select>
+
+    <select id="queryActualQty" resultType="java.math.BigDecimal">
+        SELECT
+	        IFNULL(SUM(ia.ACTUAL_QTY),0) ACTUAL_QTY
+        FROM
+	        mt_instruction mi
+        LEFT JOIN mt_instruction_attr mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID AND mia.ATTR_NAME = 'INSTRUCTION_LINE_NUM',
+        mt_instruction_actual ia
+        LEFT JOIN mt_instruction_actual_attr attr ON attr.ACTUAL_ID = ia.ACTUAL_ID AND attr.ATTR_NAME = 'EXCHANGED_QTY'
+        WHERE
+            ia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        AND mi.TENANT_ID = #{tenantId}
+        AND mi.SOURCE_DOC_ID = #{instructionDocId}
+        AND mi.MATERIAL_ID = #{materialId}
+        AND mia.ATTR_VALUE = #{instructionLineNum}
+        AND mi.INSTRUCTION_TYPE = 'TRANSFER_OVER_LOCATOR'
+    </select>
+
+    <select id="queryExchangedQtyByLineId" resultType="java.math.BigDecimal">
+        SELECT
+	        IFNULL(SUM(attr.ATTR_VALUE),0) EXCHANGED_QTY
+        FROM
+	        mt_instruction_actual ia
+        LEFT JOIN mt_instruction_actual_attr attr ON attr.ACTUAL_ID = ia.ACTUAL_ID AND attr.ATTR_NAME = 'EXCHANGED_QTY'
+        WHERE
+        	ia.TENANT_ID = #{tenantId}
+        AND ia.INSTRUCTION_ID = #{instructionId}
+    </select>
+
+    <select id="querySecondMaterialLot" resultType="com.ruike.wms.domain.vo.WmsMaterialLotLineVO">
+        SELECT
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mml.PRIMARY_UOM_QTY,
+        mml.PRIMARY_UOM_ID UOM_ID,
+        uom.UOM_CODE,
+        mml.MATERIAL_ID,
+        ma.MATERIAL_CODE,
+        ma.MATERIAL_NAME,
+        mml.LOCATOR_ID MATERIAL_LOT_LOCATOR_ID,
+        LOC.LOCATOR_CODE MATERIAL_LOT_LOCATOR_CODE,
+        LOC.LOCATOR_NAME MATERIAL_LOT_LOCATOR_NAME,
+        LOC2.LOCATOR_ID WAREHOUSE_ID,
+        LOC2.LOCATOR_CODE WAREHOUSE_CODE,
+        mml.ENABLE_FLAG,
+        mml.lot,
+        mml.CURRENT_CONTAINER_ID,
+        mmla_status.ATTR_VALUE MATERIAL_LOT_STATUS,
+        mmlt.LOCATOR_ID TRANSFER_LOCATOR_ID,
+        mmlt.LOCATOR_CODE TRANSFER_LOCATOR_CODE,
+        mml_p.LOCATOR_ID TRANSFER_WAREHOUSE_ID,
+        mml_p.LOCATOR_CODE TRANSFER_WAREHOUSE_CODE,
+        mml.SITE_ID,
+        mml.SUPPLIER_ID,
+        ms.SUPPLIER_CODE,
+        mms.SITE_CODE,
+        mmla_insp_scr.ATTR_VALUE INSPECT_SCRAP_QTY,
+        mmla_so.ATTR_VALUE SO_NUM,
+        mmla_sol.ATTR_VALUE SO_LINE_NUM,
+        la.ATTR_VALUE ACTUAL_LOCATOR_CODE
+        FROM
+        MT_UOM uom,
+        MT_MATERIAL ma,
+        MT_MOD_LOCATOR LOC,
+        MT_MOD_LOCATOR LOC2,
+        mt_mod_site mms,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr mmla_status ON mml.MATERIAL_LOT_ID = mmla_status.MATERIAL_LOT_ID
+        AND mmla_status.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_material_lot_attr mmla_insp_scr ON mml.MATERIAL_LOT_ID = mmla_insp_scr.MATERIAL_LOT_ID
+        AND mmla_insp_scr.ATTR_NAME = 'INSPECT_SCRAP_QTY'
+        LEFT JOIN mt_material_lot_attr mmla_so ON mml.MATERIAL_LOT_ID = mmla_so.MATERIAL_LOT_ID
+        AND mmla_so.ATTR_NAME = 'SO_NUM'
+        LEFT JOIN mt_material_lot_attr mmla_sol ON mml.MATERIAL_LOT_ID = mmla_sol.MATERIAL_LOT_ID
+        AND mmla_sol.ATTR_NAME = 'SO_LINE_NUM'
+        LEFT JOIN mt_material_lot_attr mmla_act_loc ON mml.MATERIAL_LOT_ID = mmla_act_loc.MATERIAL_LOT_ID
+        AND mmla_act_loc.ATTR_NAME = 'ACTUAL_LOCATOR'
+        LEFT JOIN mt_mod_locator mmlt ON mmlt.ENABLE_FLAG = 'Y'
+        AND mmlt.LOCATOR_CODE = mmla_act_loc.ATTR_VALUE
+        LEFT JOIN mt_mod_locator mml_p ON mml_p.LOCATOR_ID = mmlt.PARENT_LOCATOR_ID
+        LEFT JOIN mt_supplier ms ON ms.SUPPLIER_ID = mml.SUPPLIER_ID
+        LEFT JOIN mt_material_lot_attr la ON la.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND la.ATTR_NAME = 'ACTUAL_LOCATOR'
+        WHERE
+        mms.ENABLE_FLAG = 'Y'
+        AND mms.SITE_ID = mml.SITE_ID
+        AND mml.TENANT_ID = uom.TENANT_ID
+        AND mml.TENANT_ID = ma.TENANT_ID
+        AND mml.TENANT_ID = loc.TENANT_ID
+        AND mml.TENANT_ID = loc2.TENANT_ID
+        AND mml.PRIMARY_UOM_ID = uom.UOM_ID
+        AND ma.ENABLE_FLAG = 'Y'
+        AND mml.MATERIAL_ID = MA.MATERIAL_ID
+        AND loc.ENABLE_FLAG = 'Y'
+        AND mml.LOCATOR_ID = LOC.LOCATOR_ID
+        AND LOC2.ENABLE_FLAG = 'Y'
+        AND LOC.PARENT_LOCATOR_ID = LOC2.LOCATOR_ID
+        AND mml.TENANT_ID = #{tenantId}
+        AND mml.material_lot_id IN
+        <foreach collection="secondMaterialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

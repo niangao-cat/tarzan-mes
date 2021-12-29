@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeOperationInsHeadMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeOperationInsHead">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="ins_header_id" property="insHeaderId" jdbcType="VARCHAR"/>
+        <result column="file_url" property="fileUrl" jdbcType="VARCHAR"/>
+        <result column="attachment_code" property="attachmentCode" jdbcType="VARCHAR"/>
+        <result column="attachment_name" property="attachmentName" jdbcType="VARCHAR"/>
+        <result column="start_date" property="startDate" jdbcType="DATE"/>
+        <result column="end_date" property="endDate" jdbcType="DATE"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="operationInsHeadQuery" resultType="com.ruike.hme.api.dto.HmeOperationInsHeadDTO2">
+        SELECT
+        oih.ins_header_id,
+        oih.site_id,
+        mms.SITE_CODE,
+        oih.file_url,
+        oih.attachment_code,
+        oih.attachment_name,
+        oih.remark,
+        oih.start_date,
+        oih.end_date,
+        oih.created_by,
+        iu.real_name AS created_by_name,
+        oih.creation_date,
+        oih.last_updated_by,
+        iu2.real_name AS last_updated_by_name,
+        oih.last_update_date
+        FROM
+        hme_operation_ins_head oih
+        JOIN mt_mod_site mms ON mms.SITE_ID = oih.site_id
+        JOIN hzero_platform.iam_user iu ON oih.CREATED_BY = iu.id
+        JOIN hzero_platform.iam_user iu2 ON oih.last_updated_by = iu2.id
+        WHERE
+        oih.TENANT_ID = #{tenantId}
+        <if test="dto.attachmentCode != null">
+            AND oih.attachment_code = #{dto.attachmentCode}
+        </if>
+        <if test="dto.attachmentName != null">
+            AND oih.attachment_name = #{dto.attachmentName}
+        </if>
+        <if test="dto.insHeadId != null">
+            AND oih.ins_header_id = #{dto.insHeadId}
+        </if>
+        ORDER BY oih.last_update_date DESC
+    </select>
+
+    <select id="eSopQuery" resultType="com.ruike.hme.domain.vo.HmeOperationInsHeadVO">
+        SELECT
+        hoi.material_id,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        hoi.material_version_id,
+        hmv.MATERIAL_VERSION,
+        hoi.material_category_id,
+        wig.item_group_code,
+        wig.item_group_description,
+        mo.OPERATION_NAME,
+        hoih.attachment_code,
+        hoih.attachment_name,
+        hoih.file_url
+        FROM
+        hme_operation_instruction hoi
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = hoi.material_id
+        AND mm.ENABLE_FLAG = 'Y'
+        LEFT JOIN hme_material_version hmv ON hmv.MATERIAL_VERSION_ID = hoi.material_version_id
+        LEFT JOIN wms_item_group wig ON wig.item_group_id = hoi.material_category_id,
+        hme_operation_ins_head hoih,
+        mt_operation mo
+        WHERE
+        mo.OPERATION_ID = hoi.operation_id
+        AND hoih.ins_header_id = hoi.ins_header_id
+        AND hoi.operation_id = #{dto.operationId}
+        AND hoi.tenant_id = #{tenantId}
+        AND hoi.enable_flag = 'Y'
+        <if test="dto.materialId != null">
+            AND hoi.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialVersion != null">
+            AND hmv.MATERIAL_VERSION = #{dto.materialVersion}
+        </if>
+        <if test="dto.materialGroup != null">
+            AND wig.item_group_code = #{dto.materialGroup}
+        </if>
+        <if test="dto.operationName != null">
+            AND mo.OPERATION_NAME = #{dto.operationName}
+        </if>
+    </select>
+
+    <select id="noSiteOutEoQuery" resultType="com.ruike.hme.api.dto.HmeEoJobSnDTO5">
+        SELECT
+            hejs.job_id,
+            hejs.eo_id,
+            me.IDENTIFICATION,
+            me.WORK_ORDER_ID,
+            mwo.WORK_ORDER_NUM,
+            hejs.site_in_date,
+            mer.ROUTER_ID,
+            mr.ROUTER_NAME,
+            meb.BOM_ID,
+            mb.BOM_NAME
+        FROM
+            hme_eo_job_sn hejs
+        LEFT JOIN mt_eo me ON me.EO_ID = hejs.eo_id
+        LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = me.WORK_ORDER_ID
+        LEFT JOIN mt_eo_router mer ON mer.EO_ID = me.EO_ID
+        LEFT JOIN mt_router mr ON mr.ROUTER_ID = mer.ROUTER_ID
+        LEFT JOIN mt_eo_bom meb ON meb.EO_ID = me.EO_ID
+        LEFT JOIN mt_bom mb ON mb.BOM_ID = meb.BOM_ID
+        WHERE
+            hejs.tenant_id = #{tenantId}
+        AND hejs.job_type = 'SINGLE_PROCESS'
+        AND (
+            hejs.site_out_by IS NULL
+            OR hejs.site_out_by = ''
+        )
+        AND (
+        hejs.site_out_date IS NULL
+        OR hejs.site_out_date = ''
+        )
+        AND me.`STATUS` = 'WORKING'
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            AND hejs.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.identification != null and dto.identification != ''">
+            AND me.IDENTIFICATION LIKE CONCAT('%',#{dto.identification},'%')
+        </if>
+        <if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+            AND mwo.WORK_ORDER_NUM LIKE CONCAT('%',#{dto.workOrderNum},'%')
+        </if>
+        <if test="dto.routerId != null and dto.routerId != ''">
+            AND mer.ROUTER_ID = #{dto.routerId}
+        </if>
+        <if test="dto.bomName != null and dto.bomName != ''">
+            AND mb.BOM_NAME LIKE CONCAT('%',#{dto.bomName},'%')
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfMaterialLotSiteInMapper">
+
+    <select id="getUserIdByLoginName" resultType="java.lang.Long">
+        select iu.id
+        from hzero_platform.iam_user iu
+        where iu.login_name = #{loginName}
+    </select>
+
+    <delete id="batchDeleteEquipmentWkcRel">
+        delete from hme_equipment_wkc_rel where EQUIPMENT_WKC_REL_ID in
+        <foreach collection="equipmentWkcRelIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="alreadyEquipmentWkcRelQuery" resultType="com.ruike.hme.domain.vo.ItfMaterialLotSiteInVO2">
+        select he.ASSET_ENCODING, mmw.workcell_code
+        from hme_equipment_wkc_rel hewr,
+        mt_mod_workcell mmw,
+        hme_equipment he
+        where hewr.equipment_id in
+        <foreach collection="equipmentIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hewr.tenant_id = #{tenantId}
+        and mmw.workcell_id = hewr.station_id
+        and he.equipment_id = hewr.equipment_id
+        limit 1
+    </select>
+
+    <select id="woInfoQuery" resultType="com.ruike.hme.domain.vo.ItfMaterialLotSiteInVO">
+        select mwo.PRODUCTION_VERSION, mwo.QTY as wo_quantity, mwoa.COMPLETED_QTY as wo_quantity_out
+        from mt_work_order mwo,
+             mt_work_order_actual mwoa
+        where mwo.WORK_ORDER_ID = #{workOrderId}
+        and mwoa.WORK_ORDER_ID = mwo.WORK_ORDER_ID
+        and mwoa.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="materialLotInfoQuery" resultType="com.ruike.hme.domain.vo.ItfMaterialLotSiteInVO">
+        select mm.material_code as sn_material_code, mm.material_name as sn_material_name,
+               mmla.attr_value as lab_code, mmla2.attr_value as lab_code_remark
+        from mt_material_lot mml
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla.attr_name = 'LAB_CODE'
+        and mmla.TENANT_ID = mml.TENANT_ID
+        left join mt_material_lot_attr mmla2
+        on mmla2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and mmla2.attr_name = 'LAB_CODE_REMARK'
+        and mmla2.TENANT_ID = mml.TENANT_ID,
+        mt_material mm
+        where mml.MATERIAL_LOT_ID = #{materialLotId}
+        and mm.material_id = mml.material_id
+    </select>
+
+    <select id="scrapMaterialLotLoadIdQuery" resultType="com.ruike.hme.domain.vo.ItfMaterialLotSiteInVO4">
+        select hmll.material_lot_load_id, hmll.load_sequence, hcf.A24
+        from hme_material_lot_load hmll,
+             hme_cos_function hcf
+        where hmll.material_lot_id = #{materialLotId}
+        and hmll.tenant_id = #{tenantId}
+        and hcf.load_sequence = hmll.load_sequence
+        and hcf.A24 is not null
+        and hcf.A24 != ''
+        and hcf.tenant_id = hmll.tenant_id
+    </select>
+</mapper>

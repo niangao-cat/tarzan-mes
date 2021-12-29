@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfDeliveryDocIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfDeliveryDocIface">
+        <result column="INTERFACE_HEADER_ID" property="interfaceHeaderId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_NUM" property="instructionDocNum" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_TYPE" property="instructionDocType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_TYPE_CODE" property="instructionDocTypeCode" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_STATUS" property="instructionDocStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_CODE" property="supplierCode" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="DEMAND_TIME" property="demandTime" jdbcType="DATE"/>
+        <result column="EXPECTED_ARRIVAL_TIME" property="expectedArrivalTime" jdbcType="DATE"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryInstructionIdByPoLineNum" resultType="java.lang.String">
+        select mia.instruction_id
+        from mt_instruction_doc mid
+        inner join mt_instruction mi on mi.source_doc_id = mid.instruction_doc_id
+        inner join mt_instruction_attr mia on mia.attr_name = 'INSTRUCTION_LINE_NUM' and mia.attr_value = #{poLineNum} and mia.instruction_id = mi.instruction_id
+        where mid.instruction_doc_id = #{poId}
+        and mid.tenant_id = #{tenantId}
+        and mi.material_id = #{materialId}
+        limit 1
+    </select>
+    <select id="selectTHDeliveryDoc" resultType="com.ruike.itf.domain.vo.ItfPoDeliveryRelHandlerVO">
+        SELECT
+        qim.IQC_HEADER_ID AS iqcHeaderId,
+        mid.INSTRUCTION_DOC_NUM AS asnNumber,
+        wpdr.srm_line_num AS asnLineNum
+        FROM
+        qms_iqc_header qim
+        JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = qim.DOC_HEADER_ID
+        JOIN mt_instruction_doc_attr mida ON mida.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID
+        JOIN wms_po_delivery_rel wpdr ON wpdr.delivery_doc_line_id = qim.DOC_LINE_ID
+        WHERE
+        qim.FINAL_DECISION = 'TH'
+        AND mida.ATTR_NAME = 'SRM_FLAG'
+        AND mida.ATTR_VALUE = 'SRM'
+        AND wpdr.srm_line_num IS NOT NULL
+        AND wpdr.srm_line_num != ''
+        AND qim.attribute1 != 'S'
+        AND qim.tenant_id = ${tenantId}
+        <if test="iqcHeaderId != null and iqcHeaderId != ''">
+            AND qim.IQC_HEADER_ID = #{iqcHeaderId}
+        </if>
+        GROUP BY
+        qim.IQC_HEADER_ID,
+        mid.INSTRUCTION_DOC_NUM ,
+        wpdr.srm_line_num
+    </select>
+</mapper>

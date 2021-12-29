@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtEventObjectColumnMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtEventObjectColumn">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_COLUMN_ID" property="objectColumnId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_ID" property="objectTypeId" jdbcType="VARCHAR"/>
+        <result column="COLUMN_FIELD" property="columnField" jdbcType="VARCHAR"/>
+        <result column="COLUMN_TYPE" property="columnType" jdbcType="VARCHAR"/>
+        <result column="COLUMN_TITLE" property="columnTitle" jdbcType="VARCHAR"/>
+        <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+        <result column="EVENT_FLAG" property="eventFlag" jdbcType="VARCHAR"/>
+        <result column="DISPLAY_FLAG" property="displayFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="propertyLimitObjectColumnQuery" resultType="java.lang.String">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t.OBJECT_COLUMN_ID
+        FROM
+        mt_event_object_column t
+        INNER JOIN mt_event_object_column_tl tl ON t.OBJECT_COLUMN_ID = tl.OBJECT_COLUMN_ID
+        AND tl.LANG = #{locale}
+        WHERE 1=1
+        AND t.TENANT_ID = ${tenantId}
+        <if test="dto.objectTypeId !=null">
+            AND t.OBJECT_TYPE_ID = #{dto.objectTypeId}
+        </if>
+        <if test="dto.columnField !=null">
+            AND t.COLUMN_FIELD = #{dto.columnField}
+        </if>
+        <if test="dto.columnType !=null">
+            AND t.COLUMN_TYPE = #{dto.columnType}
+        </if>
+        <if test="dto.columnTitle !=null">
+            AND tl.COLUMN_TITLE = #{dto.columnTitle}
+        </if>
+        <if test="dto.lineNumber !=null">
+            AND t.LINE_NUMBER = #{dto.lineNumber}
+        </if>
+        <if test="dto.kidFlag !=null">
+            AND t.KID_FLAG = #{dto.kidFlag}
+        </if>
+        <if test="dto.eventFlag !=null">
+            AND t.EVENT_FLAG = #{dto.eventFlag}
+        </if>
+        <if test="dto.displayFlag !=null">
+            AND t.DISPLAY_FLAG = #{dto.displayFlag}
+        </if>
+        <if test="dto.enableFlag !=null">
+            AND t.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+    </select>
+
+</mapper>

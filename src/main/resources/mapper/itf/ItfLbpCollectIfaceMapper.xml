@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfLbpCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfLbpCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="M2" property="m2" jdbcType="VARCHAR"/>
+        <result column="M2_Y" property="m2Y" jdbcType="VARCHAR"/>
+        <result column="BPP" property="bpp" jdbcType="VARCHAR"/>
+        <result column="BPP_Y" property="bppY" jdbcType="VARCHAR"/>
+        <result column="DIVERGENCE" property="divergence" jdbcType="VARCHAR"/>
+        <result column="DIVERGENCE_Y" property="divergenceY" jdbcType="DECIMAL"/>
+        <result column="WAIST_WIDTH" property="waistWidth" jdbcType="VARCHAR"/>
+        <result column="WAIST_WIDTH_Y" property="waistWidthY" jdbcType="VARCHAR"/>
+        <result column="WAIST_LOCATION" property="waistLocation" jdbcType="VARCHAR"/>
+        <result column="WAIST_LOCATION_Y" property="waistLocationY" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_lbp_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        SN,
+        M2,
+        M2_Y,
+        BPP,
+        BPP_Y,
+        DIVERGENCE,
+        DIVERGENCE_Y,
+        WAIST_WIDTH,
+        WAIST_WIDTH_Y,
+        WAIST_LOCATION,
+        WAIST_LOCATION_Y,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+        (
+        #{item.interfaceId},
+        #{item.assetEncoding},
+        #{item.sn},
+        #{item.m2},
+        #{item.m2Y},
+        #{item.bpp},
+         #{item.bppY},
+        #{item.divergence},
+        #{item.divergenceY},
+        #{item.waistWidth},
+        #{item.waistWidthY},
+        #{item.waistLocation},
+        #{item.waistLocationY},
+        #{item.processDate},
+        #{item.processMessage},
+        #{item.processStatus},
+        #{item.tenantId},
+        #{item.objectVersionNumber},
+        #{item.creationDate},
+        #{item.createdBy},
+        #{item.lastUpdatedBy},
+        #{item.lastUpdateDate},
+        #{item.attributeCategory},
+        #{item.attribute1},
+        #{item.attribute2},
+        #{item.attribute3},
+        #{item.attribute4},
+        #{item.attribute5},
+        #{item.attribute6},
+        #{item.attribute7},
+        #{item.attribute8},
+        #{item.attribute9},
+        #{item.attribute10}
+        )
+        </foreach>
+    </insert>
+    <update id="updateIface">
+        UPDATE itf_lbp_collect_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = -1,
+            last_update_date = CURRENT_TIMESTAMP,
+            process_date=CURRENT_TIMESTAMP,
+            process_message =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processMessage}
+            </foreach>,
+            process_status =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processStatus}
+            </foreach>
+        </set>
+        <where>
+            interface_id in
+            <foreach collection="domains" item="item"
+                     separator="," open="(" close=")">
+                #{item.interfaceId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

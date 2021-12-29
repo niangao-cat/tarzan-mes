@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtEoStepWipMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtEoStepWip">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_STEP_WIP_ID" property="eoStepWipId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="QUEUE_QTY" property="queueQty" jdbcType="DECIMAL"/>
+        <result column="WORKING_QTY" property="workingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_PENDING_QTY" property="completePendingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QTY" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="selectByStepActual" type="tarzan.actual.domain.vo.MtEoStepWipVO6">
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="eoStepWipReportForUi" type="tarzan.actual.api.dto.MtEoStepWipDTO2">
+        <result column="EO_NUM" property="eoNum" jdbcType="VARCHAR"/>
+        <result column="ROUTER_Id" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CODE" property="workcellCode" jdbcType="VARCHAR"/>
+        <result column="QUEUE_QTY" property="queueQty" jdbcType="DECIMAL"/>
+        <result column="WORKING_QTY" property="workingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_PENDING_QTY" property="completePendingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QTY" property="holdQty" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="eoWkcAndStepWipBatchGet" resultMap="BaseResultMap">
+        SELECT *
+        FROM mt_eo_step_wip
+        WHERE TENANT_ID = ${tenantId} AND
+        <foreach collection="eoStepActualWkcIds.entrySet()" index="key" item="value" separator="or">
+            ( EO_STEP_ACTUAL_ID = #{key}
+            <if test="value != null">
+                AND WORKCELL_ID = #{value}
+            </if>
+            )
+        </foreach>
+    </select>
+
+    <select id="selectByEoId" resultMap="BaseResultMap">
+       SELECT mesw.*
+         FROM mt_eo_step_wip mesw,
+              mt_eo_step_actual esa,
+              mt_eo_router_actual era
+        WHERE mesw.TENANT_ID = ${tenantId}
+          AND esa.TENANT_ID = ${tenantId}
+          AND era.TENANT_ID = ${tenantId}
+          AND esa.EO_STEP_ACTUAL_ID = mesw.EO_STEP_ACTUAL_ID
+          AND era.EO_ROUTER_ACTUAL_ID = esa.EO_ROUTER_ACTUAL_ID
+          AND era.EO_ID = #{eoId}
+    </select>
+
+    <select id="selectByStepActual" resultMap="selectByStepActual">
+        SELECT
+        era.EO_ID,
+        era.ROUTER_ID,
+        esa.ROUTER_STEP_ID,
+        esa.EO_STEP_ACTUAL_ID,
+        esa.STATUS
+        FROM
+        mt_eo_step_wip esw,
+        mt_eo_step_actual esa,
+        mt_eo_router_actual era
+        WHERE esw.TENANT_ID = ${tenantId}
+        AND esa.TENANT_ID = ${tenantId}
+        AND era.TENANT_ID = ${tenantId}
+        AND esw.EO_STEP_ACTUAL_ID = esa.EO_STEP_ACTUAL_ID
+        AND esa.EO_ROUTER_ACTUAL_ID = era.EO_ROUTER_ACTUAL_ID
+        <if test=" dto.workcellId != null ">
+            AND esw.WORKCELL_ID = #{dto.workcellId}
+        </if>
+        <if test=" dto.operationId != null ">
+            AND esa.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test=" dto.stepName != null ">
+            AND esa.STEP_NAME = #{dto.stepName}
+        </if>
+        <if test=" dto.status != null ">
+            AND esa.STATUS = #{dto.status}
+        </if>
+        <if test=" qtyType != null ">
+            <choose>
+                <when test=" qtyType == 'QUEUE'">
+                    AND esw.QUEUE_QTY > 0
+                </when>
+                <when test=" qtyType == 'WORKING'">
+                    AND esw.WORKING_QTY > 0
+                </when>
+                <when test=" qtyType == 'COMPLETED'">
+                    AND esw.COMPLETED_QTY > 0
+                </when>
+                <when test=" qtyType == 'COMPLETE_PENDING'">
+                    AND esw.COMPLETE_PENDING_QTY > 0
+                </when>
+                <when test=" qtyType == 'SCRAPPED'">
+                    AND esw.SCRAPPED_QTY > 0
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_eo_step_wip t
+        where t.TENANT_ID = ${tenantId}
+        <if test="dto.workcellId != null ">
+            AND t.WORKCELL_ID = #{dto.workcellId}
+        </if>
+        <if test="dto.eoStepActualId != null ">
+            AND t.EO_STEP_ACTUAL_ID = #{dto.eoStepActualId}
+        </if>
+    </select>
+
+    <select id="selectByEoStepActualIdList" resultMap="BaseResultMap">
+        SELECT *
+        FROM mt_eo_step_wip
+        WHERE TENANT_ID = #{tenantId}
+        <if test="sourceEoStepActualIdList!=null and sourceEoStepActualIdList.size()>0">
+            and EO_STEP_ACTUAL_ID in
+            <foreach collection="sourceEoStepActualIdList" open="(" close=")" separator="," index="index" item="item">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+    <select id="selectByConditionList" resultMap="BaseResultMap">
+        SELECT *
+        FROM mt_eo_step_wip
+        WHERE TENANT_ID = ${tenantId}
+        <if test="list!=null and list.size()>0">
+
+            <foreach collection="list" open=" AND (" close=")" separator="OR" index="index" item="item">
+                (
+                1=1
+                <if test="item.eoStepActualId!=null">
+                    and EO_STEP_ACTUAL_ID=#{item.eoStepActualId}
+                </if>
+                <if test="item.workcellId!=null">
+                    and WORKCELL_ID=#{item.workcellId}
+                </if>
+                <if test="item.status!=null">
+                    <choose>
+                        <when test='item.status =="QUEUE"'>
+                            AND QUEUE_QTY &lt;&gt;0
+                        </when>
+                        <when test='item.status =="WORKING"'>
+                            AND WORKING_QTY &lt;&gt;0
+                        </when>
+                        <when test='item.status =="COMPLETED"'>
+                            AND COMPLETED_QTY &lt;&gt;0
+                        </when>
+                        <when test='item.status =="SCRAPPED"'>
+                            AND SCRAPPED_QTY &lt;&gt;0
+                        </when>
+                        <when test='item.status =="HOLD"'>
+                            AND HOLD_QTY &lt;&gt;0
+                        </when>
+                        <when test='item.status =="COMPLETE_PENDING"'>
+                            AND COMPLETE_PENDING_QTY &lt;&gt;0
+                        </when>
+                    </choose>
+                </if>
+                )
+            </foreach>
+        </if>
+    </select>
+
+    <select id="eoStepWipReportForUi" resultMap="eoStepWipReportForUi">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        DISTINCT
+        me.EO_NUM,
+        mera.ROUTER_ID,
+        mesa.STEP_NAME,
+        mo.OPERATION_NAME,
+        mmw.WORKCELL_CODE,
+        mesw.QUEUE_QTY,
+        mesw.WORKING_QTY,
+        mesw.COMPLETE_PENDING_QTY,
+        mesw.COMPLETED_QTY,
+        mesw.SCRAPPED_QTY,
+        mesw.HOLD_QTY
+        from mt_eo_step_wip mesw
+        join mt_mod_workcell mmw on mesw.WORKCELL_ID=mmw.WORKCELL_ID
+        join mt_eo_step_actual mesa on mesw.EO_STEP_ACTUAL_ID=mesa.EO_STEP_ACTUAL_ID
+        join mt_eo_router_actual mera on mesa.EO_ROUTER_ACTUAL_ID=mera.EO_ROUTER_ACTUAL_ID
+        join mt_eo me on mera.EO_ID=me.EO_ID
+        join mt_router_operation mro on mro.OPERATION_ID = mesa.OPERATION_ID AND mro.ROUTER_STEP_ID = mesa.ROUTER_STEP_ID
+        join mt_router_operation_tl mrot on (mrot.ROUTER_OPERATION_ID = mro.ROUTER_OPERATION_ID and mrot.lang = #{locale})
+        join mt_operation mo on mo.OPERATION_ID = mro.OPERATION_ID
+        join mt_operation_tl mot on (mot.OPERATION_ID = mo.OPERATION_ID and mot.LANG = #{locale})
+        where
+        mesw.TENANT_ID=${tenantId}
+        and mesa.TENANT_ID=${tenantId}
+        and mera.TENANT_ID=${tenantId}
+        and me.TENANT_ID=${tenantId}
+        and mro.TENANT_ID=${tenantId}
+        <if test="dto.workcellCode != null">
+            and mmw.WORKCELL_CODE like CONCAT('%',CONCAT(#{dto.workcellCode} ,'%'))
+        </if>
+        <if test="dto.stepName != null">
+            and mesa.STEP_NAME = #{dto.stepName}
+        </if>
+        <if test="dto.operationId != null">
+            and mro.OPERATION_ID = #{dto.operationId}
+        </if>
+        <if test="dto.eoNum != null">
+            and me.EO_NUM like CONCAT('%',CONCAT(#{dto.eoNum} ,'%'))
+        </if>
+        <if test="dto.routerId != null">
+            and mera.ROUTER_ID=#{dto.routerId}
+        </if>
+    </select>
+
+    <select id="selectForEoWkcAndStepWipQuery" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM
+        mt_eo_step_wip t
+        where
+        t.TENANT_ID=${tenantId}
+        <if test="dto.workcellId != null ">
+            AND t.WORKCELL_ID = #{dto.workcellId}
+        </if>
+        <if test="dto.eoStepActualId != null ">
+            AND t.EO_STEP_ACTUAL_ID = #{dto.eoStepActualId}
+        </if>
+        <if test=" qtyType != null ">
+            <choose>
+                <when test=" qtyType == 'QUEUE'">
+                    AND t.QUEUE_QTY &lt;&gt; 0
+                </when>
+                <when test=" qtyType == 'WORKING'">
+                    AND t.WORKING_QTY &lt;&gt; 0
+                </when>
+                <when test=" qtyType == 'COMPLETED'">
+                    AND t.COMPLETED_QTY &lt;&gt; 0
+                </when>
+                <when test=" qtyType == 'COMPLETE_PENDING'">
+                    AND t.COMPLETE_PENDING_QTY &lt;&gt; 0
+                </when>
+                <when test=" qtyType == 'SCRAPPED'">
+                    AND t.SCRAPPED_QTY &lt;&gt; 0
+                </when>
+                <when test=" qtyType == 'HOLD'">
+                    AND t.HOLD_QTY &lt;&gt; 0
+                </when>
+            </choose>
+        </if>
+    </select>
+</mapper>

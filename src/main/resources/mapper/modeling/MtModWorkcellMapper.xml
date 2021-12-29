@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModWorkcellMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModWorkcell">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CODE" property="workcellCode" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_NAME" property="workcellName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_TYPE" property="workcellType" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_LOCATION" property="workcellLocation" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CATEGORY" property="workcellCategory" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap2" type="tarzan.modeling.domain.vo.MtModWorkcellVO2">
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CODE" property="workcellCode" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_NAME" property="workcellName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_TYPE" property="workcellType" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_LOCATION" property="workcellLocation" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CATEGORY" property="workcellCategory" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_SCHEDULE_ID" property="workcellScheduleId" jdbcType="VARCHAR"/>
+        <result column="RATE_TYPE" property="rateType" jdbcType="VARCHAR"/>
+        <result column="RATE" property="rate" jdbcType="DECIMAL"/>
+        <result column="ACTIVITY" property="activity" jdbcType="DECIMAL"/>
+        <result column="FORWARD_SHIFT_NUMBER" property="forwardShiftsNumber" jdbcType="DECIMAL"/>
+        <result column="BACKWARD_SHIFT_NUMBER" property="backwarddShiftsNumber" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap3" type="tarzan.modeling.domain.vo.MtModWorkcellVO5">
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CODE" property="workcellCode" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_NAME" property="workcellName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_TYPE" property="workcellType" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_LOCATION" property="workcellLocation" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_CATEGORY" property="workcellCategory" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectWorkcells" resultMap="BaseResultMap">
+        select b.* from mt_mod_workcell b
+        where
+        b.TENANT_ID = #{tenantId}
+        and b.WORKCELL_ID IN
+        <foreach collection="workcellIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="selectWorkcellById" resultMap="BaseResultMap2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        b.WORKCELL_ID,
+        b.WORKCELL_CODE,
+        l.WORKCELL_NAME,
+        b.WORKCELL_TYPE,
+        l.DESCRIPTION,
+        l.WORKCELL_LOCATION,
+        b.ENABLE_FLAG,
+        b.WORKCELL_CATEGORY,
+        s.WORKCELL_SCHEDULE_ID,
+        s.RATE_TYPE,
+        s.RATE,
+        m.BACKWARD_SHIFT_NUMBER,
+        m.FORWARD_SHIFT_NUMBER,
+        s.ACTIVITY
+        FROM
+        mt_mod_workcell b
+        INNER JOIN mt_mod_workcell_tl L ON B.WORKCELL_ID=L.WORKCELL_ID AND L.LANG=#{lang}
+        LEFT JOIN mt_mod_workcell_schedule s ON b.WORKCELL_ID = s.WORKCELL_ID and s.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_mod_workcell_manufacturing m ON b.WORKCELL_ID = m.WORKCELL_ID and m.TENANT_ID = #{tenantId}
+        WHERE
+        b.TENANT_ID = #{tenantId}
+        <if test="workcellId!=null">
+            and b.WORKCELL_ID=#{workcellId}
+        </if>
+    </select>
+
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+        t1.TENANT_ID,
+        t1.WORKCELL_ID,
+        t1.WORKCELL_CODE,
+        t2.WORKCELL_NAME,
+        t2.DESCRIPTION,
+        t1.WORKCELL_TYPE,
+        t2.WORKCELL_LOCATION,
+        t1.ENABLE_FLAG,
+        t1.WORKCELL_CATEGORY,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_mod_workcell t1 INNER join mt_mod_workcell_tl t2 on
+        (t1.WORKCELL_ID=t2.WORKCELL_ID and t2.LANG=#{lang})
+        WHERE
+        t1.TENANT_ID = #{tenantId}
+        and t1.WORKCELL_ID IN
+        <foreach collection="workcellIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        b.TENANT_ID,
+        b.WORKCELL_ID,
+        b.WORKCELL_CODE,
+        l.WORKCELL_NAME,
+        b.WORKCELL_TYPE,
+        l.DESCRIPTION,
+        l.WORKCELL_LOCATION,
+        b.ENABLE_FLAG,
+        b.WORKCELL_CATEGORY
+        FROM
+        mt_mod_workcell b
+        INNER JOIN mt_mod_workcell_tl L ON B.WORKCELL_ID=L.WORKCELL_ID AND L.LANG=#{lang}
+        where
+        b.TENANT_ID = #{tenantId}
+        <if test="dto.workcellId!=null">
+            and b.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="dto.workcellCode!=null">
+            and b.WORKCELL_CODE like concat('%',concat(#{dto.workcellCode},'%'))
+        </if>
+        <if test="dto.workcellName!=null">
+            and l.WORKCELL_NAME like concat('%',concat(#{dto.workcellName},'%'))
+        </if>
+        <if test="dto.description!=null">
+            and l.DESCRIPTION like concat('%',concat(#{dto.description},'%'))
+        </if>
+        <if test="dto.enableFlag!=null">
+            and b.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.workcellType!=null">
+            and b.WORKCELL_TYPE = #{dto.workcellType}
+        </if>
+        <if test="dto.workcellLocation!=null">
+            and l.WORKCELL_LOCATION like concat('%',concat(#{dto.workcellLocation},'%'))
+        </if>
+        <if test="dto.workcellCategory!=null">
+            and b.WORKCELL_CATEGORY = #{dto.workcellCategory}
+        </if>
+    </select>
+    
+    <select id="selectForEmptyStringForUi" resultMap="BaseResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        b.TENANT_ID,
+        b.WORKCELL_ID,
+        b.WORKCELL_CODE,
+        l.WORKCELL_NAME,
+        b.WORKCELL_TYPE,
+        l.DESCRIPTION,
+        l.WORKCELL_LOCATION,
+        b.ENABLE_FLAG,
+        b.WORKCELL_CATEGORY
+        FROM
+        mt_mod_workcell b
+        INNER JOIN mt_mod_workcell_tl L ON B.WORKCELL_ID=L.WORKCELL_ID AND L.LANG=#{lang}
+        where
+        b.TENANT_ID = #{tenantId}
+        <if test="dto.workcellId!=null">
+            and b.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="dto.workcellCode!=null">
+            and b.WORKCELL_CODE like concat('%',concat(#{dto.workcellCode},'%'))
+        </if>
+        <if test="dto.workcellName!=null">
+            and l.WORKCELL_NAME like concat('%',concat(#{dto.workcellName},'%'))
+        </if>
+        <if test="dto.description!=null">
+            and l.DESCRIPTION like concat('%',concat(#{dto.description},'%'))
+        </if>
+        <if test="dto.enableFlag!=null">
+            and b.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.workcellType!=null">
+            and b.WORKCELL_TYPE = #{dto.workcellType}
+        </if>
+        <if test="dto.workcellLocation!=null">
+            and l.WORKCELL_LOCATION like concat('%',concat(#{dto.workcellLocation},'%'))
+        </if>
+        <if test="dto.workcellCategory!=null">
+            and b.WORKCELL_CATEGORY = #{dto.workcellCategory}
+        </if>
+        ORDER BY b.CREATION_DATE DESC 
+    </select>
+
+    <select id="propertyLimitWorkcellPropertyQuery" resultMap="BaseResultMap3">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.WORKCELL_ID,
+        b.WORKCELL_CODE,
+        b.WORKCELL_NAME,
+        l.DESCRIPTION,
+        b.WORKCELL_TYPE,
+        l.WORKCELL_LOCATION,
+        b.ENABLE_FLAG,
+        b.WORKCELL_CATEGORY
+        FROM
+        mt_mod_workcell b
+        INNER JOIN mt_mod_workcell_tl L ON B.WORKCELL_ID=L.WORKCELL_ID AND L.LANG=#{lang}
+        where
+        b.TENANT_ID = #{tenantId}
+        <if test="dto.workcellId!=null">
+            and b.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="dto.workcellCode!=null">
+            and b.WORKCELL_CODE =#{dto.workcellCode}
+        </if>
+        <if test="dto.workcellName!=null">
+            and l.WORKCELL_NAME like concat('%',concat(#{dto.workcellName},'%'))
+        </if>
+        <if test="dto.description!=null">
+            and l.DESCRIPTION like concat('%',concat(#{dto.description},'%'))
+        </if>
+        <if test="dto.enableFlag!=null">
+            and b.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.workcellType!=null">
+            and b.WORKCELL_TYPE = #{dto.workcellType}
+        </if>
+        <if test="dto.workcellLocation!=null">
+            and l.WORKCELL_LOCATION like concat('%',concat(#{dto.workcellLocation},'%'))
+        </if>
+        <if test="dto.workcellCategory!=null">
+            and b.WORKCELL_CATEGORY = #{dto.workcellCategory}
+        </if>
+        order by  b.WORKCELL_ID+0
+    </select>
+
+    <select id="selectByWkcCode" resultMap="BaseResultMap">
+        select b.* from mt_mod_workcell b
+        where
+        b.TENANT_ID = #{tenantId}
+        and b.WORKCELL_CODE IN
+        <foreach collection="workcellIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

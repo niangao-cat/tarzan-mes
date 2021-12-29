@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.general.infra.mapper.MtEventMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.general.domain.entity.MtEvent">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TYPE_ID" property="eventTypeId" jdbcType="VARCHAR"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="PARENT_EVENT_ID" property="parentEventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_REQUEST_ID" property="eventRequestId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="TIMESTAMP"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VOResultMap" type="tarzan.general.domain.vo.MtEventVO5">
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_TYPE_CODE" property="eventTypeCode" jdbcType="VARCHAR"/>
+        <result column="EVENT_TYPE_DESCRIPTION" property="eventTypeDescription" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+        <result column="EVENT_BY" property="eventBy" jdbcType="DECIMAL"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="TIMESTAMP"/>
+        <result column="PARENT_EVENT_ID" property="parentEventId" jdbcType="VARCHAR"/>
+        <result column="EVENT_REQUEST_ID" property="eventRequestId" jdbcType="VARCHAR"/>
+        <result column="REQUEST_TYPE_CODE" property="requestTypeCode" jdbcType="VARCHAR"/>
+        <result column="REQUEST_TYPE_DESCRIPTION" property="requestTypeDescription" jdbcType="VARCHAR"/>
+        <result column="REQUEST_TIME" property="requestTime" jdbcType="TIMESTAMP"/>
+        <result column="REQUEST_BY" property="requestBy" jdbcType="DECIMAL"/>
+        <result column="EVENT_TYPE_USER_NAME" property="eventTypeUserName" jdbcType="VARCHAR"/>
+        <result column="REQUEST_TYPE_USER_NAME" property="requestTypeUserName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="parentEventMap" type="tarzan.general.domain.vo.MtEventVO3">
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="PARENT_EVENT_ID" property="parentEventId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="UiMap" type="tarzan.general.api.dto.MtEventDTO2">
+        <result column="EVENT_FLAG" property="eventFlag" jdbcType="BOOLEAN"/>
+        <result column="KID" property="kid" jdbcType="VARCHAR"/>
+        <result column="TYPE_CODE" property="typeCode" jdbcType="VARCHAR"/>
+        <result column="TYPE_DESC" property="typeDesc" jdbcType="VARCHAR"/>
+        <result column="OPERATION_TIME" property="operationTime" jdbcType="TIMESTAMP"/>
+        <result column="OPERATION_BY" property="operationBy" jdbcType="DECIMAL"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="TIMESTAMP"/>
+        <result column="PARENT_EVENT_ID" property="parentEventId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_CODE" property="materialLotCode" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_QTY" property="primaryUomQty" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="UiMap2" type="tarzan.general.api.dto.MtEventDTO3">
+        <result column="EVENT_FLAG" property="eventFlag" jdbcType="BOOLEAN"/>
+        <result column="EVENT_REQUEST_ID" property="eventRequestId" jdbcType="VARCHAR"/>
+        <result column="KID" property="kid" jdbcType="VARCHAR"/>
+        <result column="TYPE_CODE" property="typeCode" jdbcType="VARCHAR"/>
+        <result column="TYPE_DESC" property="typeDesc" jdbcType="VARCHAR"/>
+        <result column="OPERATION_TIME" property="operationTime" jdbcType="TIMESTAMP"/>
+        <result column="OPERATION_BY" property="operationBy" jdbcType="DECIMAL"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="TIMESTAMP"/>
+        <result column="PARENT_EVENT_ID" property="parentEventId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_CODE" property="materialLotCode" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_QTY" property="primaryUomQty" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectEventByIds" resultMap="BaseResultMap">
+        SELECT
+        t.EVENT_ID,
+        t.EVENT_TYPE_ID,
+        t.EVENT_BY,
+        t.EVENT_TIME,
+        t.WORKCELL_ID,
+        t.LOCATOR_ID,
+        t.PARENT_EVENT_ID,
+        t.EVENT_REQUEST_ID,
+        t.SHIFT_DATE,
+        t.SHIFT_CODE,
+        t.CID
+        FROM
+        mt_event t
+        WHERE 1=1
+        AND t.TENANT_ID = ${tenantId}
+        AND t.EVENT_ID IN
+        <foreach collection="eventIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByConditionCustom" resultType="string">
+        SELECT
+        t.EVENT_ID
+        FROM
+        mt_event t
+        WHERE 1=1
+        AND t.TENANT_ID = ${tenantId}
+        <if test="condition.eventTypeCode != null">
+            AND t.EVENT_TYPE_ID IN (
+            SELECT EVENT_TYPE_ID
+            FROM mt_event_type
+            WHERE EVENT_TYPE_CODE = #{condition.eventTypeCode}
+            )
+        </if>
+        <if test="condition.eventBy!=null">
+            and t.EVENT_BY = #{condition.eventBy}
+        </if>
+        <if test="condition.eventStartTime!=null">
+            and DATE_FORMAT(t.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &gt;= #{condition.eventStartTime}
+        </if>
+        <if test="condition.eventEndTime!=null">
+            and DATE_FORMAT(t.EVENT_TIME,'%Y-%m-%d %H:%i:%S') &lt;= #{condition.eventEndTime}
+        </if>
+        <if test="condition.workcellId!=null">
+            and t.WORKCELL_ID = #{condition.workcellId}
+        </if>
+        <if test="condition.locatorId!=null">
+            and t.LOCATOR_ID = #{condition.locatorId}
+        </if>
+        <if test="condition.parentEventId!=null">
+            and t.PARENT_EVENT_ID = #{condition.parentEventId}
+        </if>
+        <if test="condition.eventRequestId!=null">
+            and t.EVENT_REQUEST_ID = #{condition.eventRequestId}
+        </if>
+        <if test="condition.shiftDate != null">
+            and DATE_FORMAT(t.SHIFT_DATE,'%Y-%m-%d') = #{condition.shiftDate}
+        </if>
+        <if test="condition.shiftCode != null">
+            and t.SHIFT_CODE = #{condition.shiftCode}
+        </if>
+    </select>
+
+    <select id="requestLimitEventQuery" resultType="java.lang.String">
+        SELECT
+        t.EVENT_ID
+        FROM
+        mt_event t
+        WHERE 1=1
+        AND t.TENANT_ID = ${tenantId}
+        AND t.EVENT_REQUEST_ID = #{eventRequestId}
+        <if test="eventTypeCode != null">
+            AND t.EVENT_TYPE_ID IN (
+            SELECT EVENT_TYPE_ID
+            FROM mt_event_type
+            WHERE EVENT_TYPE_CODE = #{eventTypeCode}
+            )
+        </if>
+    </select>
+
+    <select id="selectParentEventId" resultMap="parentEventMap">
+        SELECT
+        t.PARENT_EVENT_ID,
+        t.EVENT_ID
+        FROM
+        mt_event t
+        WHERE 1=1
+        AND t.TENANT_ID = ${tenantId}
+        AND t.EVENT_ID IN
+        <foreach collection="eventIds" item="item" open="(" close=")" separator="," index="index">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="propertyLimitRequestAndEventQuery" resultMap="VOResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        e.EVENT_ID,
+        etb.EVENT_TYPE_CODE,
+        etl.DESCRIPTION EVENT_TYPE_DESCRIPTION,
+        e.EVENT_TIME,
+        e.EVENT_BY,
+        e.WORKCELL_ID,
+        e.LOCATOR_ID,
+        e.SHIFT_CODE,
+        e.SHIFT_DATE,
+        e.PARENT_EVENT_ID,
+        er.EVENT_REQUEST_ID,
+        ertb.REQUEST_TYPE_CODE,
+        ertl.DESCRIPTION REQUEST_TYPE_DESCRIPTION,
+        er.REQUEST_TIME,
+        er.REQUEST_BY
+        FROM
+        mt_event e
+        LEFT JOIN mt_event_request er ON e.EVENT_REQUEST_ID = er.EVENT_REQUEST_ID AND er.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_event_request_type ertb ON er.REQUEST_TYPE_ID = ertb.REQUEST_TYPE_ID AND ertb.TENANT_ID =
+        ${tenantId}
+        LEFT JOIN mt_event_request_type_tl ertl ON ertb.REQUEST_TYPE_ID = ertl.REQUEST_TYPE_ID
+        AND ertl.LANG = #{locale}
+        LEFT JOIN mt_event_type etb ON e.EVENT_TYPE_ID = etb.EVENT_TYPE_ID AND etb.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_event_type_tl etl ON etb.EVENT_TYPE_ID = etl.EVENT_TYPE_ID
+        AND etl.LANG = #{locale}
+        WHERE e.TENANT_ID = #{tenantId}
+        <if test='dto.requestTypeCode!=null and dto.requestTypeCode!=""'>
+            AND er.REQUEST_TIME &gt;=#{dto.startTime}
+            AND #{dto.endTime} &gt;=er.REQUEST_TIME
+            and ertb.REQUEST_TYPE_CODE=#{dto.requestTypeCode}
+        </if>
+
+        <if test='dto.requestTypeCode==null or dto.requestTypeCode==""'>
+            AND e.EVENT_TIME &gt;=#{dto.startTime}
+            AND #{dto.endTime} &gt;=e.EVENT_TIME
+        </if>
+
+        <if test='dto.eventTypeCode!=null and dto.eventTypeCode!=""'>
+            and etb.EVENT_TYPE_CODE=#{dto.eventTypeCode}
+        </if>
+
+        <if test="dto.eventBy!=null">
+            AND e.EVENT_BY=#{dto.eventBy}
+        </if>
+        <if test="dto.workcellId!=null">
+            AND e.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        <if test="dto.locatorId!=null">
+            AND e.LOCATOR_ID=#{dto.locatorId}
+        </if>
+        <if test="dto.shiftDate!=null">
+            AND e.SHIFT_DATE=#{dto.shiftDate}
+        </if>
+        <if test="dto.shiftCode!=null">
+            AND e.SHIFT_CODE=#{dto.shiftCode}
+        </if>
+        <if test="dto.requestId!=null">
+            AND e.EVENT_REQUEST_ID=#{dto.requestId}
+        </if>
+        <if test="dto.eventId!=null">
+            AND e.EVENT_ID=#{dto.eventId}
+        </if>
+
+        ORDER BY er.EVENT_REQUEST_ID+0 desc, e.EVENT_TIME DESC
+    </select>
+
+    <select id="eventUnionRequestGroupQueryForUi" resultMap="UiMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        (
+        SELECT
+        FALSE EVENT_FLAG,
+        e.EVENT_REQUEST_ID KID,
+        et.REQUEST_TYPE_CODE TYPE_CODE,
+        etl.DESCRIPTION TYPE_DESC,
+        e.REQUEST_BY OPERATION_BY,
+        e.REQUEST_TIME OPERATION_TIME,
+        NULL WORKCELL_ID,
+        NULL LOCATOR_ID,
+        NULL PARENT_EVENT_ID,
+        NULL SHIFT_DATE,
+        NULL SHIFT_CODE,
+        NULL MATERIAL_LOT_ID,
+        NULL MATERIAL_LOT_CODE,
+        NULL PRIMARY_UOM_QTY,
+        NULL MATERIAL_CODE,
+        NULL MATERIAL_NAME
+        FROM
+        mt_event_request e
+        LEFT JOIN mt_event_request_type et ON e.REQUEST_TYPE_ID = et.REQUEST_TYPE_ID
+        AND et.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_event_request_type_tl etl ON et.REQUEST_TYPE_ID = etl.REQUEST_TYPE_ID
+        AND etl.LANG = #{locale}
+        WHERE
+        e.TENANT_ID = #{tenantId}
+        AND e.REQUEST_TIME &gt;= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+        AND DATE_FORMAT(#{dto.endTime} ,'%Y-%m-%d %H:%i:%S') &gt;= e.REQUEST_TIME
+        <if test='dto.requestTypeId!=null and dto.requestTypeId != ""'>
+            AND et.REQUEST_TYPE_ID = #{dto.requestTypeId}
+        </if>
+        <if test='dto.requestTypeCode!=null and dto.requestTypeCode!=""'>
+            AND et.REQUEST_TYPE_CODE = #{dto.requestTypeCode}
+        </if>
+        <if test='requestIdList != null and requestIdList.size() != 0'>
+            AND e.EVENT_REQUEST_ID in
+            <foreach collection="requestIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.operationBy!=null and dto.operationBy!=""'>
+            AND e.REQUEST_BY = #{dto.operationBy}
+        </if>
+        <if test='eventJudgeFlag!=null and eventJudgeFlag=="Y"'>
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            mt_event t
+            LEFT JOIN mt_event_type tt ON t.EVENT_TYPE_ID = tt.EVENT_TYPE_ID
+            AND tt.TENANT_ID = #{tenantId}
+            LEFT JOIN mt_event_type_tl ttl ON tt.EVENT_TYPE_ID = ttl.EVENT_TYPE_ID
+            AND ttl.LANG = #{locale}
+            WHERE
+            t.EVENT_REQUEST_ID = e.EVENT_REQUEST_ID
+            <if test='dto.eventTypeId != null and dto.eventTypeId !=""'>
+                AND tt.EVENT_TYPE_ID = #{dto.eventTypeId}
+            </if>
+            <if test='dto.eventTypeCode!=null and dto.eventTypeCode!=""'>
+                AND tt.EVENT_TYPE_CODE = #{dto.eventTypeCode}
+            </if>
+            <if test='eventIdList != null and eventIdList.size() != 0'>
+                AND t.EVENT_ID IN
+                <foreach collection="eventIdList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test='dto.locatorId!=null and dto.locatorId!=""'>
+                AND t.LOCATOR_ID=#{dto.locatorId}
+            </if>
+            <if test="dto.shiftDate!=null">
+                AND t.SHIFT_DATE= DATE_FORMAT(#{dto.shiftDate},'%Y-%m-%d')
+            </if>
+            <if test='dto.shiftCode!=null and dto.shiftCode!=""'>
+                AND t.SHIFT_CODE=#{dto.shiftCode}
+            </if>
+            <if test='dto.workcellId!=null and dto.workcellId!=""'>
+                AND t.WORKCELL_ID=#{dto.workcellId}
+            </if>
+            )
+        </if>
+        ORDER BY e.CREATION_DATE DESC
+        )
+        UNION ALL
+        (
+        SELECT
+        TRUE EVENT_FLAG,
+        e.EVENT_ID KID,
+        et.EVENT_TYPE_CODE TYPE_CODE,
+        etl.DESCRIPTION TYPE_DESC,
+        e.EVENT_BY OPERATION_BY,
+        e.EVENT_TIME OPERATION_TIME,
+        e.WORKCELL_ID,
+        e.LOCATOR_ID,
+        e.PARENT_EVENT_ID,
+        e.SHIFT_DATE,
+        e.SHIFT_CODE,
+        mlh.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mlh.PRIMARY_UOM_QTY,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME
+        FROM
+        mt_event e
+        LEFT JOIN mt_event_type et ON e.EVENT_TYPE_ID = et.EVENT_TYPE_ID
+        AND et.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_event_type_tl etl ON et.EVENT_TYPE_ID = etl.EVENT_TYPE_ID
+        AND etl.LANG = #{locale}
+        LEFT JOIN mt_material_lot_his mlh ON e.EVENT_ID =  mlh.EVENT_ID
+        LEFT JOIN mt_material_lot mml ON mlh.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        LEFT JOIN mt_material mm ON mlh.MATERIAL_ID = mm.MATERIAL_ID
+        WHERE
+        e.TENANT_ID = #{tenantId}
+        AND e.EVENT_REQUEST_ID = ''
+        AND e.EVENT_TIME &gt;= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+        AND DATE_FORMAT(#{dto.endTime} ,'%Y-%m-%d %H:%i:%S') &gt;= e.EVENT_TIME
+        <if test='dto.requestTypeCode!=null and dto.requestTypeCode!=""'>
+            AND 1=2
+        </if>
+        <if test='dto.eventTypeId != null and dto.eventTypeId !=""'>
+            AND et.EVENT_TYPE_ID = #{dto.eventTypeId}
+        </if>
+        <if test='dto.eventTypeCode!=null and dto.eventTypeCode!=""'>
+            AND et.EVENT_TYPE_CODE = #{dto.eventTypeCode}
+        </if>
+        <if test='requestIdList != null and requestIdList.size() != 0'>
+            AND 1=2
+        </if>
+        <if test='eventIdList != null and eventIdList.size() != 0'>
+            AND e.EVENT_ID in
+            <foreach collection="eventIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.operationBy!=null and dto.operationBy!=""'>
+            AND e.EVENT_BY = #{dto.operationBy}
+        </if>
+        <if test='dto.locatorId!=null and dto.locatorId!=""'>
+            AND e.LOCATOR_ID=#{dto.locatorId}
+        </if>
+        <if test="dto.shiftDate!=null">
+            AND e.SHIFT_DATE= DATE_FORMAT(#{dto.shiftDate},'%Y-%m-%d')
+        </if>
+        <if test='dto.shiftCode!=null and dto.shiftCode!=""'>
+            AND e.SHIFT_CODE=#{dto.shiftCode}
+        </if>
+        <if test='dto.workcellId!=null and dto.workcellId!=""'>
+            AND e.WORKCELL_ID=#{dto.workcellId}
+        </if>
+        ORDER BY e.CREATION_DATE DESC
+        )
+    </select>
+
+    <select id="requestBatchLimitQuery" resultMap="UiMap2">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        TRUE EVENT_FLAG,
+        e.EVENT_REQUEST_ID,
+        e.EVENT_ID KID,
+        et.EVENT_TYPE_CODE TYPE_CODE,
+        etl.DESCRIPTION TYPE_DESC,
+        e.EVENT_BY OPERATION_BY,
+        e.EVENT_TIME OPERATION_TIME,
+        e.WORKCELL_ID,
+        e.LOCATOR_ID,
+        e.PARENT_EVENT_ID,
+        e.SHIFT_DATE,
+        e.SHIFT_CODE,
+        mlh.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mlh.PRIMARY_UOM_QTY,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME
+        FROM
+        mt_event e
+        LEFT JOIN mt_event_type et ON e.EVENT_TYPE_ID = et.EVENT_TYPE_ID
+        AND et.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_event_type_tl etl ON et.EVENT_TYPE_ID = etl.EVENT_TYPE_ID
+        AND etl.LANG = #{locale}
+        LEFT JOIN mt_material_lot_his mlh ON e.EVENT_ID =  mlh.EVENT_ID
+        LEFT JOIN mt_material_lot mml ON mlh.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        LEFT JOIN mt_material mm ON mlh.MATERIAL_ID = mm.MATERIAL_ID
+        WHERE
+        e.TENANT_ID = #{tenantId}
+        AND e.EVENT_TIME &gt;= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+        AND DATE_FORMAT(#{dto.endTime} ,'%Y-%m-%d %H:%i:%S') &gt;= e.EVENT_TIME
+        <if test='dto.eventTypeCode!=null and dto.eventTypeCode!=""'>
+            AND et.EVENT_TYPE_CODE = #{dto.eventTypeCode}
+        </if>
+        <if test='requestIdList != null and requestIdList.size() != 0'>
+            AND e.EVENT_REQUEST_ID in
+            <foreach collection="requestIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='eventIdList != null and eventIdList.size() != 0'>
+            AND e.EVENT_ID in
+            <foreach collection="eventIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.operationBy!=null and dto.operationBy!=""'>
+            AND e.EVENT_BY = #{dto.operationBy}
+        </if>
+        <if test='dto.locatorId!=null and dto.locatorId!=""'>
+            AND e.LOCATOR_ID=#{dto.locatorId}
+        </if>
+        <if test="dto.shiftDate!=null">
+            AND e.SHIFT_DATE= DATE_FORMAT(#{dto.shiftDate},'%Y-%m-%d')
+        </if>
+        <if test='dto.shiftCode!=null and dto.shiftCode!=""'>
+            AND e.SHIFT_CODE=#{dto.shiftCode}
+        </if>
+        <if test='dto.workcellId!=null and dto.workcellId!=""'>
+            AND e.WORKCELL_ID=#{dto.workcellId}
+        </if>
+    </select>
+
+    <select id="parentEventQueryForUi" resultMap="VOResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+            e.EVENT_ID,
+            etbl.DESCRIPTION EVENT_TYPE_DESCRIPTION,
+            etb.EVENT_TYPE_CODE,
+            e.EVENT_TIME,
+            e.EVENT_BY,
+            ertb.REQUEST_TYPE_CODE,
+            e.WORKCELL_ID,
+            e.LOCATOR_ID,
+            e.SHIFT_CODE,
+            e.SHIFT_DATE,
+            e.PARENT_EVENT_ID
+        FROM
+            mt_event e
+            LEFT JOIN mt_event_type etb ON e.EVENT_TYPE_ID = etb.EVENT_TYPE_ID AND etb.TENANT_ID = #{tenantId}
+            LEFT JOIN mt_event_type_tl etbl ON etb.EVENT_TYPE_ID = etbl.EVENT_TYPE_ID AND etbl.lang =#{locale}
+            LEFT JOIN mt_event_request er ON e.EVENT_REQUEST_ID = er.EVENT_REQUEST_ID AND er.TENANT_ID = #{tenantId}
+            LEFT JOIN mt_event_request_type ertb ON er.REQUEST_TYPE_ID = ertb.REQUEST_TYPE_ID
+        WHERE
+            e.TENANT_ID = #{tenantId}
+            and (e.EVENT_ID = #{parentEventId} OR e.PARENT_EVENT_ID = #{parentEventId})
+        ORDER BY e.EVENT_ID+0 ASC
+    </select>
+
+</mapper>

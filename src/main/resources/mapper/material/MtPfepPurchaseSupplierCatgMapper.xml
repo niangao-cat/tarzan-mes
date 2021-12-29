@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtPfepPurchaseSupplierCatgMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtPfepPurchaseSupplierCatg">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_PURCHASE_SUPPLIER_CATG_ID" property="pfepPurchaseSupplierCatgId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_SITE_ID" property="materialCategorySiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="RECEIVE_LOCATOR_ID" property="receiveLocatorId" jdbcType="VARCHAR"/>
+        <result column="VISIBLE_FLAG" property="visibleFlag" jdbcType="VARCHAR"/>
+        <result column="ECONOMIC_LOT_SIZE" property="economicLotSize" jdbcType="DECIMAL"/>
+        <result column="ECONOMIC_SPLIT_PARAMETER" property="economicSplitParameter" jdbcType="DECIMAL"/>
+        <result column="MIN_PACKAGE_QTY" property="minPackageQty" jdbcType="DECIMAL"/>
+        <result column="MIN_PURCHASE_QTY" property="minPurchaseQty" jdbcType="DECIMAL"/>
+        <result column="MAX_DAILY_SUPPLY_QTY" property="maxDailySupplyQty" jdbcType="DECIMAL"/>
+        <result column="SUPPLIER_CALENDAR_ID" property="supplierCalendarId" jdbcType="VARCHAR"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="AUTO_LOCK_TIME" property="autoLockTime" jdbcType="DECIMAL"/>
+        <result column="LIMIT_HOUR" property="limitHour" jdbcType="DECIMAL"/>
+        <result column="PAST_DY_NOTIFY_CLOSE_TIME" property="pastDyNotifyCloseTime" jdbcType="DECIMAL"/>
+        <result column="PURCHASE_CYCLE" property="purchaseCycle" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

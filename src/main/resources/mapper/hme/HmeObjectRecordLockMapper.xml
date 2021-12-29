@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeObjectRecordLockMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeObjectRecordLock">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="lock_id" property="lockId" jdbcType="VARCHAR"/>
+        <result column="function_name" property="functionName" jdbcType="VARCHAR"/>
+        <result column="device_code" property="deviceCode" jdbcType="VARCHAR"/>
+        <result column="object_type" property="objectType" jdbcType="VARCHAR"/>
+        <result column="object_record_id" property="objectRecordId" jdbcType="VARCHAR"/>
+        <result column="object_record_code" property="objectRecordCode" jdbcType="VARCHAR"/>
+        <result column="ip_address" property="ipAddress" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryLock" resultMap="BaseResultMap">
+        SELECT
+        t.tenant_id,
+        t.lock_id,
+        t.function_name,
+        t.device_code,
+        t.object_type,
+        t.object_record_id,
+        t.object_record_code,
+        t.ip_address,
+        t.expire_date,
+        t.cid,
+        t.object_version_number,
+        t.creation_date,
+        t.created_by,
+        t.last_updated_by,
+        t.last_update_date,
+        t.ATTRIBUTE_CATEGORY,
+        t.ATTRIBUTE1,
+        t.ATTRIBUTE2,
+        t.ATTRIBUTE3,
+        t.ATTRIBUTE4,
+        t.ATTRIBUTE5,
+        t.ATTRIBUTE6,
+        t.ATTRIBUTE7,
+        t.ATTRIBUTE8,
+        t.ATTRIBUTE9,
+        t.ATTRIBUTE10,
+        t.ATTRIBUTE11,
+        t.ATTRIBUTE12,
+        t.ATTRIBUTE13,
+        t.ATTRIBUTE14,
+        t.ATTRIBUTE15
+        FROM
+        hme_object_record_lock t
+        WHERE
+        1 = 1
+        and t.tenant_id=#{tenantId}
+        AND DATE_FORMAT(t.expire_date,'%Y-%m-%d %H:%i:%S') &lt;= now()
+    </select>
+
+    <select id="queryLockData" resultType="com.ruike.hme.api.dto.HmeObjectRecordLockReturnDTO">
+        SELECT
+        t.lock_id,
+        t.function_name,
+        t.device_code,
+        t.object_type,
+        t.object_record_id,
+        t.object_record_code,
+        t.ip_address,
+        t.expire_date,
+        t.creation_date,
+        t.created_by
+        FROM
+        hme_object_record_lock t
+        WHERE
+        1 = 1
+        and t.tenant_id=#{tenantId}
+        <if test="dto.objectType != null">
+            and t.object_type = #{dto.objectType}
+        </if>
+        <if test="dto.objectRecordCode != null">
+            and t.object_record_code like concat('%',concat(#{dto.objectRecordCode},'%'))
+        </if>
+    </select>
+
+    <select id="batchQueryLockData" resultType="com.ruike.hme.domain.entity.HmeObjectRecordLock">
+        SELECT
+        horl.lock_id,
+        horl.created_by,
+        horl.object_record_code
+        FROM
+            hme_object_record_lock horl
+        WHERE
+            ( horl.tenant_id, horl.object_type, horl.object_record_code ) IN
+        <foreach collection="dtoList" index="index" item="item" open="(" separator="," close=")">
+            (#{tenantId} , #{item.objectType} , #{item.objectRecordCode})
+        </foreach>
+    </select>
+
+    <insert id="batchInsertLock">
+        INSERT INTO hme_object_record_lock (
+        tenant_id,
+        lock_id,
+        function_name,
+        device_code,
+        object_type,
+        object_record_id,
+        object_record_code,
+        ip_address,
+        expire_date,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATTRIBUTE1,
+        ATTRIBUTE2,
+        ATTRIBUTE3,
+        ATTRIBUTE4,
+        ATTRIBUTE5,
+        ATTRIBUTE6,
+        ATTRIBUTE7,
+        ATTRIBUTE8,
+        ATTRIBUTE9,
+        ATTRIBUTE10,
+        ATTRIBUTE11,
+        ATTRIBUTE12,
+        ATTRIBUTE13,
+        ATTRIBUTE14,
+        ATTRIBUTE15
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.lockId},
+            #{item.functionName},
+            #{item.deviceCode},
+            #{item.objectType},
+            #{item.objectRecordId},
+            #{item.objectRecordCode},
+            #{item.ipAddress},
+            #{item.expireDate},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+</mapper>

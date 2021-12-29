@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtMaterialCategoryMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtMaterialCategory">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_CATEGORY_ID" property="materialCategoryId" jdbcType="VARCHAR"/>
+        <result column="CATEGORY_CODE" property="categoryCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_SET_ID" property="materialCategorySetId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="VoResultMap" type="tarzan.material.domain.vo.MtMaterialCategoryVO3">
+        <result column="MATERIAL_CATEGORY_ID" property="materialCategoryId" jdbcType="VARCHAR"/>
+        <result column="CATEGORY_CODE" property="categoryCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_SET_ID" property="materialCategorySetId" jdbcType="VARCHAR"/>
+        <result column="CATEGORY_SET_CODE" property="categorySetCode" jdbcType="VARCHAR"/>
+        <result column="CATEGORY_SET_DESC" property="categorySetDesc" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t1.MATERIAL_CATEGORY_ID,
+        t1.CATEGORY_CODE,
+        t2.DESCRIPTION,
+        t1.MATERIAL_CATEGORY_SET_ID,
+        t1.ENABLE_FLAG,
+        t1.CID
+        FROM
+        mt_material_category t1,
+        mt_material_category_tl t2
+        WHERE
+        1 = 1
+        AND t1.MATERIAL_CATEGORY_ID = t2.MATERIAL_CATEGORY_ID
+        AND t2.LANG = #{locale}
+        AND t1.TENANT_ID = ${tenantId}
+        AND t1.MATERIAL_CATEGORY_ID IN
+        <foreach collection="materialCategoryIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByConditionForUi" resultMap="VoResultMap">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        t1.MATERIAL_CATEGORY_ID,
+        t1.CATEGORY_CODE,
+        t2.DESCRIPTION,
+        ts.MATERIAL_CATEGORY_SET_ID,
+        ts.CATEGORY_SET_CODE,
+        tsl.DESCRIPTION CATEGORY_SET_DESC,
+        t1.ENABLE_FLAG
+        FROM
+        mt_material_category t1
+        LEFT JOIN mt_material_category_tl t2 ON t1.MATERIAL_CATEGORY_ID = t2.MATERIAL_CATEGORY_ID
+        AND t2.LANG = #{lang}
+        INNER JOIN mt_material_category_set ts ON ts.MATERIAL_CATEGORY_SET_ID = t1.MATERIAL_CATEGORY_SET_ID
+        LEFT JOIN mt_material_category_set_tl tsl ON ts.MATERIAL_CATEGORY_SET_ID = tsl.MATERIAL_CATEGORY_SET_ID
+        AND tsl.LANG = #{lang}
+        WHERE
+        t1.TENANT_ID = ${tenantId}
+        AND ts.TENANT_ID = ${tenantId}
+        <if test="condition.categoryCode != null and condition.categoryCode  != ''">
+            and t1.CATEGORY_CODE like CONCAT('%',#{condition.categoryCode},'%')
+        </if>
+        <if test="condition.description != null and condition.description  != ''">
+            and t2.DESCRIPTION like CONCAT('%',#{condition.description},'%')
+        </if>
+        <if test="condition.materialCategorySetId != null and condition.materialCategorySetId  != ''">
+            and ts.MATERIAL_CATEGORY_SET_ID = #{condition.materialCategorySetId}
+        </if>
+        ORDER BY t1.CREATION_DATE DESC
+    </select>
+
+    <select id="queryMaterialCategoryBySetId" resultMap="BaseResultMap" fetchSize="5000">
+        select * from mt_material_category
+        where TENANT_ID = ${tenantId}
+        and ${materialCategorySetIdList}
+    </select>
+
+    <select id="queryMaterialCategoryByCode" resultMap="BaseResultMap" fetchSize="5000">
+        select * from mt_material_category
+        where TENANT_ID = ${tenantId}
+        and ${materialCategoryCodeList}
+    </select>
+    <select id="selectCondition" resultType="tarzan.material.domain.vo.MtMaterialCategoryVO6">
+        SELECT * FROM MT_MATERIAL_CATEGORY tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.materialCategoryId != null">
+            AND tb.MATERIAL_CATEGORY_ID = #{dto.materialCategoryId}
+        </if>
+        <if test="dto.categoryCode != null">
+            AND tb.CATEGORY_CODE = #{dto.categoryCode}
+        </if>
+        <if test="dto.description != null">
+            AND tb.DESCRIPTION LIKE CONCAT(CONCAT('%',#{dto.description}),'%')
+        </if>
+        <if test="dto.materialCategorySetId != null">
+            AND tb.MATERIAL_CATEGORY_SET_ID = #{dto.materialCategorySetId}
+        </if>
+        <if test="dto.enableFlag != null">
+            AND tb.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        order by tb.MATERIAL_CATEGORY_ID asc
+    </select>
+</mapper>

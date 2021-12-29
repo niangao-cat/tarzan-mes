@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsIqcHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsIqcHeader">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="IQC_HEADER_ID" property="iqcHeaderId" jdbcType="VARCHAR"/>
+        <result column="IQC_NUMBER" property="iqcNumber" jdbcType="VARCHAR"/>
+        <result column="RECEIPT_LOT" property="receiptLot" jdbcType="VARCHAR"/>
+        <result column="RECEIPT_BY" property="receiptBy" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_VERSION" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_TYPE" property="inspectionType" jdbcType="VARCHAR"/>
+        <result column="UAI_FLAG" property="uaiFlag" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_STATUS" property="inspectionStatus" jdbcType="VARCHAR"/>
+        <result column="DOC_TYPE" property="docType" jdbcType="VARCHAR"/>
+        <result column="DOC_HEADER_ID" property="docHeaderId" jdbcType="VARCHAR"/>
+        <result column="DOC_LINE_ID" property="docLineId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="CREATED_DATE" property="createdDate" jdbcType="DATE"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_METHOD" property="inspectionMethod" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_START_DATE" property="inspectionStartDate" jdbcType="DATE"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_FINISH_DATE" property="inspectionFinishDate" jdbcType="DATE"/>
+        <result column="INSPECTION_TIME" property="inspectionTime" jdbcType="DECIMAL"/>
+        <result column="INSPECTION_RESULT" property="inspectionResult" jdbcType="VARCHAR"/>
+        <result column="QC_BY" property="qcBy" jdbcType="DECIMAL"/>
+        <result column="OK_QTY" property="okQty" jdbcType="DECIMAL"/>
+        <result column="NG_QTY" property="ngQty" jdbcType="DECIMAL"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="FINAL_DECISION" property="finalDecision" jdbcType="VARCHAR"/>
+        <result column="AUDIT_OPINION" property="auditOpinion" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="attribute_category" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="attribute1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="attribute2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="attribute3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="attribute4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="attribute5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="attribute6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="attribute7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="attribute8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="attribute9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="attribute10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="querySampleSizeCodeLetter" resultType="com.ruike.qms.domain.entity.QmsSampleSizeCodeLetter">
+        SELECT
+        scl.*
+        FROM
+        qms_sample_size_code_letter scl
+        WHERE
+        1 = 1
+        AND scl.lot_size_to >= #{quantity}
+
+        AND scl.lot_size_from &lt;= #{quantity}
+    </select>
+
+    <select id="querySampleScheme" resultType="com.ruike.qms.domain.entity.QmsSampleScheme">
+        SELECT
+            qss.*
+        FROM
+            qms_sample_scheme qss
+        WHERE
+            qss.sample_standard_type = #{sampleStandard}
+
+            AND qss.lot_lower_limit &lt;= #{quantity}
+
+        AND qss.lot_upper_limit >= #{quantity}
+
+        AND qss.acceptance_quantity_limit = #{aql}
+    </select>
+
+</mapper>

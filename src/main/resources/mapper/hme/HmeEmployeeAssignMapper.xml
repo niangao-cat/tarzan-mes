@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEmployeeAssignMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEmployeeAssign">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EMPLOYEE_ASSIGN_ID" property="employeeAssignId" jdbcType="VARCHAR"/>
+        <result column="EMPLOYEE_ID" property="employeeId" jdbcType="VARCHAR"/>
+        <result column="QUALITY_ID" property="qualityId" jdbcType="VARCHAR"/>
+        <result column="PROFICIENCY" property="proficiency" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="DATE"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="DATE"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryLov" resultType="com.ruike.hme.api.dto.HmeQualificationDTO3">
+        SELECT
+        hq.quality_id,
+        hq.quality_code,
+        hq.quality_name,
+        hq.quality_type,
+        hq.remark
+        FROM
+        hme_qualification hq
+        WHERE
+        hq.enable_flag = 'Y'
+        AND hq.TENANT_ID = #{tenantId}
+        <if test="dto.qualityCode != null and dto.qualityCode != ''">
+            AND hq.quality_code like CONCAT('%',CONCAT(#{dto.qualityCode},'%'))
+        </if>
+        <if test="dto.qualityName != null and dto.qualityName != ''">
+            AND hq.quality_name like CONCAT('%',CONCAT(#{dto.qualityName},'%'))
+        </if>
+        <if test="dto.remark != null and dto.remark != ''">
+            AND hq.remark like CONCAT('%',CONCAT(#{dto.remark},'%'))
+        </if>
+        <if test="qualityTypeList != null and qualityTypeList.size > 0">
+            AND hq.quality_type in
+            <foreach collection="qualityTypeList" separator="," open="(" close=")" item="i" index="index">
+                #{i}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryData" resultType="com.ruike.hme.domain.entity.HmeEmployeeAssign">
+        select hea.tenant_id,
+        hea.employee_assign_id,
+        hea.employee_id,
+        hea.quality_id,
+        hea.material_id,
+        hea.proficiency,
+        hea.date_from,
+        hea.date_to,
+        hea.enable_flag,
+        hea.CID,
+        hea.OBJECT_VERSION_NUMBER,
+        hea.CREATION_DATE,
+        hea.CREATED_BY,
+        hea.LAST_UPDATED_BY,
+        hea.LAST_UPDATE_DATE,
+        hea.ATTRIBUTE_CATEGORY,
+        hea.ATTRIBUTE1,
+        hea.ATTRIBUTE2,
+        hea.ATTRIBUTE3,
+        hea.ATTRIBUTE4,
+        hea.ATTRIBUTE5
+        from hme_employee_assign hea
+             left join hme_qualification hq
+               on hea.quality_id = hq.quality_id
+        WHERE hea.enable_flag = 'Y'
+        and hea.employee_id = #{employeeId}
+        and hea.tenant_id = #{tenantId}
+        and hq.enable_flag = 'Y'
+        <if test="currentDate != null and currentDate != ''">
+            and #{currentDate} between IFNULL(hea.date_from, curdate()) and IFNULL(hea.date_to, curdate())
+        </if>
+    </select>
+    <select id="queryDataOptional" resultType="com.ruike.hme.domain.entity.HmeEmployeeAssign">
+        select
+        hea.employee_id,
+        hea.quality_id,
+        hea.material_id
+        from hme_employee_assign hea
+        left join hme_qualification hq
+        on hea.quality_id = hq.quality_id
+        WHERE hea.enable_flag = 'Y'
+        and hea.tenant_id = #{tenantId}
+        and hq.enable_flag = 'Y'
+        and hea.employee_id = #{employeeId}
+        and ( hea.material_id = #{materialId} or hea.material_id = '' or hea.material_id is null)
+        and hea.quality_id in
+        <foreach collection="qualityList" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

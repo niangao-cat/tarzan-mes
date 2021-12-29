@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeSsnInspectHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeSsnInspectHeader">
+        <result column="ssn_inspect_header_id" property="ssnInspectHeaderId" jdbcType="VARCHAR"/>
+        <result column="standard_sn_code" property="standardSnCode" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="cos_type" property="cosType" jdbcType="VARCHAR"/>
+        <result column="work_way" property="workWay" jdbcType="VARCHAR"/>
+        <result column="workcell_id" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectHeader" resultType="com.ruike.hme.domain.vo.HmeSsnInspectHeaderVO">
+        SELECT
+            hsih.ssn_inspect_header_id,
+            hsih.standard_sn_code,
+            hsih.material_id,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            hsih.cos_type,
+            hsih.work_way,
+            hsih.workcell_id,
+            mmw.WORKCELL_CODE,
+            mmw.workcell_name,
+            hsih.enable_flag
+        FROM
+            hme_ssn_inspect_header hsih
+            LEFT JOIN mt_material mm ON hsih.material_id = mm.MATERIAL_ID
+            LEFT JOIN mt_mod_workcell mmw ON hsih.workcell_id = mmw.WORKCELL_ID
+        WHERE
+            hsih.tenant_id = #{tenantId}
+        <if test="hmeSsnInspectHeader.standardSnCode != null and hmeSsnInspectHeader.standardSnCode != ''">
+            and hsih.standard_sn_code LIKE CONCAT('%',#{hmeSsnInspectHeader.standardSnCode}, '%')
+        </if>
+        <if test="hmeSsnInspectHeader.materialId != null and hmeSsnInspectHeader.materialId != ''">
+            and hsih.material_id = #{hmeSsnInspectHeader.materialId}
+        </if>
+        <if test="hmeSsnInspectHeader.cosType != null and hmeSsnInspectHeader.cosType != ''">
+            and hsih.cos_type LIKE CONCAT('%',#{hmeSsnInspectHeader.cosType}, '%')
+        </if>
+        <if test="hmeSsnInspectHeader.workWay != null and hmeSsnInspectHeader.workWay != ''">
+            and hsih.work_way = #{hmeSsnInspectHeader.workWay}
+        </if>
+        <if test="hmeSsnInspectHeader.workcellIdList != null and hmeSsnInspectHeader.workcellIdList.size() > 0">
+            and hsih.workcell_id IN
+            <foreach collection="hmeSsnInspectHeader.workcellIdList" item="item" index="index" open="(" close=")"
+                     separator=",">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY
+        hsih.creation_date DESC,
+        hsih.standard_sn_code,
+        mm.MATERIAL_CODE,
+        hsih.cos_type,
+        mmw.WORKCELL_CODE
+    </select>
+
+    <select id="ssnInspectHeaderHisQuery" resultType="com.ruike.hme.domain.vo.HmeSsnInspectHeaderVO">
+        SELECT
+            hsih.ssn_inspect_header_id,
+            hsih.standard_sn_code,
+            hsih.material_id,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            hsih.cos_type,
+            hsih.work_way,
+            hsih.workcell_id,
+            mmw.WORKCELL_CODE,
+            mmw.workcell_name,
+            hsih.enable_flag,
+            iu.real_name last_update_by_name,
+		    hsih.last_update_date
+        FROM
+            hme_ssn_inspect_header_his hsih
+            LEFT JOIN mt_material mm ON hsih.material_id = mm.MATERIAL_ID
+            LEFT JOIN mt_mod_workcell mmw ON hsih.workcell_id = mmw.WORKCELL_ID
+            LEFT JOIN iam_user iu ON iu.id = hsih.last_updated_by
+        WHERE
+            hsih.tenant_id = #{tenantId}
+			AND hsih.ssn_inspect_header_id = #{ssnInspectHeaderId}
+       ORDER BY
+            hsih.creation_date DESC
+    </select>
+
+    <select id="querySsnInspectHeader" resultType="com.ruike.hme.domain.entity.HmeSsnInspectHeader">
+        SELECT
+        sih.ssn_inspect_header_id,
+        sih.standard_sn_code,
+        sih.material_id,
+        sih.cos_type,
+        sih.work_way,
+        sih.workcell_id,
+        sih.last_update_date
+        FROM
+        hme_ssn_inspect_header sih
+        WHERE sih.tenant_id = #{tenantId}
+        AND sih.standard_sn_code = #{importVO.standardSnCode}
+        <choose>
+            <when test="importVO.workcellId != null and importVO.workcellId != ''">
+                AND sih.workcell_id = #{importVO.workcellId}
+            </when>
+            <otherwise>
+                AND (sih.workcell_id is null OR sih.workcell_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="importVO.cosType != null and importVO.cosType != ''">
+                AND sih.cos_type = #{importVO.cosType}
+            </when>
+            <otherwise>
+                AND (sih.cos_type is null OR sih.cos_type = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="importVO.workWay != null and importVO.workWay != ''">
+                AND sih.work_way = #{importVO.workWay}
+            </when>
+            <otherwise>
+                AND (sih.work_way is null OR sih.work_way = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="importVO.materialId != null and importVO.materialId != ''">
+                AND sih.material_id = #{importVO.materialId}
+            </when>
+            <otherwise>
+                AND (sih.material_id is null OR sih.material_id = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="mtBatchInsert">
+        insert into hme_ssn_inspect_header
+        (
+        tenant_id,
+        ssn_inspect_header_id,
+        standard_sn_code,
+        material_id,
+        cos_type,
+        work_way,
+        workcell_id,
+        enable_flag,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute_category,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10,
+        attribute11,
+        attribute12,
+        attribute13,
+        attribute14,
+        attribute15
+        )
+        values
+        <foreach collection="insertList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ssnInspectHeaderId},
+            #{item.standardSnCode},
+            #{item.materialId},
+            #{item.cosType},
+            #{item.workWay},
+            #{item.workcellId},
+            #{item.enableFlag},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <update id="mtBatchUpdate">
+        update hme_ssn_inspect_header
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            standard_sn_code =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_header_id" close="end">
+                when #{clause.ssnInspectHeaderId} then #{clause.standardSnCode}
+            </foreach>,
+            material_id =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_header_id" close="end">
+                when #{clause.ssnInspectHeaderId} then #{clause.materialId}
+            </foreach>,
+            cos_type =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_header_id" close="end">
+                when #{clause.ssnInspectHeaderId} then #{clause.cosType}
+            </foreach>,
+            work_way =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_header_id" close="end">
+                when #{clause.ssnInspectHeaderId} then #{clause.workWay}
+            </foreach>,
+            workcell_id =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_header_id" close="end">
+                when #{clause.ssnInspectHeaderId} then #{clause.workcellId}
+            </foreach>,
+            enable_flag =
+            <foreach collection="domains" item="clause" index="index"
+                     separator=" " open="case ssn_inspect_header_id" close="end">
+                when #{clause.ssnInspectHeaderId} then #{clause.enableFlag}
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and ssn_inspect_header_id in
+            <foreach collection="domains" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.ssnInspectHeaderId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="ssnInspectExport" resultType="com.ruike.hme.domain.vo.HmeSsnInspectExportVO">
+        SELECT
+        hsih.standard_sn_code,
+        mm.MATERIAL_CODE,
+        hsih.cos_type,
+        hsih.work_way,
+        mmw.WORKCELL_CODE,
+        hsih.enable_flag,
+        hsil.sequence,
+        mt.TAG_CODE,
+        hsil.minimum_value,
+        hsil.maximal_value,
+        hsil.couple_flag,
+        hsil.cos_couple_flag,
+        hsil.cos_pos,
+        hsil.allow_differ,
+        hsil.check_allow_differ,
+        hsil.judge_flag,
+        mtg.TAG_GROUP_CODE
+        FROM
+        hme_ssn_inspect_header hsih
+        LEFT JOIN mt_material mm ON hsih.material_id = mm.MATERIAL_ID
+        LEFT JOIN mt_mod_workcell mmw ON hsih.workcell_id = mmw.WORKCELL_ID
+        LEFT JOIN hme_ssn_inspect_line hsil ON hsil.ssn_inspect_header_id = hsih.ssn_inspect_header_id AND
+        hsil.TENANT_ID = hsih.TENANT_ID
+        LEFT JOIN mt_tag mt ON mt.tag_id = hsil.tag_id
+        LEFT JOIN hme_ssn_inspect_detail hsid ON hsid.ssn_inspect_line_id = hsil.ssn_inspect_line_id AND hsid.tenant_id
+        = hsil.tenant_id
+        LEFT JOIN mt_tag_group mtg ON mtg.TAG_GROUP_ID = hsid.tag_group_id
+        WHERE
+        hsih.tenant_id = #{tenantId}
+        <if test="hmeSsnInspectHeader.standardSnCode != null and hmeSsnInspectHeader.standardSnCode != ''">
+            and hsih.standard_sn_code LIKE CONCAT('%',#{hmeSsnInspectHeader.standardSnCode}, '%')
+        </if>
+        <if test="hmeSsnInspectHeader.materialId != null and hmeSsnInspectHeader.materialId != ''">
+            and hsih.material_id = #{hmeSsnInspectHeader.materialId}
+        </if>
+        <if test="hmeSsnInspectHeader.cosType != null and hmeSsnInspectHeader.cosType != ''">
+            and hsih.cos_type LIKE CONCAT('%',#{hmeSsnInspectHeader.cosType}, '%')
+        </if>
+        <if test="hmeSsnInspectHeader.workWay != null and hmeSsnInspectHeader.workWay != ''">
+            and hsih.work_way = #{hmeSsnInspectHeader.workWay}
+        </if>
+        <if test="hmeSsnInspectHeader.workcellIdList != null and hmeSsnInspectHeader.workcellIdList.size() > 0">
+            and hsih.workcell_id IN
+            <foreach collection="hmeSsnInspectHeader.workcellIdList" item="item" index="index" open="(" close=")"
+                     separator=",">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY
+        hsih.creation_date DESC,
+        hsih.standard_sn_code,
+        mm.MATERIAL_CODE,
+        hsih.cos_type,
+        mmw.WORKCELL_CODE
+    </select>
+</mapper>

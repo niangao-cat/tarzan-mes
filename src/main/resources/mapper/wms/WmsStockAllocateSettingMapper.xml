@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsStockAllocateSettingMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.entity.WmsStockAllocateSetting">
+        <result column="allocate_setting_id" property="allocateSettingId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="from_locater_id" property="fromLocaterId" jdbcType="VARCHAR"/>
+        <result column="to_locater_id" property="toLocaterId" jdbcType="VARCHAR"/>
+        <result column="approve_setting" property="approveSetting" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectByConditionForUi" resultType="com.ruike.wms.api.dto.WmsStockAllocateSettingDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        wsas.allocate_setting_id,
+        wsas.site_id,
+        site.SITE_CODE,
+        site_tl.SITE_NAME,
+        wsas.from_locator_id,
+        floc.LOCATOR_CODE AS FROM_LOCATOR_CODE,
+        floc_tl.LOCATOR_NAME AS FROM_LOCATOR_NAME,
+        wsas.to_locator_id,
+        tloc.LOCATOR_CODE AS TO_LOCATOR_CODE,
+        tloc_tl.LOCATOR_NAME AS TO_LOCATOR_NAME,
+        wsas.approve_setting
+        FROM
+          wms_stock_allocate_setting wsas
+        JOIN mt_mod_site site ON site.SITE_ID = wsas.site_id
+        JOIN mt_mod_site_tl site_tl ON site_tl.SITE_ID = site.SITE_ID
+          AND site_tl.LANG = #{lang}
+        JOIN mt_mod_locator floc ON floc.locator_id = wsas.from_locator_id
+        JOIN mt_mod_locator_tl floc_tl ON floc_tl.locator_id = floc.locator_id
+          AND floc_tl.LANG = #{lang}
+        JOIN mt_mod_locator tloc ON tloc.locator_id = wsas.to_locator_id
+        JOIN mt_mod_locator_tl tloc_tl ON tloc_tl.locator_id = tloc.locator_id
+          AND tloc_tl.LANG = #{lang}
+        WHERE wsas.TENANT_ID = #{tenantId}
+        <if test="dto.siteId != null">
+            and wsas.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.fromLocatorId != null">
+            and wsas.from_locator_id = #{dto.fromLocatorId}
+        </if>
+        <if test="dto.toLocatorId != null">
+            and wsas.to_locator_id = #{dto.toLocatorId}
+        </if>
+    </select>
+
+</mapper>

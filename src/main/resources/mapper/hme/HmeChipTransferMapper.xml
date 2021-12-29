@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeChipTransferMapper">
+
+    <select id="queryHmeIncomingRecord" resultType="com.ruike.hme.domain.entity.HmeCosOperationRecord">
+        SELECT
+	        *
+        FROM
+	        hme_cos_operation_record
+        WHERE
+	        tenant_id = #{tenantId}
+	    AND operation_record_id = #{cosRecordId}
+    </select>
+
+    <select id="queryMtMaterialBasicInfo" resultType="tarzan.iface.domain.entity.MtMaterialBasic">
+        SELECT
+	        *
+        FROM
+	        mt_material_basic
+        WHERE
+	        TENANT_ID = #{tenantId}
+	    AND MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="queryNgMaterialLotLoad" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        SELECT
+	        ll.material_lot_load_id,
+			ll.material_lot_id,
+		    ll.load_row,
+			ll.cos_num,
+			ll.load_column,
+			ll.load_sequence
+        FROM
+	        hme_material_lot_load ll,
+	        hme_material_lot_nc_load nl
+        WHERE
+		    ll.tenant_id = #{tenantId}
+	    AND ll.load_sequence = nl.load_sequence
+	    AND ll.material_lot_id = #{materialLotId}
+	    GROUP BY
+		ll.material_lot_load_id,
+		ll.material_lot_id,
+		ll.load_row,
+		ll.cos_num,
+		ll.load_column,
+		ll.load_sequence
+    </select>
+
+    <update id="batchUpdateHmeMaterialLotLoad">
+        UPDATE hme_material_lot_load
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            material_lot_id =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.materialLotId}
+            </foreach>,
+            load_sequence =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.loadSequence}
+            </foreach>,
+            load_row =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.loadRow}
+            </foreach>,
+            load_column =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.loadColumn}
+            </foreach>,
+            cos_num =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.cosNum}
+            </foreach>,
+            source_material_lot_id =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.sourceMaterialLotId}
+            </foreach>,
+            source_load_row =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.sourceLoadRow}
+            </foreach>,
+            source_load_column =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.sourceLoadColumn}
+            </foreach>,
+            ATTRIBUTE19 =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.attribute19}
+            </foreach>,
+            ATTRIBUTE20 =
+            <foreach collection="materialLotLoadList" item="item" index="index"
+                     separator=" " open="case material_lot_load_id" close="end">
+                when #{item.materialLotLoadId} then #{item.attribute20}
+            </foreach>
+        </set>
+        <where>
+            material_lot_load_id in
+            <foreach collection="materialLotLoadList" item="item"
+                     separator="," open="(" close=")">
+                #{item.materialLotLoadId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="queryItemGroupByMaterialIdSite" resultType="java.lang.String">
+        SELECT
+	        mb.ITEM_GROUP
+        FROM
+	        mt_material_site ms,
+	        mt_material_basic mb
+        WHERE
+        ms.MATERIAL_SITE_ID = mb.MATERIAL_SITE_ID
+        AND ms.TENANT_ID = #{tenantId}
+        AND ms.MATERIAL_ID = #{materialId}
+        AND ms.SITE_ID = #{siteId}
+    </select>
+</mapper>

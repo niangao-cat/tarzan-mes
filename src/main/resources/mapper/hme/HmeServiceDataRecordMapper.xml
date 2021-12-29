@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeServiceDataRecordMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeServiceDataRecord">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SERVICE_DATA_RECORD_ID" property="serviceDataRecordId" jdbcType="VARCHAR"/>
+        <result column="SERVICE_RECEIVE_ID" property="serviceReceiveId" jdbcType="VARCHAR"/>
+        <result column="SN_NUM" property="snNum" jdbcType="VARCHAR"/>
+        <result column="LOGISTICS_NUMBER" property="logisticsNumber" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WKC_SHIFT_ID" property="wkcShiftId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="RESULT" property="result" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="ATTACHMENT_UUID" property="attachmentUuid" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryRecordInfo" resultType="com.ruike.hme.domain.vo.HmeServiceDataRecordVO">
+        SELECT
+            sr.service_receive_id,
+	        sr.material_id,
+	        sr.receive_status,
+            mm.material_code,
+            mm.material_name,
+	        sr.receive_date,
+	        sr.receive_by,
+
+	        li.logistics_number,
+	        li.logistics_company,
+	        li.creation_date,
+	        li.created_by
+        FROM
+	        hme_service_receive sr
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = sr.material_id
+        LEFT JOIN hme_logistics_info li ON sr.logistics_info_id = li.logistics_info_id
+        WHERE sr.tenant_id = #{tenantId}
+        AND sr.site_id = #{siteId}
+        AND sr.receive_status not IN ('REPAIR_COMPLETE', 'CANCEL')
+        AND sr.sn_num = #{snNum}
+    </select>
+
+    <resultMap id="ServiceDataResultMap" type="com.ruike.hme.domain.vo.HmeServiceDataRecordVO2">
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_DESCRIPTION" property="tagGroupDescription" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <collection property="tagList" javaType="java.util.ArrayList" select="queryTagList" column="{tagGroupId=TAG_GROUP_ID}" ofType="com.ruike.hme.domain.vo.HmeServiceDataRecordVO3">
+            <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+            <result column="TAG_DESCRIPTION" property="tagDescription" jdbcType="VARCHAR"/>
+        </collection>
+    </resultMap>
+
+    <select id="queryTagList" resultType="com.ruike.hme.domain.vo.HmeServiceDataRecordVO3">
+        SELECT
+	        mt.TAG_ID,
+	        mt.TAG_DESCRIPTION
+        FROM
+	        mt_tag_group_assign ga,
+	        mt_tag mt
+        WHERE
+            mt.TAG_ID = ga.TAG_ID
+	        AND ga.TAG_GROUP_ID = #{tagGroupId}
+    </select>
+
+
+    <select id="queryTagInfo" resultMap="ServiceDataResultMap">
+        SELECT
+	       tg.TAG_GROUP_ID,
+	       tg.TAG_GROUP_DESCRIPTION,
+	       tg.BUSINESS_TYPE
+	    FROM
+	        mt_tag_group tg
+	    LEFT JOIN mt_tag_group_object tgo ON tgo.TAG_GROUP_ID = tg.TAG_GROUP_ID
+	    LEFT JOIN mt_operation mo ON mo.OPERATION_ID = tgo.OPERATION_ID
+	    LEFT JOIN mt_tag_group_assign ga ON ga.TAG_GROUP_ID = tg.TAG_GROUP_ID
+        LEFT JOIN mt_tag mt ON mt.TAG_ID = ga.TAG_ID
+	    WHERE
+	        tg.TENANT_ID = #{tenantId}
+	    AND tg.BUSINESS_TYPE = 'AF_CHOOSE'
+	    AND tg.`STATUS` = 'RELEASE'
+	    AND mo.OPERATION_ID = #{operationId}
+	    UNION
+	    SELECT
+	        tg.TAG_GROUP_ID,tg.TAG_GROUP_DESCRIPTION,tg.BUSINESS_TYPE
+        FROM
+	        mt_tag_group tg
+	    LEFT JOIN mt_tag_group_object tgo ON tgo.TAG_GROUP_ID = tg.TAG_GROUP_ID
+    	LEFT JOIN mt_operation mo ON mo.OPERATION_ID = tgo.OPERATION_ID
+	    WHERE
+	        tg.TENANT_ID = #{tenantId}
+	    AND tg.BUSINESS_TYPE = 'AF_INPUT'
+	    AND tg.`STATUS` = 'RELEASE'
+	    AND mo.OPERATION_ID = #{operationId}
+    </select>
+
+    <select id="queryRecordLineList" resultType="com.ruike.hme.domain.vo.HmeServiceDataRecordVO3">
+        SELECT
+	        mt.TAG_ID,
+            mt.TAG_DESCRIPTION,
+            rl.result,
+            rl.service_data_record_line_id
+        FROM
+	        hme_service_data_record_line rl,
+	        mt_tag mt
+        WHERE rl.tag_id = mt.TAG_ID
+        AND rl.tenant_id = #{tenantId}
+        AND rl.service_data_record_id = #{serviceDataRecordId}
+    </select>
+</mapper>

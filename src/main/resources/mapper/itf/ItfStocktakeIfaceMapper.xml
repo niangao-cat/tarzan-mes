@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfStocktakeIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="StocktakeBaseMap" type="com.ruike.itf.domain.vo.ItfStocktakeVO">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="stocktake_num" property="stocktakeNum" jdbcType="VARCHAR"/>
+        <result column="stocktake_status" property="stocktakeStatus" jdbcType="VARCHAR"/>
+        <result column="stocktake_type" property="stocktakeType" jdbcType="VARCHAR"/>
+        <result column="stocktake_range" property="stocktakeRange" jdbcType="DECIMAL"/>
+        <result column="doc_business_name" property="businessName" jdbcType="VARCHAR"/>
+        <result column="ledger_type" property="ledgerType" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <collection property="equipmentList" ofType="com.ruike.itf.domain.vo.ItfStocktakeVO2">
+            <result column="ASSET_ENCODING" property="assetEncoding" />
+            <result column="ASSET_NAME" property="assetName" />
+            <result column="EQUIPMENT_BODY_NUM" property="equipmentBodyNum" />
+            <result column="EQ_BUSINESS_NAME" property="businessName" />
+            <result column="MODEL" property="model" />
+            <result column="LOCATION" property="location" />
+            <result column="FREQUENCY" property="frequency" />
+            <result column="EQ_REMARK" property="remark" />
+            <result column="EQ_STOCKTAKE_NUM" property="stocktakeNum" />
+            <result column="stocktake_flag" property="stocktakeFlag" />
+            <result column="stocktake_date" property="stocktakeDate" />
+            <result column="ATTRIBUTE1" property="attribute1" />
+            <result column="ATTRIBUTE2" property="attribute2" />
+            <result column="ATTRIBUTE3" property="attribute3" />
+            <result column="ATTRIBUTE4" property="attribute4" />
+            <result column="ATTRIBUTE5" property="attribute5" />
+            <result column="ATTRIBUTE6" property="uploadStatus" />
+            <result column="tenant_id" property="tenantId" />
+        </collection>
+    </resultMap>
+
+    <select id="queryStocktakeList" resultMap="StocktakeBaseMap">
+        SELECT
+        	esd.tenant_id,
+            esd.stocktake_num,
+            esd.stocktake_status,
+            esd.stocktake_type,
+        	esd.stocktake_range,
+        	mma.AREA_NAME DOC_BUSINESS_NAME,
+        	esd.ledger_type,
+        	esd.remark,
+        	he.ASSET_ENCODING,
+        	he.ASSET_NAME,
+        	he.EQUIPMENT_BODY_NUM,
+        	ema.AREA_NAME EQ_BUSINESS_NAME,
+        	he.MODEL,
+        	he.LOCATION,
+        	he.FREQUENCY,
+        	he.REMARK EQ_REMARK,
+        	esd.stocktake_num EQ_STOCKTAKE_NUM,
+        	esa.stocktake_flag,
+        	esa.stocktake_date,
+        	esa.ATTRIBUTE1,
+        	esa.ATTRIBUTE2,
+        	esa.ATTRIBUTE3,
+        	esa.ATTRIBUTE4,
+        	esa.ATTRIBUTE5,
+        	esa.attribute6,
+        	esa.tenant_id
+        FROM
+        	hme_equipment_stocktake_doc esd
+        	LEFT JOIN mt_mod_area mma ON mma.area_id = esd.business_id,
+        	hme_equipment_stocktake_actual esa,
+        	hme_equipment he
+        	LEFT JOIN mt_mod_area ema ON ema.area_id = he.BUSINESS_ID
+        WHERE esd.tenant_id = #{tenantId}
+        AND esd.stocktake_status IN ('NEW', 'GOING')
+        AND esa.stocktake_id = esd.stocktake_id
+        AND esa.tenant_id = esd.tenant_id
+        AND he.EQUIPMENT_ID = esa.equipment_id
+    </select>
+
+    <select id="batchQueryEquipmentByAssetEncodings" resultType="com.ruike.hme.domain.entity.HmeEquipment">
+        SELECT
+        	he.EQUIPMENT_ID,
+            he.ASSET_ENCODING,
+            he.ASSET_NAME,
+            he.ASSET_CLASS
+        FROM
+        	hme_equipment he
+        WHERE
+            he.TENANT_ID = #{tenantId}
+        AND he.ASSET_ENCODING IN
+        <foreach collection="assetEncodingList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchQueryStocktakeDocByStocktakeNums" resultType="com.ruike.hme.domain.entity.HmeEquipmentStocktakeDoc">
+        SELECT
+        	esd.stocktake_id,
+            esd.stocktake_num
+        FROM
+        	hme_equipment_stocktake_doc esd
+        WHERE
+            esd.TENANT_ID = #{tenantId}
+        AND esd.stocktake_num IN
+        <foreach collection="stocktakeNumList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="batchUpdateEquipment">
+        update hme_equipment
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            frequency =
+            <foreach collection="equipmentList" item="clause" index="index"
+                     separator=" " open="case equipment_id" close="end">
+                when #{clause.equipmentId} then #{clause.frequency}
+            </foreach>,
+            location =
+            <foreach collection="equipmentList" item="clause" index="index"
+                     separator=" " open="case equipment_id" close="end">
+                when #{clause.equipmentId} then #{clause.location}
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and equipment_id in
+            <foreach collection="equipmentList" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.equipmentId}
+            </foreach>
+        </where>
+    </update>
+
+    <update id="batchUpdateStocktake">
+        update hme_equipment_stocktake_actual
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            stocktake_flag =
+            <foreach collection="equipmentList" item="clause" index="index"
+                     separator=" " open="case" close="end">
+                when equipment_id = #{clause.equipmentId} AND stocktake_id = #{clause.stocktakeId}  then #{clause.stocktakeFlag}
+            </foreach>,
+            stocktake_date =
+            <foreach collection="equipmentList" item="clause" index="index"
+                     separator=" " open="case" close="end">
+                when equipment_id = #{clause.equipmentId} AND stocktake_id = #{clause.stocktakeId}  then #{clause.stocktakeDate}
+            </foreach>,
+            remark =
+            <foreach collection="equipmentList" item="clause" index="index"
+                     separator=" " open="case" close="end">
+                when equipment_id = #{clause.equipmentId} AND stocktake_id = #{clause.stocktakeId}  then #{clause.remark}
+            </foreach>,
+            attribute6 =
+            <foreach collection="equipmentList" item="clause" index="index"
+                     separator=" " open="case" close="end">
+                when equipment_id = #{clause.equipmentId} AND stocktake_id = #{clause.stocktakeId}  then #{clause.uploadStatus}
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and (equipment_id, stocktake_id) in
+            <foreach collection="equipmentList" item="clause"
+                     separator="," open="(" close=")">
+                (#{clause.equipmentId}, #{clause.stocktakeId})
+            </foreach>
+        </where>
+    </update>
+
+    <update id="batchUpdateEquipmentStocktakeDoc">
+        update hme_equipment_stocktake_doc
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            stocktake_status =
+            <foreach collection="equipmentStocktakeDocList" item="clause" index="index"
+                     separator=" " open="case stocktake_id" close="end">
+                when #{clause.stocktakeId} then #{clause.stocktakeStatus}
+            </foreach>
+        </set>
+        <where>
+            tenant_id = #{tenantId}
+            and stocktake_id in
+            <foreach collection="equipmentStocktakeDocList" item="clause"
+                     separator="," open="(" close=")">
+                #{clause.stocktakeId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsInvOnhandQuantityMapper">
+    <select id="onhandQuantityQuery" resultType="tarzan.inventory.domain.vo.MtInvOnhandQuantityVO10">
+        SELECT
+        mioq.TENANT_ID,
+        mioq.ONHAND_QUANTITY_ID,
+        mioq.SITE_ID,
+        mioq.MATERIAL_ID,
+        mioq.LOCATOR_ID,
+        mioq.ONHAND_QUANTITY,
+        mioq.LOT_CODE,
+        mioq.OWNER_TYPE,
+        mioq.OWNER_ID,
+        mioq.CID,
+        mms.SITE_CODE,
+        mms.SITE_NAME,
+        mml.LOCATOR_CODE,
+        mml.LOCATOR_NAME,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mu.UOM_CODE PRIMARY_UOM_CODE,
+        wig.item_group_id,
+        wig.item_group_code,
+        wig.item_group_description
+        FROM
+        mt_inv_onhand_quantity mioq
+        LEFT JOIN mt_mod_site mms ON mioq.site_ID = mms.site_ID
+        LEFT JOIN mt_mod_locator mml ON mioq.LOCATOR_ID = mml.LOCATOR_ID
+        LEFT JOIN mt_material mm ON mioq.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_uom mu ON mm.PRIMARY_UOM_ID = mu.UOM_ID
+        LEFT JOIN mt_material_site mmls ON mioq.MATERIAL_ID = mmls.MATERIAL_ID AND mioq.SITE_ID =  mmls.SITE_ID
+        LEFT JOIN mt_material_basic mmb ON mmls.material_site_id = mmb.material_site_id
+        LEFT JOIN wms_item_group wig ON mmb.ITEM_GROUP = wig. item_group_code
+        WHERE mioq.TENANT_ID= #{tenantId}
+        <if test="dto.siteId!=null and dto.siteId !=''">
+            AND mioq.SITE_ID = #{dto.siteId}
+        </if>
+        <if test='dto.visible=="N"'>
+            AND mml.LOCATOR_TYPE != 5
+        </if>
+        <if test="dto.locatorCode!=null and dto.locatorCode!=''">
+            AND mml.LOCATOR_CODE like CONCAT('%',#{dto.locatorCode},'%')
+        </if>
+        <if test="dto.locatorName!=null and dto.locatorName!=''">
+            AND mml.LOCATOR_NAME like CONCAT('%',#{dto.locatorName},'%')
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            and mml.PARENT_LOCATOR_ID in
+            <foreach collection="dto.warehouseIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mml.LOCATOR_ID in
+            <foreach collection="dto.locatorIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mioq.MATERIAL_ID in
+            <foreach collection="dto.materialIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.lotCode != null and dto.lotCode != ''">
+            and mioq.LOT_CODE in
+            <foreach collection="dto.lotCodeList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.materialCode!=null and dto.materialCode!=''">
+            AND mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.itemGroupId!=null and dto.itemGroupId !=''">
+            AND wig.item_group_id = #{dto.itemGroupId}
+        </if>
+    </select>
+
+    <select id="onhandQuantityExport" resultType="tarzan.inventory.domain.vo.MtInvOnhandQuantityVO10">
+        SELECT
+        mioq.TENANT_ID,
+        mioq.ONHAND_QUANTITY_ID,
+        mioq.SITE_ID,
+        mioq.MATERIAL_ID,
+        mioq.LOCATOR_ID,
+        mioq.ONHAND_QUANTITY,
+        mioq.LOT_CODE,
+        mioq.OWNER_TYPE,
+        mioq.OWNER_ID,
+        mioq.CID,
+        mms.SITE_CODE,
+        mms.SITE_NAME,
+        mmp.LOCATOR_CODE warehouseCode,
+        mmp.LOCATOR_NAME warehouseName,
+        mml.LOCATOR_CODE,
+        mml.LOCATOR_NAME,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mu.UOM_CODE PRIMARY_UOM_CODE,
+        wig.item_group_id,
+        wig.item_group_code,
+        wig.item_group_description
+        FROM
+        mt_inv_onhand_quantity mioq
+        LEFT JOIN mt_mod_site mms ON mioq.site_ID = mms.site_ID
+        LEFT JOIN mt_mod_locator mml ON mioq.LOCATOR_ID = mml.LOCATOR_ID
+        LEFT JOIN mt_mod_locator mmp ON mml.PARENT_LOCATOR_ID = mmp.LOCATOR_ID
+        LEFT JOIN mt_material mm ON mioq.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_uom mu ON mm.PRIMARY_UOM_ID = mu.UOM_ID
+        LEFT JOIN mt_material_site mmls ON mioq.MATERIAL_ID = mmls.MATERIAL_ID AND mioq.SITE_ID =  mmls.SITE_ID
+        LEFT JOIN mt_material_basic mmb ON mmls.material_site_id = mmb.material_site_id
+        LEFT JOIN wms_item_group wig ON mmb.ITEM_GROUP = wig. item_group_code
+        WHERE mioq.TENANT_ID= #{tenantId}
+        <if test="dto.siteId!=null and dto.siteId !=''">
+            AND mioq.SITE_ID = #{dto.siteId}
+        </if>
+        <if test='dto.visible=="N"'>
+            AND mml.LOCATOR_TYPE != 5
+        </if>
+        <if test="dto.locatorCode!=null and dto.locatorCode!=''">
+            AND mml.LOCATOR_CODE like CONCAT('%',#{dto.locatorCode},'%')
+        </if>
+        <if test="dto.locatorName!=null and dto.locatorName!=''">
+            AND mml.LOCATOR_NAME like CONCAT('%',#{dto.locatorName},'%')
+        </if>
+        <if test="dto.materialCode!=null and dto.materialCode!=''">
+            AND mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            and mml.PARENT_LOCATOR_ID in
+            <foreach collection="dto.warehouseIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mml.LOCATOR_ID in
+            <foreach collection="dto.locatorIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mioq.MATERIAL_ID in
+            <foreach collection="dto.materialIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.lotCode != null and dto.lotCode != ''">
+            and mioq.LOT_CODE in
+            <foreach collection="dto.lotCodeList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.itemGroupId!=null and dto.itemGroupId !=''">
+            AND wig.item_group_id = #{dto.itemGroupId}
+        </if>
+        order by mms.SITE_CODE,mmp.LOCATOR_CODE,mml.LOCATOR_CODE,mm.MATERIAL_CODE
+    </select>
+
+    <select id="countOnhandQuantity" resultType="java.math.BigDecimal">
+        SELECT
+            IFNULL(SUM(mioq.ONHAND_QUANTITY),0)
+        FROM
+        mt_inv_onhand_quantity mioq
+        LEFT JOIN mt_mod_site mms ON mioq.site_ID = mms.site_ID
+        LEFT JOIN mt_mod_locator mml ON mioq.LOCATOR_ID = mml.LOCATOR_ID
+        LEFT JOIN mt_material mm ON mioq.MATERIAL_ID = mm.MATERIAL_ID
+        LEFT JOIN mt_uom mu ON mm.PRIMARY_UOM_ID = mu.UOM_ID
+        WHERE
+        mioq.TENANT_ID = #{tenantId}
+        <if test="dto.siteId!=null and dto.siteId !=''">
+            AND mioq.SITE_ID = #{dto.siteId}
+        </if>
+        <if test='dto.visible=="N"'>
+            AND mml.LOCATOR_TYPE != 5
+        </if>
+        <if test="dto.locatorCode!=null and dto.locatorCode!=''">
+            AND mml.LOCATOR_CODE like CONCAT('%',#{dto.locatorCode},'%')
+        </if>
+        <if test="dto.locatorName!=null and dto.locatorName!=''">
+            AND mml.LOCATOR_NAME like CONCAT('%',#{dto.locatorName},'%')
+        </if>
+        <if test="dto.materialCode!=null and dto.materialCode!=''">
+            AND mm.MATERIAL_CODE like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            and mml.PARENT_LOCATOR_ID in
+            <foreach collection="dto.warehouseIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mml.LOCATOR_ID in
+            <foreach collection="dto.locatorIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mioq.MATERIAL_ID in
+            <foreach collection="dto.materialIdList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="dto.lotCode != null and dto.lotCode != ''">
+            and mioq.LOT_CODE in
+            <foreach collection="dto.lotCodeList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <delete id="deleteInvOnhandQuantityShot">
+        DELETE
+        FROM
+        mt_inv_onhand_quantity_shot
+        WHERE
+        SHOT_DATE &lt; NOW() - INTERVAL 7 DAY
+    </delete>
+
+    <insert id="batchInsertInvOnhandQuantityShot">
+            INSERT INTO mt_inv_onhand_quantity_shot (
+            TENANT_ID,
+            SHOT_DATE,
+            ONHAND_QUANTITY_ID,
+            SITE_ID,
+            MATERIAL_ID,
+            LOCATOR_ID,
+            ONHAND_QUANTITY,
+            LOT_CODE,
+            OWNER_TYPE,
+            OWNER_ID,
+            CID,
+            OBJECT_VERSION_NUMBER,
+            CREATED_BY,
+            CREATION_DATE,
+            LAST_UPDATED_BY,
+            LAST_UPDATE_DATE
+        ) SELECT
+        TENANT_ID,
+        NOW() AS SHOT_DATE,
+        ONHAND_QUANTITY_ID,
+        SITE_ID,
+        MATERIAL_ID,
+        LOCATOR_ID,
+        ONHAND_QUANTITY,
+        LOT_CODE,
+        OWNER_TYPE,
+        OWNER_ID,
+        CID,
+        OBJECT_VERSION_NUMBER,
+        CREATED_BY,
+        CREATION_DATE,
+        LAST_UPDATED_BY,
+        LAST_UPDATE_DATE
+        FROM
+            mt_inv_onhand_quantity
+    </insert>
+</mapper>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtEoStepActualHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtEoStepActualHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EO_STEP_ACTUAL_HIS_ID" property="eoStepActualHisId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="EO_ROUTER_ACTUAL_ID" property="eoRouterActualId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="QUEUE_QTY" property="queueQty" jdbcType="DECIMAL"/>
+        <result column="WORKING_QTY" property="workingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_PENDING_QTY" property="completePendingQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETED_QTY" property="completedQty" jdbcType="DECIMAL"/>
+        <result column="SCRAPPED_QTY" property="scrappedQty" jdbcType="DECIMAL"/>
+        <result column="HOLD_QTY" property="holdQty" jdbcType="DECIMAL"/>
+        <result column="BYPASSED_FLAG" property="bypassedFlag" jdbcType="VARCHAR"/>
+        <result column="REWORK_STEP_FLAG" property="reworkStepFlag" jdbcType="VARCHAR"/>
+        <result column="LOCAL_REWORK_FLAG" property="localReworkFlag" jdbcType="VARCHAR"/>
+        <result column="MAX_PROCESS_TIMES" property="maxProcessTimes" jdbcType="DECIMAL"/>
+        <result column="TIMES_PROCESSED" property="timesProcessed" jdbcType="DECIMAL"/>
+        <result column="PREVIOUS_STEP_ID" property="previousStepId" jdbcType="VARCHAR"/>
+        <result column="QUEUE_DATE" property="queueDate" jdbcType="TIMESTAMP"/>
+        <result column="WORKING_DATE" property="workingDate" jdbcType="TIMESTAMP"/>
+        <result column="COMPLETED_DATE" property="completedDate" jdbcType="TIMESTAMP"/>
+        <result column="COMPLETE_PENDING_DATE" property="completePendingDate" jdbcType="TIMESTAMP"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="SPECIAL_INSTRUCTION" property="specialInstruction" jdbcType="VARCHAR"/>
+        <result column="HOLD_COUNT" property="holdCount" jdbcType="DECIMAL"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="TRX_QUEUE_QTY" property="trxQueueQty" jdbcType="DECIMAL"/>
+        <result column="TRX_WORKING_QTY" property="trxWorkingQty" jdbcType="DECIMAL"/>
+        <result column="TRX_COMPLETED_QTY" property="trxCompletedQty" jdbcType="DECIMAL"/>
+        <result column="TRX_SCRAPPED_QTY" property="trxScrappedQty" jdbcType="DECIMAL"/>
+        <result column="TRX_HOLD_QTY" property="trxHoldQty" jdbcType="DECIMAL"/>
+        <result column="TRX_COMPLETE_PENDING_QTY" property="trxCompletePendingQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="eoStepActualHisQuery" resultMap="BaseResultMap">
+       SELECT s.*
+         FROM mt_eo_step_actual_his s,
+              mt_eo_router_actual_his t
+        WHERE s.TENANT_ID = ${tenantId}
+          AND t.TENANT_ID = ${tenantId}
+          AND s.EO_ROUTER_ACTUAL_ID = t.EO_ROUTER_ACTUAL_ID
+          AND t.EO_ID = #{eoId}
+    </select>
+</mapper>

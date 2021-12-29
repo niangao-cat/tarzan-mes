@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosYieldComputeMapper">
+
+    <select id="getLastJobDate" resultType="java.util.Date">
+        select hctmh.last_update_date
+        from hme_cos_test_monitor_header hctmh
+        where hctmh.monitor_doc_num = 'COST202101010000'
+        and hctmh.tenant_id = #{tenantId}
+    </select>
+
+    <insert id="insertJobDate">
+        insert into hme_cos_test_monitor_header(
+            tenant_id
+            , cos_monitor_header_id
+            , monitor_doc_num
+            , doc_status
+            , check_status
+            , cos_type
+            , wafer
+            , test_pass_rate
+            , cid
+            , object_version_number
+            , creation_date
+            , created_by
+            , last_updated_by
+            , last_update_date)
+        values (
+            #{tenantId},
+            '-1.1',
+            'COST202101010000',
+            'JOB',
+            'JOB',
+            'JOB',
+            'JOB',
+            0,
+            -1.1,
+            1,
+            #{nowDate},
+            -1,
+            -1,
+            #{nowDate}
+        )
+    </insert>
+
+    <update id="updateJobDate">
+        UPDATE hme_cos_test_monitor_header
+        <set>
+            object_version_number = object_version_number + 1,
+            last_update_date = #{nowDate}
+        </set>
+        <where>
+            cos_monitor_header_id = '-1.1'
+        </where>
+    </update>
+
+    <select id="getLoadSequenceByFunctionUpdatedDate" resultType="java.lang.String">
+        select hcf.load_sequence
+        from hme_cos_function hcf
+        where hcf.LAST_UPDATE_DATE > DATE_FORMAT(#{lastJobDate}, '%Y-%m-%d %T')
+        and hcf.TENANT_ID = #{tenantId}
+        GROUP BY hcf.load_sequence
+    </select>
+
+    <select id="getCosTypeWaferComposeByLoadSequence" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.ATTRIBUTE1, hmll.ATTRIBUTE2
+        from hme_material_lot_load hmll
+        where hmll.load_sequence in
+        <foreach collection="loadSequenceList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hmll.tenant_id = #{tenantId}
+        GROUP BY hmll.ATTRIBUTE1, hmll.ATTRIBUTE2
+    </select>
+
+    <select id="getInputPassRateByCosType" resultType="com.ruike.hme.domain.entity.HmeCosTestPassRate">
+        select hctpr.cos_type, hctpr.input_pass_rate, hctpr.target_pass_rate
+        from hme_cos_test_pass_rate hctpr
+        where hctpr.cos_type in
+        <foreach collection="cosTypeList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hctpr.enable_flag = 'Y'
+        and hctpr.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getMaterialLotIdByAttr" resultType="com.ruike.hme.domain.vo.HmeCosYieldComputeVO">
+        select mmla.ATTR_VALUE, mml.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE, mm.MATERIAL_ID, mm.MATERIAL_CODE,
+        mml.ENABLE_FLAG
+        from mt_material_lot_attr mmla,
+        mt_material_lot mml,
+        mt_material mm
+        where mmla.ATTR_NAME = #{attrName}
+        and mmla.ATTR_VALUE in
+        <foreach collection="attrValueList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mmla.TENANT_ID = #{tenantId}
+        and mml.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+        and mm.MATERIAL_ID = mml.MATERIAL_ID
+    </select>
+
+    <select id="getCosTypeMaterialLotId" resultType="com.ruike.hme.domain.vo.HmeCosYieldComputeVO">
+        select mmla.ATTR_VALUE, mmla.MATERIAL_LOT_ID
+        from mt_material_lot_attr mmla
+        where mmla.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mmla.ATTR_NAME = #{attrName}
+        and mmla.ATTR_VALUE in
+        <foreach collection="attrValueList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mmla.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="getMfFlagMaterialLotId" resultType="java.lang.String">
+        select mmla.MATERIAL_LOT_ID
+        from mt_material_lot_attr mmla
+        where mmla.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and mmla.ATTR_NAME = 'MF_FLAG'
+        and mmla.ATTR_VALUE = 'Y'
+        and mmla.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="getMaterialLotSnQty" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        select hejs.material_lot_id, hejs.sn_qty
+        from hme_eo_job_sn hejs
+        where hejs.material_lot_id in
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and hejs.site_out_by is not null
+        and hejs.job_type = 'IO'
+        and hejs.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getLoadSequenceByCosTypeWafer" resultType="com.ruike.hme.domain.vo.HmeCosYieldComputeVO4">
+        select hmll.ATTRIBUTE1, hmll.ATTRIBUTE2, hcf.load_sequence, hcf.A24
+        from hme_material_lot_load hmll,
+        hme_cos_function hcf
+        where (hmll.ATTRIBUTE2, hmll.ATTRIBUTE1) IN
+        <foreach collection="cosTypeWaferComposeList" index="index" item="item" open="(" close=")" separator=",">
+            (#{item.attribute2},#{item.attribute1})
+        </foreach>
+        and hmll.material_lot_id != ''
+        and hmll.material_lot_id is not null
+        and hmll.tenant_id = #{tenantId}
+        and hcf.load_sequence = hmll.load_sequence
+        and hcf.tenant_id = hmll.tenant_id
+    </select>
+
+    <select id="testMonitorHeaderQueryByCosTypeWafer" resultType="com.ruike.hme.domain.vo.HmeCosYieldComputeVO5">
+        select hctmh.cos_monitor_header_id, hctmh.doc_status, hctmh.cos_type, hctmh.wafer, hctmh.creation_date,
+        hctmh.monitor_doc_num, hctmh.check_status, hctmh.test_pass_rate, hctmh.object_version_number
+        from hme_cos_test_monitor_header hctmh
+        where (hctmh.wafer, hctmh.cos_type) IN
+        <foreach collection="cosTypeWaferComposeList" index="index" item="item" open="(" close=")" separator=",">
+            (#{item.attribute2},#{item.attribute1})
+        </foreach>
+        and hctmh.tenant_id = #{tenantId}
+    </select>
+
+    <insert id="batchInsertCosTestMonitorHeader">
+        INSERT INTO hme_cos_test_monitor_header
+        (
+        tenant_id,
+        cos_monitor_header_id,
+        monitor_doc_num,
+        doc_status,
+        check_status,
+        cos_type,
+        wafer,
+        test_pass_rate,
+        test_qty,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date)
+        VALUES
+        <foreach collection="monitorHeaderInsertDataList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.cosMonitorHeaderId},
+            #{item.monitorDocNum},
+            #{item.docStatus},
+            #{item.checkStatus},
+            #{item.cosType},
+            #{item.wafer},
+            #{item.testPassRate},
+            #{item.testQty},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <update id="batchUpdateCosTestMonitorHeader">
+        UPDATE hme_cos_test_monitor_header
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = -1,
+            last_update_date = CURRENT_TIMESTAMP,
+            test_pass_rate =
+            <foreach collection="monitorHeaderUpdateDataList" item="item" index="index"
+                     separator=" " open="case cos_monitor_header_id" close="end">
+                when #{item.cosMonitorHeaderId} then #{item.testPassRate}
+            </foreach>,
+            test_qty =
+            <foreach collection="monitorHeaderUpdateDataList" item="item" index="index"
+                     separator=" " open="case cos_monitor_header_id" close="end">
+                when #{item.cosMonitorHeaderId} then #{item.testQty}
+            </foreach>
+        </set>
+        <where>
+            cos_monitor_header_id in
+            <foreach collection="monitorHeaderUpdateDataList" item="item"
+                     separator="," open="(" close=")">
+                #{item.cosMonitorHeaderId}
+            </foreach>
+        </where>
+    </update>
+
+    <insert id="batchInsertCosTestMonitorRecord">
+        INSERT INTO hme_cos_test_monitor_record
+        (
+        tenant_id,
+        cos_monitor_record_id,
+        cos_monitor_header_id,
+        monitor_doc_num,
+        doc_status,
+        check_status,
+        cos_type,
+        wafer,
+        test_pass_rate,
+        test_qty,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date)
+        VALUES
+        <foreach collection="monitorRecordInsertDataList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.cosMonitorRecordId},
+            #{item.cosMonitorHeaderId},
+            #{item.monitorDocNum},
+            #{item.docStatus},
+            #{item.checkStatus},
+            #{item.cosType},
+            #{item.wafer},
+            #{item.testPassRate},
+            #{item.testQty},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+</mapper>

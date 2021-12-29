@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWorkcellEquipmentSwitchMapper">
+
+    <select id="equipmentCategoryQuery" resultType="com.ruike.hme.domain.entity.HmeOpEqRel">
+        select hoer.equipment_category, IFNULL(ATTRIBUTE1,'N') ATTRIBUTE1
+        from hme_op_eq_rel hoer
+        where hoer.tenant_id = #{tenantId}
+        and hoer.operation_id = #{operationId}
+        and hoer.enable_flag = 'Y'
+        order by ATTRIBUTE1 desc, hoer.equipment_category desc
+    </select>
+
+</mapper>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtGenTypeMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtGenType">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="GEN_TYPE_ID" property="genTypeId" jdbcType="VARCHAR"/>
+        <result column="MODULE" property="module" jdbcType="VARCHAR"/>
+        <result column="TYPE_GROUP" property="typeGroup" jdbcType="VARCHAR"/>
+        <result column="TYPE_CODE" property="typeCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_FLAG" property="defaultFlag" jdbcType="VARCHAR"/>
+        <result column="RELATION_TABLE" property="relationTable" jdbcType="VARCHAR"/>
+        <result column="INITIAL_FLAG" property="initialFlag" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    
+    <resultMap id="BaseResultMap2" type="io.tarzan.common.domain.vo.MtGenTypeVO5">
+        <result column="MODULE" property="module" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+    
+    <resultMap id="lovResultMap" type="io.tarzan.common.domain.vo.MtGenTypeVO6">
+    	<result column="GEN_TYPE_ID" property="genTypeId" jdbcType="VARCHAR"/>
+        <result column="TYPE_GROUP" property="typeGroup" jdbcType="VARCHAR"/>
+        <result column="TYPE_CODE" property="typeCode" jdbcType="VARCHAR"/>
+        <result column="MODULE" property="module" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectByConditionCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.GEN_TYPE_ID,
+        b.MODULE,
+        b.TYPE_GROUP,
+        b.TYPE_CODE,
+        t.DESCRIPTION,
+        b.DEFAULT_FLAG,
+        b.RELATION_TABLE,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        FROM
+        mt_gen_type b,
+        mt_gen_type_tl t
+        WHERE
+        b.GEN_TYPE_ID = t.GEN_TYPE_ID
+        AND t.LANG = #{locale}
+        AND b.TENANT_ID = ${tenantId}
+        AND b.MODULE = #{condition.module}
+        <if test="condition.typeCode!=null">
+            and b.TYPE_CODE = #{condition.typeCode}
+        </if>
+        <if test="condition.description!=null">
+            and t.DESCRIPTION = #{condition.description}
+        </if>
+    </select>
+
+    <select id="selectAllGenTypes" resultMap="BaseResultMap">
+        SELECT b.TENANT_ID,
+	           b.GEN_TYPE_ID,
+	           b.MODULE,
+	           b.TYPE_GROUP,
+	           b.TYPE_CODE,
+	           t.DESCRIPTION,
+	           b.DEFAULT_FLAG,
+	           b.RELATION_TABLE,
+	           b.INITIAL_FLAG,
+	           b.SEQUENCE,
+	           b.CID,
+	           b.OBJECT_VERSION_NUMBER,
+	           b.CREATED_BY,
+	           b.CREATION_DATE,
+	           b.LAST_UPDATED_BY,
+	           b.LAST_UPDATE_DATE
+          FROM mt_gen_type b,
+               mt_gen_type_tl t
+         WHERE b.GEN_TYPE_ID = t.GEN_TYPE_ID
+           AND t.LANG = #{language}
+    </select>    
+    
+    <select id="selectModuleByTypeGroup" resultMap="BaseResultMap">
+		<bind name="lang"
+			value="@org.hzero.core.helper.LanguageHelper@language()" />
+		select
+			t.MODULE,
+			t1l.DESCRIPTION
+		from
+			mt_gen_type t
+			join mt_gen_type_tl tl on t.GEN_TYPE_ID = tl.GEN_TYPE_ID and tl.LANG =
+			#{lang}
+			join mt_gen_type t1 on t.MODULE= t1.TYPE_CODE and
+			t1.TYPE_GROUP='SERVICE_PACKAGE'
+			join mt_gen_type_tl t1l on t1.GEN_TYPE_ID = t1l.GEN_TYPE_ID and t1l.LANG =
+			#{lang}
+		where
+			t.TENANT_ID = #{tenantId}
+			and t1.TENANT_ID = #{tenantId}
+			and t.TYPE_GROUP = #{typeGroup}
+		GROUP BY t.TYPE_GROUP,t.MODULE,t1l.DESCRIPTION
+	</select>
+	
+	<select id="selectByConditionForLov" resultMap="lovResultMap">
+		<bind name="lang"
+			value="@org.hzero.core.helper.LanguageHelper@language()" />
+		SELECT
+	        t.GEN_TYPE_ID,
+	        t.TYPE_CODE,
+	        t.TYPE_GROUP,
+	        t.MODULE,
+        	tl.DESCRIPTION
+        FROM
+        	mt_gen_type t
+        	LEFT JOIN mt_gen_type_tl tl ON t.GEN_TYPE_ID = tl.GEN_TYPE_ID AND tl.LANG = #{lang}
+        WHERE 
+        	t.TENANT_ID = #{tenantId}
+        	AND t.TYPE_GROUP = #{condition.typeGroup}
+        	AND t.MODULE = #{condition.module}
+        	<if test="condition.typeCode!=null and condition.typeCode!=''">
+        		<bind name="codeLike" value="'%'+condition.typeCode+'%'"/>
+            	and t.TYPE_CODE LIKE #{codeLike}
+	        </if>
+	        <if test="condition.description!=null and condition.description!=''">
+	        	<bind name="descriptionLike" value="'%'+condition.description+'%'"/>
+	            and tl.DESCRIPTION LIKE #{descriptionLike}
+	        </if>
+	</select>
+
+    <select id="selectCondition" resultType="io.tarzan.common.domain.vo.MtGenTypeVO8">
+        <bind name="lang"
+              value="@org.hzero.core.helper.LanguageHelper@language()" />
+        SELECT
+        tb.TENANT_ID,
+        tb.GEN_TYPE_ID,
+        tb.MODULE,
+        tb.TYPE_GROUP,
+        tb.TYPE_CODE,
+        tl.DESCRIPTION,
+        tb.DEFAULT_FLAG,
+        tb.RELATION_TABLE,
+        tb.INITIAL_FLAG,
+        tb.SEQUENCE,
+        tb.CID,
+        tb.OBJECT_VERSION_NUMBER,
+        tb.CREATED_BY,
+        tb.CREATION_DATE,
+        tb.LAST_UPDATED_BY,
+        tb.LAST_UPDATE_DATE
+        FROM MT_GEN_TYPE tb inner JOIN mt_gen_type_tl tl ON tb.GEN_TYPE_ID = tl.GEN_TYPE_ID
+        WHERE tb.TENANT_ID = ${tenantId}
+        AND tl.LANG = #{lang}
+        <if test="dto.relationTable != null">
+            AND tb.RELATION_TABLE = #{dto.relationTable}
+        </if>
+        <if test="dto.sequence != null">
+            AND tb.SEQUENCE = #{dto.sequence}
+        </if>
+        <if test="dto.typeGroup != null">
+            AND tb.TYPE_GROUP = #{dto.typeGroup}
+        </if>
+        <if test="dto.defaultFlag != null">
+            AND tb.DEFAULT_FLAG = #{dto.defaultFlag}
+        </if>
+        <if test="dto.genTypeId != null">
+            AND tb.GEN_TYPE_ID = #{dto.genTypeId}
+        </if>
+        <if test="dto.module != null">
+            AND tb.MODULE = #{dto.module}
+        </if>
+        <if test="dto.description != null">
+            AND tl.DESCRIPTION LIKE concat('%', concat(#{dto.description}, '%'))
+        </if>
+        <if test="dto.initialFlag != null">
+            AND tb.INITIAL_FLAG = #{dto.initialFlag}
+        </if>
+        <if test="dto.typeCode != null">
+            AND tb.TYPE_CODE = #{dto.typeCode}
+        </if>
+        order by  tb.MODULE,tb.TYPE_GROUP,tb.SEQUENCE
+    </select>
+</mapper>

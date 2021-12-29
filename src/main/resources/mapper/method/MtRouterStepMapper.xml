@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterStepMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterStep">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_TYPE" property="routerStepType" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="COPRODUCT_FLAG" property="coproductFlag" jdbcType="VARCHAR"/>
+        <result column="QUEUE_DECISION_TYPE" property="queueDecisionType" jdbcType="VARCHAR"/>
+        <result column="ENTRY_STEP_FLAG" property="entryStepFlag" jdbcType="VARCHAR"/>
+        <result column="KEY_STEP_FLAG" property="keyStepFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_ROUTER_STEP_ID" property="copiedFromRouterStepId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="RouterStepVO3Map" type="tarzan.method.domain.vo.MtRouterStepVO3">
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_TYPE" property="routerStepType" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OPERATION_ID" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OPERATION_COMPONENT_ID" property="routerOperationComponentId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ParentStepMap" type="tarzan.method.domain.vo.MtRouterStepVO7">
+        <result column="PARENT_STEP_ID" property="parentStepId" jdbcType="VARCHAR"/>
+        <result column="PARENT_STEP_TYPE" property="parentType" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="ChildStepMap" type="tarzan.method.domain.vo.MtRouterStepVO9">
+        <result column="CHILD_STEP_ID" property="childStepId" jdbcType="VARCHAR"/>
+        <result column="CHILD_STEP_TYPE" property="childType" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="BaseTLResultMap" type="tarzan.method.domain.vo.MtRouterStepVO4">
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="RouterStepOpResultMap" type="tarzan.method.domain.vo.MtRouterStepVO5">
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_TYPE" property="routerStepType" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="STEP_NAME" property="stepName" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="selectOperationStep" resultType="string">
+        select mrsb.ROUTER_STEP_ID
+          from mt_router_step mrsb join mt_router_operation mrob on mrsb.ROUTER_STEP_ID = mrob.ROUTER_STEP_ID
+         where mrsb.TENANT_ID = ${tenantId}
+           and mrob.TENANT_ID = ${tenantId}
+           and mrsb.ROUTER_ID = #{routerId}
+           and mrob.OPERATION_ID = #{operationId}
+    </select>
+
+    <select id="selectComParentStep" resultMap="ParentStepMap">
+        SELECT T3.ROUTER_STEP_ID AS PARENT_STEP_ID, T3.ROUTER_STEP_TYPE AS PARENT_STEP_TYPE
+		  FROM MT_ROUTER_STEP T1, MT_ROUTER_LINK T2, MT_ROUTER_STEP T3
+		 WHERE T1.TENANT_ID = ${tenantId}
+		   AND T2.TENANT_ID = ${tenantId}
+		   AND T3.TENANT_ID = ${tenantId}
+		   AND T1.ROUTER_STEP_ID = #{routerStepId}
+		   AND T1.ROUTER_ID = T2.ROUTER_ID
+		   AND T2.ROUTER_STEP_ID = T3.ROUTER_STEP_ID
+    </select>
+
+    <select id="selectNonComParentStep" resultMap="ParentStepMap">
+        select t1.ROUTER_STEP_ID AS PARENT_STEP_ID, t1.ROUTER_STEP_GROUP_TYPE AS PARENT_STEP_TYPE
+          from mt_router_step_group t1 join mt_router_step_group_step t2 on t1.ROUTER_STEP_GROUP_ID = t2.ROUTER_STEP_GROUP_ID
+         where t1.TENANT_ID = ${tenantId}
+           and t2.TENANT_ID = ${tenantId}
+           and t2.ROUTER_STEP_ID = #{routerStepId}
+    </select>
+
+    <select id="selectChildEntry" resultType="string">
+        select t2.ROUTER_STEP_ID
+          from mt_router_link t1 join mt_router_step t2 on t1.ROUTER_ID = t2.ROUTER_ID
+         where t1.TENANT_ID = ${tenantId}
+           and t2.TENANT_ID = ${tenantId}
+           and t1.ROUTER_STEP_ID = #{routerStepId}
+           and t2.ENTRY_STEP_FLAG = 'Y'
+    </select>
+
+    <select id="selectChild" resultMap="ChildStepMap">
+        select t2.ROUTER_STEP_ID AS CHILD_STEP_ID, t1.ROUTER_STEP_GROUP_TYPE AS CHILD_STEP_TYPE
+          from mt_router_step_group t1 join mt_router_step_group_step t2 on t1.ROUTER_STEP_GROUP_ID = t2.ROUTER_STEP_GROUP_ID
+         where t1.TENANT_ID = ${tenantId}
+           and t2.TENANT_ID = ${tenantId}
+           and t1.ROUTER_STEP_ID = #{routerStepId}
+    </select>
+
+    <select id="selectRouterStepTL" resultMap="BaseTLResultMap">
+       select t.ROUTER_STEP_ID,t.LANG,t.DESCRIPTION from mt_router_step_tl t where t.ROUTER_STEP_ID=#{routerStepId}
+    </select>
+
+    <select id="selectStepByGroupStep" resultType="string">
+        SELECT b.ROUTER_STEP_ID
+          FROM mt_router_step b
+         WHERE b.TENANT_ID = ${tenantId}
+           and b.ROUTER_STEP_ID IN
+              (
+		        SELECT gs.ROUTER_STEP_ID
+		          FROM mt_router_step_group g join mt_router_step_group_step gs on g.ROUTER_STEP_GROUP_ID = gs.ROUTER_STEP_GROUP_ID
+		        WHERE g.TENANT_ID = ${tenantId}
+		          and gs.TENANT_ID = ${tenantId}
+		          AND g.router_step_id = #{routerStepId}
+              )
+    </select>
+
+    <select id="selectRouterStepOp" resultMap="RouterStepOpResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        t1.ROUTER_STEP_ID,
+        t1.STEP_NAME,
+        rob.OPERATION_ID,
+        ob.OPERATION_NAME,
+        ot.DESCRIPTION,
+        t1.SEQUENCE
+        FROM
+        mt_router_step t1
+        INNER JOIN mt_router_step_tl t2 ON ( t1.ROUTER_STEP_ID = t2.ROUTER_STEP_ID AND t2.LANG = #{locale} )
+        JOIN mt_router_operation rob ON t1.ROUTER_STEP_ID = rob.ROUTER_STEP_ID
+        JOIN mt_operation ob ON rob.OPERATION_ID = ob.OPERATION_ID
+        LEFT JOIN mt_operation_tl ot ON (ob.OPERATION_ID = ot.OPERATION_ID AND ot.LANG = #{locale})
+        WHERE
+        t1.TENANT_ID = ${tenantId}
+        and rob.TENANT_ID = ${tenantId}
+        and ob.TENANT_ID = ${tenantId}
+        and t1.ROUTER_ID = #{routerId}
+    </select>
+
+    <select id="routerComponentQuery" resultMap="RouterStepVO3Map">
+        SELECT A.ROUTER_ID,
+        A.ROUTER_STEP_TYPE,
+        A.STEP_NAME,
+        b.OPERATION_ID,
+        b.ROUTER_STEP_ID,
+        B.ROUTER_OPERATION_ID,
+        c.BOM_COMPONENT_ID,
+        c.ROUTER_OPERATION_COMPONENT_ID,
+        c.SEQUENCE
+        FROM MT_ROUTER_STEP a,
+        MT_ROUTER_OPERATION b,
+        MT_ROUTER_OPERATION_COMPONENT c
+        WHERE a.ROUTER_STEP_ID = b.ROUTER_STEP_ID
+        AND b.ROUTER_OPERATION_ID = c.ROUTER_OPERATION_ID
+        AND a.ROUTER_ID = #{condition.routerId}
+        AND a.TENANT_ID = ${tenantId}
+        AND b.TENANT_ID = ${tenantId}
+        AND c.TENANT_ID = ${tenantId}
+        <if test="condition.routerStepId != null">
+            AND b.ROUTER_STEP_ID = #{condition.routerStepId}
+        </if>
+        <if test="condition.bomComponentId != null">
+            AND c.BOM_COMPONENT_ID = #{condition.bomComponentId}
+        </if>
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.method.domain.vo.MtRouterStepVO12">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        tb.*,
+        mr.ROUTER_NAME as routerName,
+        tl.DESCRIPTION as routerDescription
+        FROM MT_ROUTER_STEP tb
+        left join MT_ROUTER mr
+        on tb.ROUTER_ID=mr.ROUTER_ID
+        inner join MT_ROUTER_TL tl on (mr.ROUTER_ID=tl.ROUTER_ID and tl.LANG=#{locale} )
+        WHERE tb.TENANT_ID = ${tenantId}
+        and mr.TENANT_ID=${tenantId}
+        <if test="dto.routerStepId != null">
+            AND tb.ROUTER_STEP_ID = #{dto.routerStepId}
+        </if>
+        <if test="dto.routerId != null">
+            AND tb.ROUTER_ID = #{dto.routerId}
+        </if>
+        <if test="dto.stepName != null">
+            AND tb.STEP_NAME = #{dto.stepName}
+        </if>
+        <if test="dto.routerStepType != null">
+            AND tb.ROUTER_STEP_TYPE = #{dto.routerStepType}
+        </if>
+        <if test="dto.sequence != null">
+            AND tb.SEQUENCE = #{dto.sequence}
+        </if>
+        <if test="dto.description != null">
+            AND tb.DESCRIPTION = #{dto.description}
+        </if>
+        <if test="dto.coproductFlag != null">
+            AND tb.COPRODUCT_FLAG = #{dto.coproductFlag}
+        </if>
+        <if test="dto.queueDecisionType != null">
+            AND tb.QUEUE_DECISION_TYPE = #{dto.queueDecisionType}
+        </if>
+        <if test="dto.entryStepFlag != null">
+            AND tb.ENTRY_STEP_FLAG = #{dto.entryStepFlag}
+        </if>
+        <if test="dto.keyStepFlag != null">
+            AND tb.KEY_STEP_FLAG = #{dto.keyStepFlag}
+        </if>
+        <if test="dto.copyFromRouterStepId != null">
+            AND tb.COPIED_FROM_ROUTER_STEP_ID = #{dto.copyFromRouterStepId}
+        </if>
+        order by tb.ROUTER_STEP_ID asc
+    </select>
+    <select id="selectRouterStepByRouter" resultMap="BaseResultMap">
+        SELECT
+        t.*
+        FROM MT_ROUTER_STEP t
+        where t.TENANT_ID=${tenantId}
+        and t.ROUTER_ID IN
+        <foreach collection="routerId" open="(" close=")" separator="," item="i" index="in">
+            #{i}
+        </foreach>
+    </select>
+
+    <select id="selectByWoRouter" parameterType="string" resultType="string">
+        SELECT
+			mr.ROUTER_STEP_ID
+		FROM
+			mt_router_step mr
+		WHERE
+			mr.TENANT_ID = ${tenantId}
+			AND mr.ROUTER_ID = #{routerId}
+		AND mr.ROUTER_STEP_ID NOT IN (
+			SELECT
+				mgs.ROUTER_STEP_ID
+			FROM
+				mt_router_step mr
+				JOIN mt_router_step_group mg ON mg.ROUTER_STEP_ID = mr.ROUTER_STEP_ID AND mr.ROUTER_STEP_TYPE = 'GROUP'
+				JOIN mt_router_step_group_step mgs ON mgs.ROUTER_STEP_GROUP_ID = mg.ROUTER_STEP_GROUP_ID
+			WHERE
+				mg.TENANT_ID = ${tenantId}
+				AND mgs.TENANT_ID = ${tenantId}
+			)
+			ORDER BY mr.SEQUENCE ASC
+    </select>
+
+    <select id="selectStepByRouterIds" resultMap="RouterStepOpResultMap">
+        SELECT
+        t1.ROUTER_STEP_ID,
+        t1.ROUTER_STEP_TYPE,
+        t1.ROUTER_ID,
+        t1.STEP_NAME,
+        t1.SEQUENCE
+        FROM
+        mt_router_step t1
+        WHERE
+        t1.TENANT_ID = ${tenantId}
+        and t1.ROUTER_ID IN
+        <foreach collection="routerIds" open="(" close=")" separator="," item="i" index="in">
+            #{i}
+        </foreach>
+    </select>
+</mapper>

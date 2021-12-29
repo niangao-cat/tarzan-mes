@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtNumrangeAssignMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtNumrangeAssign">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NUMRANGE_ASSIGN_ID" property="numrangeAssignId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_ID" property="numrangeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_ID" property="objectTypeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_CODE" property="objectTypeCode" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE" property="site" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="resultView" type="io.tarzan.common.domain.vo.MtNumrangeAssignVO1">
+        <result column="NUMRANGE_ID" property="numrangeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_GROUP" property="numrangeGroup" jdbcType="VARCHAR"/>
+        <result column="NUM_DESCRIPTION" property="numDescription" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX1" property="inputBox1" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX2" property="inputBox2" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX3" property="inputBox3" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX4" property="inputBox4" jdbcType="VARCHAR"/>
+        <result column="INPUT_BOX5" property="inputBox5" jdbcType="VARCHAR"/>
+        <result column="NUM_EXAMPLE" property="numExample" jdbcType="VARCHAR"/>
+        <result column="OBJECT_CODE" property="objectCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="objectDescription" jdbcType="VARCHAR"/>
+        <result column="OUTSIDE_NUM_FLAG" property="outsideNumFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+    </resultMap>
+    
+   
+
+    <select id="selectByIdsCustom" resultMap="resultView">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.NUMRANGE_ID,
+        b.OBJECT_ID,
+        b.NUMRANGE_GROUP,
+        b.NUM_EXAMPLE,
+        t.NUM_DESCRIPTION,
+        b.INPUT_BOX1,
+        b.INPUT_BOX2,
+        b.INPUT_BOX3,
+        b.INPUT_BOX4,
+        b.INPUT_BOX5,
+        b.NUM_EXAMPLE,
+        b.OUTSIDE_NUM_FLAG,
+        b.ENABLE_FLAG,
+        b1.OBJECT_CODE,
+        t1.DESCRIPTION,
+        b.CID
+        FROM
+        mt_numrange b
+        LEFT OUTER JOIN mt_numrange_TL t
+        ON b.numrange_Id = t.numrange_Id AND t.LANG = #{locale}
+        inner join mt_numrange_object b1 on b.OBJECT_ID=b1.OBJECT_ID AND b1.TENANT_ID = ${tenantId}
+        inner join mt_numrange_object_tl t1 on b1.OBJECT_ID=t1.OBJECT_ID
+        and t1.LANG= #{locale}
+        WHERE
+        b.TENANT_ID = ${tenantId}
+        AND b.NUMRANGE_ID in
+        <foreach collection="numrangeIds" separator="," open="(" close=")" item="i" index="index">
+            #{i}
+        </foreach>
+    </select>
+    
+     <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="VOResultMap" type="io.tarzan.common.domain.vo.MtNumrangeAssignVO">
+        <result column="NUMRANGE_ASSIGN_ID" property="numrangeAssignId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_GROUP" property="numrangeGroup" jdbcType="VARCHAR"/>
+        <result column="NUM_DESCRIPTION" property="numDescription" jdbcType="VARCHAR"/>
+        <result column="OUTSIDE_NUM_FLAG" property="outsideNumFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_NAME" property="objectName" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_ASSIGN_ID" property="numrangeAssignId" jdbcType="VARCHAR"/>
+        <result column="NUMRANGE_ID" property="numrangeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_ID" property="objectTypeId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_CODE" property="objectTypeCode" jdbcType="VARCHAR"/>
+        <result column="OBJECT_TYPE_DESC" property="objectTypeDesc" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE" property="site" jdbcType="VARCHAR"/>
+        <result column="SITE_DESC" property="siteDesc" jdbcType="VARCHAR"/>
+    </resultMap>
+    
+    <select id="selectByConditionForUi" resultMap="VOResultMap">
+	<bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        a.NUMRANGE_ID,
+        b.NUMRANGE_GROUP,
+        tl.NUM_DESCRIPTION,
+        b.OUTSIDE_NUM_FLAG,
+        b.ENABLE_FLAG,
+        b.NUM_EXAMPLE,
+        b.OBJECT_ID,
+        b1.OBJECT_CODE,
+        tl2.OBJECT_NAME,
+        a.NUMRANGE_ASSIGN_ID,
+        a.OBJECT_TYPE_ID,
+        b2.TYPE_CODE OBJECT_TYPE_CODE,
+        tl3.DESCRIPTION OBJECT_TYPE_DESC,
+        a.SITE_ID,
+        a.SITE 
+        FROM
+        mt_numrange_assign a
+        INNER JOIN mt_numrange b ON a.NUMRANGE_ID = b.NUMRANGE_ID
+        INNER JOIN mt_numrange_tl tl ON b.NUMRANGE_ID = tl.NUMRANGE_ID and tl.lang= #{lang}
+        INNER JOIN mt_numrange_object b1 ON b.OBJECT_ID=b1.OBJECT_ID
+        INNER JOIN mt_numrange_object_tl tl2 on b1.OBJECT_ID=tl2.OBJECT_ID and
+        tl2.lang=#{lang} 
+        LEFT join mt_gen_type b2 ON a.OBJECT_TYPE_ID=b2.GEN_TYPE_ID AND a.TENANT_ID = b2.TENANT_ID
+        LEFT join mt_gen_type_tl tl3 on b2.GEN_TYPE_ID=tl3.GEN_TYPE_ID and tl3.lang=#{lang}
+        where 
+			a.TENANT_ID = #{tenantId}
+			AND b.TENANT_ID = #{tenantId}
+			AND b1.TENANT_ID = #{tenantId}
+        <if test="condition.objectId!=null">
+            and b.OBJECT_ID=#{condition.objectId}
+        </if>
+        <if test="condition.numDescription!=null">
+            and tl.NUM_DESCRIPTION like CONCAT('%',#{condition.numDescription},'%')
+        </if>
+        ORDER BY a.CREATION_DATE DESC
+    </select>
+    
+    <select id="selectByIdCustom" resultMap="VOResultMap">
+	<bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+       a.NUMRANGE_ID,
+        b.NUMRANGE_GROUP,
+        tl.NUM_DESCRIPTION,
+        b.OUTSIDE_NUM_FLAG,
+        b.ENABLE_FLAG,
+        b.NUM_EXAMPLE,
+        b.OBJECT_ID,
+        b1.OBJECT_CODE,
+        tl2.OBJECT_NAME,
+        a.NUMRANGE_ASSIGN_ID,
+        a.OBJECT_TYPE_ID,
+        b2.TYPE_CODE OBJECT_TYPE_CODE,
+        tl3.DESCRIPTION OBJECT_TYPE_DESC,
+        a.SITE_ID,
+        a.SITE 
+        FROM
+        mt_numrange_assign a
+        INNER JOIN mt_numrange b ON a.NUMRANGE_ID = b.NUMRANGE_ID
+        INNER JOIN mt_numrange_tl tl ON b.NUMRANGE_ID = tl.NUMRANGE_ID and tl.lang= #{lang}
+        INNER JOIN mt_numrange_object b1 ON b.OBJECT_ID=b1.OBJECT_ID
+        INNER JOIN mt_numrange_object_tl tl2 on b1.OBJECT_ID=tl2.OBJECT_ID and
+        tl2.lang=#{lang} 
+        LEFT join mt_gen_type b2 ON a.OBJECT_TYPE_ID=b2.GEN_TYPE_ID AND a.TENANT_ID = b2.TENANT_ID
+        LEFT join mt_gen_type_tl tl3 on b2.GEN_TYPE_ID=tl3.GEN_TYPE_ID and tl3.lang=#{lang}
+        where 
+			a.TENANT_ID = #{tenantId}
+			AND b.TENANT_ID = #{tenantId}
+			AND b1.TENANT_ID = #{tenantId}
+        	AND a.NUMRANGE_ASSIGN_ID = #{numrangeAssignId}
+    </select>
+
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        SELECT t.*
+        FROM MT_NUMRANGE_ASSIGN t
+        where
+        t.TENANT_ID = #{tenantId}
+        <if test="dto.numrangeAssignId!=null">
+            AND t.NUMRANGE_ASSIGN_ID =#{dto.numrangeAssignId}
+        </if>
+        <if test="dto.numrangeId!=null">
+            AND t.NUMRANGE_ID =#{dto.numrangeId}
+        </if>
+        <if test="dto.objectId!=null">
+            AND t.OBJECT_ID =#{dto.objectId}
+        </if>
+        <if test="dto.objectTypeId!=null">
+            AND t.OBJECT_TYPE_ID =#{dto.objectTypeId}
+        </if>
+        <if test="dto.objectTypeCode!=null">
+            AND t.OBJECT_TYPE_CODE =#{dto.objectTypeCode}
+        </if>
+        <if test="dto.siteId!=null">
+            AND t.SITE_ID =#{dto.siteId}
+        </if>
+        <if test="dto.site!=null">
+            AND t.SITE =#{dto.site}
+        </if>
+    </select>
+</mapper>

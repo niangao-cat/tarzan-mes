@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEqManageTagGroupMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEqManageTagGroup">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="manage_taggroup_id" property="manageTagGroupId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="equipment_id" property="equipmentId" jdbcType="VARCHAR"/>
+        <result column="equipment_category" property="equipmentCategory" jdbcType="VARCHAR"/>
+        <result column="tag_group_id" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectEquipTagData" resultType="com.ruike.hme.domain.vo.HmeEquipTagGroupReturnVO">
+        SELECT
+            emt.site_id,
+            mms.SITE_CODE,
+            mms.SITE_NAME,
+            emt.equipment_id,
+            emt.tag_group_id,
+            mtg.TAG_GROUP_CODE,
+            mtg.TAG_GROUP_DESCRIPTION,
+            emt.`status`,
+            emt.ENABLE_FLAG,
+            emt.equipment_category,
+            emt.manage_tag_group_id,
+            emt.OBJECT_VERSION_NUMBER,
+            mma.AREA_ID as businessId,
+            mma.DESCRIPTION AS businessName,
+            mo.OPERATION_ID,
+            mo.OPERATION_NAME,
+            mo.DESCRIPTION AS operationDescription,
+            emt.service_life,
+            emt.manage_type
+        FROM
+            hme_eq_manage_tag_group emt
+        LEFT JOIN mt_mod_site mms ON emt.site_id = mms.SITE_ID
+        LEFT JOIN mt_tag_group mtg ON emt.tag_group_id = mtg.TAG_GROUP_ID
+        LEFT JOIN mt_mod_area mma ON mma.AREA_ID = emt.business_id
+        LEFT JOIN mt_operation mo ON mo.OPERATION_ID = emt.operation_id
+        where
+            emt.TENANT_ID = #{tenantId}
+        <if test="dto.siteId != null and dto.siteId != ''">
+            and emt.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.equipmentCategory != null and dto.equipmentCategory != ''">
+            and emt.equipment_category = #{dto.equipmentCategory}
+        </if>
+        <if test="dto.equipmentId != null and dto.equipmentId != ''">
+            and emt.equipment_id = #{dto.equipmentId}
+        </if>
+        <if test="dto.tagGroupId != null and dto.tagGroupId != ''">
+            and emt.tag_group_id = #{dto.tagGroupId}
+        </if>
+        <if test="dto.status != null and dto.status != ''">
+            and emt.status = #{dto.status}
+        </if>
+        <if test="dto.enableFlag != null and dto.enableFlag != ''">
+            and emt.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.manageType != null and dto.manageType != ''">
+            and emt.manage_type = #{dto.manageType}
+        </if>
+        <if test="dto.businessId != null and dto.businessId != ''">
+            and emt.business_id = #{dto.businessId}
+        </if>
+        <if test="dto.operationId != null and dto.operationId != ''">
+            and emt.operation_id = #{dto.operationId}
+        </if>
+    </select>
+
+    <select id="queryManageTag" resultType="com.ruike.hme.domain.vo.HmeMtTagVO">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select b.*, uom.UOM_CODE,
+        mta.ATTR_VALUE as standardValue,
+        mta2.ATTR_VALUE as accuracy
+        from mt_tag b
+        inner join mt_tag_tl t on b.TAG_ID= t.TAG_ID and t.LANG = #{locale}
+        left join mt_uom uom on b.UNIT = uom.UOM_ID
+        LEFT JOIN mt_tag_attr mta ON mta.TENANT_ID = b.TENANT_ID
+        AND mta.TAG_ID = b.TAG_ID
+        AND mta.ATTR_NAME = 'STANDARD'
+        LEFT JOIN mt_tag_attr mta2 ON mta2.TENANT_ID = b.TENANT_ID
+        AND mta2.TAG_ID = b.TAG_ID
+        AND mta2.ATTR_NAME = 'ACCURACY'
+        where b.TENANT_ID = ${tenantId}
+        <if test="dto.tagCode != null">
+            and b.TAG_CODE like CONCAT('%',#{dto.tagCode} ,'%')
+        </if>
+        <if test="dto.tagDescription != null">
+            and b.TAG_DESCRIPTION like CONCAT('%',#{dto.tagDescription} ,'%')
+        </if>
+    </select>
+
+    <select id="selectTagGroup" resultType="com.ruike.hme.domain.entity.HmeEqManageTagGroup">
+        SELECT
+            creation_date,
+            created_by,
+            last_update_date,
+            last_updated_by,
+            object_version_number,
+            tenant_id,
+            manage_tag_group_id,
+            site_id,
+            equipment_id,
+            equipment_category,
+            tag_group_id,
+            business_id,
+            operation_id,
+            service_life,
+            manage_type,
+            STATUS,
+            enable_flag,
+            cid,
+            attribute1,
+            attribute2,
+            attribute3,
+            attribute4,
+            attribute5,
+            attribute6,
+            attribute7,
+            attribute8,
+            attribute9,
+            attribute10
+        FROM
+            hme_eq_manage_tag_group
+        WHERE
+            tenant_id = #{tenantId}
+        <if test="tagGroup.equipmentCategory == null">
+            AND (equipment_category is null or equipment_category = '')
+        </if>
+        <if test="tagGroup.equipmentCategory != null">
+            AND equipment_category = #{tagGroup.equipmentCategory}
+        </if>
+        <if test="tagGroup.businessId == null">
+            AND (business_id is null or business_id = '')
+        </if>
+        <if test="tagGroup.businessId != null ">
+            AND business_id = #{tagGroup.businessId}
+        </if>
+        <if test="tagGroup.manageType == null">
+            AND (manage_type is null or manage_type = '')
+        </if>
+        <if test="tagGroup.manageType != null">
+            AND manage_type = #{tagGroup.manageType}
+        </if>
+        <if test="tagGroup.operationId == null">
+            AND (operation_id is null or operation_id = '')
+        </if>
+        <if test="tagGroup.operationId != null">
+            AND operation_id = #{tagGroup.operationId}
+        </if>
+    </select>
+
+    <delete id="deleteTag">
+        DELETE
+        FROM
+            hme_eq_manage_tag
+        WHERE
+            manage_tag_group_id = #{tagGroupId} and  TENANT_ID = #{tenantId} and tag_id = #{tagId}
+	</delete>
+
+    <select id="queryEqManageHead" resultType="com.ruike.hme.domain.entity.HmeEqManageTagGroup">
+        SELECT
+            creation_date,
+            created_by,
+            last_update_date,
+            last_updated_by,
+            object_version_number,
+            tenant_id,
+            manage_tag_group_id,
+            site_id,
+            equipment_id,
+            equipment_category,
+            tag_group_id,
+            business_id,
+            operation_id,
+            service_life,
+            manage_type,
+            STATUS,
+            enable_flag,
+            cid,
+            attribute1,
+            attribute2,
+            attribute3,
+            attribute4,
+            attribute5,
+            attribute6,
+            attribute7,
+            attribute8,
+            attribute9,
+            attribute10
+        FROM
+            hme_eq_manage_tag_group
+        WHERE
+            tenant_id = #{tenantId}
+        AND site_id = #{dto.siteId}
+        <choose>
+            <when test="dto.equipmentCategory != null and dto.equipmentCategory != ''">
+                AND equipment_category = #{dto.equipmentCategory}
+            </when>
+            <otherwise>
+                AND (equipment_category is null or equipment_category = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.businessId != null and dto.businessId != ''">
+                AND business_id = #{dto.businessId}
+            </when>
+            <otherwise>
+                AND (business_id is null or business_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.businessId != null and dto.businessId != ''">
+                AND business_id = #{dto.businessId}
+            </when>
+            <otherwise>
+                AND (business_id is null or business_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.operationId != null and dto.operationId != ''">
+                AND operation_id = #{dto.operationId}
+            </when>
+            <otherwise>
+                AND (operation_id is null or operation_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.tagGroupId != null and dto.tagGroupId != ''">
+                AND tag_group_id = #{dto.tagGroupId}
+            </when>
+            <otherwise>
+                AND (tag_group_id is null or tag_group_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="dto.manageType != null and dto.manageType != ''">
+                AND manage_type = #{dto.manageType}
+            </when>
+            <otherwise>
+                AND (manage_type is null or manage_type = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <update id="batchHeaderUpdate">
+        UPDATE hme_eq_manage_tag_group
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            status =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_group_id" close="end">
+                when #{item.manageTagGroupId} then #{item.status}
+            </foreach>,
+            enable_flag =
+            <foreach collection="dto" item="item" index="index"
+                     separator=" " open="case manage_tag_group_id" close="end">
+                when #{item.manageTagGroupId} then #{item.enableFlag}
+            </foreach>
+        </set>
+        <where>
+            manage_tag_group_id in
+            <foreach collection="dto" item="item"
+                     separator="," open="(" close=")">
+                #{item.manageTagGroupId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="eqManageExport" resultType="com.ruike.hme.domain.vo.HmeEquipmentTagVO2">
+        SELECT
+        emt.tag_group_id,
+        mtg.TAG_GROUP_CODE,
+        mtg.TAG_GROUP_DESCRIPTION,
+        emt.`status`,
+        emt.ENABLE_FLAG,
+        emt.equipment_category,
+        mma.AREA_ID  BUSINESS_ID,
+        mma.DESCRIPTION  BUSINESS_NAME,
+        mo.OPERATION_ID,
+        mo.OPERATION_NAME,
+        emt.manage_type,
+        hem.serial_number,
+        hem.tag_id,
+        mt.TAG_CODE,
+        mt.TAG_DESCRIPTION,
+        hem.value_type,
+        hem.collection_method,
+        hem.manage_cycle,
+        hem.accuracy,
+        hem.minimum_value,
+        hem.standard_value,
+        hem.maximal_value,
+        hem.uom_id,
+        mu.UOM_NAME,
+        hem.true_value,
+        hem.false_value,
+        hem.remark,
+        hem.ENABLE_FLAG LINE_ENABLE_FLAG
+        FROM
+        hme_eq_manage_tag_group emt
+        LEFT JOIN mt_tag_group mtg ON emt.tag_group_id = mtg.TAG_GROUP_ID
+        LEFT JOIN mt_mod_area mma ON mma.AREA_ID = emt.business_id
+        LEFT JOIN mt_operation mo ON mo.OPERATION_ID = emt.operation_id
+        LEFT JOIN hme_eq_manage_tag hem ON hem.manage_tag_group_id = emt.manage_tag_group_id AND hem.TENANT_ID = emt.TENANT_ID
+        LEFT JOIN mt_tag mt ON mt.TAG_ID = hem.tag_id
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = hem.uom_id
+        WHERE
+            emt.TENANT_ID = #{tenantId}
+        <if test="dto.siteId != null and dto.siteId != ''">
+            and emt.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.equipmentCategory != null and dto.equipmentCategory != ''">
+            and emt.equipment_category = #{dto.equipmentCategory}
+        </if>
+        <if test="dto.equipmentId != null and dto.equipmentId != ''">
+            and emt.equipment_id = #{dto.equipmentId}
+        </if>
+        <if test="dto.tagGroupId != null and dto.tagGroupId != ''">
+            and emt.tag_group_id = #{dto.tagGroupId}
+        </if>
+        <if test="dto.status != null and dto.status != ''">
+            and emt.status = #{dto.status}
+        </if>
+        <if test="dto.enableFlag != null and dto.enableFlag != ''">
+            and emt.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.manageType != null and dto.manageType != ''">
+            and emt.manage_type = #{dto.manageType}
+        </if>
+        <if test="dto.businessId != null and dto.businessId != ''">
+            and emt.business_id = #{dto.businessId}
+        </if>
+        <if test="dto.operationId != null and dto.operationId != ''">
+            and emt.operation_id = #{dto.operationId}
+        </if>
+        ORDER BY emt.manage_tag_group_id ASC, hem.serial_number ASC
+    </select>
+</mapper>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeNcRecordAttrMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeNcRecordAttr">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ATTR_ID" property="attrId" jdbcType="VARCHAR"/>
+        <result column="PARENT_RECORD_ID" property="parentRecordId" jdbcType="VARCHAR"/>
+        <result column="RECORD_ID" property="recordId" jdbcType="VARCHAR"/>
+        <result column="PROCESS_METHOD" property="processMethod" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <update id="myBatchUpdate">
+        UPDATE hme_nc_record_attr
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            process_method =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.processMethod}
+            </foreach>,
+            attribute1 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute1}
+            </foreach>,
+            attribute2 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute2}
+            </foreach>,
+            attribute3 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute3}
+            </foreach>,
+            attribute4 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute4}
+            </foreach>,
+            attribute5 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute5}
+            </foreach>,
+            attribute6 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute6}
+            </foreach>,
+            attribute7 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute7}
+            </foreach>,
+            attribute8 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute8}
+            </foreach>,
+            attribute9 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute9}
+            </foreach>,
+            attribute10 =
+            <foreach collection="hmeNcRecordAttrList" item="item" index="index"
+                     separator=" " open="case attr_Id" close="end">
+                when #{item.attrId} then #{item.attribute10}
+            </foreach>
+        </set>
+        <where>
+            attr_Id in
+            <foreach collection="hmeNcRecordAttrList" item="item"
+                     separator="," open="(" close=")">
+                #{item.attrId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterLinkMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterLink">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_LINK_ID" property="routerLinkId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtRouterLinkDTO">
+        <result column="ROUTER_LINK_ID" property="routerLinkId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_TYPE" property="routerType" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STATUS" property="routerStatus" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="BOM_NAME" property="bomName" jdbcType="VARCHAR"/>
+    </resultMap>
+    <resultMap id="DtoResultMap2" type="tarzan.method.api.dto.MtRouterLinkDTO2">
+        <result column="ROUTER_ID" property="routerId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR"/>
+        <result column="ROUTER_TYPE" property="routerType" jdbcType="VARCHAR"/>
+        <result column="REVISION" property="revision" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="CURRENT_FLAG" property="currentFlag" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STATUS" property="routerStatus" jdbcType="VARCHAR"/>
+        <result column="ORIGINAL_STATUS" property="originalStatus" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="TEMPORARY_ROUTER_FLAG" property="temporaryRouterFlag" jdbcType="VARCHAR"/>
+        <result column="RELAXED_FLOW_FLAG" property="relaxedFlowFlag" jdbcType="VARCHAR"/>
+        <result column="HAS_BEEN_RELEASED_FLAG" property="hasBeenReleasedFlag" jdbcType="VARCHAR"/>
+        <result column="COPIED_FROM_ROUTER_ID" property="copiedFromRouterId" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_ID" property="dispositionGroupId" jdbcType="VARCHAR"/>
+        <result column="AUTO_REVISION_FLAG" property="autoRevisionFlag" jdbcType="VARCHAR"/>
+        <result column="HOLD_ID" property="holdId" jdbcType="VARCHAR"/>
+        <result column="routerTypeDesc" property="routerTypeDesc" jdbcType="VARCHAR"/>
+        <result column="bomCode" property="bomCode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRouterLinkByIds" resultMap="BaseResultMap">
+        select * from mt_router_link
+        where TENANT_ID = ${tenantId}
+        AND ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="queryRouterLinkForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mrl.ROUTER_LINK_ID,
+        mrl.ROUTER_STEP_ID,
+        mr.ROUTER_ID,
+        mr.ROUTER_NAME,
+        mr.ROUTER_TYPE,
+        mr.REVISION,
+        mrt.DESCRIPTION,
+        mr.CURRENT_FLAG,
+        mr.ROUTER_STATUS,
+        mr.DATE_FROM,
+        mr.DATE_TO,
+        mr.BOM_ID,
+        mb.BOM_NAME
+        from mt_router_link mrl
+        join mt_router mr on mrl.ROUTER_ID = mr.ROUTER_ID and mr.TENANT_ID = ${tenantId}
+        join mt_router_tl mrt on mrt.ROUTER_ID = mr.ROUTER_ID and mrt.LANG = #{locale}
+        left join mt_bom mb on mr.BOM_ID = mb.BOM_ID and mb.TENANT_ID = ${tenantId}
+        where mrl.TENANT_ID = ${tenantId}
+        and mrl.ROUTER_STEP_ID in
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        order by mrl.CREATION_DATE DESC
+    </select>
+    <select id="queryRouterLinkDetailForUi" resultMap="DtoResultMap2">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.ROUTER_ID,
+        b.ROUTER_NAME,
+        b.ROUTER_TYPE,
+        b.REVISION,
+        t.DESCRIPTION,
+        b.CURRENT_FLAG,
+        b.ROUTER_STATUS,
+        b.ORIGINAL_STATUS,
+        b.DATE_FROM,
+        b.DATE_TO,
+        b.BOM_ID,
+        b.TEMPORARY_ROUTER_FLAG,
+        b.RELAXED_FLOW_FLAG,
+        b.HAS_BEEN_RELEASED_FLAG,
+        b.COPIED_FROM_ROUTER_ID,
+        b.DISPOSITION_GROUP_ID,
+        b.AUTO_REVISION_FLAG,
+        b.HOLD_ID,
+        bom.BOM_NAME bomCode,
+        type_t.DESCRIPTION routerTypeDesc
+        FROM
+        mt_router b
+        INNER JOIN mt_router_tl t ON b.ROUTER_ID = t.ROUTER_ID
+        AND t.LANG =#{locale}
+        LEFT JOIN mt_gen_type type on type.TYPE_CODE=b.ROUTER_TYPE
+        and type.TYPE_GROUP='ROUTER_TYPE'
+        LEFT JOIN mt_gen_type_tl type_t on type_t.GEN_TYPE_ID=type.GEN_TYPE_ID
+        AND type_t.LANG =#{locale}
+        LEFT JOIN mt_bom bom on bom.BOM_ID=b.BOM_ID
+        where 1=1
+        <if test="routerId!=null">
+            and b.ROUTER_ID =#{routerId}
+        </if>
+    </select>
+</mapper>

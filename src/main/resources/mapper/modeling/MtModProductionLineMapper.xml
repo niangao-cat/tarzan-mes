@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModProductionLineMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModProductionLine">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_CODE" property="prodLineCode" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_NAME" property="prodLineName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_TYPE" property="prodLineType" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_CATEGORY" property="prodLineCategory" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap2" type="tarzan.modeling.domain.vo.MtModProductionLineVO2">
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_CODE" property="prodLineCode" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_NAME" property="prodLineName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_TYPE" property="prodLineType" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_CATEGORY" property="prodLineCategory" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_SCHEDULE_ID" property="prodLineScheduleId" jdbcType="VARCHAR"/>
+        <result column="RATE_TYPE" property="rateType" jdbcType="VARCHAR"/>
+        <result column="RATE" property="rate" jdbcType="DECIMAL"/>
+        <result column="ACTIVITY" property="activity" jdbcType="DECIMAL"/>
+        <result column="DEMAND_TIME_FENCE" property="demandTimeFence" jdbcType="DECIMAL"/>
+        <result column="FIX_TIME_FENCE" property="fixTimeFence" jdbcType="DECIMAL"/>
+        <result column="FROZEN_TIME_FENCE" property="frozenTimeFence" jdbcType="DECIMAL"/>
+        <result column="FORWARD_PLANNING_TIME_FENCE" property="forwardPlanningTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="ORDER_TIME_FENCE" property="orderTimeFence" jdbcType="DECIMAL"/>
+        <result column="PROD_LINE_MANUFACTURING_ID" property="prodLineManufacturingId" jdbcType="VARCHAR"/>
+        <result column="ISSUED_LOCATOR_ID" property="issuedLocatorId" jdbcType="VARCHAR"/>
+        <result column="COMPLETION_LOCATOR_ID" property="completionLocatorId" jdbcType="VARCHAR"/>
+        <result column="INVENTORY_LOCATOR_ID" property="inventoryLocatorId" jdbcType="VARCHAR"/>
+        <result column="DISPATCH_METHOD" property="dispatchMethod" jdbcType="VARCHAR"/>
+
+        <result column="issuedLocatorCode" property="issuedLocatorCode" jdbcType="VARCHAR"/>
+        <result column="completionLocatorCode" property="completionLocatorCode" jdbcType="VARCHAR"/>
+        <result column="inventoryLocatorCode" property="inventoryLocatorCode" jdbcType="VARCHAR"/>
+        <result column="issuedLocatorName" property="issuedLocatorName" jdbcType="VARCHAR"/>
+        <result column="completionLocatorName" property="completionLocatorName" jdbcType="VARCHAR"/>
+        <result column="inventoryLocatorName" property="inventoryLocatorName" jdbcType="VARCHAR"/>
+        <result column="supplierName" property="supplierName" jdbcType="VARCHAR"/>
+        <result column="supplierCode" property="supplierCode" jdbcType="VARCHAR"/>
+        <result column="supplierSiteCode" property="supplierSiteCode" jdbcType="VARCHAR"/>
+        <result column="supplierSiteName" property="supplierSiteName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectProdLineById" resultMap="BaseResultMap2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        b.PROD_LINE_ID,
+        b.PROD_LINE_CODE,
+        b.PROD_LINE_TYPE,
+        tl0.PROD_LINE_NAME,
+        tl0.DESCRIPTION,
+        b.SUPPLIER_ID,
+        b.SUPPLIER_SITE_ID,
+        b.ENABLE_FLAG,
+        b.PROD_LINE_CATEGORY,
+        s.PROD_LINE_SCHEDULE_ID,
+        s.RATE_TYPE,
+        s.RATE,
+        s.ACTIVITY,
+        s.DEMAND_TIME_FENCE,
+        s.FIX_TIME_FENCE,
+        s.FROZEN_TIME_FENCE,
+        s.FORWARD_PLANNING_TIME_FENCE,
+        s.RELEASE_TIME_FENCE,
+        s.ORDER_TIME_FENCE,
+        l.PROD_LINE_MANUFACTURING_ID,
+        l.ISSUED_LOCATOR_ID,
+        l.COMPLETION_LOCATOR_ID,
+        l.INVENTORY_LOCATOR_ID,
+        l1.LOCATOR_CODE issuedLocatorCode,
+        tl4.LOCATOR_NAME issuedLocatorName,
+        l2.LOCATOR_CODE completionLocatorCode,
+        tl5.LOCATOR_NAME completionLocatorName,
+        l3.LOCATOR_CODE inventoryLocatorCode,
+        tl6.LOCATOR_NAME inventoryLocatorName,
+        sp.SUPPLIER_CODE SupplierCode,
+        tl7.SUPPLIER_NAME SupplierName,
+        l.DISPATCH_METHOD,
+        sb.SUPPLIER_SITE_CODE SupplierSiteCode
+        FROM
+        mt_mod_production_line b INNER JOIN mt_mod_production_line_TL tl0 ON tl0.PROD_LINE_ID = b.PROD_LINE_ID AND
+        tl0.LANG = #{lang}
+        LEFT JOIN mt_mod_prod_line_schedule s ON s.PROD_LINE_ID = b.PROD_LINE_ID and s.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_mod_prod_line_manufacturing l ON l.PROD_LINE_ID = b.PROD_LINE_ID and l.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_mod_locator l1 ON l1.LOCATOR_ID = l.ISSUED_LOCATOR_ID
+        LEFT JOIN mt_mod_locator_tl tl4 ON tl4.LOCATOR_ID = l.ISSUED_LOCATOR_ID
+        AND tl4.LANG = #{lang}
+        LEFT JOIN mt_mod_locator l2 ON l2.LOCATOR_ID = l.COMPLETION_LOCATOR_ID and l2.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_mod_locator_tl tl5 ON tl5.LOCATOR_ID = l.COMPLETION_LOCATOR_ID
+        AND tl5.LANG =#{lang}
+        LEFT JOIN mt_mod_locator l3 ON l3.LOCATOR_ID = l.INVENTORY_LOCATOR_ID  and l3.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_mod_locator_tl tl6 ON tl6.LOCATOR_ID = l.INVENTORY_LOCATOR_ID
+        AND tl6.LANG = #{lang}
+        LEFT JOIN mt_supplier sp ON sp.SUPPLIER_ID = b.SUPPLIER_ID and sp.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_supplier_tl tl7 ON tl7.SUPPLIER_ID = sp.SUPPLIER_ID
+        AND tl7.LANG = #{lang}
+        LEFT JOIN mt_supplier_site sb ON sb.SUPPLIER_SITE_ID = b.SUPPLIER_SITE_ID and sb.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_supplier_site_tl tl8 ON tl8.SUPPLIER_SITE_ID = sb.SUPPLIER_SITE_ID
+        AND tl8.LANG = #{lang}
+        WHERE
+        b.TENANT_ID = #{tenantId}
+        <if test="prodLineId!=null">
+            and b.PROD_LINE_ID =#{prodLineId}
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+        t1.TENANT_ID,
+        t1.PROD_LINE_ID,
+        t1.PROD_LINE_CODE,
+        t2.PROD_LINE_NAME,
+        t2.DESCRIPTION,
+        t1.PROD_LINE_TYPE,
+        t1.SUPPLIER_ID,
+        t1.SUPPLIER_SITE_ID,
+        t1.ENABLE_FLAG,
+        t1.PROD_LINE_CATEGORY,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_mod_production_line t1 inner join mt_mod_production_line_tl t2 on (t1.PROD_LINE_ID=t2.PROD_LINE_ID and
+        t2.LANG=#{lang})
+        where t1.TENANT_ID = #{tenantId}
+        and t1.PROD_LINE_ID IN
+        <foreach collection="prodLineIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+        t1.TENANT_ID,
+        t1.PROD_LINE_ID,
+        t1.PROD_LINE_CODE,
+        t2.PROD_LINE_NAME,
+        t2.DESCRIPTION,
+        t1.PROD_LINE_TYPE,
+        t1.SUPPLIER_ID,
+        t1.SUPPLIER_SITE_ID,
+        t1.ENABLE_FLAG,
+        t1.PROD_LINE_CATEGORY
+        from mt_mod_production_line t1 inner join mt_mod_production_line_tl t2 on (t1.PROD_LINE_ID=t2.PROD_LINE_ID and t2.LANG=#{lang})
+        where t1.TENANT_ID = #{tenantId}
+        <if test="dto.prodLineId!=null">
+            and t1.PROD_LINE_ID=#{dto.prodLineId}
+        </if>
+        <if test="dto.prodLineCode!=null">
+            and t1.PROD_LINE_CODE = #{dto.prodLineCode}
+        </if>
+        <if test="dto.prodLineName!=null">
+            and t2.PROD_LINE_NAME like concat('%', concat(#{dto.prodLineName},'%')
+        </if>
+        <if test="dto.description!=null">
+            and t2.DESCRIPTION like concat('%', concat(#{dto.description},'%')
+        </if>
+        <if test="dto.enableFlag!=null">
+            and t1.ENABLE_FLAG=#{dto.enableFlag}
+        </if>
+        <if test="dto.prodLineType!=null">
+            and t1.PROD_LINE_TYPE=#{dto.prodLineType}
+        </if>
+        <if test="dto.supplierId!=null">
+            and t1.SUPPLIER_ID=#{dto.supplierId}
+        </if>
+        <if test="dto.supplierSiteId!=null">
+            and t1.SUPPLIER_SITE_ID=#{dto.supplierSiteId}
+        </if>
+        <if test="dto.prodLineCategory!=null">
+            and t1.PROD_LINE_CATEGORY=#{dto.prodLineCategory}
+        </if>
+    </select>
+
+    <select id="selectByCodesCustom" resultMap="BaseResultMap" fetchSize="5000">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        t1.TENANT_ID,
+        t1.PROD_LINE_ID,
+        t1.PROD_LINE_CODE,
+        t2.PROD_LINE_NAME,
+        t2.DESCRIPTION,
+        t1.PROD_LINE_TYPE,
+        t1.SUPPLIER_ID,
+        t1.SUPPLIER_SITE_ID,
+        t1.ENABLE_FLAG,
+        t1.PROD_LINE_CATEGORY,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_mod_production_line t1 inner join mt_mod_production_line_tl t2 on (t1.PROD_LINE_ID=t2.PROD_LINE_ID and
+        t2.LANG=#{lang})
+        where t1.TENANT_ID = #{tenantId}
+        and ${prodLineCodes}
+    </select>
+</mapper>

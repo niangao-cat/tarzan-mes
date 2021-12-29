@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsPrepareExecuteMapper">
+
+    <select id="selectDistDocByNum" resultType="com.ruike.wms.domain.vo.WmsPrepareExecInsDocVO">
+        select mid.instruction_doc_num
+             , mid.instruction_doc_id
+             , mida_pl.attr_value     prod_line_code
+             , mid.instruction_doc_status
+             , mid.demand_time
+             , mid.remark
+             , mid.tenant_id
+             , mida_to_loc.attr_value to_locator_id
+             , loc.locator_code       to_locator_code
+             , mida_wkc.attr_value    workcell_code
+        from mt_instruction_doc mid
+                 left join mt_instruction_doc_attr mida_pl on mida_pl.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID and
+                                                              mida_pl.attr_name = 'PROD_LINE_CODE'
+                 left join mt_instruction_doc_attr mida_to_loc
+                           on mida_to_loc.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID and
+                              mida_to_loc.attr_name = 'TO_LOCATOR_ID'
+                 left join mt_instruction_doc_attr mida_wkc on mida_wkc.INSTRUCTION_DOC_ID = mid.INSTRUCTION_DOC_ID and
+                                                               mida_wkc.attr_name = 'WORKCELL'
+                 left join mt_mod_locator loc on mida_to_loc.attr_value = loc.LOCATOR_ID
+        where mid.INSTRUCTION_DOC_TYPE = 'DISTRIBUTION_DOC'
+          and mid.TENANT_ID = #{tenantId}
+          and mid.INSTRUCTION_DOC_NUM = #{instructionDocNum}
+    </select>
+
+    <select id="selectInsListByDocId" resultType="com.ruike.wms.domain.vo.WmsPrepareExecInsVO">
+        select mi.instruction_id
+             , mi.material_id
+             , mm.material_code
+             , mm.material_name
+             , mia_ver.attr_value                             material_version
+             , mi.instruction_status
+             , mi.quantity                                    instruction_qty
+             , sum(ifnull(mia.actual_qty, 0))                 actual_qty
+             , (select count(*)
+                from mt_instruction_actual_detail miad
+                   , mt_instruction_actual act
+                where miad.actual_id = act.actual_id
+                  and mi.instruction_id = act.instruction_id) material_lot_count
+             , mi.uom_id
+             , uom.uom_code
+             , mia_so.attr_value                              so_num
+             , mia_so_line.attr_value                         so_line_num
+             , mi.tenant_id
+             , mi.site_id
+        from mt_instruction mi
+                 JOIN mt_material mm on mi.material_id = mm.material_id
+                 join mt_uom uom on mi.uom_id = uom.uom_id
+                 left join mt_instruction_attr mia_ver on mia_ver.INSTRUCTION_ID = mi.INSTRUCTION_ID and
+                                                          mia_ver.attr_name = 'MATERIAL_VERSION'
+                 left join mt_instruction_attr mia_so on mia_so.INSTRUCTION_ID = mi.INSTRUCTION_ID and
+                                                         mia_so.attr_name = 'SO_NUM'
+                 left join mt_instruction_attr mia_so_line on mia_so_line.INSTRUCTION_ID = mi.INSTRUCTION_ID and
+                                                              mia_so_line.attr_name = 'SO_LINE_NUM'
+                 LEFT JOIN mt_instruction_actual mia on mia.INSTRUCTION_ID = mi.INSTRUCTION_ID
+        where mi.INSTRUCTION_STATUS != 'SIGN_COMPLETE'
+          and mi.SOURCE_DOC_ID = #{instructionDocId}
+          and mi.tenant_id = #{tenantId}
+        GROUP BY mi.INSTRUCTION_ID
+               , mi.MATERIAL_ID
+               , mm.MATERIAL_CODE
+               , mm.MATERIAL_NAME
+               , mia_ver.ATTR_VALUE
+               , mi.INSTRUCTION_STATUS
+               , mi.QUANTITY
+               , mi.UOM_ID
+               , uom.UOM_CODE
+               , mia_so.ATTR_VALUE
+               , mia_so_line.ATTR_VALUE
+    </select>
+
+    <select id="selectDistLocatorBySiteId" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        select loc.LOCATOR_ID
+             , loc.LOCATOR_CODE
+        from mt_material_lot mml
+                 LEFT join mt_material_lot_attr mml_stauts on mml.MATERIAL_LOT_ID = mml_stauts.MATERIAL_LOT_ID
+            and mml_stauts.ATTR_NAME = 'STATUS'
+                 LEFT join mt_material_lot_attr mml_mf on mml.MATERIAL_LOT_ID = mml_mf.MATERIAL_LOT_ID
+            and mml_mf.ATTR_NAME = 'MF_FLAG'
+                 LEFT join mt_material_lot_attr mml_ver on mml.MATERIAL_LOT_ID = mml_ver.MATERIAL_LOT_ID
+            and mml_ver.ATTR_NAME = 'MATERIAL_VERSION'
+                 LEFT join mt_material_lot_attr mml_so on mml.MATERIAL_LOT_ID = mml_so.MATERIAL_LOT_ID
+            and mml_so.ATTR_NAME = 'SO_NUM'
+                 LEFT join mt_material_lot_attr mml_soline on mml.MATERIAL_LOT_ID = mml_soline.MATERIAL_LOT_ID
+            and mml_soline.ATTR_NAME = 'SO_LINE_NUM'
+                 join mt_mod_locator loc on mml.LOCATOR_ID = loc.LOCATOR_ID
+                 join mt_mod_locator wh on loc.PARENT_LOCATOR_ID = wh.LOCATOR_ID and NOT (wh.LOCATOR_TYPE = '14' and
+                                                                                          wh.LOCATOR_CATEGORY = 'AREA')
+        where mml.ENABLE_FLAG = 'Y'
+          and mml.QUALITY_STATUS = 'OK'
+          and mml_stauts.ATTR_VALUE = 'INSTOCK'
+          and ifnull(mml_mf.ATTR_VALUE, 'N') != 'Y'
+          and ifnull(mml_ver.ATTR_VALUE, '') = ifnull(#{materialVersion}, '')
+          and ifnull(mml_so.ATTR_VALUE, '') = ifnull(#{soNum}, '')
+          and ifnull(mml_soline.ATTR_VALUE, '') = ifnull(#{soLineNum}, '')
+          and mml.MATERIAL_ID = #{materialId}
+          and mml.site_id = #{siteId}
+        order by mml.lot
+        limit 1
+    </select>
+
+    <select id="selectLocatorOnWarehouse" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        select wh.LOCATOR_CODE
+             , wh.LOCATOR_ID
+        from mt_mod_locator loc
+           , mt_mod_locator wh
+        where loc.PARENT_LOCATOR_ID = wh.LOCATOR_ID
+          and wh.LOCATOR_CATEGORY = 'AREA'
+          and wh.LOCATOR_TYPE = '14'
+          and loc.TENANT_ID = #{tenantId}
+          and loc.LOCATOR_ID = #{locatorId}
+    </select>
+
+    <select id="selectActualDetailByInstId" resultType="com.ruike.wms.domain.vo.WmsInstructionActualDetailVO">
+        select mia.instruction_id
+             , mia.actual_id
+             , miad.actual_detail_id
+             , miad.material_lot_id
+             , mml.material_lot_code
+             , mml.lot
+             , mml.material_id
+             , mm.material_code
+             , mm.material_name
+             , mml_ver.attr_value    material_version
+             , mml.primary_uom_id
+             , uom.uom_code          primary_uom_code
+             , mml.primary_uom_qty
+             , mml.quality_status
+             , mml_status.attr_value material_lot_status
+             , ins.instruction_status
+             , miad.container_id
+             , mc.container_code
+             , mia_so.attr_value     so_num
+             , mia_so.attr_value     so_line_num
+             , mml.locator_id
+             , loc.locator_code
+        from mt_instruction_actual mia
+           , mt_instruction ins
+                 left join mt_instruction_attr mia_so on mia_so.INSTRUCTION_ID = ins.INSTRUCTION_ID and
+                                                         mia_so.attr_name = 'SO_NUM'
+                 left join mt_instruction_attr mia_so_line on mia_so_line.INSTRUCTION_ID = ins.INSTRUCTION_ID and
+                                                              mia_so_line.attr_name = 'SO_LINE_NUM'
+           , mt_instruction_actual_detail miad
+                 left join mt_container mc on miad.CONTAINER_ID = mc.CONTAINER_ID
+           , mt_material_lot mml
+                 inner join mt_mod_locator loc on loc.LOCATOR_ID = mml.LOCATOR_ID
+                 left join mt_material_lot_attr mml_status on mml.material_lot_id = mml_status.material_lot_id and
+                                                              mml_status.attr_name = 'STATUS'
+                 left join mt_material_lot_attr mml_ver on mml.material_lot_id = mml_ver.material_lot_id and
+                                                           mml_ver.attr_name = 'MATERIAL_VERSION'
+           , mt_material mm
+           , mt_uom uom
+        where mia.ACTUAL_ID = miad.ACTUAL_ID
+          and mia.INSTRUCTION_ID = ins.INSTRUCTION_ID
+          and miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+          and mml.MATERIAL_ID = mm.MATERIAL_ID
+          and mml.PRIMARY_UOM_ID = uom.UOM_ID
+          and mia.TENANT_ID = #{tenantId}
+          and mia.INSTRUCTION_ID = #{instructionId}
+    </select>
+
+    <select id="selectActualDetailByDocId" resultType="com.ruike.wms.domain.vo.WmsInstructionActualDetailVO">
+        select mia.instruction_id
+             , mia.actual_id
+             , miad.actual_detail_id
+             , miad.material_lot_id
+             , mml.material_lot_code
+             , mml.lot
+             , mml.material_id
+             , mm.material_code
+             , mm.material_name
+             , mml_ver.attr_value    material_version
+             , mml.primary_uom_id
+             , uom.uom_code          primary_uom_code
+             , mml.primary_uom_qty
+             , mml.quality_status
+             , mml_status.attr_value material_lot_status
+             , ins.instruction_status
+             , doca.attr_value       workcell_code
+             , miad.container_id
+             , mc.container_code
+             , mml.locator_id
+             , loc.locator_code
+        from mt_instruction_actual mia
+           , mt_instruction ins
+                 left join mt_instruction_doc_attr doca
+                           on ins.SOURCE_DOC_ID = doca.instruction_doc_id and doca.ATTR_NAME = 'WORKCELL'
+           , mt_instruction_actual_detail miad
+                 left join mt_container mc on miad.CONTAINER_ID = mc.CONTAINER_ID
+           , mt_material_lot mml
+                 inner join mt_mod_locator loc on loc.LOCATOR_ID = mml.LOCATOR_ID
+                 left join mt_material_lot_attr mml_status on mml.material_lot_id = mml_status.material_lot_id and
+                                                              mml_status.attr_name = 'STATUS'
+                 left join mt_material_lot_attr mml_ver on mml.material_lot_id = mml_ver.material_lot_id and
+                                                           mml_ver.attr_name = 'MATERIAL_VERSION'
+           , mt_material mm
+           , mt_uom uom
+        where mia.ACTUAL_ID = miad.ACTUAL_ID
+          and mia.INSTRUCTION_ID = ins.INSTRUCTION_ID
+          and miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+          and mml.MATERIAL_ID = mm.MATERIAL_ID
+          and mml.PRIMARY_UOM_ID = uom.UOM_ID
+          and mia.TENANT_ID = #{tenantId}
+          and ins.source_DOC_ID = #{instructionDocId}
+    </select>
+
+    <select id="selectLocatorByBarcode" resultType="com.ruike.wms.domain.vo.WmsLocatorSiteVO">
+        select tar_loc.LOCATOR_ID
+             , tar_loc.LOCATOR_CODE
+             , tar_loc.PARENT_LOCATOR_ID warehouse_id
+             , wh.LOCATOR_CODE           warehouse_code
+             , (select mor.TOP_SITE_ID
+                from mt_mod_locator_org_rel mlor
+                   , mt_mod_locator loc_p
+                   , mt_mod_organization_rel mor
+                where mlor.LOCATOR_ID = loc_p.parent_LOCATOR_ID
+                  and mlor.ORGANIZATION_ID = mor.ORGANIZATION_ID
+                  and mor.PARENT_ORGANIZATION_TYPE = 'SITE'
+                  and loc_p.LOCATOR_ID = tar_loc.LOCATOR_ID
+                limit 1)                 site_id
+        from mt_mod_locator loc,
+             mt_mod_locator tar_loc,
+             mt_mod_locator wh,
+             mt_material_lot mml
+        where loc.PARENT_LOCATOR_ID = tar_loc.PARENT_LOCATOR_ID
+          and tar_loc.PARENT_LOCATOR_ID = wh.LOCATOR_ID
+          and tar_loc.LOCATOR_TYPE = '5'
+          and tar_loc.LOCATOR_CATEGORY = 'INVENTORY'
+          and loc.LOCATOR_ID = mml.LOCATOR_ID
+          and mml.material_lot_id = #{loadTypeId}
+          and loc.tenant_id = #{tenantId}
+          and #{loadTypeCode} = 'MATERIAL_LOT'
+        UNION ALL
+        select tar_loc.LOCATOR_ID
+             , tar_loc.LOCATOR_CODE
+             , tar_loc.PARENT_LOCATOR_ID warehouse_id
+             , wh.LOCATOR_CODE           warehouse_code
+             , (select mor.TOP_SITE_ID
+                from mt_mod_locator_org_rel mlor
+                   , mt_mod_locator loc_p
+                   , mt_mod_organization_rel mor
+                where mlor.LOCATOR_ID = loc_p.parent_LOCATOR_ID
+                  and mlor.ORGANIZATION_ID = mor.ORGANIZATION_ID
+                  and mor.PARENT_ORGANIZATION_TYPE = 'SITE'
+                  and loc_p.LOCATOR_ID = tar_loc.LOCATOR_ID
+                limit 1)                 site_id
+        from mt_mod_locator loc,
+             mt_mod_locator tar_loc,
+             mt_mod_locator wh,
+             mt_container mc
+        where loc.PARENT_LOCATOR_ID = tar_loc.PARENT_LOCATOR_ID
+          and tar_loc.PARENT_LOCATOR_ID = wh.LOCATOR_ID
+          and tar_loc.LOCATOR_TYPE = '5'
+          and tar_loc.LOCATOR_CATEGORY = 'INVENTORY'
+          and loc.LOCATOR_ID = mc.LOCATOR_ID
+          and mc.container_id = #{loadTypeId}
+          and loc.tenant_id = #{tenantId}
+          and #{loadTypeCode} = 'CONTAINER'
+        limit 1
+    </select>
+
+    <select id="selectLocatorById" resultType="com.ruike.wms.domain.vo.WmsLocatorSiteVO">
+        select loc.LOCATOR_ID
+             , loc.LOCATOR_CODE
+             , loc.PARENT_LOCATOR_ID warehouse_id
+             , wh.LOCATOR_CODE       warehouse_code
+             , (select mor.TOP_SITE_ID
+                from mt_mod_locator_org_rel mlor
+                   , mt_mod_organization_rel mor
+                where mlor.ORGANIZATION_ID = mor.ORGANIZATION_ID
+                  and mor.PARENT_ORGANIZATION_TYPE = 'SITE'
+                  and mlor.LOCATOR_ID = loc.LOCATOR_ID
+                limit 1)             site_id
+        from mt_mod_locator loc,
+             mt_mod_locator wh
+        where loc.PARENT_LOCATOR_ID = wh.LOCATOR_ID
+          and loc.LOCATOR_ID = #{locatorId}
+          and loc.TENANT_ID = #{tenantId}
+    </select>
+
+</mapper>

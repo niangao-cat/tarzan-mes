@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfFirstProcessIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <select id="getUserIdByLoginName" resultType="java.lang.Long">
+        select iu.id
+        from hzero_platform.iam_user iu
+        where iu.login_name = #{loginName}
+    </select>
+
+    <delete id="batchDeleteEquipmentWkcRel">
+        delete from hme_equipment_wkc_rel where EQUIPMENT_WKC_REL_ID in
+        <foreach collection="equipmentWkcRelIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="alreadyEquipmentWkcRelQuery" resultType="com.ruike.itf.domain.vo.ItfFirstProcessIfaceVO2">
+        select he.ASSET_ENCODING, mmw.workcell_code
+        from hme_equipment_wkc_rel hewr,
+        mt_mod_workcell mmw,
+        hme_equipment he
+        where hewr.equipment_id in
+        <foreach collection="equipmentIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hewr.tenant_id = #{tenantId}
+        and mmw.workcell_id = hewr.station_id
+        and he.equipment_id = hewr.equipment_id
+        limit 1
+    </select>
+</mapper>

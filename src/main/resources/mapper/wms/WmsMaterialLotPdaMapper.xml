@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialLotPdaMapper">
+
+    <select id="selectBarCodeCondition" resultType="com.ruike.wms.api.dto.WmsMaterialLotDTO3">
+        SELECT
+          mt.MATERIAL_LOT_ID,
+          mt.MATERIAL_LOT_CODE,
+          sit.SITE_CODE factory_code,
+          sit.SITE_NAME factory_name,
+          wh.LOCATOR_CODE ware_house,
+          wh.LOCATOR_NAME ware_house_name,
+          loc.LOCATOR_CODE,
+          loc.LOCATOR_NAME,
+          m.MATERIAL_CODE,
+          m.MATERIAL_NAME,
+          round( mt.PRIMARY_UOM_QTY, 2 ) PRIMARY_UOM_QTY,
+          uom.UOM_CODE primary_uom_code,
+          mt.QUALITY_STATUS,
+          mt.LOT,
+          sp.SUPPLIER_CODE,
+          sp.SUPPLIER_NAME,
+          mla_pd.ATTR_VALUE PRODUCT_DATE,
+          mla_ed.ATTR_VALUE EFFECTIVE_DATE,
+          mc1.CONTAINER_NAME CURRENT_CONTAINER,
+          mc1.CONTAINER_CODE CURRENT_CONTAINER_CODE,
+          mc2.CONTAINER_NAME TOP_CONTAINER,
+          mc2.CONTAINER_CODE TOP_CONTAINER_CODE
+        FROM
+          mt_material_lot mt
+        LEFT JOIN mt_material m ON mt.MATERIAL_ID = m.MATERIAL_ID
+        LEFT JOIN mt_uom uom ON mt.PRIMARY_UOM_ID = uom.UOM_ID
+        LEFT JOIN mt_mod_site sit ON mt.SITE_ID = sit.SITE_ID
+        LEFT JOIN mt_material_lot_attr mla_pd ON mla_pd.MATERIAL_LOT_ID = mt.MATERIAL_LOT_ID and mla_pd.ATTR_NAME = 'PRODUCT_DATE'
+        LEFT JOIN mt_material_lot_attr mla_ed ON mla_ed.MATERIAL_LOT_ID = mt.MATERIAL_LOT_ID and mla_ed.ATTR_NAME = 'EFFECTIVE_DATE'
+        LEFT JOIN mt_mod_locator loc ON mt.LOCATOR_ID = loc.LOCATOR_ID
+        LEFT JOIN mt_mod_locator wh ON wh.LOCATOR_ID = loc.PARENT_LOCATOR_ID
+        LEFT JOIN mt_supplier sp ON mt.SUPPLIER_ID = sp.SUPPLIER_ID
+        LEFT JOIN mt_container mc1 ON mc1.CONTAINER_ID = mt.CURRENT_CONTAINER_ID
+        LEFT JOIN mt_container mc2 ON mc2.CONTAINER_ID = mt.TOP_CONTAINER_ID
+        WHERE
+        1 =1
+--         and mt.ENABLE_FLAG = 'Y'
+        and mt.TENANT_ID = #{tenantId}
+        <if test="dto.materialLotCode != null">
+            <bind name="materialLotCodeLike" value="dto.materialLotCode+'%'"/>
+            and mt.MATERIAL_LOT_CODE LIKE #{materialLotCodeLike}
+        </if>
+        <if test="dto.materialCode != null">
+            <bind name="materialCodeLike" value="dto.materialCode+'%'"/>
+            and m.MATERIAL_CODE LIKE #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null">
+            <bind name="materialNameLike" value="dto.materialName+'%'"/>
+            and m.MATERIAL_NAME LIKE #{materialNameLike}
+        </if>
+        <if test="dto.locatorCode != null">
+            <bind name="locatorCodeLike" value="dto.locatorCode+'%'"/>
+            and loc.LOCATOR_CODE LIKE #{locatorCodeLike}
+        </if>
+        <if test="dto.locatorName != null">
+            <bind name="locatorNameLike" value="dto.locatorName+'%'"/>
+            and loc.LOCATOR_NAME LIKE #{locatorNameLike}
+        </if>
+        <if test="dto.factoryCode != null">
+            <bind name="factoryCodeLike" value="dto.factoryCode+'%'"/>
+            and sit.SITE_CODE LIKE #{factoryCodeLike}
+        </if>
+        <if test="dto.factoryName != null">
+            <bind name="factoryNameLike" value="dto.factoryName+'%'"/>
+            and sit.SITE_NAME LIKE #{factoryNameLike}
+        </if>
+        <if test="dto.logisticsEquipmentCode != null">
+            <bind name="logisticsEquipmentCodeLike" value="dto.logisticsEquipmentCode+'%'"/>
+            and (mc1.CONTAINER_CODE LIKE #{logisticsEquipmentCodeLike} or mc2.CONTAINER_CODE LIKE #{logisticsEquipmentCodeLike})
+        </if>
+        order by mt.CREATION_DATE desc, mt.MATERIAL_LOT_CODE desc
+    </select>
+</mapper>

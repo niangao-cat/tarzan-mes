@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtPfepScheduleCategoryMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtPfepScheduleCategory">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_SCHEDULE_CATEGORY_ID" property="pfepScheduleCategoryId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_SITE_ID" property="materialCategorySiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="KEY_COMPONENT_FLAG" property="keyComponentFlag" jdbcType="VARCHAR"/>
+        <result column="SCHEDULE_FLAG" property="scheduleFlag" jdbcType="VARCHAR"/>
+        <result column="MAKE_TO_ORDER_FLAG" property="makeToOrderFlag" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_RULE" property="prodLineRule" jdbcType="VARCHAR"/>
+        <result column="PRE_PROCESSING_LEAD_TIME" property="preProcessingLeadTime" jdbcType="DECIMAL"/>
+        <result column="PROCESSING_LEAD_TIME" property="processingLeadTime" jdbcType="DECIMAL"/>
+        <result column="POST_PROCESSING_LEAD_TIME" property="postProcessingLeadTime" jdbcType="DECIMAL"/>
+        <result column="SAFETY_LEAD_TIME" property="safetyLeadTime" jdbcType="DECIMAL"/>
+        <result column="EXCEED_LEAD_TIME" property="exceedLeadTime" jdbcType="DECIMAL"/>
+        <result column="DEMAND_TIME_FENCE" property="demandTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="ORDER_TIME_FENCE" property="orderTimeFence" jdbcType="DECIMAL"/>
+        <result column="DEMAND_MERGE_TIME_FENCE" property="demandMergeTimeFence" jdbcType="DECIMAL"/>
+        <result column="SUPPLY_MERGE_TIME_FENCE" property="supplyMergeTimeFence" jdbcType="DECIMAL"/>
+        <result column="SAFETY_STOCK_METHOD" property="safetyStockMethod" jdbcType="VARCHAR"/>
+        <result column="SAFETY_STOCK_PERIOD" property="safetyStockPeriod" jdbcType="DECIMAL"/>
+        <result column="SAFETY_STOCK_VALUE" property="safetyStockValue" jdbcType="DECIMAL"/>
+        <result column="ECONOMIC_LOT_SIZE" property="economicLotSize" jdbcType="DECIMAL"/>
+        <result column="ECONOMIC_SPLIT_PARAMETER" property="economicSplitParameter" jdbcType="DECIMAL"/>
+        <result column="MIN_ORDER_QTY" property="minOrderQty" jdbcType="DECIMAL"/>
+        <result column="FIXED_LOT_MULTIPLE" property="fixedLotMultiple" jdbcType="DECIMAL"/>
+        <result column="RATE_TYPE" property="rateType" jdbcType="VARCHAR"/>
+        <result column="RATE" property="rate" jdbcType="DECIMAL"/>
+        <result column="ACTIVITY" property="activity" jdbcType="DECIMAL"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="PROCESS_BATCH" property="processBatch" jdbcType="DECIMAL"/>
+        <result column="STANDARD_RATE_TYPE" property="standardRateType" jdbcType="VARCHAR"/>
+        <result column="STANDARD_RATE" property="standardRate" jdbcType="DECIMAL"/>
+        <result column="AUTO_ASSIGN_FLAG" property="autoAssignFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

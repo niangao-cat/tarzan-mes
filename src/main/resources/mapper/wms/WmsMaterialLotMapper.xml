@@ -1,0 +1,1099 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialLotMapper">
+
+    <select id="selectBarCodeCondition" resultType="com.ruike.wms.api.dto.WmsMaterialLotQryResultDTO"
+            parameterType="com.ruike.wms.api.dto.WmsMaterialLotQryDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mt.MATERIAL_LOT_ID,
+        mt.MATERIAL_LOT_CODE,
+        mt.ENABLE_FLAG,
+        mt.QUALITY_STATUS,
+        m.MATERIAL_ID,
+        m.MATERIAL_CODE,
+        m.MATERIAL_NAME,
+        mt.LOT,
+        mt.primary_uom_qty as primary_uom_qty,
+        uom.UOM_CODE primaryUomCode,
+        uom.UOM_NAME primaryUomName,
+        sit.SITE_CODE,
+        sit.SITE_NAME,
+        loc.PARENT_LOCATOR_ID AS WAREHOUSE_ID,
+        wh.LOCATOR_CODE ware_house_code,
+        wh.LOCATOR_NAME ware_house,
+        loc.LOCATOR_CODE,
+        loc.LOCATOR_NAME,
+        loc.LOCATOR_ID,
+        sp.SUPPLIER_CODE,
+        sp.SUPPLIER_NAME,
+        ctn.CONTAINER_CODE containerCode,
+        mt.CREATION_DATE createDate,
+        iam_user.real_name createBy,
+        mt.LAST_UPDATE_DATE,
+        iam_user2.real_name LastUpdateBy,
+        itlot.MATERIAL_LOT_CODE originalCode,
+        mt.IN_LOCATOR_TIME,
+        me.EO_NUM,
+        attr7.ATTR_VALUE AS MF_FLAG,
+        attr6.ATTR_VALUE AS ACTUAL_LOCATOR_CODE,
+        attr.ATTR_VALUE AS `STATUS`,
+        attr2.ATTR_VALUE AS PO_LINE_NUM,
+        attr3.ATTR_VALUE AS `MATERIAL_VERSION`,
+        attr4.ATTR_VALUE AS SO_NUM,
+        attr5.ATTR_VALUE AS SO_LINE_NUM,
+        attr8.ATTR_VALUE AS DELIVERY_NUM,
+        attr9.ATTR_VALUE AS outMaterialLotCode,
+        mt.STOCKTAKE_FLAG,
+        deveryDoc.INSTRUCTION_DOC_NUM AS PO_NUM,
+        attr12.ATTR_VALUE AS SAP_ACCOUNT_FLAG,
+        mt.FREEZE_FLAG,
+        mr.ROUTER_NAME REWORK_ROUTER_NAME,
+        mr.DESCRIPTION REWORK_ROUTER_DESC,
+        mr.REVISION REWORK_ROUTER_VERSION,
+        attr13.ATTR_VALUE REWORK_ROUTER_ID
+        FROM
+        tarzan_mes.mt_material_lot mt
+        LEFT JOIN tarzan_mes.mt_material m ON mt.MATERIAL_ID = m.MATERIAL_ID
+        LEFT JOIN tarzan_mes.mt_uom uom ON mt.PRIMARY_UOM_ID = uom.UOM_ID
+        LEFT JOIN tarzan_mes.mt_mod_site sit ON mt.SITE_ID = sit.SITE_ID
+        LEFT JOIN tarzan_mes.mt_mod_locator loc ON mt.LOCATOR_ID = loc.LOCATOR_ID and mt.TENANT_ID = loc.TENANT_ID
+        LEFT JOIN tarzan_mes.mt_mod_locator wh ON wh.LOCATOR_ID = loc.PARENT_LOCATOR_ID and wh.TENANT_ID = loc.TENANT_ID
+        LEFT JOIN tarzan_mes.mt_supplier sp ON mt.SUPPLIER_ID = sp.SUPPLIER_ID
+        LEFT JOIN tarzan_mes.mt_material_lot_attr ori ON mt.MATERIAL_LOT_ID = ori.MATERIAL_LOT_ID
+        AND ori.ATTR_NAME = 'ORIGINAL_ID'
+        LEFT JOIN tarzan_mes.mt_material_lot itlot ON ori.ATTR_VALUE = itlot.MATERIAL_LOT_ID
+        LEFT JOIN iam_user iam_user ON iam_user.id = mt.CREATED_BY
+        LEFT JOIN iam_user iam_user2 ON iam_user2.id = mt.LAST_UPDATED_BY
+        LEFT JOIN tarzan_mes.mt_eo me ON mt.EO_ID = me.EO_ID
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr ON mt.MATERIAL_LOT_ID = attr.MATERIAL_LOT_ID
+        AND attr.ATTR_NAME = 'STATUS'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr1 ON mt.MATERIAL_LOT_ID = attr1.MATERIAL_LOT_ID
+        AND attr1.ATTR_NAME = 'PO_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr2 ON mt.MATERIAL_LOT_ID = attr2.MATERIAL_LOT_ID
+        AND attr2.ATTR_NAME = 'PO_LINE_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr3 ON mt.MATERIAL_LOT_ID = attr3.MATERIAL_LOT_ID
+        AND attr3.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr4 ON mt.MATERIAL_LOT_ID = attr4.MATERIAL_LOT_ID
+        AND attr4.ATTR_NAME = 'SO_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr5 ON mt.MATERIAL_LOT_ID = attr5.MATERIAL_LOT_ID
+        AND attr5.ATTR_NAME = 'SO_LINE_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr6 ON mt.MATERIAL_LOT_ID = attr6.MATERIAL_LOT_ID
+        AND attr6.ATTR_NAME = 'ACTUAL_LOCATOR'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr7 ON mt.MATERIAL_LOT_ID = attr7.MATERIAL_LOT_ID
+        AND attr7.ATTR_NAME = 'MF_FLAG'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr8 ON mt.MATERIAL_LOT_ID = attr8.MATERIAL_LOT_ID
+        AND attr8.ATTR_NAME = 'DELIVERY_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr9 ON mt.MATERIAL_LOT_ID = attr9.MATERIAL_LOT_ID
+        AND attr9.ATTR_NAME = 'OUTER_BOX'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr10 ON mt.MATERIAL_LOT_ID = attr10.MATERIAL_LOT_ID
+        AND attr10.ATTR_NAME = 'DELIVERY_DOC_ID'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr11 ON mt.MATERIAL_LOT_ID = attr11.MATERIAL_LOT_ID
+        AND attr11.ATTR_NAME = 'DELIVERY_LINE_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr12 ON mt.MATERIAL_LOT_ID = attr12.MATERIAL_LOT_ID
+        AND attr12.ATTR_NAME = 'SAP_ACCOUNT_FLAG'
+        LEFT JOIN mt_material_lot_attr attr13 ON mt.MATERIAL_LOT_ID = attr13.MATERIAL_LOT_ID
+        AND attr13.ATTR_NAME = 'REWORK_ROUTER'
+        LEFT JOIN mt_router mr ON mr.ROUTER_ID = attr13.ATTR_VALUE
+        LEFT JOIN (SELECT DISTINCT wp.delivery_doc_id,wp.delivery_doc_line_id,GROUP_CONCAT(md.INSTRUCTION_DOC_NUM)
+        INSTRUCTION_DOC_NUM
+        FROM mt_instruction_doc md
+        INNER JOIN wms_po_delivery_rel wp ON wp.po_id = md.INSTRUCTION_DOC_ID
+        WHERE wp.delivery_doc_id != ''
+        GROUP BY wp.delivery_doc_id,wp.delivery_doc_line_id) deveryDoc ON deveryDoc.delivery_doc_id = attr10.ATTR_VALUE
+        AND deveryDoc.delivery_doc_line_id IN (SELECT mia.INSTRUCTION_ID FROM mt_instruction_doc mis
+        LEFT JOIN mt_instruction mi ON mi.SOURCE_DOC_ID = mis.INSTRUCTION_DOC_ID AND mi.INSTRUCTION_TYPE =
+        'RECEIVE_FROM_SUPPLIER'
+        LEFT JOIN mt_instruction_attr mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID AND mia.attr_name =
+        'INSTRUCTION_LINE_NUM'
+        WHERE mis.INSTRUCTION_DOC_ID = attr10.ATTR_VALUE
+        and mia.attr_value = attr11.ATTR_VALUE)
+        LEFT JOIN (SELECT icnt.CONTAINER_CODE,icntd.LOAD_OBJECT_ID
+        FROM tarzan_mes.mt_container icnt
+        INNER JOIN tarzan_mes.mt_container_load_detail icntd ON icnt.CONTAINER_ID = icntd.CONTAINER_ID
+        WHERE icntd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT') ctn ON ctn.LOAD_OBJECT_ID = mt.MATERIAL_LOT_ID
+        WHERE mt.tenant_id = #{tenantId}
+        <if test="dto.enableFlag != null and dto.enableFlag.length() != 0">
+            and mt.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode.length() != 0">
+            and mt.MATERIAL_LOT_CODE Like CONCAT(#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.lot != null and dto.lot.length() != 0">
+            and mt.LOT = #{dto.lot}
+        </if>
+        <if test="dto.siteId != null and dto.siteId.length() != 0">
+            and mt.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.createDateFrom != null">
+            and mt.CREATION_DATE &gt;= #{dto.createDateFrom}
+        </if>
+        <if test="dto.createDateTo != null">
+            and mt.CREATION_DATE &lt;= #{dto.createDateTo}
+        </if>
+        <if test="dto.status != null and dto.status.length() != 0">
+            and attr.ATTR_VALUE = #{dto.status}
+        </if>
+        <if test="dto.createBy != null and dto.createBy.length() != 0">
+            and mt.CREATED_BY = #{dto.createBy}
+        </if>
+        <if test="dto.updateBy != null and dto.updateBy.length() != 0">
+            and mt.LAST_UPDATED_BY = #{dto.updateBy}
+        </if>
+        <if test="dto.originalCode != null and dto.originalCode.length() != 0">
+            and itlot.MATERIAL_LOT_CODE = #{dto.originalCode}
+        </if>
+        <if test="dto.poNum != null and dto.poNum.length() != 0">
+            and deveryDoc.INSTRUCTION_DOC_NUM like CONCAT("%",#{dto.poNum},"%")
+        </if>
+        <if test="dto.poLineNum != null and dto.poLineNum.length() != 0">
+            and attr2.ATTR_VALUE = #{dto.poLineNum}
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus.length() != 0">
+            and mt.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+        <if test="dto.containerCode != null and dto.containerCode.length() != 0">
+            and ctn.CONTAINER_CODE = #{dto.containerCode}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode.length() != 0">
+            and m.MATERIAL_CODE Like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.eoNum != null and dto.eoNum.length() != 0">
+            and me.EO_NUM Like CONCAT('%',#{dto.eoNum},'%')
+        </if>
+        <if test="dto.locatorCode != null and dto.locatorCode.length() != 0">
+            and loc.LOCATOR_CODE = #{dto.locatorCode}
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion.length() != 0">
+            and attr3.ATTR_VALUE like CONCAT("%",#{dto.materialVersion},"%")
+        </if>
+        <if test="dto.soNum != null and dto.soNum.length() != 0">
+            and attr4.ATTR_VALUE like CONCAT("%",#{dto.soNum},"%")
+        </if>
+        <if test="dto.soLineNum != null and dto.soLineNum.length() != 0">
+            and attr5.ATTR_VALUE like CONCAT("%",#{dto.soLineNum},"%")
+        </if>
+        <if test="dto.actualLocatorCode != null and dto.actualLocatorCode != ''">
+            and attr6.ATTR_VALUE in
+            <foreach collection="dto.actualLocatorCodeList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.supplierLot != null">
+            and exists (select 1
+            from mt_material_lot_attr mmla_slo
+            where mmla_slo.material_lot_id = mt.material_lot_id
+            and mmla_slo.attr_name = 'SUPPLIER_LOT'
+            and mmla_slo.attr_value = #{dto.supplierLot})
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mt.material_id in
+            <foreach collection="dto.materialIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.wareHouseId != null and dto.wareHouseId != ''">
+            and wh.LOCATOR_ID in
+            <foreach collection="dto.wareHouseIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mt.LOCATOR_ID in
+            <foreach collection="dto.locatorIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.snLabCode != null and dto.snLabCode != ''">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            hme_sn_lab_code hslc
+            WHERE
+            hslc.tenant_id = #{tenantId}
+            AND hslc.material_lot_id = mt.MATERIAL_LOT_ID
+            AND hslc.lab_code like CONCAT("%",#{dto.snLabCode},"%")
+            AND hslc.enabled_flag = 'Y'
+            )
+        </if>
+        <choose>
+            <when test='dto.stocktakeFlag == "Y"'>
+                and mt.STOCKTAKE_FLAG = #{dto.stocktakeFlag}
+            </when>
+            <when test='dto.stocktakeFlag == "N"'>
+                and (mt.STOCKTAKE_FLAG = #{dto.stocktakeFlag} or mt.STOCKTAKE_FLAG = '' or mt.STOCKTAKE_FLAG is NULL )
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.mfFlag == "Y"'>
+                and attr7.ATTR_VALUE = #{dto.mfFlag}
+            </when>
+            <when test='dto.mfFlag == "N"'>
+                and (attr7.ATTR_VALUE = #{dto.mfFlag} or attr7.ATTR_VALUE = '' or attr7.ATTR_VALUE is NULL )
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+        <if test="dto.deliveryNum != null and dto.deliveryNum.length() != 0">
+            and attr8.ATTR_VALUE like CONCAT("%",#{dto.deliveryNum},"%")
+        </if>
+        <if test="dto.outMaterialLotCode != null and dto.outMaterialLotCode.length() != 0">
+            and attr9.ATTR_VALUE like CONCAT("%",#{dto.outMaterialLotCode},"%")
+        </if>
+        <choose>
+            <when test='dto.sapAccountFlag == "N"'>
+                and attr12.ATTR_VALUE = #{dto.sapAccountFlag}
+            </when>
+            <when test='dto.sapAccountFlag == "Y"'>
+                and (attr12.ATTR_NAME IS NULL or attr12.ATTR_NAME = '' or attr12.ATTR_VALUE != 'N')
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+        <if test="dto.labCode != null and dto.labCode != ''">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            hme_material_lot_lab_code hmllc
+            WHERE
+            hmllc.tenant_id = #{tenantId}
+            AND hmllc.lab_code like CONCAT('%',#{dto.labCode},'%')
+            AND hmllc.enable_flag = 'Y'
+            AND hmllc.MATERIAL_LOT_ID = mt.MATERIAL_LOT_ID
+            )
+        </if>
+        <if test="dto.freezeFlag != null and dto.freezeFlag != ''">
+            AND mt.FREEZE_FLAG = #{dto.freezeFlag}
+        </if>
+        <if test="dto.supplierId != null and dto.supplierId != ''">
+            and sp.SUPPLIER_ID in
+            <foreach collection="dto.supplierIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        order by mt.CREATION_DATE desc, mt.MATERIAL_LOT_CODE desc
+
+    </select>
+
+    <select id="selectBarCodeExportCondition" resultType="com.ruike.wms.api.dto.WmsMaterialLotQryExportResultDTO"
+            parameterType="com.ruike.wms.api.dto.WmsMaterialLotQryDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mt.MATERIAL_LOT_ID,
+        mt.MATERIAL_LOT_CODE,
+        mt.ENABLE_FLAG,
+        mt.QUALITY_STATUS,
+        m.MATERIAL_ID,
+        m.MATERIAL_CODE,
+        m.MATERIAL_NAME,
+        mt.LOT,
+        mt.PRIMARY_UOM_QTY PRIMARY_UOM_QTY,
+        uom.UOM_CODE primaryUomCode,
+        uom.UOM_NAME primaryUomName,
+        sit.SITE_CODE,
+        sit.SITE_NAME,
+        loc.PARENT_LOCATOR_ID AS WAREHOUSE_ID,
+        wh.LOCATOR_CODE ware_house_code,
+        wh.LOCATOR_NAME ware_house,
+        loc.LOCATOR_CODE,
+        loc.LOCATOR_NAME,
+        loc.LOCATOR_ID,
+        sp.SUPPLIER_CODE,
+        sp.SUPPLIER_NAME,
+        ctn.CONTAINER_CODE containerCode,
+        mt.CREATION_DATE createDate,
+        iam_user.real_name createBy,
+        mt.LAST_UPDATE_DATE,
+        iam_user2.real_name LastUpdateBy,
+        itlot.MATERIAL_LOT_CODE originalCode,
+        mt.IN_LOCATOR_TIME,
+        me.EO_NUM,
+        attr7.ATTR_VALUE AS MF_FLAG,
+        attr6.ATTR_VALUE AS ACTUAL_LOCATOR_CODE,
+        attr.ATTR_VALUE AS `STATUS`,
+        attr1.ATTR_VALUE AS PO_NUM,
+        attr2.ATTR_VALUE AS PO_LINE_NUM,
+        attr3.ATTR_VALUE AS `MATERIAL_VERSION`,
+        attr4.ATTR_VALUE AS SO_NUM,
+        attr5.ATTR_VALUE AS SO_LINE_NUM,
+        attr8.ATTR_VALUE AS DELIVERY_NUM,
+        attr9.ATTR_VALUE AS outMaterialLotCode,
+        mt.STOCKTAKE_FLAG,
+        deveryDoc.INSTRUCTION_DOC_NUM AS PO_NUM,
+        attr12.ATTR_VALUE AS SAP_ACCOUNT_FLAG,
+        mt.FREEZE_FLAG,
+        mr.ROUTER_NAME REWORK_ROUTER_NAME,
+        mr.DESCRIPTION REWORK_ROUTER_DESC,
+        mr.REVISION REWORK_ROUTER_VERSION,
+        attr13.ATTR_VALUE REWORK_ROUTER_ID
+        FROM
+        tarzan_mes.mt_material_lot mt
+        LEFT JOIN tarzan_mes.mt_material m ON mt.MATERIAL_ID = m.MATERIAL_ID
+        LEFT JOIN tarzan_mes.mt_uom uom ON mt.PRIMARY_UOM_ID = uom.UOM_ID
+        LEFT JOIN tarzan_mes.mt_mod_site sit ON mt.SITE_ID = sit.SITE_ID
+        LEFT JOIN tarzan_mes.mt_mod_locator loc ON mt.LOCATOR_ID = loc.LOCATOR_ID
+        LEFT JOIN tarzan_mes.mt_mod_locator wh ON wh.LOCATOR_ID = loc.PARENT_LOCATOR_ID
+        LEFT JOIN tarzan_mes.mt_supplier sp ON mt.SUPPLIER_ID = sp.SUPPLIER_ID
+        LEFT JOIN tarzan_mes.mt_material_lot_attr ori ON mt.MATERIAL_LOT_ID = ori.MATERIAL_LOT_ID
+        AND ori.ATTR_NAME = 'ORIGINAL_ID'
+        LEFT JOIN tarzan_mes.mt_material_lot itlot ON ori.ATTR_VALUE = itlot.MATERIAL_LOT_ID
+        LEFT JOIN iam_user iam_user ON iam_user.id = mt.CREATED_BY
+        LEFT JOIN iam_user iam_user2 ON iam_user2.id = mt.LAST_UPDATED_BY
+        LEFT JOIN tarzan_mes.mt_eo me ON mt.EO_ID = me.EO_ID
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr ON mt.MATERIAL_LOT_ID = attr.MATERIAL_LOT_ID
+        AND attr.ATTR_NAME = 'STATUS'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr1 ON mt.MATERIAL_LOT_ID = attr1.MATERIAL_LOT_ID
+        AND attr1.ATTR_NAME = 'PO_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr2 ON mt.MATERIAL_LOT_ID = attr2.MATERIAL_LOT_ID
+        AND attr2.ATTR_NAME = 'PO_LINE_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr3 ON mt.MATERIAL_LOT_ID = attr3.MATERIAL_LOT_ID
+        AND attr3.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr4 ON mt.MATERIAL_LOT_ID = attr4.MATERIAL_LOT_ID
+        AND attr4.ATTR_NAME = 'SO_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr5 ON mt.MATERIAL_LOT_ID = attr5.MATERIAL_LOT_ID
+        AND attr5.ATTR_NAME = 'SO_LINE_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr6 ON mt.MATERIAL_LOT_ID = attr6.MATERIAL_LOT_ID
+        AND attr6.ATTR_NAME = 'ACTUAL_LOCATOR'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr7 ON mt.MATERIAL_LOT_ID = attr7.MATERIAL_LOT_ID
+        AND attr7.ATTR_NAME = 'MF_FLAG'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr8 ON mt.MATERIAL_LOT_ID = attr8.MATERIAL_LOT_ID
+        AND attr8.ATTR_NAME = 'DELIVERY_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr9 ON mt.MATERIAL_LOT_ID = attr9.MATERIAL_LOT_ID
+        AND attr9.ATTR_NAME = 'OUTER_BOX'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr10 ON mt.MATERIAL_LOT_ID = attr10.MATERIAL_LOT_ID
+        AND attr10.ATTR_NAME = 'DELIVERY_DOC_ID'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr11 ON mt.MATERIAL_LOT_ID = attr11.MATERIAL_LOT_ID
+        AND attr11.ATTR_NAME = 'DELIVERY_LINE_NUM'
+        LEFT JOIN tarzan_mes.mt_material_lot_attr attr12 ON mt.MATERIAL_LOT_ID = attr12.MATERIAL_LOT_ID
+        AND attr12.ATTR_NAME = 'SAP_ACCOUNT_FLAG'
+        LEFT JOIN mt_material_lot_attr attr13 ON mt.MATERIAL_LOT_ID = attr13.MATERIAL_LOT_ID
+        AND attr13.ATTR_NAME = 'REWORK_ROUTER'
+        LEFT JOIN mt_router mr ON mr.ROUTER_ID = attr13.ATTR_VALUE
+        LEFT JOIN (SELECT DISTINCT wp.delivery_doc_id,wp.delivery_doc_line_id,GROUP_CONCAT(md.INSTRUCTION_DOC_NUM)
+        INSTRUCTION_DOC_NUM
+        FROM mt_instruction_doc md
+        INNER JOIN wms_po_delivery_rel wp ON wp.po_id = md.INSTRUCTION_DOC_ID
+        WHERE wp.delivery_doc_id != ''
+        GROUP BY wp.delivery_doc_id,wp.delivery_doc_line_id) deveryDoc ON deveryDoc.delivery_doc_id = attr10.ATTR_VALUE
+        AND deveryDoc.delivery_doc_line_id IN (SELECT mia.INSTRUCTION_ID FROM mt_instruction_doc mis
+        LEFT JOIN mt_instruction mi ON mi.SOURCE_DOC_ID = mis.INSTRUCTION_DOC_ID AND mi.INSTRUCTION_TYPE =
+        'RECEIVE_FROM_SUPPLIER'
+        LEFT JOIN mt_instruction_attr mia ON mia.INSTRUCTION_ID = mi.INSTRUCTION_ID AND mia.attr_name =
+        'INSTRUCTION_LINE_NUM'
+        WHERE mis.INSTRUCTION_DOC_ID = attr10.ATTR_VALUE
+        and mia.attr_value = attr11.ATTR_VALUE)
+        LEFT JOIN (SELECT icnt.CONTAINER_CODE,icntd.LOAD_OBJECT_ID
+        FROM tarzan_mes.mt_container icnt
+        INNER JOIN tarzan_mes.mt_container_load_detail icntd ON icnt.CONTAINER_ID = icntd.CONTAINER_ID
+        WHERE icntd.LOAD_OBJECT_TYPE = 'MATERIAL_LOT') ctn ON ctn.LOAD_OBJECT_ID = mt.MATERIAL_LOT_ID
+        WHERE mt.tenant_id = #{tenantId}
+        <if test="dto.enableFlag != null and dto.enableFlag.length() != 0">
+            and mt.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode.length() != 0">
+            and mt.MATERIAL_LOT_CODE Like CONCAT('%',#{dto.materialLotCode},'%')
+        </if>
+        <if test="dto.lot != null and dto.lot.length() != 0">
+            and mt.LOT = #{dto.lot}
+        </if>
+        <if test="dto.siteId != null and dto.siteId.length() != 0">
+            and mt.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.createDateFrom != null and dto.createDateFrom.length() != 0">
+            and STR_TO_DATE(mt.CREATION_DATE,'%Y-%m-%d') &gt;= STR_TO_DATE(#{dto.createDateFrom},'%Y-%m-%d')
+        </if>
+        <if test="dto.createDateTo != null and dto.createDateTo.length() != 0">
+            and STR_TO_DATE(mt.CREATION_DATE,'%Y-%m-%d') &lt;= STR_TO_DATE(#{dto.createDateTo},'%Y-%m-%d')
+        </if>
+        <if test="dto.status != null and dto.status.length() != 0">
+            and attr.ATTR_VALUE = #{dto.status}
+        </if>
+        <if test="dto.originalCode != null and dto.originalCode.length() != 0">
+            and itlot.MATERIAL_LOT_CODE = #{dto.originalCode}
+        </if>
+        <if test="dto.poNum != null and dto.poNum.length() != 0">
+            and attr1.ATTR_VALUE = #{dto.poNum}
+        </if>
+        <if test="dto.poLineNum != null and dto.poLineNum.length() != 0">
+            and attr2.ATTR_VALUE = #{dto.poLineNum}
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus.length() != 0">
+            and mt.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+        <if test="dto.containerCode != null and dto.containerCode.length() != 0">
+            and ctn.CONTAINER_CODE = #{dto.containerCode}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode.length() != 0">
+            and m.MATERIAL_CODE Like CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.eoNum != null and dto.eoNum.length() != 0">
+            and me.EO_NUM Like CONCAT('%',#{dto.eoNum},'%')
+        </if>
+        <if test="dto.locatorCode != null and dto.locatorCode.length() != 0">
+            and loc.LOCATOR_CODE = #{dto.locatorCode}
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion.length() != 0">
+            and attr3.ATTR_VALUE like CONCAT("%",#{dto.materialVersion},"%")
+        </if>
+        <if test="dto.soNum != null and dto.soNum.length() != 0">
+            and attr4.ATTR_VALUE like CONCAT("%",#{dto.soNum},"%")
+        </if>
+        <if test="dto.soLineNum != null and dto.soLineNum.length() != 0">
+            and attr5.ATTR_VALUE like CONCAT("%",#{dto.soLineNum},"%")
+        </if>
+        <if test="dto.actualLocatorCode != null and dto.actualLocatorCode != ''">
+            and attr6.ATTR_VALUE in
+            <foreach collection="dto.actualLocatorCodeList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.supplierLot != null">
+            and exists (select 1
+            from mt_material_lot_attr mmla_slo
+            where mmla_slo.material_lot_id = mt.material_lot_id
+            and mmla_slo.attr_name = 'SUPPLIER_LOT'
+            and mmla_slo.attr_value = #{dto.supplierLot})
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mt.material_id in
+            <foreach collection="dto.materialIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.wareHouseId != null and dto.wareHouseId != ''">
+            and wh.LOCATOR_ID in
+            <foreach collection="dto.wareHouseIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and mt.LOCATOR_ID in
+            <foreach collection="dto.locatorIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.snLabCode != null and dto.snLabCode != ''">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            hme_sn_lab_code hslc
+            WHERE
+            hslc.tenant_id = #{tenantId}
+            AND hslc.material_lot_id = mt.MATERIAL_LOT_ID
+            AND hslc.lab_code like CONCAT("%",#{dto.snLabCode},"%")
+            AND hslc.enabled_flag = 'Y'
+            )
+        </if>
+        <choose>
+            <when test='dto.stocktakeFlag == "Y"'>
+                and mt.STOCKTAKE_FLAG = #{dto.stocktakeFlag}
+            </when>
+            <when test='dto.stocktakeFlag == "N"'>
+                and (mt.STOCKTAKE_FLAG = #{dto.stocktakeFlag} or mt.STOCKTAKE_FLAG = '' or mt.STOCKTAKE_FLAG is NULL )
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='dto.mfFlag == "Y"'>
+                and attr7.ATTR_VALUE = #{dto.mfFlag}
+            </when>
+            <when test='dto.mfFlag == "N"'>
+                and (attr7.ATTR_VALUE = #{dto.mfFlag} or attr7.ATTR_VALUE = '' or attr7.ATTR_VALUE is NULL )
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+        <if test="dto.deliveryNum != null and dto.deliveryNum.length() != 0">
+            and attr8.ATTR_VALUE like CONCAT("%",#{dto.deliveryNum},"%")
+        </if>
+        <if test="dto.outMaterialLotCode != null and dto.outMaterialLotCode.length() != 0">
+            and attr9.ATTR_VALUE like CONCAT("%",#{dto.outMaterialLotCode},"%")
+        </if>
+        <choose>
+            <when test='dto.sapAccountFlag == "N"'>
+                and attr12.ATTR_VALUE = #{dto.sapAccountFlag}
+            </when>
+            <when test='dto.sapAccountFlag == "Y"'>
+                and attr12.ATTR_NAME IS NULL or attr12.ATTR_VALUE != 'N'
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+        <if test="dto.labCode != null and dto.labCode != ''">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            hme_material_lot_lab_code hmllc
+            WHERE
+            hmllc.tenant_id = #{tenantId}
+            AND hmllc.lab_code like CONCAT('%',#{dto.labCode},'%')
+            AND hmllc.enable_flag = 'Y'
+            AND hmllc.MATERIAL_LOT_ID = mt.MATERIAL_LOT_ID
+            )
+        </if>
+        <choose>
+            <when test='dto.mfFlag == "Y"'>
+                and attr7.ATTR_VALUE = #{dto.mfFlag}
+            </when>
+            <when test='dto.mfFlag == "N"'>
+                and (attr7.ATTR_VALUE = #{dto.mfFlag} or attr7.ATTR_VALUE = '' or attr7.ATTR_VALUE is NULL )
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+        <if test="dto.freezeFlag != null and dto.freezeFlag != ''">
+            AND mt.FREEZE_FLAG = #{dto.freezeFlag}
+        </if>
+        <if test="dto.supplierId != null and dto.supplierId != ''">
+            and sp.SUPPLIER_ID in
+            <foreach collection="dto.supplierIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        order by mt.CREATION_DATE desc, mt.MATERIAL_LOT_CODE desc
+    </select>
+
+    <select id="selectBarCodeHis" resultType="com.ruike.wms.api.dto.WmsMaterialLotHisResultDTO"
+            parameterType="com.ruike.wms.api.dto.WmsMaterialLotHisQryDTO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        ame.CREATION_DATE attrEventTime,
+        iam_user4.real_name attr_event_by,
+        amet.DESCRIPTION AS attr_event_type_desc,
+        arv.EVENT_ID attrEventId,
+        mt.EVENT_ID,
+        mt.MATERIAL_LOT_HIS_ID,
+        mt.MATERIAL_LOT_ID,
+        mt.MATERIAL_LOT_CODE,
+        mt.ENABLE_FLAG,
+        mt.QUALITY_STATUS,
+        m.MATERIAL_CODE,
+        m.MATERIAL_NAME,
+        mt.LOT,
+        mt.PRIMARY_UOM_QTY PRIMARY_UOM_QTY,
+        uom.UOM_CODE primaryUomCode,
+        uom.UOM_NAME primaryUomName,
+        sit.SITE_CODE,
+        sit.SITE_NAME,
+        loc.LOCATOR_CODE,
+        loc.LOCATOR_NAME,
+        sp.SUPPLIER_CODE,
+        sp.SUPPLIER_NAME,
+        itlot.MATERIAL_LOT_CODE as MATERIAL_LOT_CODE1,
+        mc.CONTAINER_CODE,
+        IFNULL(arv.CREATION_DATE,mt.CREATION_DATE) AS CREATION_DATE,
+        iam_user.real_name CREATED_BY,
+        IFNULL(arv.LAST_UPDATE_DATE,mt.LAST_UPDATE_DATE) AS LAST_UPDATE_DATE,
+        iam_user2.real_name LAST_UPDATED_BY,
+        met.DESCRIPTION EVENT_TYPE_DESC,
+        me.CREATION_DATE eventTime,
+        iam_user3.real_name EVENT_BY,
+        mt.TRX_PRIMARY_QTY TRX_PRIMARY_QTY,
+        mt.IN_LOCATOR_TIME,
+        meo.EO_NUM,
+        loc.PARENT_LOCATOR_ID AS WAREHOUSE_ID,
+        wh.LOCATOR_CODE ware_house_code,
+        wh.LOCATOR_NAME ware_house,
+        mt.STOCKTAKE_FLAG,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'MSL' ) THEN arv.ATTR_VALUE END ) ) AS MSL,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'PRINTING' ) THEN arv.ATTR_VALUE END ) ) AS PRINTING,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'EXPANSION_COEFFICIENTS' ) THEN arv.ATTR_VALUE END ) ) AS
+        EXPANSION_COEFFICIENTS,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'INSTRUCTION_ID' ) THEN arv.ATTR_VALUE END ) ) AS INSTRUCTION_ID,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'STICKER_NUMBER' ) THEN arv.ATTR_VALUE END ) ) AS STICKER_NUMBER,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'PRINT_TIME' ) THEN arv.ATTR_VALUE END ) ) AS PRINT_TIME,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'PRINT_REASON' ) THEN arv.ATTR_VALUE END ) ) AS PRINT_REASON,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'PRODUCT_DATE' ) THEN arv.ATTR_VALUE END ) ) AS PRODUCT_DATE,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'OVERDUE_INSPECTION_DATE' ) THEN arv.ATTR_VALUE END ) ) AS
+        OVERDUE_INSPECTION_DATE,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'WO_ISSUE_DATE' ) THEN arv.ATTR_VALUE END ) ) AS WO_ISSUE_DATE,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'COLOR_BIN' ) THEN arv.ATTR_VALUE END ) ) AS COLOR_BIN,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'LIGHT_BIN' ) THEN arv.ATTR_VALUE END ) ) AS LIGHT_BIN,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'VOLTAGE_BIN' ) THEN arv.ATTR_VALUE END ) ) AS VOLTAGE_BIN,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'PO_NUM' ) THEN arv.ATTR_VALUE END ) ) AS PO_NUM,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'PO_LINE_NUM' ) THEN arv.ATTR_VALUE END ) ) AS PO_LINE_NUM,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'PO_LINE_LOCATION_NUM' ) THEN arv.ATTR_VALUE END ) ) AS PO_LINE_LOCATION_NUM,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'SO_NUM' ) THEN arv.ATTR_VALUE END ) ) AS SO_NUM,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'SO_LINE_NUM' ) THEN arv.ATTR_VALUE END ) ) AS SO_LINE_NUM,
+        -- max( ( CASE WHEN ( arv.ATTR_NAME = 'WAREHOUSE_ID' ) THEN arv.ATTR_VALUE END ) ) AS WAREHOUSE_ID,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'STATUS' ) THEN arv.ATTR_VALUE END ) ) AS STATUS,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'EFFECTIVE_DATE' ) THEN arv.ATTR_VALUE END ) ) AS EFFECTIVE_DATE,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'ENABLE_DATE' ) THEN arv.ATTR_VALUE END ) ) AS ENABLE_DATE,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'DEADLINE_DATE' ) THEN arv.ATTR_VALUE END ) ) AS DEADLINE_DATE,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'CURRENT_WCK' ) THEN arv.ATTR_VALUE END ) ) AS CURRENT_WCK,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'FINAL_PROCESS_WCK' ) THEN arv.ATTR_VALUE END ) ) AS FINAL_PROCESS_WCK,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'REWORK_FLAG' ) THEN arv.ATTR_VALUE END ) ) AS REWORK_FLAG,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'PERFORMANCE_LEVEL' ) THEN arv.ATTR_VALUE END ) ) AS PERFORMANCE_LEVEL,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'DELIVERY_NUM' ) THEN arv.ATTR_VALUE END ) ) AS DELIVERY_NUM,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'DELIVERY_LINE_NUM' ) THEN arv.ATTR_VALUE END ) ) AS DELIVERY_LINE_NUM,
+        max( ( CASE WHEN ( arv.ATTR_NAME = 'MATERIAL_VERSION' ) THEN arv.ATTR_VALUE END ) ) AS MATERIAL_VERSION,
+        max(( CASE WHEN ( arv.ATTR_NAME = 'MF_FLAG' ) THEN arv.ATTR_VALUE END )) AS MF_FLAG,
+        max(( CASE WHEN ( arv.ATTR_NAME = 'ORIGINAL_ID' ) THEN arv.ATTR_VALUE END )) AS ORIGINAL_ID,
+        max(( CASE WHEN ( arv.ATTR_NAME = 'ACTUAL_LOCATOR' ) THEN arv.ATTR_VALUE END )) AS ACTUAL_LOCATOR_CODE,
+        max(( CASE WHEN ( arv.ATTR_NAME = 'NC_SUPPLIER_REPLACEMENT' ) THEN arv.ATTR_VALUE END )) AS REPLACEMENT_FLAG
+        FROM
+        tarzan_mes.mt_material_lot_his mt
+        LEFT JOIN tarzan_mes.mt_container mc ON mc.CONTAINER_ID = mt.CURRENT_CONTAINER_ID
+        LEFT JOIN tarzan_mes.mt_material m ON mt.MATERIAL_ID = m.MATERIAL_ID
+        LEFT JOIN tarzan_mes.mt_uom uom ON mt.PRIMARY_UOM_ID = uom.UOM_ID
+        LEFT JOIN tarzan_mes.mt_mod_site sit ON mt.SITE_ID = sit.SITE_ID
+        LEFT JOIN tarzan_mes.mt_material_lot_attr_his arv ON mt.MATERIAL_LOT_HIS_ID = arv.MATERIAL_LOT_HIS_ID
+        AND arv.TENANT_ID = #{tenantId}
+        LEFT JOIN tarzan_mes.mt_event ame ON arv.EVENT_ID = ame.EVENT_ID
+        LEFT JOIN tarzan_mes.mt_event_type_tl amet ON ame.EVENT_TYPE_ID = amet.EVENT_TYPE_ID AND amet.LANG = #{lang}
+        LEFT JOIN tarzan_mes.mt_mod_locator loc ON mt.LOCATOR_ID = loc.LOCATOR_ID
+        LEFT JOIN tarzan_mes.mt_supplier sp ON mt.SUPPLIER_ID = sp.SUPPLIER_ID
+        LEFT JOIN tarzan_mes.mt_material_lot_attr_his EXECUTOR_ID ON mt.MATERIAL_LOT_HIS_ID =
+        EXECUTOR_ID.MATERIAL_LOT_HIS_ID AND EXECUTOR_ID.ATTR_NAME = 'EXECUTOR_ID'
+        LEFT JOIN tarzan_mes.mt_material_lot itlot ON EXECUTOR_ID.ATTR_VALUE = itlot.MATERIAL_LOT_ID
+        LEFT JOIN tarzan_mes.mt_mod_locator wh ON wh.LOCATOR_ID = loc.PARENT_LOCATOR_ID
+        LEFT JOIN tarzan_mes.mt_event me ON mt.EVENT_ID = me.EVENT_ID
+        LEFT JOIN tarzan_mes.mt_event_type_tl met ON me.EVENT_TYPE_ID = met.EVENT_TYPE_ID AND met.LANG = #{lang}
+        LEFT JOIN iam_user iam_user ON iam_user.id = mt.CREATED_BY
+        LEFT JOIN iam_user iam_user2 ON iam_user2.id = mt.LAST_UPDATED_BY
+        LEFT JOIN iam_user iam_user3 ON iam_user3.id = me.EVENT_BY
+        LEFT JOIN iam_user iam_user4 ON iam_user4.id = ame.EVENT_BY
+        LEFT JOIN tarzan_mes.mt_eo meo ON mt.EO_ID = meo.EO_ID
+        where 1=1
+        <if test="materialLotHisQryDTO.materialLotIds != null">
+            and mt.MATERIAL_LOT_ID in (
+            <foreach collection="materialLotHisQryDTO.materialLotIds" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="materialLotHisQryDTO.materialLotCodes != null">
+            and mt.MATERIAL_LOT_CODE in (
+            <foreach collection="materialLotHisQryDTO.materialLotCodes" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        GROUP BY
+        iam_user4.real_name,
+        ame.CREATION_DATE,
+        amet.DESCRIPTION,
+        mt.MATERIAL_LOT_ID,
+        mt.MATERIAL_LOT_CODE,
+        mt.ENABLE_FLAG,
+        mt.QUALITY_STATUS,
+        m.MATERIAL_CODE,
+        m.MATERIAL_NAME,
+        mt.LOT,
+        mt.PRIMARY_UOM_QTY,
+        primaryUomCode,
+        sit.SITE_CODE,
+        sit.SITE_NAME,
+        uom.UOM_NAME,
+        loc.LOCATOR_CODE,
+        loc.LOCATOR_NAME,
+        loc.PARENT_LOCATOR_ID,
+        sp.SUPPLIER_CODE,
+        sp.SUPPLIER_NAME,
+        MATERIAL_LOT_CODE1,
+        mc.CONTAINER_CODE,
+        CREATION_DATE,
+        CREATED_BY,
+        LAST_UPDATE_DATE,
+        LAST_UPDATED_BY,
+        met.DESCRIPTION,
+        eventTime,
+        EVENT_BY,
+        TRX_PRIMARY_QTY,
+        mt.IN_LOCATOR_TIME,
+        meo.EO_NUM,
+        wh.LOCATOR_NAME,
+        arv.EVENT_ID,
+        mt.EVENT_ID,
+        mt.MATERIAL_LOT_HIS_ID
+        ORDER BY me.CREATION_DATE DESC, me.EVENT_ID DESC , ame.EVENT_ID DESC
+    </select>
+
+    <select id="queryPrintData" resultType="com.ruike.wms.domain.vo.WmsMaterialLotPntVO">
+        select sp.SUPPLIER_NAME,m.MATERIAL_CODE,m.MATERIAL_NAME,mt.LOT,mt.MATERIAL_LOT_CODE,
+        mt.PRIMARY_UOM_QTY,uom.UOM_CODE primaryUomCode,mt.MATERIAL_LOT_ID,
+        mla_vb.ATTR_VALUE VOLTAGE_BIN,
+        mla_cb.ATTR_VALUE COLOR_BIN,
+        mla_lb.ATTR_VALUE LIGHT_BIN,
+        mla_ec.ATTR_VALUE EXPANSION_COEFFICIENTS
+        from tarzan_mes.mt_material_lot mt
+        left join tarzan_mes.mt_material m on mt.MATERIAL_ID = m.MATERIAL_ID
+        left join tarzan_mes.mt_uom uom on mt.PRIMARY_UOM_ID = uom.UOM_ID
+        left join tarzan_mes.mt_supplier sp on mt.SUPPLIER_ID = sp.SUPPLIER_ID
+        left join mt_material_lot_attr mla_vb on mt.MATERIAL_LOT_ID = mla_vb.MATERIAL_LOT_ID and mla_vb.ATTR_NAME =
+        'VOLTAGE_BIN'
+        left join mt_material_lot_attr mla_cb on mt.MATERIAL_LOT_ID = mla_cb.MATERIAL_LOT_ID and mla_cb.ATTR_NAME =
+        'COLOR_BIN'
+        left join mt_material_lot_attr mla_lb on mt.MATERIAL_LOT_ID = mla_lb.MATERIAL_LOT_ID and mla_lb.ATTR_NAME =
+        'LIGHT_BIN'
+        left join mt_material_lot_attr mla_ec on mt.MATERIAL_LOT_ID = mla_ec.MATERIAL_LOT_ID and mla_ec.ATTR_NAME =
+        'EXPANSION_COEFFICIENTS'
+        where mt.TENANT_ID = #{tenantId} and mt.MATERIAL_LOT_ID in
+        <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectMaterialLotByCondition" resultType="com.ruike.wms.domain.vo.WmsMaterialLotVO2">
+        select t.SITE_ID,
+        site.SITE_CODE,
+        t.MATERIAL_LOT_ID,
+        t.MATERIAL_LOT_CODE,
+        t.ENABLE_FLAG,
+        t.QUALITY_STATUS,
+        t.MATERIAL_ID,
+        m.MATERIAL_CODE,
+        m.MATERIAL_NAME,
+        t.PRIMARY_UOM_ID,
+        uom.UOM_CODE PRIMARY_UOM_CODE,
+        uom.UOM_NAME PRIMARY_UOM_NAME,
+        t.PRIMARY_UOM_QTY,
+        t.LOCATOR_ID,
+        LOC.LOCATOR_CODE LOCATOR_CODE,
+        LOC2.LOCATOR_ID WAREHOUSE_ID,
+        LOC2.LOCATOR_CODE WAREHOUSE_CODE,
+        t.LOT,
+        t.SUPPLIER_ID,
+        s.SUPPLIER_CODE,
+        s.SUPPLIER_NAME,
+        t.SUPPLIER_SITE_ID,
+<!--        IF-->
+<!--        ( t.FREEZE_FLAG = 'Y', 'Y', 'N' ) FREEZE_FLAG,-->
+        case t.FREEZE_FLAG when 'Y' then 'Y'
+        else 'N' end FREEZE_FLAG,
+        MML_STATUS.ATTR_VALUE MATERIAL_LOT_STATUS,
+        ATTR4.ATTR_VALUE REMARK,
+        ATTR3.ATTR_VALUE MATERIAL_VERSION,
+        ATTR5.ATTR_VALUE  AS supplierLot,
+	    ATTR6.ATTR_VALUE AS soNum,
+        ATTR.ATTR_VALUE FREEZE_DATE
+        from MT_MATERIAL_LOT t
+        LEFT JOIN mt_material_lot_attr MML_STATUS ON t.TENANT_ID = MML_STATUS.TENANT_ID and T.MATERIAL_LOT_ID =
+        MML_STATUS.MATERIAL_LOT_ID and MML_STATUS.ATTR_NAME = 'STATUS'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR ON t.TENANT_ID = ATTR.TENANT_ID and T.MATERIAL_LOT_ID = ATTR.MATERIAL_LOT_ID
+        AND ATTR.ATTR_NAME = 'FREEZE_DATE'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR3 ON t.TENANT_ID = ATTR3.TENANT_ID and T.MATERIAL_LOT_ID =
+        ATTR3.MATERIAL_LOT_ID AND ATTR3.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR4 ON t.TENANT_ID = ATTR4.TENANT_ID and T.MATERIAL_LOT_ID =
+        ATTR4.MATERIAL_LOT_ID AND ATTR4.ATTR_NAME = 'REMARK'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR5 ON t.TENANT_ID = ATTR5.TENANT_ID and T.MATERIAL_LOT_ID =
+        ATTR5.MATERIAL_LOT_ID AND ATTR5.ATTR_NAME = 'SUPPLIER_LOT'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR6 ON t.TENANT_ID = ATTR6.TENANT_ID and T.MATERIAL_LOT_ID =
+        ATTR6.MATERIAL_LOT_ID AND ATTR6.ATTR_NAME = 'SO_NUM'
+        LEFT JOIN mt_supplier s ON s.SUPPLIER_ID = t.SUPPLIER_ID,
+        mt_uom uom,
+        mt_mod_site site,
+        MT_MOD_LOCATOR LOC,
+        MT_MOD_LOCATOR LOC2,
+        mt_material m
+        where t.MATERIAL_ID = m.MATERIAL_ID
+        AND site.SITE_ID = t.SITE_ID
+        AND uom.UOM_ID = t.PRIMARY_UOM_ID
+        and t.LOCATOR_ID = LOC.LOCATOR_ID
+        and LOC.PARENT_LOCATOR_ID = LOC2.LOCATOR_ID
+        AND t.TENANT_ID = #{tenantId}
+        <if test="dto.materialLotId!=null and dto.materialLotId!=''">
+            and t.MATERIAL_LOT_ID=#{dto.materialLotId}
+        </if>
+        <if test="dto.materialLotCode!=null and dto.materialLotCode.size()>0">
+            and t.MATERIAL_LOT_CODE in
+            <foreach collection="dto.materialLotCode" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.siteId!=null and dto.siteId!=''">
+            and t.SITE_ID=#{dto.siteId}
+        </if>
+        <if test="dto.enableFlag!=null and dto.enableFlag!=''">
+            and t.ENABLE_FLAG=#{dto.enableFlag}
+        </if>
+        <if test="dto.qualityStatus!=null and dto.qualityStatus.size()>0">
+            and t.QUALITY_STATUS in
+            <foreach collection="dto.qualityStatus" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.materialId!=null and dto.materialId!=''">
+            and t.MATERIAL_ID=#{dto.materialId}
+        </if>
+        <if test="dto.primaryUomId!=null and dto.primaryUomId!=''">
+            and t.PRIMARY_UOM_ID=#{dto.primaryUomId}
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId.size()>0">
+            and t.LOCATOR_ID in
+            <foreach collection="dto.locatorId" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.lot!=null and dto.lot!=''">
+            and t.LOT like CONCAT(#{dto.lot},"%")
+        </if>
+        <if test="dto.supplierId!=null and dto.supplierId!=''">
+            and t.SUPPLIER_ID=#{dto.supplierId}
+        </if>
+        <if test="dto.supplierSiteId!=null and dto.supplierSiteId!=''">
+            and t.SUPPLIER_SITE_ID=#{dto.supplierSiteId}
+        </if>
+        <if test="dto.freezeFlag != null and dto.freezeFlag != ''">
+            and t.FREEZE_FLAG = #{dto.freezeFlag}
+        </if>
+        <if test="dto.materialVersion!=null and dto.materialVersion!=''">
+            and ATTR3.ATTR_VALUE = #{dto.materialVersion}
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId.size()>0">
+        and loc2.LOCATOR_ID in
+        <foreach collection="dto.warehouseId" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        </if>
+        <if test="dto.freezeDateFrom != null and dto.freezeDateFrom != ''">
+            and str_to_date(ATTR.ATTR_VALUE,'%Y-%m-%d') &gt;= DATE_FORMAT(#{dto.freezeDateFrom}, '%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.freezeDateTo != null and dto.freezeDateTo != ''">
+            and str_to_date(ATTR.ATTR_VALUE,'%Y-%m-%d') &lt;= DATE_FORMAT(#{dto.freezeDateTo}, '%Y-%m-%d %H:%i:%S')
+        </if>
+
+        <if test="dto.supplierLotValue != null and dto.supplierLotValue != ''">
+            and ATTR5.ATTR_VALUE like CONCAT(#{dto.supplierLotValue},"%")
+        </if>
+        <if test="dto.soNumValue != null and dto.soNumValue != ''">
+            and ATTR6.ATTR_VALUE like CONCAT(#{dto.soNumValue},"%")
+        </if>
+        <if test="dto.lotStatus != null and dto.lotStatus.size()>0">
+            and MML_STATUS.ATTR_VALUE in
+            <foreach collection="dto.lotStatus" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectMaterialLotByIds" resultType="com.ruike.wms.domain.vo.WmsMaterialLotVO2">
+        select t.SITE_ID,
+        site.SITE_CODE,
+        t.MATERIAL_LOT_ID,
+        t.MATERIAL_LOT_CODE,
+        t.ENABLE_FLAG,
+        t.QUALITY_STATUS,
+        t.MATERIAL_ID,
+        m.MATERIAL_CODE,
+        m.MATERIAL_NAME,
+        t.PRIMARY_UOM_ID,
+        uom.UOM_CODE PRIMARY_UOM_CODE,
+        uom.UOM_NAME PRIMARY_UOM_NAME,
+        t.PRIMARY_UOM_QTY,
+        t.LOCATOR_ID,
+        LOC.LOCATOR_CODE LOCATOR_CODE,
+        LOC2.LOCATOR_CODE WAREHOUSE_CODE,
+        t.LOT,
+        t.SUPPLIER_ID,
+        s.SUPPLIER_CODE,
+        s.SUPPLIER_NAME,
+        t.SUPPLIER_SITE_ID,
+        IF
+        ( t.FREEZE_FLAG = 'Y', 'Y', 'N' ) FREEZE_FLAG,
+        MML_STATUS.ATTR_VALUE MATERIAL_LOT_STATUS,
+        ATTR4.ATTR_VALUE REMARK,
+        ATTR3.ATTR_VALUE MATERIAL_VERSION,
+        ATTR2.ATTR_VALUE WAREHOUSE_ID,
+        ATTR.ATTR_VALUE FREEZE_DATE
+        from MT_MATERIAL_LOT t
+        LEFT JOIN mt_material_lot_attr MML_STATUS ON t.TENANT_ID = MML_STATUS.TENANT_ID and T.MATERIAL_LOT_ID =
+        MML_STATUS.MATERIAL_LOT_ID and MML_STATUS.ATTR_NAME = 'STATUS'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR ON t.TENANT_ID = ATTR.TENANT_ID and T.MATERIAL_LOT_ID = ATTR.MATERIAL_LOT_ID
+        AND ATTR.ATTR_NAME = 'FREEZE_DATE'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR2 ON t.TENANT_ID = ATTR2.TENANT_ID and T.MATERIAL_LOT_ID =
+        ATTR2.MATERIAL_LOT_ID AND ATTR2.ATTR_NAME = 'WAREHOUSE_ID'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR3 ON t.TENANT_ID = ATTR3.TENANT_ID and T.MATERIAL_LOT_ID =
+        ATTR3.MATERIAL_LOT_ID AND ATTR3.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN MT_MATERIAL_LOT_ATTR ATTR4 ON t.TENANT_ID = ATTR4.TENANT_ID and T.MATERIAL_LOT_ID =
+        ATTR4.MATERIAL_LOT_ID AND ATTR4.ATTR_NAME = 'REMARK',
+        mt_uom uom,
+        mt_mod_site site,
+        MT_MOD_LOCATOR LOC,
+        MT_MOD_LOCATOR LOC2,
+        mt_supplier s,
+        mt_material m
+        where t.MATERIAL_ID = m.MATERIAL_ID
+        AND site.SITE_ID = t.SITE_ID
+        AND uom.UOM_ID = t.PRIMARY_UOM_ID
+        and s.SUPPLIER_ID = t.SUPPLIER_ID
+        and t.LOCATOR_ID = LOC.LOCATOR_ID
+        and LOC.PARENT_LOCATOR_ID = LOC2.LOCATOR_ID
+        AND t.TENANT_ID = #{tenantId}
+        and t.MATERIAL_LOT_ID IN
+        <foreach collection="materialLotIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectMaterialLotByCode" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        select t.MATERIAL_LOT_ID,
+               t.ENABLE_FLAG
+        from MT_MATERIAL_LOT t
+        where t.MATERIAL_LOT_CODE = #{materialLotCode}
+          AND t.TENANT_ID = #{tenantId}
+        LIMIT 1
+    </select>
+
+    <select id="selectMaterialLotByCodes" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        select t.MATERIAL_LOT_ID,
+        t.ENABLE_FLAG
+        from MT_MATERIAL_LOT t
+        where t.TENANT_ID = #{tenantId}
+        <if test="materialLotCodes != null and materialLotCodes.size()>0">
+            AND t.MATERIAL_LOT_CODE = in
+            <foreach collection="materialLotCodes" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectListWithAttrByIds" resultType="com.ruike.wms.domain.vo.WmsMaterialLotAttrVO">
+        select mml.material_lot_id
+        , mml.material_lot_code
+        , mml.enable_flag
+        , mml.freeze_flag
+        , mml.stocktake_flag
+        , mml.quality_status
+        , mml.material_id
+        , mm.material_code
+        , mm.material_name
+        , mml.primary_uom_id
+        , uom.uom_code primary_uom_code
+        , mml.lot
+        , mml.primary_uom_qty
+        , mml_ver.attr_value material_version
+        , mml_status.attr_value status
+        , mml_so.attr_value so_num
+        , mml_soline.attr_value so_line_num
+        , mml.site_id plant_id
+        , mml.locator_id
+        , loc.parent_locator_id warehouse_id
+        , loc.locator_code
+        , mml_mf.attr_value mf_flag
+        , mml_vf.attr_value virtual_flag
+        , mml.current_container_id
+        from mt_material_lot mml
+        left join mt_material_lot_attr mml_status on mml.material_lot_id = mml_status.material_lot_id and
+        mml_status.attr_name = 'STATUS'
+        left join mt_material_lot_attr mml_ver on mml.material_lot_id = mml_ver.material_lot_id and
+        mml_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_material_lot_attr mml_so on mml.material_lot_id = mml_so.material_lot_id and
+        mml_so.attr_name = 'SO_NUM'
+        left join mt_material_lot_attr mml_soline on mml.material_lot_id = mml_soline.material_lot_id and
+        mml_soline.attr_name = 'SO_LINE_NUM'
+        left join mt_material_lot_attr mml_mf on mml.material_lot_id = mml_mf.material_lot_id and
+        mml_mf.attr_name = 'MF_FLAG'
+        left join mt_material_lot_attr mml_vf on mml.material_lot_id = mml_vf.material_lot_id and
+        mml_vf.attr_name = 'VIRTUAL_FLAG'
+        left join mt_mod_locator loc on loc.locator_id = mml.locator_id
+        join mt_uom uom on uom.uom_id = mml.primary_uom_id
+        join mt_material mm on mml.material_id = mm.material_id
+        where mml.TENANT_ID = #{tenantId}
+        and mml.MATERIAL_LOT_ID IN
+        <foreach collection="materialLotIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="batchProductionVersionQuery" resultType="tarzan.general.api.dto.MtTagGroupObjectDTO3">
+        select hpv.PRODUCTION_VERSION, hpv.DESCRIPTION, mms.MATERIAL_ID
+        from mt_material_site mms
+        left join hme_production_version hpv
+        on hpv.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        and hpv.tenant_id = mms.TENANT_ID
+        and hpv.LOCK_FLAG != '1'
+        and IFNULL(hpv.DATE_FROM,CURRENT_TIMESTAMP) &lt;= CURRENT_TIMESTAMP
+        and IFNULL(hpv.DATE_TO,CURRENT_TIMESTAMP) >= CURRENT_TIMESTAMP
+        where mms.TENANT_ID = #{tenantId}
+        and hpv.PRODUCTION_VERSION is not null
+        and mms.SITE_ID = #{siteId}
+        and mms.ENABLE_FLAG = 'Y'
+        <if test="mtMaterialIdList !=null and mtMaterialIdList.size()>0">
+            AND mms.MATERIAL_ID IN
+            <foreach collection="mtMaterialIdList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="materialVersionList !=null and materialVersionList.size()>0">
+            AND hpv.PRODUCTION_VERSION IN
+            <foreach collection="materialVersionList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectWithAttrByCode" resultType="com.ruike.wms.domain.vo.WmsMaterialLotAttrVO">
+        select mml.material_lot_id
+             , mml.material_lot_code
+             , mml.enable_flag
+             , mml.freeze_flag
+             , mml.stocktake_flag
+             , mml.quality_status
+             , mml.material_id
+             , mml.primary_uom_id
+             , uom.uom_code          primary_uom_code
+             , mml.lot
+             , mml.primary_uom_qty
+             , mml_ver.attr_value    material_version
+             , mml_status.attr_value status
+             , mml_so.attr_value     so_num
+             , mml_soline.attr_value so_line_num
+             , mml.site_id           plant_id
+             , mms.site_code         plant_code
+             , mml.locator_id
+             , loc.parent_locator_id warehouse_id
+             , loc.locator_code
+             , mml_mf.attr_value     mf_flag
+             , mml_vf.ATTR_VALUE     virtual_flag
+             , mm.MATERIAL_CODE
+             , mm.MATERIAL_NAME
+             , mml.eo_id
+             , mml.current_container_id
+        from mt_material_lot mml
+                 left join mt_material_lot_attr mml_status on mml.material_lot_id = mml_status.material_lot_id and
+                                                              mml_status.attr_name = 'STATUS'
+                 left join mt_material_lot_attr mml_ver on mml.material_lot_id = mml_ver.material_lot_id and
+                                                           mml_ver.attr_name = 'MATERIAL_VERSION'
+                 left join mt_material_lot_attr mml_so on mml.material_lot_id = mml_so.material_lot_id and
+                                                          mml_so.attr_name = 'SO_NUM'
+                 left join mt_material_lot_attr mml_soline on mml.material_lot_id = mml_soline.material_lot_id and
+                                                              mml_soline.attr_name = 'SO_LINE_NUM'
+                 left join mt_material_lot_attr mml_mf on mml.material_lot_id = mml_mf.material_lot_id and
+                                                          mml_mf.attr_name = 'MF_FLAG'
+                 left join mt_material_lot_attr mml_vf on mml.material_lot_id = mml_vf.material_lot_id and
+                                                          mml_vf.attr_name = 'VIRTUAL_FLAG'
+                 left join mt_mod_locator loc on loc.locator_id = mml.locator_id
+                 join mt_uom uom on uom.uom_id = mml.primary_uom_id
+                 join mt_material mm on mm.MATERIAL_ID = mml.MATERIAL_ID
+                 join mt_mod_site mms on mms.SITE_ID = mml.SITE_ID
+        where mml.TENANT_ID = #{tenantId}
+          and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+    </select>
+
+    <select id="queryLabCodeByMaterialLotId" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLabCode">
+        SELECT
+			hmllc.lab_code,
+			hmllc.MATERIAL_LOT_ID
+        FROM
+            hme_material_lot_lab_code hmllc
+        WHERE
+        hmllc.tenant_id = #{tenantId}
+        AND hmllc.enable_flag = 'Y'
+        AND hmllc.MATERIAL_LOT_ID  IN
+        <foreach collection="materialLotIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        GROUP BY
+        hmllc.lab_code,
+        hmllc.MATERIAL_LOT_ID
+    </select>
+
+</mapper>

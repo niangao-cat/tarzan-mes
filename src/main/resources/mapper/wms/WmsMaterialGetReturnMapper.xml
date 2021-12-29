@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialGetReturnMapper">
+
+    <select id="queryInstructionDoc"
+            resultType="com.ruike.wms.api.dto.WmsMaterialGetReturnResponseDTO">
+        SELECT
+        MID.INSTRUCTION_DOC_ID,
+        MID.INSTRUCTION_DOC_NUM,
+        MMS.SITE_ID,
+        MMS.SITE_NAME AS SITE_CODE,
+        MID.INSTRUCTION_DOC_TYPE AS TYPE,
+        MID.INSTRUCTION_DOC_STATUS AS STATUS,
+        MCC.COSTCENTER_ID AS COST_CENTER_ID,
+        MCC.COSTCENTER_CODE AS COST_CENTER_CODE,
+        APPLIER.REAL_NAME AS APPLIER,
+        MID.CREATION_DATE,
+        EXECUTION.REAL_NAME AS EXECUTION,
+        MID.LAST_UPDATE_DATE AS EXECUTION_DATE,
+        MID.REMARK,
+        TO_LOCATOR_CODE.LOCATOR_CODE AS TARGET_LOCATOR,
+        FROM_LOCATOR_CODE.LOCATOR_CODE AS SOURCE_LOCATOR
+        FROM
+        mt_instruction_doc MID
+        LEFT JOIN mt_instruction_doc_attr TO_LOCATOR ON TO_LOCATOR.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID
+        AND TO_LOCATOR.ATTR_NAME = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_mod_locator TO_LOCATOR_CODE ON TO_LOCATOR.ATTR_VALUE = TO_LOCATOR_CODE.LOCATOR_ID
+        LEFT JOIN mt_instruction_doc_attr FROM_LOCATOR ON FROM_LOCATOR.INSTRUCTION_DOC_ID = MID.INSTRUCTION_DOC_ID
+        AND FROM_LOCATOR.ATTR_NAME = 'FROM_LOCATOR_ID'
+        LEFT JOIN mt_mod_locator FROM_LOCATOR_CODE ON FROM_LOCATOR.ATTR_VALUE = FROM_LOCATOR_CODE.LOCATOR_ID
+        LEFT JOIN mt_costcenter MCC ON MCC.SITE_ID = MID.SITE_ID AND MCC.COSTCENTER_ID = MID.COST_CENTER_ID
+        LEFT JOIN mt_instruction MI ON MI.SOURCE_DOC_ID = MID.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_instruction_attr MIA ON MIA.INSTRUCTION_ID = MI.INSTRUCTION_ID AND MIA.ATTR_NAME = 'SCRAP_REASON'
+        LEFT JOIN mt_mod_site MMS ON MMS.SITE_ID = MID.SITE_ID
+        LEFT JOIN iam_user EXECUTION on EXECUTION.id = MID.LAST_UPDATED_BY
+        LEFT JOIN iam_user APPLIER on APPLIER.id = MID.PERSON_ID
+        <where>
+            AND MID.TENANT_ID = #{tenantId}
+            <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+                AND MID.INSTRUCTION_DOC_NUM LIKE CONCAT( '%',#{dto.instructionDocNum}, '%' )
+            </if>
+            <if test="finalTypeList != null and finalTypeList.size() != 0">
+                AND MID.INSTRUCTION_DOC_TYPE IN
+                <foreach collection="finalTypeList" item="type" index="index" open="(" close=")" separator=",">
+                    #{type}
+                </foreach>
+            </if>
+            <if test="dto.scrapReason != null and dto.scrapReason != ''">
+                AND MIA.ATTR_VALUE = #{dto.scrapReason}
+            </if>
+            <if test="dto.execution != null and dto.execution != ''">
+                AND EXECUTION.REAL_NAME LIKE CONCAT( '%',#{dto.execution}, '%' )
+            </if>
+            <if test="dto.applier != null and dto.applier != ''">
+                AND APPLIER.REAL_NAME LIKE CONCAT( '%',#{dto.applier}, '%' )
+            </if>
+            <if test="dto.targetLocatorId != null and dto.targetLocatorId != ''">
+                AND TO_LOCATOR.ATTR_VALUE = #{dto.targetLocatorId}
+            </if>
+            <if test="dto.sourceLocatorId != null and dto.sourceLocatorId != ''">
+                AND FROM_LOCATOR.ATTR_VALUE = #{dto.sourceLocatorId}
+            </if>
+            <if test="finalSiteIdList != null and finalSiteIdList.size() != 0">
+                AND MID.SITE_ID IN
+                <foreach collection="finalSiteIdList" item="site" index="index" open="(" close=")" separator=",">
+                    #{site}
+                </foreach>
+            </if>
+            <if test="dto.costCenterId != null and dto.costCenterId != ''">
+                AND MID.COST_CENTER_ID = #{dto.costCenterId}
+            </if>
+            <if test="dto.creationDateStart != null and dto.creationDateStart != ''">
+                AND STR_TO_DATE(MID.CREATION_DATE,'%Y-%m-%d %H:%i:%s') &gt;=
+                STR_TO_DATE(#{dto.creationDateStart},'%Y-%m-%d %H:%i:%s')
+            </if>
+            <if test="dto.creationDateEnd != null and dto.creationDateEnd != ''">
+                AND STR_TO_DATE(MID.CREATION_DATE,'%Y-%m-%d %H:%i:%s') &lt;=
+                STR_TO_DATE(#{dto.creationDateEnd},'%Y-%m-%d %H:%i:%s')
+            </if>
+            <if test="dto.executionDateStart != null and dto.executionDateStart != ''">
+                AND STR_TO_DATE(MID.LAST_UPDATE_DATE,'%Y-%m-%d %H:%i:%s') &gt;=
+                STR_TO_DATE(#{dto.executionDateStart},'%Y-%m-%d %H:%i:%s')
+            </if>
+            <if test="dto.executionDateEnd != null and dto.executionDateEnd != ''">
+                AND STR_TO_DATE(MID.LAST_UPDATE_DATE,'%Y-%m-%d %H:%i:%s') &lt;=
+                STR_TO_DATE(#{dto.executionDateEnd},'%Y-%m-%d %H:%i:%s')
+            </if>
+            <if test="dto.materialId != null and dto.materialId != ''">
+                AND MI.MATERIAL_ID = #{dto.materialId}
+            </if>
+            <if test="dto.status != null and dto.status != ''">
+                AND MID.INSTRUCTION_DOC_STATUS = #{dto.status}
+            </if>
+            GROUP BY
+            MID.INSTRUCTION_DOC_ID,
+            MID.INSTRUCTION_DOC_NUM,
+            MMS.SITE_ID,
+            MMS.SITE_NAME,
+            MID.INSTRUCTION_DOC_TYPE,
+            MID.INSTRUCTION_DOC_STATUS,
+            MCC.COSTCENTER_ID,
+            MCC.COSTCENTER_CODE,
+            MID.PERSON_ID,
+            MID.CREATION_DATE,
+            MID.LAST_UPDATED_BY,
+            MID.LAST_UPDATE_DATE,
+            MID.REMARK,
+            TO_LOCATOR_CODE.LOCATOR_CODE,
+            FROM_LOCATOR_CODE.LOCATOR_CODE
+            ORDER BY MID.CREATION_DATE DESC
+        </where>
+    </select>
+
+    <select id="queryInstructionByIdList"
+            resultType="com.ruike.wms.api.dto.WmsMaterialGetReturnLineDTO">
+        SELECT
+        MI.INSTRUCTION_ID,
+        MI.INSTRUCTION_STATUS,
+        MI.TO_SITE_ID,
+        MI.FROM_SITE_ID,
+        FROM_LOCATOR.LOCATOR_ID as CURRENT_LOCATOR_ID,
+        FROM_LOCATOR.LOCATOR_CODE as CURRENT_LOCATOR,
+        TO_LOCATOR.LOCATOR_ID as TARGET_LOCATOR_ID,
+        TO_LOCATOR.LOCATOR_CODE as TARGET_LOCATOR,
+        MI.UOM_ID,
+        MIALINENUM.ATTR_VALUE AS INSTRUCTION_LINE_NUM,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        MI.QUANTITY AS DEMAND_QUANTITY,
+        IFNULL(MIAC.ACTUAL_QTY,0) AS EXECUTION_QUANTITY,
+        MU.UOM_CODE,
+        TO_LOCATOR.LOCATOR_ID,
+        TO_LOCATOR.LOCATOR_CODE,
+        TO_LOCATOR.LOCATOR_CATEGORY,
+        SCRAPREASO.ATTR_VALUE AS SCRAP_REASON,
+        MIALOT.ATTR_VALUE AS LOT,
+        ZMB.COLOR_BIN AS COLOR_BIN,
+        ZMB.LIGHT_BIN AS LIGHT_BIN,
+        ZMB.VOLTAGE_BIN AS VOLTAGE_BIN,
+        MI.REMARK,
+        ZMB.GRADE_CODE
+        FROM
+        mt_instruction MI
+        JOIN mt_instruction_attr MIALINENUM ON MIALINENUM.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        AND MIALINENUM.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_attr MIALOT ON MIALOT.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        AND MIALOT.ATTR_NAME = 'LOT'
+        LEFT JOIN mt_instruction_attr GRADECODE ON GRADECODE.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        AND GRADECODE.ATTR_NAME = 'GRADE_CODE'
+        LEFT JOIN mt_instruction_attr SCRAPREASO ON SCRAPREASO.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        AND SCRAPREASO.ATTR_NAME = 'SCRAP_REASON'
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MI.MATERIAL_ID
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MI.UOM_ID
+        LEFT JOIN mt_instruction_actual MIAC ON MIAC.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        LEFT JOIN mt_mod_locator TO_LOCATOR ON TO_LOCATOR.LOCATOR_ID = MI.TO_LOCATOR_ID
+        LEFT JOIN mt_mod_locator FROM_LOCATOR ON FROM_LOCATOR.LOCATOR_ID = MI.FROM_LOCATOR_ID
+        LEFT JOIN z_material_bin ZMB ON ZMB.MATERIAL_ID = MI.MATERIAL_ID AND ZMB.GRADE_CODE = GRADECODE.ATTR_VALUE
+        <where>
+            <if test="instructionIdList != null and instructionIdList.size() != 0">
+                and MI.INSTRUCTION_ID IN
+                <foreach collection="instructionIdList" item="id" index="index" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </if>
+            and (MI.INSTRUCTION_STATUS='NEW' or MI.INSTRUCTION_STATUS='RELEASED' or MI.INSTRUCTION_STATUS='COMPLETED')
+            ORDER BY
+            INSTRUCTION_LINE_NUM
+        </where>
+    </select>
+
+    <select id="getInstructionIdMaterialLotId" resultType="java.util.HashMap">
+        SELECT
+        MI.INSTRUCTION_ID,
+        MMLADOC.MATERIAL_LOT_ID
+        FROM
+        mt_instruction MI
+        LEFT JOIN mt_instruction_attr MIA ON MIA.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        AND MIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN mt_instruction_doc MID ON MID.INSTRUCTION_DOC_ID = MI.SOURCE_DOC_ID
+        LEFT JOIN mt_material_lot_attr MMLADOC ON MMLADOC.ATTR_NAME = 'INSTRUCTION_DOC_NUM'
+        AND MMLADOC.ATTR_VALUE = MID.INSTRUCTION_DOC_NUM
+        LEFT JOIN mt_material_lot_attr MMLALINE ON MMLALINE.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        AND MMLALINE.ATTR_VALUE = MIA.ATTR_VALUE
+        AND MMLALINE.MATERIAL_LOT_ID = MMLADOC.MATERIAL_LOT_ID
+        <where>
+            <if test="instructionDocNum != null and instructionDocNum != ''">
+                AND MID.INSTRUCTION_DOC_NUM=#{instructionDocNum}
+            </if>
+            <if test="instructionLineNum != null and instructionLineNum != ''">
+                AND MIA.ATTR_VALUE=#{instructionLineNum}
+            </if>
+            <if test="tenantId != null">
+                AND MI.TENANT_ID = #{tenantId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getMaterialLotId" resultType="java.lang.String">
+        SELECT
+        MMLA.MATERIAL_LOT_ID
+        FROM
+        mt_material_lot_attr MMLA
+        WHERE
+        MMLA.ATTR_NAME = 'INSTRUCTION_ID'
+        AND MMLA.ATTR_VALUE = #{instructionId}
+        AND MMLA.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryInstructionDetail"
+            resultType="com.ruike.wms.api.dto.WmsMaterialGetReturnLineDetailDTO">
+        SELECT
+        #{instructionLineNum} AS instructionLineNum,
+        MML.MATERIAL_LOT_ID,
+        MML.MATERIAL_LOT_CODE,
+        MU.UOM_CODE,
+        MML.PRIMARY_UOM_QTY AS MATERIAL_LOT_QTY,
+        MML.LOT,
+        MMLOC.LOCATOR_ID AS SUB_LOCATOR_ID,
+        MMLOC.LOCATOR_CODE AS SUB_LOCATOR_CODE,
+        ZMB.COLOR_BIN AS COLOR_BIN,
+        ZMB.LIGHT_BIN AS LIGHT_BIN,
+        ZMB.VOLTAGE_BIN AS VOLTAGE_BIN,
+        UPPER( MMLASTATUS.ATTR_VALUE ) AS MATERIAL_LOT_STATUS ,
+        MM.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME
+        FROM
+        mt_material_lot MML
+        LEFT JOIN mt_instruction MI ON MI.INSTRUCTION_ID = #{finalInstructionId}
+        LEFT JOIN mt_instruction_attr GRADECODE ON GRADECODE.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        AND GRADECODE.ATTR_NAME = 'GRADE_CODE'
+        LEFT JOIN z_material_bin ZMB ON ZMB.MATERIAL_ID = MI.MATERIAL_ID AND ZMB.GRADE_CODE = GRADECODE.ATTR_VALUE
+        LEFT JOIN mt_material_lot_attr MMLASTATUS ON MMLASTATUS.MATERIAL_LOT_ID = MML.MATERIAL_LOT_ID
+        AND MMLASTATUS.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_uom MU ON MU.UOM_ID = MML.PRIMARY_UOM_ID
+        LEFT JOIN mt_material MM ON MM.MATERIAL_ID = MML.MATERIAL_ID
+        LEFT JOIN mt_mod_locator MMLOC ON MMLOC.LOCATOR_ID = MML.LOCATOR_ID
+        <where>
+            <if test="materialLotIdList != null and materialLotIdList.size() != 0">
+                AND MML.MATERIAL_LOT_ID IN
+                <foreach collection="materialLotIdList" item="id" index="index" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="materialLotCode != null and materialLotCode != ''">
+                AND MML.MATERIAL_LOT_CODE LIKE CONCAT( '%', #{materialLotCode}, '%' )
+            </if>
+            <if test="tenantId != null">
+                AND MML.TENANT_ID = #{tenantId}
+            </if>
+            <if test="materialLotStatus != null and materialLotStatus != ''">
+                AND MMLASTATUS.ATTR_VALUE = #{materialLotStatus}
+            </if>
+        </where>
+    </select>
+    <select id="queryInstructionActualQty" resultType="java.lang.Integer">
+        SELECT
+        IFNULL(SUM(MIA.ACTUAL_QTY),0)
+        FROM
+        mt_instruction MI
+        LEFT JOIN mt_instruction_actual MIA ON MIA.INSTRUCTION_ID = MI.INSTRUCTION_ID
+        WHERE MI.SOURCE_DOC_ID = #{instructionDocId}
+    </select>
+    <select id="getInstructionLineNumMax" resultType="java.lang.Integer">
+        SELECT IFNULL(MAX(CAST(MIA.ATTR_VALUE AS DECIMAL)),0)
+        FROM mt_instruction MI
+        LEFT JOIN mt_instruction_attr MIA ON MIA.INSTRUCTION_ID = MI.INSTRUCTION_ID AND MIA.ATTR_NAME =
+        'INSTRUCTION_LINE_NUM'
+        WHERE MI.SOURCE_DOC_ID = #{instructionDocId}
+    </select>
+    <select id="getInId" parameterType="com.ruike.wms.api.dto.WmsMaterialGetReturnLineDTO"
+            resultType="java.lang.String">
+        SELECT
+        mi.INSTRUCTION_ID
+        FROM
+        mt_instruction mi
+        WHERE
+        mi.MATERIAL_ID=#{materialId}
+        AND mi.INSTRUCTION_ID IN (
+        SELECT
+        mia.INSTRUCTION_ID
+        FROM
+        mt_instruction_attr mia
+        WHERE
+        mia.attr_name = 'LOT'
+        AND mia.ATTR_VALUE = #{lot}
+        AND mia.INSTRUCTION_ID IN (
+        SELECT
+        mia1.INSTRUCTION_ID
+        FROM
+        mt_instruction_attr mia1
+        WHERE
+        mia.attr_name = 'GRADE_CODE'
+        AND mia.ATTR_VALUE = #{gradeCode}
+        )
+        )
+    </select>
+
+    <select id="queryLine" parameterType="com.ruike.wms.api.dto.WmsMaterialGetReturnLineSaveDTO$Line"
+            resultType="com.ruike.wms.api.dto.WmsMaterialGetReturnLineSaveDTO$Line">
+        SELECT mi.MATERIAL_ID,miag.ATTR_VALUE as GRADE_CODE,mial.ATTR_VALUE as LOT,miar.ATTR_VALUE as SCRAP_REASON from
+        mt_instruction mi
+        LEFT JOIN mt_instruction_attr miag on miag.ATTR_NAME='GRADE_CODE' and miag.INSTRUCTION_ID=mi.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_attr mial on mial.ATTR_NAME='LOT' and mial.INSTRUCTION_ID=mi.INSTRUCTION_ID
+        LEFT JOIN mt_instruction_attr miar on miar.ATTR_NAME='SCRAP_REASON' and miar.INSTRUCTION_ID=mi.INSTRUCTION_ID
+        where mi.MATERIAL_ID=#{materialId}
+        and mi.INSTRUCTION_STATUS!='CANCEL' and mi.SOURCE_DOC_ID=#{instructionDocId}
+    </select>
+</mapper>

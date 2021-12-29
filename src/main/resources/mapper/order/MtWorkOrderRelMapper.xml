@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.order.infra.mapper.MtWorkOrderRelMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.order.domain.entity.MtWorkOrderRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_REL_ID" property="workOrderRelId" jdbcType="VARCHAR"/>
+        <result column="REL_TYPE" property="relType" jdbcType="VARCHAR"/>
+        <result column="PARENT_WORK_ORDER_ID" property="parentWorkOrderId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <delete id="batchDelete">
+        delete from mt_work_order_rel
+        where
+        TENANT_ID = #{tenantId}
+        and REL_TYPE=#{relType}
+        and (work_order_id,PARENT_WORK_ORDER_ID) in (
+        <foreach collection="ids" item="id" separator="," index="index">
+            (#{id.workOrderId}, #{id.parentWorkOrderId})
+        </foreach>
+        )
+    </delete>
+
+    <select id="selectByWorkOrderId" resultType="tarzan.order.domain.vo.MtWorkOrderVO53">
+        SELECT
+        *
+        FROM
+        (SELECT DISTINCT
+        wr.WORK_ORDER_ID workOrderId,
+        wr.REL_TYPE relType,
+        'PARENT' rel,
+        wo.WORK_ORDER_NUM workOrderNum,
+        wo.MATERIAL_ID materialId,
+        wo.WORK_ORDER_TYPE workOrderType,
+        wo.STATUS status,
+        wo.QTY qty
+        FROM
+        mt_work_order_rel wr
+        JOIN mt_work_order wo ON wo.WORK_ORDER_ID = wr.WORK_ORDER_ID
+        WHERE
+        wo.TENANT_ID = ${tenantId}
+        AND wr.PARENT_WORK_ORDER_ID = #{dto.workOrderId}
+        <if test='dto.workOrderNum != null and dto.workOrderNum != ""'>
+            <bind name="numLike" value="'%'+dto.workOrderNum+'%'"/>
+            AND wo.WORK_ORDER_NUM LIKE #{numLike}
+        </if>
+        UNION
+        SELECT DISTINCT
+        wr.PARENT_WORK_ORDER_ID workOrderId,
+        wr.REL_TYPE relType,
+        'CHILD' rel,
+        wo.WORK_ORDER_NUM workOrderNum,
+        wo.MATERIAL_ID materialId,
+        wo.WORK_ORDER_TYPE workOrderType,
+        wo.STATUS status,
+        wo.QTY qty
+        FROM
+        mt_work_order_rel wr
+        JOIN mt_work_order wo ON wo.WORK_ORDER_ID = wr.PARENT_WORK_ORDER_ID
+        WHERE
+        wo.TENANT_ID = ${tenantId}
+        AND wr.WORK_ORDER_ID = #{dto.workOrderId}
+        <if test='dto.workOrderNum != null and dto.workOrderNum != ""'>
+            <bind name="numLike" value="'%'+dto.workOrderNum+'%'"/>
+            AND wo.WORK_ORDER_NUM LIKE #{numLike}
+        </if>
+        ) a
+        WHERE 1 = 1
+
+        <if test='dto.rel != null and dto.rel.size() > 0'>
+            AND a.rel IN
+            <foreach collection="dto.rel" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test='dto.relType != null and dto.relType.size() > 0'>
+            AND a.relType IN
+            <foreach collection="dto.relType" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+
+    </select>
+</mapper>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtSubstepMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtSubstep">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SUBSTEP_ID" property="substepId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_NAME" property="substepName" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_TYPE" property="substepType" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="LONG_DESCRIPTION" property="longDescription" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtSubstepDTO2">
+        <result column="SUBSTEP_ID" property="substepId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_NAME" property="substepName" jdbcType="VARCHAR"/>
+        <result column="SUBSTEP_TYPE" property="substepType" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="LONG_DESCRIPTION" property="longDescription" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectSubstepByIds" resultMap="BaseResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select t1.TENANT_ID,
+        t1.SUBSTEP_ID,
+        t1.SITE_ID,
+        t1.SUBSTEP_NAME,
+        t1.SUBSTEP_TYPE,
+        t2.DESCRIPTION,
+        t2.LONG_DESCRIPTION,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_substep t1,
+        mt_substep_tl t2
+        where t1.SUBSTEP_ID = t2.SUBSTEP_ID
+        and t2.LANG = #{locale}
+        and t1.TENANT_ID = ${tenantId}
+        and t1.SUBSTEP_ID IN
+        <foreach collection="substepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="querySubstepForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        <bind name="temp" value="@io.choerodon.mybatis.helper.AuditHelper@audit()"/>
+        select
+        ms.SUBSTEP_ID,
+        ms.SITE_ID,
+        mms.SITE_CODE,
+        mmst.SITE_NAME,
+        ms.SUBSTEP_NAME,
+        ms.SUBSTEP_TYPE,
+        mst.DESCRIPTION,
+        mst.LONG_DESCRIPTION
+        from mt_substep ms
+        join mt_substep_tl mst on ms.SUBSTEP_ID = mst.SUBSTEP_ID and mst.LANG = #{locale}
+        join mt_mod_site mms on ms.SITE_ID = mms.SITE_ID and mms.TENANT_ID = ${tenantId}
+        join mt_mod_site_tl mmst on mms.SITE_ID = mmst.SITE_ID and mmst.LANG = #{locale}
+        where ms.TENANT_ID = ${tenantId}
+        <if test="dto.siteId!=null">
+            and ms.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.siteId==null or dto.siteId==''">
+            and ms.SITE_ID in (select muo.ORGANIZATION_ID
+            from mt_user_organization muo
+            where muo.USER_ID = #{temp.user} and muo.ORGANIZATION_TYPE = 'SITE')
+        </if>
+        <if test="dto.substepName!=null">
+            and ms.SUBSTEP_NAME like CONCAT('%',#{dto.substepName},'%')
+        </if>
+        <if test="dto.description!=null">
+            and mst.DESCRIPTION like CONCAT('%',#{dto.description},'%')
+        </if>
+        order by ms.CREATION_DATE DESC
+    </select>
+    <select id="selectCondition" resultType="tarzan.method.domain.vo.MtSubstepVO1">
+        SELECT * FROM MT_SUBSTEP tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.substepId != null">
+            AND tb.SUBSTEP_ID = #{dto.substepId}
+        </if>
+        <if test="dto.siteId != null">
+            AND tb.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.substepName != null">
+            AND tb.SUBSTEP_NAME = #{dto.substepName}
+        </if>
+        <if test="dto.substepType != null">
+            AND tb.SUBSTEP_TYPE = #{dto.substepType}
+        </if>
+        <if test="dto.description != null">
+            AND tb.DESCRIPTION like CONCAT('%',#{dto.description},'%')
+        </if>
+        <if test="dto.longDescription != null">
+            AND tb.LONG_DESCRIPTION like CONCAT('%',#{dto.longDescription},'%')
+        </if>
+    </select>
+</mapper>

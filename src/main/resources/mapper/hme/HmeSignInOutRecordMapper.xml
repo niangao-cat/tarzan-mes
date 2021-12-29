@@ -1,0 +1,2310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeSignInOutRecordMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeSignInOutRecord">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="RECORD_ID" property="recordId" jdbcType="VARCHAR"/>
+        <result column="REL_ID" property="relId" jdbcType="VARCHAR"/>
+        <result column="USER_ID" property="userId" jdbcType="DECIMAL"/>
+        <result column="EMPLOYEE_ID" property="employeeId" jdbcType="DECIMAL"/>
+        <result column="UNIT_ID" property="unitId" jdbcType="DECIMAL"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="DATE" property="date" jdbcType="TIMESTAMP"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_SHIFT_ID" property="calendarShiftId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_DATE" property="operationDate" jdbcType="TIMESTAMP"/>
+        <result column="OPERATION" property="operation" jdbcType="VARCHAR"/>
+        <result column="DURATION" property="duration" jdbcType="VARCHAR"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+	<select id="getHmeSignInOutRecordList" resultMap="BaseResultMap">
+	    SELECT
+		 *
+		FROM
+		 hme_sign_in_out_record 
+		WHERE 
+			1=1
+		<if test="tenantId != null ">
+		     AND tenant_id = #{tenantId}
+		</if>
+		<if test="vo.userId != null and vo.userId !='' ">
+		     AND USER_ID = #{vo.userId}
+		</if>
+		<if test="vo.employeeId != null and vo.employeeId !='' ">
+		     AND EMPLOYEE_ID = #{vo.employeeId}
+		</if>
+		<if test="vo.shiftCode != null and vo.shiftCode !=''">
+		     AND SHIFT_CODE = #{vo.shiftCode}
+		</if>
+		<if test="vo.workcellId != null and vo.workcellId !=''">
+		     AND WORKCELL_ID = #{vo.workcellId}
+		</if>
+		<if test="vo.relId != null and vo.relId !=''">
+		     AND REL_ID = #{vo.relId}
+		</if>
+		<if test="vo.date != null and vo.date !='' ">
+			AND DATE_FORMAT(DATE,'%Y-%m-%d') = DATE_FORMAT(#{vo.date},'%Y-%m-%d')
+		</if>
+		<if test="vo.startTime != null  ">
+			AND OPERATION_DATE >= #{vo.startTime}
+		</if>
+		<if test="vo.operation != null and vo.operation !='' ">
+		   AND OPERATION = #{vo.operation}
+		</if>
+		ORDER BY  OPERATION_DATE DESC
+     </select>
+     <select id="getEemployeeQuery" resultType="com.ruike.hme.api.dto.HmeSignInOutRecordDTO1">
+		SELECT
+			he.employee_id AS employeeId,
+			concat(he.employee_num,'-',he.`name`) AS employeeName
+		FROM
+			hpfm_employee he
+		WHERE
+			EXISTS (
+				SELECT
+					employee_id
+				FROM
+					hpfm_employee_user
+				WHERE
+					1 = 1
+				 <if test="tenantId != null ">
+		            AND tenant_id = #{tenantId}
+		        </if>
+		         <if test="userId != null">
+		            AND user_Id = #{userId}
+		        </if>
+				AND he.employee_id = employee_id
+			)
+     </select>
+     <select id="getUnitList" resultType="com.ruike.hme.api.dto.HmeSignInOutRecordDTO2">
+       SELECT
+			hea.unit_id unitId,
+			hu.unit_name unitName,
+			hea.primary_position_flag primaryPositionFlag
+		FROM
+			hpfm_employee_assign hea
+		LEFT JOIN hpfm_unit hu ON hea.unit_id = hu.unit_id
+		WHERE
+		1=1
+		<if test="tenantId != null">
+		      AND hea.tenant_id = #{tenantId}
+		 </if>
+		 <if test="employeeId != null and employeeId != ''">
+		     AND hea.employee_id = #{employeeId}
+		 </if>
+    </select>
+	<select id="getUnitById" resultType="com.ruike.hme.api.dto.HmeSignInOutRecordDTO2">
+		SELECT
+		hu.unit_id unitId,
+		hu.unit_name unitName
+		FROM
+		hpfm_unit hu
+		WHERE
+		1 = 1
+		<if test="tenantId != null">
+			AND tenant_id = #{tenantId}
+		</if>
+		<if test="unitId != null ">
+			AND unit_id = #{unitId}
+		</if>
+	</select>
+     <select id="getMtModWorkcellList" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+		 SELECT mmw.WORKCELL_ID,
+		 		mmw.WORKCELL_NAME
+		 FROM mt_user_organization muo
+		 LEFT JOIN mt_mod_workcell mmw
+		 ON mmw.WORKCELL_ID = muo.ORGANIZATION_ID
+		 WHERE muo.ORGANIZATION_TYPE = 'WORKCELL'
+		 AND muo.ENABLE_FLAG = 'Y'
+		 AND mmw.WORKCELL_TYPE = 'LINE'
+		 AND muo.tenant_id = #{tenantId}
+		 <if test="userId != null and userId != ''">
+			 AND muo.USER_ID = #{userId}
+		 </if>
+		 ORDER BY muo.DEFAULT_ORGANIZATION_FLAG = 'Y'
+    </select>
+     <select id="findWorkcell" resultType="com.ruike.hme.api.dto.HmeSignInOutRecordDTO3">
+		 SELECT DISTINCT
+			 mmw.workcell_id workcellId,
+			 mmw.workcell_name workcellName
+		 FROM
+		 (
+		 SELECT
+		 	workcell_id
+		 FROM
+		 	mt_operation_wkc_dispatch_rel mowr
+		 LEFT JOIN mt_mod_organization_rel mmor ON mmor.PARENT_ORGANIZATION_ID = mowr.workcell_id
+		 LEFT JOIN (
+		 SELECT ORGANIZATION_ID
+		 FROM mt_mod_organization_rel r
+		 WHERE PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		 AND ORGANIZATION_TYPE = 'WORKCELL'
+		 <if test="workcellIds != null and workcellIds.size()>0">
+			 AND PARENT_ORGANIZATION_ID in
+			 <foreach collection="workcellIds" index="index" item="item" open="(" close=")" separator=",">
+				 #{item}
+			 </foreach>
+		 </if>
+		 	) wkc ON mowr.workcell_id = wkc.ORGANIZATION_ID
+		 AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		 AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		 WHERE
+		 	EXISTS (
+		 SELECT
+		 	operation_id
+		 FROM
+		 	hme_operation_assign hoa
+		 WHERE 1 = 1
+		 <if test="qualityIds != null">
+			 AND hoa.quality_id IN
+			 <foreach collection="qualityIds" index="index" item="item" open="(" close=")" separator=",">
+				 #{item}
+			 </foreach>
+		 </if>
+		 AND mowr.operation_id = hoa.operation_id
+			 )
+			 ) t,
+			 mt_mod_workcell mmw,
+			 mt_mod_organization_rel r
+		 WHERE 1 = 1
+		 AND mmw.tenant_id = 0
+		 AND r.PARENT_ORGANIZATION_ID = t.WORKCELL_ID
+		 AND r.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		 AND R.ORGANIZATION_ID = MMW.WORKCELL_ID
+		 UNION
+		 SELECT
+			 w.WORKCELL_id workcellId,
+			 WORKCELL_NAME workcellName
+		 FROM
+			 mt_user_organization o,
+			 mt_mod_workcell w,
+			 mt_mod_organization_rel r,
+			 mt_operation_wkc_dispatch_rel RR
+		 WHERE
+		 	o.ORGANIZATION_TYPE = 'WORKCELL'
+		 AND O.ORGANIZATION_ID = W.WORKCELL_ID
+		 AND W.WORKCELL_TYPE = 'STATION'
+		 AND O.USER_ID = 6
+		 AND w.WORKCELL_ID = r.ORGANIZATION_ID
+		 AND r.ORGANIZATION_TYPE = 'WORKCELL'
+		 AND R.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		 AND RR.WORKCELL_ID = R.PARENT_ORGANIZATION_ID
+		 AND RR.OPERATION_ID NOT IN ( SELECT A.operation_id FROM hme_operation_assign A )
+    </select>
+     <select id="findShiftSodeList" resultType="com.ruike.hme.api.dto.HmeSignInOutRecordDTO7">
+		SELECT
+			CALENDAR_ID as calendarId ,
+			SHIFT_CODE as shiftCode ,
+			SHIFT_START_TIME as shiftStartTime,
+			SHIFT_END_TIME as shiftEndTime,
+		 	REST_TIME as restTime
+		FROM
+			mt_calendar_shift
+		WHERE
+			1=1
+		 <if test="tenantId != null">
+		    AND TENANT_ID = #{tenantId}
+		 </if>
+		 <if test="calendarId != null  and calendarId!=''">
+		    AND CALENDAR_ID = #{calendarId}
+		 </if>
+		 <if test="choiceTime != null  and choiceTime!=''">
+		    AND SHIFT_DATE = #{choiceTime}
+		 </if>
+    </select>
+
+	<select id="findShiftSodeList2" resultType="com.ruike.hme.api.dto.HmeSignInOutRecordDTO7">
+		SELECT
+		CALENDAR_ID as calendarId ,
+		SHIFT_CODE as shiftCode ,
+		SHIFT_START_TIME as shiftStartTime,
+		SHIFT_END_TIME as shiftEndTime,
+		REST_TIME as restTime
+		FROM
+		mt_calendar_shift
+		WHERE
+		1=1
+		<if test="tenantId != null">
+			AND TENANT_ID = #{tenantId}
+		</if>
+		<if test="calendarId != null  and calendarId!=''">
+			AND CALENDAR_ID = #{calendarId}
+		</if>
+		<if test="choiceTime != null  and choiceTime!=''">
+			AND SHIFT_DATE = #{choiceTime}
+		</if>
+		<if test="shiftCode != null  and shiftCode!=''">
+			AND SHIFT_CODE = #{shiftCode}
+		</if>
+	</select>
+     <select id="getMtModSiteList" resultType="tarzan.modeling.domain.entity.MtModSite">
+		SELECT
+			DISTINCT mms.SITE_ID,
+			mms.SITE_NAME 
+		FROM
+			mt_mod_organization_rel mmor
+		LEFT JOIN mt_mod_site mms ON mmor.TOP_SITE_ID = mms.SITE_ID
+		WHERE
+			mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		 <if test="tenantId != null">
+		    AND mmor.TENANT_ID = #{tenantId}
+		 </if>
+		 <if test="workcellId != null  and workcellId !='' ">
+		   AND mmor.ORGANIZATION_ID = #{workcellId}
+		 </if>
+    </select>
+    <select id="queryData" resultType="com.ruike.hme.domain.entity.HmeEmployeeAssign">
+        select hea.tenant_id,
+        hea.employee_assign_id,
+        hea.employee_id,
+        hea.quality_id,
+        hea.proficiency,
+        hea.date_from,
+        hea.date_to,
+        hea.enable_flag,
+        hea.CID,
+        hea.OBJECT_VERSION_NUMBER,
+        hea.CREATION_DATE,
+        hea.CREATED_BY,
+        hea.LAST_UPDATED_BY,
+        hea.LAST_UPDATE_DATE,
+        hea.ATTRIBUTE_CATEGORY,
+        hea.ATTRIBUTE1,
+        hea.ATTRIBUTE2,
+        hea.ATTRIBUTE3,
+        hea.ATTRIBUTE4,
+        hea.ATTRIBUTE5
+        from hme_employee_assign hea
+             left join hme_qualification hq
+               on hea.quality_id = hq.quality_id
+        WHERE hea.enable_flag = 'Y'
+        and unix_timestamp(now()) BETWEEN IFNULL(unix_timestamp(hea.date_from),-1) AND IFNULL(unix_timestamp(hea.date_to),9999999999)
+        and hea.employee_id = #{employeeId}
+        and hea.tenant_id = #{tenantId}
+    </select>
+    <select id="getEachGroupMaxList" resultMap="BaseResultMap">
+    	SELECT
+			*
+		FROM
+			hme_sign_in_out_record hr,
+			(
+				SELECT
+				REL_ID,
+				max(OPERATION_DATE) as OPERATION_DATE
+				FROM
+					hme_sign_in_out_record 
+				WHERE 
+					1=1
+				<if test="tenantId != null ">
+				     AND tenant_id = #{tenantId}
+				</if>
+				<if test="vo.userId != null and vo.userId !='' ">
+				     AND USER_ID = #{vo.userId}
+				</if>
+				<if test="vo.employeeId != null and vo.employeeId !='' ">
+				     AND EMPLOYEE_ID = #{vo.employeeId}
+				</if>
+				<if test="vo.unitId != null and vo.unitId !=''">
+				     AND UNIT_ID = #{vo.unitId}
+				</if>
+				<if test="vo.workcellId != null and vo.workcellId !=''">
+				     AND WORKCELL_ID = #{vo.workcellId}
+				</if>
+				<if test="vo.date != null and vo.date !='' ">
+					AND DATE_FORMAT(DATE,'%Y-%m-%d') = DATE_FORMAT(#{vo.date},'%Y-%m-%d')
+				</if>
+				<if test="vo.operation != null and vo.operation !='' ">
+				   AND OPERATION = #{vo.operation}
+				</if>
+				GROUP BY REL_ID
+			) t
+		WHERE
+			hr.REL_ID = t.REL_ID
+		AND hr.OPERATION_DATE = t.OPERATION_DATE
+		ORDER BY hr.OPERATION_DATE DESC
+     </select>
+	<select id="queryLovValues" resultType="com.ruike.hme.api.dto.HpfmLovValueDTO">
+		SELECT
+		`value`,
+		meaning,
+		order_seq
+		FROM
+		hpfm_lov_value
+		WHERE
+		tenant_id = #{tenantId}
+		AND lov_code = #{lovCode}
+		ORDER BY
+		order_seq
+	</select>
+	<select id="findOneList" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceDto">
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					REL_ID,
+					max(OPERATION_DATE) AS OPERATION_DATE
+				FROM
+					hme_sign_in_out_record
+				WHERE
+					1=1
+					<if test="tenantId != null ">
+						AND tenant_id = #{tenantId}
+					</if>
+					<if test="vo.relId != null ">
+						REL_ID = #{vo.relId}
+					</if>
+					<if test="vo.startTime != null and vo.startTime !='' ">
+						AND DATE_FORMAT(DATE,'%Y-%m-%d') <![CDATA[ >= ]]> DATE_FORMAT(#{vo.startTime},'%Y-%m-%d')
+					</if>
+					<if test="vo.endTime != null and vo.endTime !='' ">
+						AND DATE_FORMAT(DATE,'%Y-%m-%d') <![CDATA[ <= ]]>  DATE_FORMAT(#{vo.endTime},'%Y-%m-%d')
+					</if>
+				GROUP BY
+					REL_ID
+			) t
+		LEFT JOIN hme_sign_in_out_record hr ON hr.REL_ID = t.REL_ID
+		AND hr.OPERATION_DATE = t.OPERATION_DATE
+		LEFT JOIN (
+			SELECT
+				mor1.ORGANIZATION_ID AS workcellId,
+				mor2.ORGANIZATION_ID AS processId,
+				mor3.ORGANIZATION_ID AS lineWorkcellId,
+				mor4.ORGANIZATION_ID AS productionLineId,
+				mor5.PARENT_ORGANIZATION_ID AS siteId,
+				mor5.ORGANIZATION_ID AS workshopId,
+				mor3.SEQUENCE
+			FROM
+				mt_mod_organization_rel mor1
+			LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+			AND mor2.ORGANIZATION_TYPE = "WORKCELL"
+			LEFT JOIN mt_mod_organization_rel mor3 ON mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+			LEFT JOIN (SELECT distinct PRODUCTION_LINE_ID FROM mt_work_order)mo ON mor3.ORGANIZATION_ID = mo.PRODUCTION_LINE_ID
+			AND mor3.ORGANIZATION_TYPE = "PROD_LINE"
+			AND mor3.PARENT_ORGANIZATION_TYPE = "AREA"
+			LEFT JOIN mt_mod_organization_rel mor4 ON mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+			AND mor4.ORGANIZATION_TYPE = "AREA"
+			AND mor4.PARENT_ORGANIZATION_TYPE = "AREA"
+			LEFT JOIN mt_mod_organization_rel mor5 ON mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+			AND mor5.ORGANIZATION_TYPE = "AREA"
+			WHERE
+				mor2.ORGANIZATION_ID IS NOT NULL
+				AND	mo.PRODUCTION_LINE_ID IS NOT NULL
+				AND mor3.ORGANIZATION_ID IS NOT NULL
+				AND mor4.ORGANIZATION_ID IS NOT NULL
+				AND mor5.ORGANIZATION_ID IS NOT NULL
+		) t3 ON t3.workcellId = hr.workcell_id  WHERE 1=1
+		<if test="vo.siteId != null ">
+			AND t3.siteId = #{vo.siteId}
+		</if>
+		<if test="vo.processId != null ">
+			AND t3.processId = #{vo.processId}
+		</if>
+		<if test="vo.lineWorkcellId != null ">
+			AND t3.lineWorkcellId = #{vo.lineWorkcellId}
+		</if>
+		<if test="vo.productionLineId != null ">
+			AND t3.productionLineId = #{vo.productionLineId}
+		</if>
+		<if test="vo.workshopId != null ">
+			AND t3.workshopId = #{vo.workshopId}
+		</if>
+		ORDER BY
+			hr.OPERATION_DATE DESC
+	</select>
+	<select id="findEmployNumberCount" resultType="java.lang.Integer">
+		SELECT
+		COUNT( distinct employee_id)
+		FROM
+		hpfm_employee_assign
+		WHERE
+		1=1
+		<if test="tenantId != null ">
+			AND TENANT_ID = #{tenantId}
+		</if>
+		<if test="unitId != null ">
+			AND UNIT_ID = #{unitId}
+		</if>
+	</select>
+	<select id="findAttendanceNumberCount" resultType="java.lang.Integer">
+
+		SELECT
+		COUNT(distinct EMPLOYEE_ID)
+		FROM
+		(
+			SELECT
+			REL_ID
+			FROM
+			hme_sign_in_out_record
+			WHERE
+			1=1
+			<if test="tenantId != null ">
+				AND TENANT_ID = #{tenantId}
+			</if>
+			<if test="unitId != null ">
+				AND UNIT_ID = #{unitId}
+			</if>
+			GROUP BY REL_ID
+		) t
+		LEFT JOIN hme_sign_in_out_record hsr ON hsr.RECORD_ID = t.REL_ID
+	</select>
+	<select id="findDefectsList" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceDto2">
+		SELECT
+			SHIFT_START_TIME,SHIFT_END_TIME
+		FROM
+			mt_wkc_shift
+		WHERE
+			DATE_FORMAT(SHIFT_DATE, '%Y-%m-%d') = DATE_FORMAT(#{date}, '%Y-%m-%d')
+		AND WORKCELL_ID =#{workcell}
+	</select>
+	<select id="findDefectsNumber" resultType="java.lang.Integer">
+		SELECT
+			COUNT(1)
+		FROM
+			mt_nc_record
+		WHERE
+		<if test="tenantId != null ">
+			AND TENANT_ID = #{tenantId}
+		</if>
+		<if test="workcellId != null ">
+			AND ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+		</if>
+		AND DATE_TIME BETWEEN #{vo.shiftStartTime} AND  #{vo.shiftEndTime}
+	</select>
+	<select id="findMonitor" resultType="java.lang.String">
+		SELECT
+			he.`name`
+		FROM
+			hpfm_position hp
+		LEFT JOIN hpfm_employee_assign ha ON hp.position_id = ha.position_id
+		LEFT JOIN hpfm_employee he ON he.employee_id = ha.employee_id
+		WHERE
+			hp.supervisor_flag = 1
+		<if test="tenantId != null ">
+			AND hp.TENANT_ID = #{tenantId}
+		</if>
+		<if test="unitId != null ">
+			AND hp.unit_id = #{unitId}
+		</if>
+	</select>
+	<select id="findInfoList" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceRecordDto">
+		SELECT
+			hr.REL_ID  relId,
+			hr.DATE  dateTime,
+			hr.SHIFT_CODE shiftCode,
+			hr.WORKCELL_ID workcellId,
+			hr.EMPLOYEE_ID employeeId,
+			he.NAME employName,
+			he.employee_num employeeNum,
+			t.minTime startOperationDate,
+			t.maxTime endOperationDate,
+			(t.maxTime - t.minTime) countDate,
+			t3.workcellId,
+			t3.processId,
+			t3.lineWorkcellId
+		FROM
+			(
+				SELECT
+					REL_ID,
+					Min(OPERATION_DATE) minTime,
+					MAX(OPERATION_DATE) maxTime
+				FROM
+					hme_sign_in_out_record
+				WHERE
+					REL_ID = #{vo.relId}
+				GROUP BY
+					REL_ID
+			) t
+		LEFT JOIN hme_sign_in_out_record hr ON t.REL_ID = hr.RECORD_ID
+		LEFT JOIN hpfm_employee he ON hr.EMPLOYEE_ID = he.EMPLOYEE_ID
+		LEFT JOIN (
+			SELECT
+				mor1.ORGANIZATION_ID AS workcellId,
+				mor2.ORGANIZATION_ID AS processId,
+				mor3.ORGANIZATION_ID AS lineWorkcellId
+			FROM
+				mt_mod_organization_rel mor1
+			LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+			AND mor2.ORGANIZATION_TYPE = "WORKCELL"
+			LEFT JOIN mt_mod_organization_rel mor3 ON mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+			LEFT JOIN (SELECT distinct PRODUCTION_LINE_ID FROM mt_work_order)mo ON mor3.ORGANIZATION_ID = mo.PRODUCTION_LINE_ID
+			AND mor3.ORGANIZATION_TYPE = "PROD_LINE"
+			AND mor3.PARENT_ORGANIZATION_TYPE = "AREA"
+
+			WHERE
+				mor2.ORGANIZATION_ID IS NOT NULL
+				AND	mo.PRODUCTION_LINE_ID IS NOT NULL
+				AND mor3.ORGANIZATION_ID IS NOT NULL
+
+		) t3 ON t3.workcellId = hr.workcell_id
+	</select>
+	<select id="findShiftList" resultType="com.ruike.hme.api.dto.HmeSignInOutRecordDTO7">
+		SELECT
+		CALENDAR_ID as calendarId ,
+		SHIFT_CODE as shiftCode ,
+		SHIFT_START_TIME as shiftStartTime,
+		SHIFT_END_TIME as shiftEndTime
+		FROM
+		mt_calendar_shift
+		WHERE
+		1=1
+		<if test="tenantId != null">
+			AND TENANT_ID = #{tenantId}
+		</if>
+		<if test="calendarId != null  and calendarId!=''">
+			AND CALENDAR_ID = #{calendarId}
+		</if>
+		<if test="dateTime != null  and dateTime!=''">
+			AND DATE_FORMAT(SHIFT_DATE, '%Y-%m-%d') = DATE_FORMAT(#{dateTime}, '%Y-%m-%d')
+		</if>
+		<if test="shiftCode != null and shiftCode !=''">
+			AND SHIFT_CODE = #{shiftCode}
+		</if>
+	</select>
+
+	<select id="headDataQuery" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceDto">
+		select hsior.WORKCELL_ID, hsior.UNIT_ID, hsior.SHIFT_CODE, hsior.DATE
+		from hme_sign_in_out_record hsior
+		where hsior.TENANT_ID = #{tenantId}
+		and hsior.RECORD_ID = hsior.REL_ID
+		<if test="workcellIdList != null and workcellIdList.size>0">
+			and hsior.WORKCELL_ID in
+			<foreach collection="workcellIdList" index="index" item="item" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		and hsior.DATE >= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+		and hsior.DATE &lt;= DATE_FORMAT(#{dto.endTime},'%Y-%m-%d %H:%i:%S')
+		group by hsior.WORKCELL_ID, hsior.UNIT_ID, hsior.SHIFT_CODE, hsior.DATE
+	</select>
+
+	<select id="headDataQuery2" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceDto">
+		select mws.WORKCELL_ID as work_id, mmw.WORKCELL_NAME as work_name,
+			   mws.SHIFT_CODE, mws.SHIFT_DATE as date, mws.SHIFT_START_TIME as shift_start_date,
+			   mws.SHIFT_END_TIME as shift_end_date, our.unit_id, mws.WKC_SHIFT_ID
+		from mt_wkc_shift mws
+		left join hme_organization_unit_rel our
+		on our.organization_id = mws.WORKCELL_ID
+		and our.organization_type = 'WORKCELL'
+		left join mt_mod_workcell mmw
+		on mmw.TENANT_ID = #{tenantId}
+		and mmw.WORKCELL_ID = mws.WORKCELL_ID
+		where mws.TENANT_ID = #{tenantId}
+		and mws.SHIFT_START_TIME >= DATE_FORMAT(#{dto.startTime},'%Y-%m-%d %H:%i:%S')
+		and mws.SHIFT_START_TIME &lt;= DATE_FORMAT(#{dto.endTime},'%Y-%m-%d %H:%i:%S')
+		<if test="workcellIdList != null and workcellIdList.size>0">
+			and mws.WORKCELL_ID in
+			<foreach collection="workcellIdList" index="index" item="item" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		order by mmw.WORKCELL_NAME, mws.SHIFT_DATE, mws.SHIFT_CODE asc
+	</select>
+
+	<select id="getRelId" resultType="java.lang.String">
+		select hsior.REL_ID
+		from hme_sign_in_out_record hsior
+		where hsior.TENANT_ID = #{tenantId}
+		and (hsior.REL_ID != '' or hsior.REL_ID is not null)
+		and hsior.WORKCELL_ID = #{workcellId}
+		and hsior.UNIT_ID = #{unitId}
+		and hsior.SHIFT_CODE = #{shiftCode}
+		and hsior.DATE = DATE_FORMAT(#{date},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="getRelId2" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceRecordDto">
+		select hsior.REL_ID
+		from hme_sign_in_out_record hsior
+		where hsior.TENANT_ID = #{tenantId}
+		and (hsior.REL_ID != '' or hsior.REL_ID is not null)
+		and hsior.WORKCELL_ID = #{workcellId}
+		and hsior.UNIT_ID = #{unitId}
+		and hsior.SHIFT_CODE = #{shiftCode}
+		and hsior.DATE = DATE_FORMAT(#{date},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="maxOperationDateQuery" resultType="com.ruike.hme.domain.entity.HmeSignInOutRecord">
+		select hsior.*
+		from hme_sign_in_out_record hsior
+		where hsior.TENANT_ID = #{tenantId}
+		and hsior.REL_ID = #{relId}
+		order by hsior.OPERATION_DATE desc
+		limit 1
+	</select>
+
+	<select id="getMaterialLotId" resultType="java.lang.String">
+        select mnr.MATERIAL_LOT_ID
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+        and mnr.DATE_TIME >= DATE_FORMAT(#{dateTimeFrom},'%Y-%m-%d %H:%i:%S')
+        and mnr.DATE_TIME &lt;= DATE_FORMAT(#{dateTimeTo},'%Y-%m-%d %H:%i:%S')
+        and (mnr.PARENT_NC_RECORD_ID is null or mnr.PARENT_NC_RECORD_ID = '')
+    </select>
+
+	<select id="employeeInfoQuery" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceDto6">
+		select he.`name`, he.employee_num
+		from hpfm_employee he
+		where he.tenant_id = #{tenantId}
+		and he.employee_id = #{employeeId}
+	</select>
+
+	<select id="shiftDataQuery" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceRecordDto">
+		select hejs.workcell_id, mmw.WORKCELL_NAME AS workcell, hejs.site_in_by AS EMPLOYEE_ID,
+			   mmw_parent.WORKCELL_NAME as workName, IFNULL(mmor_process.SEQUENCE,9999999999) order_by
+		from hme_eo_job_sn hejs
+		left join mt_mod_workcell mmw
+		on mmw.workcell_id = hejs.workcell_id
+		and mmw.tenant_id = #{tenantId}
+		left join mt_mod_organization_rel mmor
+		on mmor.TENANT_ID = hejs.tenant_id
+		and mmor.TOP_SITE_ID = #{siteId}
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.ORGANIZATION_ID = hejs.workcell_id
+		left join mt_mod_workcell mmw_parent
+		on mmw_parent.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+		left join mt_mod_organization_rel mmor_process
+		on mmor_process.TENANT_ID = hejs.tenant_id
+		and mmor_process.TOP_SITE_ID = #{siteId}
+		and mmor_process.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor_process.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor_process.ORGANIZATION_ID = mmw_parent.workcell_id
+		and mmor_process.PARENT_ORGANIZATION_ID = #{workId}
+		where hejs.tenant_id = #{tenantId}
+		and hejs.workcell_id in
+		<foreach collection="workcellIdList" open="(" close=")" separator="," item="workcellId" index="index">
+			#{workcellId}
+		</foreach>
+		and hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_date >= DATE_FORMAT(#{siteOutDateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{siteOutDateTo},'%Y-%m-%d %H:%i:%S')
+		and hejs.rework_flag != 'Y'
+	</select>
+
+	<select id="shiftDataQueryNew" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceRecordDto">
+		SELECT mmw.workcell_id, mmw.WORKCELL_NAME AS workcell, hejs.site_in_by AS EMPLOYEE_ID,
+			   mm.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME
+		FROM
+		hme_eo_job_sn hejs
+		left join mt_mod_workcell mmw
+		on mmw.workcell_id = hejs.workcell_id
+		left join mt_material mm
+		on mm.MATERIAL_ID = hejs.sn_material_id
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		AND hejs.workcell_id in
+		<foreach collection="workcellIdList" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		<if test="dto.userIdList != null and dto.userIdList.size() > 0">
+			and hejs.site_in_by in
+			<foreach collection="dto.userIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		group by mmw.workcell_id, hejs.site_in_by, mm.MATERIAL_ID
+	</select>
+
+	<select id="getMaterialLotId4" resultType="java.lang.String">
+		select hejs.material_lot_id
+		from hme_eo_job_sn hejs
+		where hejs.tenant_id = #{tenantId}
+		and hejs.workcell_id in
+		<foreach collection="workcellIds" open="(" close=")" separator="," item="workcellId" index="index">
+			#{workcellId}
+		</foreach>
+		and hejs.site_in_date >= DATE_FORMAT(#{siteInDateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{siteInDateTo},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="getMaterialLotId5" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO">
+		select hejs.job_id, hejs.material_lot_id
+		from hme_eo_job_sn hejs
+		where hejs.tenant_id = #{tenantId}
+		and hejs.workcell_id = #{workcellId}
+		and hejs.site_out_date >= DATE_FORMAT(#{siteInDateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_out_date &lt;= DATE_FORMAT(#{siteInDateTo},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_out_by = #{employeeId}
+		and hejs.rework_flag != 'Y'
+	</select>
+
+    <select id="findOperation" resultType="com.ruike.hme.api.dto.HmeEmployeeAttendanceDTO11">
+        SELECT hr.OPERATION, hr.DATE, hr.SHIFT_CODE, hr.RECORD_ID, hr.REL_ID
+        from hme_sign_in_out_record hr
+        WHERE hr.TENANT_ID = #{tenantId}
+        AND hr.EMPLOYEE_ID = #{employeeId}
+        AND hr.WORKCELL_ID = #{workcellId}
+    </select>
+
+	<select id="findWorkcellQualityId" resultType="com.ruike.hme.api.dto.HmeSignInOutRecordDTO3">
+		SELECT hoa.quality_id,
+			mmw.WORKCELL_NAME,
+			mmw.WORKCELL_ID
+		FROM mt_mod_workcell mmw
+		LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = mmw.WORKCELL_ID
+		LEFT JOIN mt_operation_wkc_dispatch_rel mowdr ON mowdr.WORKCELL_ID=mmor.PARENT_ORGANIZATION_ID
+		LEFT JOIN hme_operation_assign hoa ON hoa.operation_id = mowdr.OPERATION_ID
+		WHERE mmw.TENANT_ID = #{tenantId}
+		AND mmw.WORKCELL_ID in
+		   <foreach collection="workcellLists" open="(" close=")" separator="," item="workcellId" index="index">
+			#{workcellId}
+	       </foreach>
+	</select>
+    <select id="getNoModWorkcellList" resultType="com.ruike.hme.api.dto.HmeWorkCellDTO">
+		SELECT
+			mmw1.WORKCELL_ID,
+			mmw1.WORKCELL_NAME,
+			HOR.unit_id
+		FROM
+			mt_mod_workcell mmw1,
+			mt_user_organization HUO,
+			hme_organization_unit_rel HOR
+		WHERE
+			mmw1.WORKCELL_TYPE = 'STATION'
+		AND mmw1.ENABLE_FLAG = 'Y'
+		 AND HUO.USER_ID =#{userId}
+		AND HUO.ORGANIZATION_ID = mmw1.WORKCELL_ID
+		AND HOR.organization_id = mmw1.WORKCELL_ID
+		AND NOT EXISTS (
+			SELECT
+				1
+			FROM
+				hme_operation_assign hoa,
+				mt_operation_wkc_dispatch_rel howdr,
+				mt_mod_organization_rel mmor,
+				mt_mod_workcell mmw
+			WHERE
+				howdr.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+			AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+			AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+			AND mmor.ORGANIZATION_ID = mmw.WORKCELL_ID
+			AND mmw.WORKCELL_TYPE = 'STATION'
+			AND mmw.ENABLE_FLAG = 'Y'
+			AND mmw.WORKCELL_ID = mmw1.WORKCELL_ID
+	        AND hoa.operation_id = howdr.operation_id
+
+		)
+	</select>
+
+	<select id="getModWorkcellList" resultType="com.ruike.hme.api.dto.HmeWorkCellDTO">
+		SELECT DISTINCT
+			mmw.WORKCELL_ID,
+			mmw.WORKCELL_NAME,
+			HOR.unit_id,
+			hoa.quality_id
+		FROM
+			hme_operation_assign hoa,
+			mt_operation_wkc_dispatch_rel howdr,
+			mt_mod_organization_rel mmor,
+			mt_mod_workcell mmw,
+			hme_organization_unit_rel HOR
+		WHERE
+			howdr.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+		AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mmor.ORGANIZATION_ID = mmw.WORKCELL_ID
+		AND mmw.WORKCELL_TYPE = 'STATION'
+		AND mmw.ENABLE_FLAG = 'Y'
+		AND HOR.organization_id = mmw.WORKCELL_ID
+		AND hoa.operation_id = howdr.operation_id
+	</select>
+
+	<select id="getEmployeeList" resultType="com.ruike.hme.api.dto.HmeWorkCellDTO">
+		SELECT
+			hea.quality_id
+		FROM
+			hme_employee_assign hea
+		WHERE
+			hea.enable_flag = 'Y'
+		AND hea.employee_id =#{employeeId}
+	</select>
+
+	<select id="getMaterialLot" resultType="java.lang.String">
+		select distinct mnr.MATERIAL_LOT_ID
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.ROOT_CAUSE_WORKCELL_ID in
+		<foreach collection="workcellIdList" open="(" close=")" separator="," item="workcellId" index="index">
+			#{workcellId}
+		</foreach>
+        and mnr.DATE_TIME >= DATE_FORMAT(#{dateTimeFrom},'%Y-%m-%d %H:%i:%S')
+        and mnr.DATE_TIME &lt;= DATE_FORMAT(#{dateTimeTo},'%Y-%m-%d %H:%i:%S')
+        and (mnr.PARENT_NC_RECORD_ID is null or mnr.PARENT_NC_RECORD_ID = '')
+	</select>
+
+	<select id="getMaterialLotId2" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO2">
+        select mnr.NC_RECORD_ID, mnr.MATERIAL_LOT_ID
+        from mt_nc_record mnr
+        where mnr.TENANT_ID = #{tenantId}
+        and mnr.ROOT_CAUSE_WORKCELL_ID = #{workcellId}
+        and mnr.DATE_TIME >= DATE_FORMAT(#{dateTimeFrom},'%Y-%m-%d %H:%i:%S')
+        and mnr.DATE_TIME &lt;= DATE_FORMAT(#{dateTimeTo},'%Y-%m-%d %H:%i:%S')
+        and mnr.USER_ID = #{userId}
+        and (mnr.PARENT_NC_RECORD_ID is null or mnr.PARENT_NC_RECORD_ID = '')
+    </select>
+
+	<select id="getRepairJobId" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO">
+		select hejs.job_id, hejs.material_lot_id
+		from hme_eo_job_sn hejs
+		where hejs.tenant_id = #{tenantId}
+		and hejs.workcell_id = #{workcellId}
+		and hejs.site_out_date >= DATE_FORMAT(#{siteInDateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_out_date &lt;= DATE_FORMAT(#{siteInDateTo},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_out_by = #{employeeId}
+		and hejs.rework_flag = 'Y'
+	</select>
+
+	<select id="jobDetailInfoQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO3">
+		select hejs.job_id, hejs.work_order_id, mwo.WORK_ORDER_NUM, hejs.eo_id, me.EO_NUM, me.IDENTIFICATION,
+			   hejs.material_lot_id, mml.PRIMARY_UOM_QTY, hejs.site_in_date, hejs.site_out_date
+		from hme_eo_job_sn hejs
+		left join mt_work_order mwo
+		on mwo.WORK_ORDER_ID = hejs.work_order_id
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		left join mt_material_lot mml
+		on mml.MATERIAL_LOT_ID = hejs.material_lot_id
+		where hejs.job_id in
+		<foreach collection="jobIdList" open="(" close=")" separator="," item="jobId" index="index">
+			#{jobId}
+		</foreach>
+	</select>
+
+	<select id="ncRecordInfoQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO4">
+		select mnr.NC_RECORD_ID, mnr.EO_ID, me.EO_NUM, mnr.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE,
+			   mml.PRIMARY_UOM_QTY, mnr.DATE_TIME, mnr.USER_ID, mnr.NC_CODE_ID as NC_GROUP_ID, mng.DESCRIPTION,
+		       mni.INCIDENT_NUMBER
+		from mt_nc_record mnr
+		left join mt_eo me
+		on me.EO_ID = mnr.EO_ID
+		left join mt_material_lot mml
+		on mml.MATERIAL_LOT_ID = mnr.MATERIAL_LOT_ID
+		left join mt_nc_group mng
+		on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+		left join mt_nc_incident mni
+		on mni.NC_INCIDENT_ID = mnr.NC_INCIDENT_ID
+		where mnr.NC_RECORD_ID in
+		<foreach collection="ncRecordIdList" open="(" close=")" separator="," item="ncRecordId" index="index">
+			#{ncRecordId}
+		</foreach>
+	</select>
+
+	<select id="getCountNumber" resultType="java.math.BigDecimal">
+		SELECT
+			IFNULL(SUM(wcor.qty ),0) as qty
+		FROM
+		 hme_wkc_complete_output_record wcor
+		WHERE wcor.tenant_id = #{tenantId}
+		 AND wcor.wkc_shift_id = #{wkcShiftId}
+		 AND wcor.workcell_id = #{workcellId}
+	</select>
+
+	<select id="getCountNumberNew" resultType="java.math.BigDecimal">
+		SELECT
+			IFNULL(sum(me.QTY),0)
+		FROM
+			hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_mod_organization_rel mmor2
+		ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+		and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+			hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		<if test="dto.userIdList != null and dto.userIdList.size() > 0">
+			and hejs.site_in_by in
+			<foreach collection="dto.userIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		AND mmor2.PARENT_ORGANIZATION_ID = #{workcellId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+	</select>
+
+	<select id="getActualOutputNumber" resultType="java.math.BigDecimal">
+		SELECT
+		IFNULL(sum(me.QTY),0)
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_mod_workcell_attr mmwa
+		on mmwa.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+		and mmwa.ATTR_NAME = 'OUTPUT_FLAG'
+		LEFT JOIN mt_mod_organization_rel mmor2
+		ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+		and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		<if test="dto.userIdList != null and dto.userIdList.size() > 0">
+			and hejs.site_in_by in
+			<foreach collection="dto.userIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		AND mmor2.PARENT_ORGANIZATION_ID = #{workcellId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and (hejs.rework_flag = 'N' or hejs.rework_flag is null or hejs.rework_flag = '')
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and mmwa.ATTR_VALUE = 'Y'
+	</select>
+
+	<select id="defectNumberNew" resultType="java.math.BigDecimal">
+		select count(DISTINCT(mnr.NC_RECORD_ID))
+		from (
+			SELECT hejs.eo_id, hejs.workcell_id
+			FROM
+			hme_eo_job_sn hejs
+			LEFT JOIN mt_mod_organization_rel mmor
+			ON mmor.ORGANIZATION_ID = hejs.workcell_id
+			and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+			and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+			LEFT JOIN mt_mod_organization_rel mmor2
+			ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+			and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+			and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+			left join mt_eo me
+			on me.EO_ID = hejs.eo_id
+			<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+				LEFT JOIN mt_work_order mwo
+				ON mwo.WORK_ORDER_ID = hejs.work_order_id
+			</if>
+			WHERE
+			hejs.tenant_id = #{tenantId}
+			AND hejs.shift_id = #{wkcShiftId}
+			<if test="dto.userIdList != null and dto.userIdList.size() > 0">
+				and hejs.site_in_by in
+				<foreach collection="dto.userIdList" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+				and mwo.WORK_ORDER_NUM in
+				<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+				and hejs.sn_material_id in
+				<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+				and mwo.PRODUCTION_VERSION in
+				<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			AND mmor2.PARENT_ORGANIZATION_ID = #{workcellId}
+			and hejs.site_out_date is not null
+			and hejs.site_out_date != ''
+			and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		    group by hejs.eo_id, hejs.workcell_id
+		) t
+		left join mt_nc_record mnr
+		on mnr.TENANT_ID = #{tenantId}
+		and mnr.EO_ID = t.eo_id
+		and mnr.ROOT_CAUSE_WORKCELL_ID = t.workcell_id
+		and mnr.PARENT_NC_RECORD_ID = ''
+		left join mt_nc_group mng
+		on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+		where mng.COMPONENT_REQUIRED = 'N'
+		<if test="shiftStartDate!=null">
+			AND mnr.CREATION_DATE  >= DATE_FORMAT(#{shiftStartDate},'%Y-%m-%d %H:%i:%S')
+		</if>
+		<if test="shiftEndDate!=null">
+			AND mnr.CREATION_DATE  &lt;= DATE_FORMAT(#{shiftEndDate},'%Y-%m-%d %H:%i:%S')
+		</if>
+	</select>
+
+	<select id="workcellNameLikeQuery" resultType="java.lang.String">
+		select mmw.WORKCELL_ID
+		from mt_mod_workcell mmw
+		where mmw.TENANT_ID = #{tenantId}
+		and mmw.WORKCELL_NAME like concat('%', concat(#{workcellName}, '%'))
+	</select>
+
+	<select id="noSiteOutMaterialLotIdQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO">
+		select hejs.job_id, hejs.material_lot_id
+		from hme_eo_job_sn hejs
+		where hejs.tenant_id = #{tenantId}
+		and hejs.workcell_id = #{workcellId}
+		and hejs.site_in_date >= DATE_FORMAT(#{siteInDateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{siteInDateTo},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_by = #{employeeId}
+    	and hejs.site_out_date is null
+		and hejs.rework_flag != 'Y'
+	</select>
+
+    <select id="listQuery" resultType="com.ruike.hme.domain.vo.HmeSignInOutRecordVO4">
+		SELECT
+			hsior.SHIFT_CODE,
+			hsior.OPERATION,
+			hsior.OPERATION_DATE,
+			hsior.DATE,
+			hsior.CREATION_DATE,
+			hsior.REASON,
+			hsior.DURATION,
+			mmw.WORKCELL_NAME,
+			mmpl.PROD_LINE_NAME,
+			mma2.AREA_NAME departmentName,
+			iu.login_name,
+			iu.real_name,
+			mcs.SHIFT_START_TIME,
+			mcs.SHIFT_END_TIME
+		FROM
+			hme_sign_in_out_record hsior,
+			mt_mod_workcell mmw,
+			mt_mod_organization_rel mmor,
+			mt_mod_organization_rel mmor2,
+			mt_mod_organization_rel mmor3,
+			mt_mod_organization_rel mmor4,
+			mt_mod_production_line mmpl,
+			mt_mod_area mma,
+			mt_mod_area mma2,
+			iam_user iu,
+			mt_calendar_shift mcs,
+			mt_calendar_org_rel mcor
+		WHERE
+			hsior.TENANT_ID = #{tenantId}
+			AND hsior.WORKCELL_ID = mmw.WORKCELL_ID
+			AND hsior.WORKCELL_ID = mmor.ORGANIZATION_ID
+			AND mmor.PARENT_ORGANIZATION_ID = mmor2.ORGANIZATION_ID
+			AND mmor2.ORGANIZATION_TYPE = 'PROD_LINE'
+			AND mmor2.ORGANIZATION_ID = mmpl.PROD_LINE_ID
+			AND mmor2.PARENT_ORGANIZATION_ID = mmor3.ORGANIZATION_ID
+			AND mmor3.ORGANIZATION_TYPE = 'AREA'
+			AND mmor3.ORGANIZATION_ID = mma.AREA_ID
+			AND mmor3.PARENT_ORGANIZATION_ID = mmor4.ORGANIZATION_ID
+			AND mmor4.ORGANIZATION_TYPE = 'AREA'
+			AND mmor4.ORGANIZATION_ID = mma2.AREA_ID
+			AND hsior.USER_ID = iu.id
+			AND mcor.ORGANIZATION_ID = hsior.WORKCELL_ID
+			AND mcor.ORGANIZATION_TYPE = 'WORKCELL'
+			AND mcor.CALENDAR_ID = mcs.CALENDAR_ID
+			AND mcs.SHIFT_CODE = hsior.SHIFT_CODE
+			AND mcs.SHIFT_DATE = hsior.DATE
+		<if test="dto.departmentId!=null and dto.departmentId!=''">
+			and mma2.AREA_ID = #{dto.departmentId}
+		</if>
+		<if test="dto.prodLineId!=null and dto.prodLineId!=''">
+			and mmpl.PROD_LINE_ID = #{dto.prodLineId}
+		</if>
+		<if test="dto.workcellId!=null and dto.workcellId!=''">
+			and mmw.WORKCELL_ID = #{dto.workcellId}
+		</if>
+		<if test="dto.employeeNum!=null and dto.employeeNum!=''">
+			and iu.login_name = #{dto.employeeNum}
+		</if>
+		<if test="dto.dateFrom!=null and dto.dateFrom!=''">
+			and hsior.DATE &gt;= #{dto.dateFrom}
+		</if>
+		<if test="dto.dateTo!=null and dto.dateTo!=''">
+			and hsior.DATE &lt;= #{dto.dateTo}
+		</if>
+    </select>
+
+	<select id="getProcessByWorkcell" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+		select mmw.WORKCELL_ID, mmw.WORKCELL_CODE,mmw.WORKCELL_NAME
+		from mt_mod_organization_rel mmor
+		left join mt_mod_workcell mmw
+		on mmw.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+		where mmor.TENANT_ID = #{tenantId}
+		and mmor.ORGANIZATION_ID = #{workcellId}
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		limit 1
+	</select>
+
+	<select id="lineMakeNumQuery" resultType="java.math.BigDecimal">
+		SELECT
+		IFNULL(sum(me.QTY),0)
+		FROM
+		hme_eo_job_sn hejs
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+	</select>
+
+	<select id="lineMakeNumDetailQuery" resultType="java.lang.String">
+		SELECT
+		hejs.job_id
+		FROM
+		hme_eo_job_sn hejs
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+	</select>
+
+	<select id="inMakeNumQuery" resultType="java.math.BigDecimal">
+		SELECT
+		IFNULL(sum(me.QTY),0)
+		FROM
+		hme_eo_job_sn hejs
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and (hejs.site_out_date is null
+		or hejs.site_out_date = '')
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+	</select>
+
+	<select id="inMakeNumDetailQuery" resultType="java.lang.String">
+		SELECT
+		hejs.job_id
+		FROM
+		hme_eo_job_sn hejs
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and (hejs.site_out_date is null
+		or hejs.site_out_date = '')
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+	</select>
+
+	<select id="defectsNumbQuery" resultType="java.lang.String">
+		select DISTINCT(mnr.NC_RECORD_ID)
+		from (
+			SELECT hejs.eo_id, hejs.workcell_id
+			FROM
+			hme_eo_job_sn hejs
+			<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+				LEFT JOIN mt_work_order mwo
+				ON mwo.WORK_ORDER_ID = hejs.work_order_id
+			</if>
+			WHERE
+			hejs.tenant_id = #{tenantId}
+			AND hejs.shift_id = #{wkcShiftId}
+			and hejs.site_in_by = #{hejs.employeeId}
+			and hejs.workcell_id = #{hejs.workcellId}
+			and hejs.sn_material_id = #{hejs.materialId}
+			<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+				and mwo.WORK_ORDER_NUM in
+				<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+				and hejs.sn_material_id in
+				<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+				and mwo.PRODUCTION_VERSION in
+				<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			and hejs.site_out_date is not null
+			and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+			group by hejs.eo_id, hejs.workcell_id
+		) t
+		left join mt_nc_record mnr
+		on mnr.TENANT_ID = #{tenantId}
+		and mnr.EO_ID = t.eo_id
+		and mnr.ROOT_CAUSE_WORKCELL_ID = t.workcell_id
+		and mnr.PARENT_NC_RECORD_ID = ''
+		left join mt_nc_group mng
+		on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+		where mng.COMPONENT_REQUIRED = 'N'
+		<if test="dto.shiftStartDate!=null">
+			AND mnr.CREATION_DATE  >= DATE_FORMAT(#{dto.shiftStartDate},'%Y-%m-%d %H:%i:%S')
+		</if>
+		<if test="dto.shiftEndDate!=null">
+			AND mnr.CREATION_DATE  &lt;= DATE_FORMAT(#{dto.shiftEndDate},'%Y-%m-%d %H:%i:%S')
+		</if>
+	</select>
+
+	<select id="repairNumQuery" resultType="java.math.BigDecimal">
+		SELECT
+		IFNULL(sum(me.QTY),0)
+		FROM
+		hme_eo_job_sn hejs
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.rework_flag = 'Y'
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+	</select>
+
+	<select id="repairNumDetailQuery" resultType="java.lang.String">
+		SELECT
+		hejs.job_id
+		FROM
+		hme_eo_job_sn hejs
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.rework_flag = 'Y'
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+	</select>
+
+	<select id="eoWorkcellGroupQuery" resultType="java.math.BigDecimal">
+		select count(1)
+		from (
+		SELECT 	hejs.eo_id,
+				hejs.workcell_id
+		FROM
+		hme_eo_job_sn hejs
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		group by hejs.eo_id, hejs.workcell_id) a
+	</select>
+
+	<select id="eoWorkcellReworkFlagNGroupQuery" resultType="java.lang.String">
+		SELECT 	hejs.eo_id
+		FROM
+		hme_eo_job_sn hejs
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and (hejs.rework_flag = 'N' or hejs.rework_flag is null or hejs.rework_flag = '')
+	</select>
+
+	<select id="eoWorkcellReworkFlagYGroupQuery" resultType="java.lang.String">
+		SELECT 	hejs.eo_id
+		FROM
+		hme_eo_job_sn hejs
+		<if test="(dto.workOrderNumList != null and dto.workOrderNumList.size() > 0) or (dto.bomVersionList != null and dto.bomVersionList.size() > 0)">
+			LEFT JOIN mt_work_order mwo
+			ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		</if>
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{wkcShiftId}
+		and hejs.site_in_by = #{hejs.employeeId}
+		and hejs.workcell_id = #{hejs.workcellId}
+		and hejs.sn_material_id = #{hejs.materialId}
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.rework_flag = 'Y'
+		group by hejs.eo_id, hejs.workcell_id, hejs.rework_flag
+	</select>
+
+	<select id="getWorkcellByProdLine" resultType="java.lang.String">
+		select mmw.WORKCELL_ID
+		from mt_mod_organization_rel mmor
+		left join mt_mod_organization_rel mmor2
+		on mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+		and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_mod_organization_rel mmor3
+		on mmor3.PARENT_ORGANIZATION_ID = mmor2.ORGANIZATION_ID
+		and mmor3.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor3.ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_mod_workcell mmw
+		on mmw.WORKCELL_ID = mmor3.ORGANIZATION_ID
+		where mmor.TENANT_ID = #{tenantId}
+		and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID, #{prodLineId})
+		and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+		and mmw.ENABLE_FLAG = 'Y'
+	</select>
+
+	<select id="getWorkcellByProcess" resultType="java.lang.String">
+		select mmw.WORKCELL_ID
+		from mt_mod_organization_rel mmor
+		left join mt_mod_workcell mmw
+		on mmw.WORKCELL_ID = mmor.ORGANIZATION_ID
+		where mmor.TENANT_ID = #{tenantId}
+		and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID, #{processId})
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmw.ENABLE_FLAG = 'Y'
+	</select>
+
+	<select id="getWorkcellByLineWorkcellId" resultType="java.lang.String">
+		select mmw.WORKCELL_ID
+		from mt_mod_organization_rel mmor
+		left join mt_mod_organization_rel mmor2
+		on mmor2.TENANT_ID = mmor.TENANT_ID
+		and mmor2.PARENT_ORGANIZATION_ID = mmor.ORGANIZATION_ID
+		and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_mod_workcell mmw
+		on mmw.WORKCELL_ID = mmor2.ORGANIZATION_ID
+		where mmor.TENANT_ID = #{tenantId}
+		and FIND_IN_SET(mmor.PARENT_ORGANIZATION_ID, #{lineWorkcellId})
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmw.ENABLE_FLAG = 'Y'
+	</select>
+
+	<select id="sumQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO5">
+		select hejs.site_in_by as user_id, mmw.WORKCELL_ID as process_id, mmw.WORKCELL_NAME as process_name,
+		       mm.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME, IFNULL(mwo.PRODUCTION_VERSION,'') as material_version
+		from hme_eo_job_sn hejs
+		left join mt_work_order mwo
+		on mwo.WORK_ORDER_ID = hejs.work_order_id
+		left join mt_mod_organization_rel mmor
+		on mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_mod_workcell mmw
+		on mmw.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+		left join mt_material mm
+		on mm.MATERIAL_ID = hejs.sn_material_id
+		where hejs.tenant_id =  #{tenantId}
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		<if test="dto.workcellIdList != null and dto.workcellIdList.size() > 0">
+		and hejs.workcell_id in
+			<foreach collection="dto.workcellIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		<if test="dto.userIdList != null and dto.userIdList.size() > 0">
+			and hejs.site_in_by in
+			<foreach collection="dto.userIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.materialIdList != null and dto.materialIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.materialIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.materialVersionList != null and dto.materialVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.materialVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		and mmw.ENABLE_FLAG = 'Y'
+		GROUP BY hejs.site_in_by, mmw.WORKCELL_ID, mm.MATERIAL_ID, mwo.PRODUCTION_VERSION
+	</select>
+
+	<select id="getLineWorkcellByProcess" resultType="tarzan.modeling.domain.entity.MtModWorkcell">
+		select mmw.WORKCELL_ID, mmw.WORKCELL_NAME
+		from mt_mod_organization_rel mmor
+		left join mt_mod_workcell mmw
+		on mmw.WORKCELL_ID = mmor.PARENT_ORGANIZATION_ID
+		where mmor.TENANT_ID = #{tenantId}
+		and mmor.ORGANIZATION_ID = #{processId}
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		and mmw.ENABLE_FLAG = 'Y'
+		limit 1
+	</select>
+
+	<select id="getProdLineByLineWorkcell" resultType="tarzan.modeling.domain.entity.MtModProductionLine">
+		select mmpl.PROD_LINE_ID, mmpl.PROD_LINE_CODE, mmpl.PROD_LINE_NAME
+		from mt_mod_organization_rel mmor,
+				 mt_mod_production_line mmpl
+		where mmor.TENANT_ID = #{tenantId}
+		and mmor.ORGANIZATION_ID = #{lineWorkcellId}
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+		and mmpl.PROD_LINE_ID = mmor.PARENT_ORGANIZATION_ID
+		and mmpl.ENABLE_FLAG = 'Y'
+		limit 1
+	</select>
+
+	<select id="getSumActualOutputNumber" resultType="java.math.BigDecimal">
+		SELECT
+		IFNULL(sum(me.QTY),0)
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+ 		LEFT JOIN mt_work_order mwo
+ 		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and (hejs.rework_flag = 'N' or hejs.rework_flag is null or hejs.rework_flag = '')
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="getSumCountNumber" resultType="java.math.BigDecimal">
+		SELECT
+			IFNULL(sum(me.QTY),0)
+		FROM
+			hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="getSumInMakeNum" resultType="java.math.BigDecimal">
+		SELECT
+		IFNULL(sum(me.QTY),0)
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and (hejs.site_out_date is null
+		or hejs.site_out_date = '')
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="getSumDefectsNumb" resultType="java.math.BigDecimal">
+		select count(DISTINCT(mnr.NC_RECORD_ID))
+		from (
+		SELECT hejs.eo_id, hejs.workcell_id
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		group by hejs.eo_id, hejs.workcell_id
+		) t
+		left join mt_nc_record mnr
+		on mnr.TENANT_ID = #{tenantId}
+		and mnr.EO_ID = t.eo_id
+		and mnr.ROOT_CAUSE_WORKCELL_ID = t.workcell_id
+		and mnr.PARENT_NC_RECORD_ID = ''
+		left join mt_nc_group mng
+		on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+		where mng.COMPONENT_REQUIRED = 'N'
+		<if test="dateFrom!=null">
+			AND mnr.CREATION_DATE  >= DATE_FORMAT(#{dateFrom},'%Y-%m-%d %H:%i:%S')
+		</if>
+		<if test="dateTo!=null">
+			AND mnr.CREATION_DATE  &lt;= DATE_FORMAT(#{dateTo},'%Y-%m-%d %H:%i:%S')
+		</if>
+	</select>
+
+	<select id="getSumRepairNum" resultType="java.math.BigDecimal">
+		SELECT
+		IFNULL(sum(me.QTY),0)
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.rework_flag = 'Y'
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="getSumEoWorkcellGroup" resultType="java.math.BigDecimal">
+		select count(1)
+		from (
+		SELECT 	hejs.eo_id,
+				hejs.workcell_id
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		group by hejs.eo_id, hejs.workcell_id) a
+	</select>
+
+	<select id="sumEoWorkcellReworkFlagNGroupQuery" resultType="java.lang.String">
+		SELECT hejs.eo_id
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and (hejs.rework_flag = 'N' or hejs.rework_flag is null or hejs.rework_flag = '')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="sumEoWorkcellReworkFlagYGroupQuery" resultType="java.lang.String">
+		SELECT hejs.eo_id
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.rework_flag = 'Y'
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		group by hejs.eo_id, hejs.workcell_id, hejs.rework_flag
+	</select>
+
+	<select id="getTotalProductionTime" resultType="java.math.BigDecimal">
+		SELECT IFNULL(sum(UNIX_TIMESTAMP(hejs.site_out_date) - UNIX_TIMESTAMP(hejs.site_in_date)), 0)
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+	</select>
+
+	<select id="sumActualOutputNumberQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO3">
+		SELECT
+		hejs.job_id, hejs.work_order_id, mwo.WORK_ORDER_NUM, hejs.eo_id, me.EO_NUM, me.IDENTIFICATION,
+		hejs.material_lot_id, mml.PRIMARY_UOM_QTY, hejs.site_in_date, hejs.site_out_date
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+ 		LEFT JOIN mt_work_order mwo
+ 		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		left join mt_material_lot mml
+		on mml.MATERIAL_LOT_ID = hejs.material_lot_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and (hejs.rework_flag = 'N' or hejs.rework_flag is null or hejs.rework_flag = '')
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		<if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+			and mwo.WORK_ORDER_NUM like CONCAT('%',#{dto.workOrderNum},'%')
+		</if>
+		<if test="dto.eoNum != null and dto.eoNum != ''">
+			and me.EO_NUM like CONCAT('%',#{dto.eoNum},'%')
+		</if>
+		<if test="dto.identification != null and dto.identification != ''">
+			and me.IDENTIFICATION like CONCAT('%',#{dto.identification},'%')
+		</if>
+	</select>
+
+	<select id="sumCountNumberQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO3">
+		SELECT
+		hejs.job_id, hejs.work_order_id, mwo.WORK_ORDER_NUM, hejs.eo_id, me.EO_NUM, me.IDENTIFICATION,
+		hejs.material_lot_id, mml.PRIMARY_UOM_QTY, hejs.site_in_date, hejs.site_out_date
+		FROM
+			hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		left join mt_material_lot mml
+		on mml.MATERIAL_LOT_ID = hejs.material_lot_id
+		WHERE hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		<if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+			and mwo.WORK_ORDER_NUM like CONCAT('%',#{dto.workOrderNum},'%')
+		</if>
+		<if test="dto.eoNum != null and dto.eoNum != ''">
+			and me.EO_NUM like CONCAT('%',#{dto.eoNum},'%')
+		</if>
+		<if test="dto.identification != null and dto.identification != ''">
+			and me.IDENTIFICATION like CONCAT('%',#{dto.identification},'%')
+		</if>
+	</select>
+
+	<select id="sumInMakeNumQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO3">
+		SELECT
+		hejs.job_id, hejs.work_order_id, mwo.WORK_ORDER_NUM, hejs.eo_id, me.EO_NUM, me.IDENTIFICATION,
+		hejs.material_lot_id, mml.PRIMARY_UOM_QTY, hejs.site_in_date, hejs.site_out_date
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		left join mt_material_lot mml
+		on mml.MATERIAL_LOT_ID = hejs.material_lot_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and (hejs.site_out_date is null
+		or hejs.site_out_date = '')
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		<if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+			and mwo.WORK_ORDER_NUM like CONCAT('%',#{dto.workOrderNum},'%')
+		</if>
+		<if test="dto.eoNum != null and dto.eoNum != ''">
+			and me.EO_NUM like CONCAT('%',#{dto.eoNum},'%')
+		</if>
+		<if test="dto.identification != null and dto.identification != ''">
+			and me.IDENTIFICATION like CONCAT('%',#{dto.identification},'%')
+		</if>
+	</select>
+
+	<select id="sumRepairNumQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO3">
+		SELECT
+		hejs.job_id, hejs.work_order_id, mwo.WORK_ORDER_NUM, hejs.eo_id, me.EO_NUM, me.IDENTIFICATION,
+		hejs.material_lot_id, mml.PRIMARY_UOM_QTY, hejs.site_in_date, hejs.site_out_date
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		left join mt_eo me
+		on me.EO_ID = hejs.eo_id
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		left join mt_material_lot mml
+		on mml.MATERIAL_LOT_ID = hejs.material_lot_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.rework_flag = 'Y'
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		<if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+			and mwo.WORK_ORDER_NUM like CONCAT('%',#{dto.workOrderNum},'%')
+		</if>
+		<if test="dto.eoNum != null and dto.eoNum != ''">
+			and me.EO_NUM like CONCAT('%',#{dto.eoNum},'%')
+		</if>
+		<if test="dto.identification != null and dto.identification != ''">
+			and me.IDENTIFICATION like CONCAT('%',#{dto.identification},'%')
+		</if>
+	</select>
+
+	<select id="sumDefectsNumQuery" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO4">
+		select mnr.NC_RECORD_ID, mnr.EO_ID, me.EO_NUM, mnr.MATERIAL_LOT_ID, mml.MATERIAL_LOT_CODE,
+			   mml.PRIMARY_UOM_QTY, mnr.DATE_TIME, mnr.USER_ID, mnr.NC_CODE_ID as NC_GROUP_ID, mng.DESCRIPTION,
+		       mni.INCIDENT_NUMBER, t.work_order_id, t.WORK_ORDER_NUM
+		from (
+		SELECT hejs.eo_id, hejs.workcell_id, hejs.work_order_id, mwo.WORK_ORDER_NUM
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor
+		ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_work_order mwo
+		ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and hejs.site_in_by = #{dto.userId}
+		and hejs.sn_material_id = #{dto.materialId}
+		and mwo.PRODUCTION_VERSION = #{dto.materialVersion}
+		AND mmor.PARENT_ORGANIZATION_ID = #{dto.processId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+		and hejs.site_in_date >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		and hejs.site_in_date &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		<if test="dto.workOrderNum != null and dto.workOrderNum != ''">
+			and mwo.WORK_ORDER_NUM like CONCAT('%',#{dto.workOrderNum},'%')
+		</if>
+		group by hejs.eo_id, hejs.workcell_id, hejs.work_order_id, mwo.WORK_ORDER_NUM
+		) t
+		left join mt_nc_record mnr
+		on mnr.TENANT_ID = #{tenantId}
+		and mnr.EO_ID = t.eo_id
+		and mnr.ROOT_CAUSE_WORKCELL_ID = t.workcell_id
+		and mnr.PARENT_NC_RECORD_ID = ''
+		left join mt_nc_group mng
+		on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+		left join mt_eo me
+		on me.EO_ID = mnr.EO_ID
+		left join mt_material_lot mml
+		on mml.MATERIAL_LOT_ID = mnr.MATERIAL_LOT_ID
+		left join mt_nc_incident mni
+		on mni.NC_INCIDENT_ID = mnr.NC_INCIDENT_ID
+		where mng.COMPONENT_REQUIRED = 'N'
+		AND mnr.CREATION_DATE  >= DATE_FORMAT(#{dto.dateFrom},'%Y-%m-%d %H:%i:%S')
+		AND mnr.CREATION_DATE  &lt;= DATE_FORMAT(#{dto.dateTo},'%Y-%m-%d %H:%i:%S')
+		<if test="dto.eoNum != null and dto.eoNum != ''">
+			and me.EO_NUM like CONCAT('%',#{dto.eoNum},'%')
+		</if>
+		<if test="dto.identification != null and dto.identification != ''">
+			and mml.MATERIAL_LOT_CODE like CONCAT('%',#{dto.identification},'%')
+		</if>
+	</select>
+
+	<select id="lineWorkcellProductDetails" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO3">
+		SELECT
+			hejs.job_id,
+			hejs.work_order_id,
+			mwo.WORK_ORDER_NUM,
+			hejs.eo_id,
+			me.EO_NUM,
+			me.IDENTIFICATION,
+			hejs.material_lot_id,
+			mml.PRIMARY_UOM_QTY,
+			hejs.site_in_date,
+			hejs.site_out_date
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_mod_organization_rel mmor2 ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+		AND mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+		AND mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_eo me ON me.EO_ID = hejs.eo_id
+		LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = hejs.material_lot_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		AND hejs.shift_id = #{dto.wkcShiftId}
+		<if test="dto.userIdList != null and dto.userIdList.size() > 0">
+			and hejs.site_in_by in
+			<foreach collection="dto.userIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		AND mmor2.PARENT_ORGANIZATION_ID = #{dto.workId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.job_type in ('SINGLE_PROCESS','BATCH_PROCESS','TIME_PROCESS','PREPARE_PROCESS','PACKAGE_PROCESS_PDA','REPAIR_PROCESS')
+	</select>
+
+	<select id="lineWorkcellNcDetails" resultType="com.ruike.hme.domain.vo.HmeEmployeeAttendanceExportVO4">
+		select
+		mnr.NC_RECORD_ID,
+		mnr.EO_ID,
+		me.EO_NUM,
+		mnr.MATERIAL_LOT_ID,
+		mml.MATERIAL_LOT_CODE,
+		mml.PRIMARY_UOM_QTY,
+		mnr.DATE_TIME,
+		mnr.USER_ID,
+		mnr.NC_CODE_ID as NC_GROUP_ID,
+		mng.DESCRIPTION,
+		mni.INCIDENT_NUMBER,
+		t.work_order_id,
+		t.WORK_ORDER_NUM
+		from
+		(
+		SELECT
+		hejs.eo_id,
+		hejs.workcell_id,
+		hejs.work_order_id,
+		mwo.WORK_ORDER_NUM
+		FROM
+		hme_eo_job_sn hejs
+		LEFT JOIN mt_mod_organization_rel mmor ON mmor.ORGANIZATION_ID = hejs.workcell_id
+		and mmor.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_mod_organization_rel mmor2 ON mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+		and mmor2.ORGANIZATION_TYPE = 'WORKCELL'
+		and mmor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+		LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = hejs.work_order_id
+		WHERE
+		hejs.tenant_id = #{tenantId}
+		and mmor2.PARENT_ORGANIZATION_ID = #{dto.workId}
+		and hejs.site_out_date is not null
+		and hejs.site_out_date != ''
+		and hejs.shift_id = #{dto.wkcShiftId}
+		and hejs.job_type in ( 'SINGLE_PROCESS', 'BATCH_PROCESS', 'TIME_PROCESS', 'PREPARE_PROCESS', 'PACKAGE_PROCESS_PDA', 'REPAIR_PROCESS' )
+		<if test="dto.userIdList != null and dto.userIdList.size() > 0">
+			and hejs.site_in_by in
+			<foreach collection="dto.userIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.workOrderNumList != null and dto.workOrderNumList.size() > 0">
+			and mwo.WORK_ORDER_NUM in
+			<foreach collection="dto.workOrderNumList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.productCodeIdList != null and dto.productCodeIdList.size() > 0">
+			and hejs.sn_material_id in
+			<foreach collection="dto.productCodeIdList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="dto.bomVersionList != null and dto.bomVersionList.size() > 0">
+			and mwo.PRODUCTION_VERSION in
+			<foreach collection="dto.bomVersionList" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		group by hejs.eo_id, hejs.workcell_id, hejs.work_order_id, mwo.WORK_ORDER_NUM ) t
+		left join mt_nc_record mnr on mnr.TENANT_ID = #{tenantId}
+		and mnr.EO_ID = t.eo_id
+		and mnr.ROOT_CAUSE_WORKCELL_ID = t.workcell_id
+		and (mnr.PARENT_NC_RECORD_ID = '' OR mnr.PARENT_NC_RECORD_ID is NUll)
+		left join mt_nc_group mng on mng.NC_GROUP_ID = mnr.NC_CODE_ID
+		left join mt_eo me on me.EO_ID = mnr.EO_ID
+		left join mt_material_lot mml on mml.MATERIAL_LOT_ID = mnr.MATERIAL_LOT_ID
+		left join mt_nc_incident mni on mni.NC_INCIDENT_ID = mnr.NC_INCIDENT_ID
+		where
+		mng.COMPONENT_REQUIRED = 'N'
+		<if test="dto.shiftStartDate != null and dto.shiftStartDate != ''">
+			AND mnr.CREATION_DATE >= #{dto.shiftStartDate}
+		</if>
+		<if test="dto.shiftEndDate != null and dto.shiftEndDate != ''">
+			AND mnr.CREATION_DATE <![CDATA[<=]]> #{dto.shiftEndDate}
+		</if>
+	</select>
+</mapper>

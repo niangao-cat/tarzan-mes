@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.instruction.infra.mapper.MtInstructionMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.instruction.domain.entity.MtInstruction">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_NUM" property="instructionNum" jdbcType="VARCHAR"/>
+        <result column="SOURCE_INSTRUCTION_ID" property="sourceInstructionId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_DOC_ID" property="sourceDocId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_TYPE" property="instructionType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_STATUS" property="instructionStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="DIS_ROUTER_ID" property="disRouterId" jdbcType="VARCHAR"/>
+        <result column="ORDER_TYPE" property="orderType" jdbcType="VARCHAR"/>
+        <result column="ORDER_ID" property="orderId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_TYPE" property="sourceOrderType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_ID" property="sourceOrderId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_ID" property="sourceOrderLineId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_LOCATION_ID" property="sourceOrderLineLocationId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_LINE_DIST_ID" property="sourceOrderLineDistId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_OUTSIDE_COMP_LINE_ID" property="sourceOutsideCompLineId" jdbcType="VARCHAR"/>
+        <result column="FROM_SITE_ID" property="fromSiteId" jdbcType="VARCHAR"/>
+        <result column="TO_SITE_ID" property="toSiteId" jdbcType="VARCHAR"/>
+        <result column="FROM_LOCATOR_ID" property="fromLocatorId" jdbcType="VARCHAR"/>
+        <result column="TO_LOCATOR_ID" property="toLocatorId" jdbcType="VARCHAR"/>
+        <result column="COST_CENTER_ID" property="costCenterId" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="DECIMAL"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="DEMAND_TIME" property="demandTime" jdbcType="TIMESTAMP"/>
+        <result column="WAVE_SEQUENCE" property="waveSequence" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="DATE"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="COVER_QTY" property="coverQty" jdbcType="DECIMAL"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="FROM_OWNER_TYPE" property="fromOwnerType" jdbcType="VARCHAR"/>
+        <result column="TO_OWNER_TYPE" property="toOwnerType" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <delete id="deleteByDocId">
+        DELETE
+        FROM
+            mt_instruction
+        WHERE
+            SOURCE_INSTRUCTION_ID IN
+            (
+                SELECT INSTRUCTION_ID FROM mt_instruction WHERE SOURCE_DOC_ID = ${instructionDocId}
+            )
+    </delete>
+
+    <select id="selectMaxNum" resultType="java.lang.Integer">
+        SELECT
+            MAX( SUBSTR( t.INSTRUCTION_NUM, 14 ) + 0 )
+        FROM
+            mt_instruction t
+        WHERE
+            t.TENANT_ID = #{tenantId}
+            AND t.INSTRUCTION_NUM LIKE #{siteDateStr} || '%'
+            AND length( SUBSTR( t.INSTRUCTION_NUM, 14 ) ) = 4
+            AND REGEXP_LIKE(SUBSTR( t.INSTRUCTION_NUM, 14 ),'^[0-9]*$')            
+    </select>
+
+    <select id="selectByIdList" resultMap="BaseResultMap">
+        select
+        *
+        from
+        mt_instruction
+        where
+        TENANT_ID = #{tenantId}
+        and INSTRUCTION_ID IN
+        <foreach collection="instructionIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectForEmptyString" resultMap="BaseResultMap">
+        select
+        t.*
+        from
+        mt_instruction t
+        where
+        t.TENANT_ID = #{tenantId}
+        <choose>
+            <when test='dto.instructionId!=null and dto.instructionId!=""'>
+                AND t.INSTRUCTION_ID=#{dto.instructionId}
+            </when>
+            <when test='dto.instructionId==""'>
+                AND t.INSTRUCTION_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.instructionNum!=null and dto.instructionNum!=""'>
+                AND t.INSTRUCTION_NUM=#{dto.instructionNum}
+            </when>
+            <when test='dto.instructionNum==""'>
+                AND t.INSTRUCTION_NUM is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.sourceInstructionId!=null and dto.sourceInstructionId!=""'>
+                AND t.SOURCE_INSTRUCTION_ID=#{dto.sourceInstructionId}
+            </when>
+            <when test='dto.sourceInstructionId==""'>
+                AND t.SOURCE_INSTRUCTION_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.sourceDocId!=null and dto.sourceDocId!=""'>
+                AND t.SOURCE_DOC_ID=#{dto.sourceDocId}
+            </when>
+            <when test='dto.sourceDocId==""'>
+                AND t.SOURCE_DOC_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.instructionType!=null and dto.instructionType!=""'>
+                AND t.INSTRUCTION_TYPE=#{dto.instructionType}
+            </when>
+            <when test='dto.instructionType==""'>
+                AND t.INSTRUCTION_TYPE is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.instructionStatus!=null and dto.instructionStatus!=""'>
+                AND t.INSTRUCTION_STATUS=#{dto.instructionStatus}
+            </when>
+            <when test='dto.instructionStatus==""'>
+                AND t.INSTRUCTION_STATUS is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.siteId!=null and dto.siteId!=""'>
+                AND t.SITE_ID=#{dto.siteId}
+            </when>
+            <when test='dto.siteId==""'>
+                AND t.SITE_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.materialId!=null and dto.materialId!=""'>
+                AND t.MATERIAL_ID=#{dto.materialId}
+            </when>
+            <when test='dto.materialId==""'>
+                AND t.MATERIAL_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.uomId!=null and dto.uomId!=""'>
+                AND t.UOM_ID=#{dto.uomId}
+            </when>
+            <when test='dto.uomId==""'>
+                AND t.UOM_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.eoId!=null and dto.eoId!=""'>
+                AND t.EO_ID=#{dto.eoId}
+            </when>
+            <when test='dto.eoId==""'>
+                AND t.EO_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.disRouterId!=null and dto.disRouterId!=""'>
+                AND t.DIS_ROUTER_ID=#{dto.disRouterId}
+            </when>
+            <when test='dto.disRouterId==""'>
+                AND t.DIS_ROUTER_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.orderType!=null and dto.orderType!=""'>
+                AND t.ORDER_TYPE=#{dto.orderType}
+            </when>
+            <when test='dto.orderType==""'>
+                AND t.ORDER_TYPE is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.orderId!=null and dto.orderId!=""'>
+                AND t.ORDER_ID=#{dto.orderId}
+            </when>
+            <when test='dto.orderId==""'>
+                AND t.ORDER_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.sourceOrderType!=null and dto.sourceOrderType!=""'>
+                AND t.SOURCE_ORDER_TYPE=#{dto.sourceOrderType}
+            </when>
+            <when test='dto.sourceOrderType==""'>
+                AND t.SOURCE_ORDER_TYPE is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.sourceOrderId!=null and dto.sourceOrderId!=""'>
+                AND t.SOURCE_ORDER_ID=#{dto.sourceOrderId}
+            </when>
+            <when test='dto.sourceOrderId==""'>
+                AND t.SOURCE_ORDER_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.sourceOrderLineId!=null!=null and dto.sourceOrderLineId!=null!=""'>
+                AND t.SOURCE_ORDER_LINE_ID=#{dto.sourceOrderLineId!=null}
+            </when>
+            <when test='dto.sourceOrderLineId!=null==""'>
+                AND t.SOURCE_ORDER_LINE_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.sourceOrderLineLocationId!=null and dto.sourceOrderLineLocationId!=""'>
+                AND t.SOURCE_ORDER_LINE_LOCATION_ID=#{dto.sourceOrderLineLocationId}
+            </when>
+            <when test='dto.sourceOrderLineLocationId==""'>
+                AND t.SOURCE_ORDER_LINE_LOCATION_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.sourceOrderLineDistId!=null and dto.sourceOrderLineDistId!=""'>
+                AND t.SOURCE_ORDER_LINE_DIST_ID=#{dto.sourceOrderLineDistId}
+            </when>
+            <when test='dto.sourceOrderLineDistId!=null==""'>
+                AND t.SOURCE_ORDER_LINE_DIST_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.sourceOutsideCompLineId!=null and dto.sourceOutsideCompLineId!=""'>
+                AND t.SOURCE_OUTSIDE_COMP_LINE_ID=#{dto.sourceOutsideCompLineId}
+            </when>
+            <when test='dto.sourceOutsideCompLineId==""'>
+                AND t.SOURCE_OUTSIDE_COMP_LINE_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.fromSiteId!=null and dto.fromSiteId!=""'>
+                AND t.FROM_SITE_ID=#{dto.fromSiteId}
+            </when>
+            <when test='dto.fromSiteId==""'>
+                AND t.FROM_SITE_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.toSiteId!=null and dto.toSiteId!=""'>
+                AND t.TO_SITE_ID=#{dto.toSiteId}
+            </when>
+            <when test='dto.toSiteId==""'>
+                AND t.TO_SITE_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.fromLocatorId!=null and dto.fromLocatorId!=""'>
+                AND t.FROM_LOCATOR_ID=#{dto.fromLocatorId}
+            </when>
+            <when test='dto.fromLocatorId==""'>
+                AND t.FROM_LOCATOR_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.toLocatorId!=null and dto.toLocatorId!=""'>
+                AND t.TO_LOCATOR_ID=#{dto.toLocatorId}
+            </when>
+            <when test='dto.toLocatorId==""'>
+                AND t.TO_LOCATOR_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.costCenterId!=null and dto.costCenterId!=""'>
+                AND t.COST_CENTER_ID=#{dto.costCenterId}
+            </when>
+            <when test='dto.costCenterId==""'>
+                AND t.COST_CENTER_ID is null
+            </when>
+        </choose>
+        <if test='dto.quantity!=null'>
+            AND t.QUANTITY=#{dto.quantity}
+        </if>
+        <choose>
+            <when test='dto.supplierId!=null and dto.supplierId!=""'>
+                AND t.SUPPLIER_ID=#{dto.supplierId}
+            </when>
+            <when test='dto.supplierId==""'>
+                AND t.SUPPLIER_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.supplierSiteId!=null and dto.supplierSiteId!=""'>
+                AND t.SUPPLIER_SITE_ID=#{dto.supplierSiteId}
+            </when>
+            <when test='dto.supplierSiteId==""'>
+                AND t.SUPPLIER_SITE_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.customerId!=null and dto.customerId!=""'>
+                AND t.CUSTOMER_ID=#{dto.customerId}
+            </when>
+            <when test='dto.customerId==""'>
+                AND t.CUSTOMER_ID is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.customerSiteId!=null and dto.customerSiteId!=""'>
+                AND t.CUSTOMER_SITE_ID=#{dto.customerSiteId}
+            </when>
+            <when test='dto.customerSiteId==""'>
+                AND t.CUSTOMER_SITE_ID is null
+            </when>
+        </choose>
+        <if test="dto.demandTimeFrom!=null">
+            AND t.DEMAND_TIME &gt;= #{dto.demandTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="dto.demandTimeTo!=null">
+            AND t.DEMAND_TIME &lt;= #{dto.demandTimeTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="dto.shiftDateFrom!=null">
+            AND t.SHIFT_DATE &gt;= #{dto.shiftDateFrom,jdbcType=DATE}
+        </if>
+        <if test="dto.shiftDateTo!=null">
+            AND t.SHIFT_DATE &lt;= #{dto.shiftDateTo,jdbcType=DATE}
+        </if>
+        <choose>
+            <when test='dto.waveSequence!=null and dto.waveSequence!=""'>
+                AND t.WAVE_SEQUENCE=#{dto.waveSequence}
+            </when>
+            <when test='dto.waveSequence==""'>
+                AND t.WAVE_SEQUENCE is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.shiftCode!=null and dto.shiftCode!=""'>
+                AND t.SHIFT_CODE=#{dto.shiftCode}
+            </when>
+            <when test='dto.shiftCode==""'>
+                AND t.SHIFT_CODE is null
+            </when>
+        </choose>
+        <if test="dto.coverQty!=null">
+            AND t.COVER_QTY= #{dto.coverQty}
+        </if>
+        <choose>
+            <when test='dto.businessType!=null and dto.businessType!=""'>
+                AND t.BUSINESS_TYPE=#{dto.businessType}
+            </when>
+            <when test='dto.businessType==""'>
+                AND t.BUSINESS_TYPE is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.remark!=null and dto.remark!=""'>
+                AND t.REMARK=#{dto.remark}
+            </when>
+            <when test='dto.remark==""'>
+                AND t.REMARK is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.identification!=null and dto.identification!=""'>
+                AND t.IDENTIFICATION=#{dto.identification}
+            </when>
+            <when test='dto.identification==""'>
+                AND t.IDENTIFICATION is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.fromOwnerType!=null and dto.fromOwnerType!=""'>
+                AND t.FROM_OWNER_TYPE=#{dto.fromOwnerType}
+            </when>
+            <when test='dto.fromOwnerType==""'>
+                AND t.FROM_OWNER_TYPE is null
+            </when>
+        </choose>
+        <choose>
+            <when test='dto.toOwnerType!=null and dto.toOwnerType!=""'>
+                AND t.TO_OWNER_TYPE=#{dto.toOwnerType}
+            </when>
+            <when test='dto.toOwnerType==""'>
+                AND t.TO_OWNER_TYPE is null
+            </when>
+        </choose>
+    </select>
+
+    <select id="selectByUnique" resultMap="BaseResultMap">
+        select 
+        	* 
+        from 
+        	mt_instruction
+        where 
+	        TENANT_ID = #{tenantId}
+	        and (INSTRUCTION_NUM = #{instruction.instructionNum}
+	        or IDENTIFICATION = #{instruction.identification})
+    </select>
+    <select id="selectByDocId" resultType="tarzan.instruction.domain.entity.MtInstruction">
+        SELECT
+         *
+        FROM
+            mt_instruction
+        WHERE
+            SOURCE_INSTRUCTION_ID =${instructionId}
+
+    </select>
+
+    <select id="getMode" resultType="java.lang.String">
+    SELECT
+        mpia.ATTR_VALUE
+    FROM
+        mt_pfep_inventory mpi
+        join mt_material_site mms on mpi.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        join mt_pfep_inventory_attr mpia on mpi.PFEP_INVENTORY_ID = mpia.PFEP_INVENTORY_ID and mpia.ATTR_NAME = 'LOCATOR_RECOM_MODE'
+    WHERE
+        mpi.TENANT_ID = #{tenantId}
+        AND mpi.organization_type = 'LOCATOR'
+        AND mpi.ORGANIZATION_ID = #{toLocatorId}
+        AND mms.SITE_ID = #{siteId}
+        AND mms.MATERIAL_ID = #{materialId}
+    </select>
+
+    <select id="selectByDocCodeForJudge" resultType="com.ruike.itf.api.dto.ItfSendOutReturnDTO2">
+       SELECT
+                mid.instruction_doc_num,
+                mi.instruction_id,
+                mi.material_id,
+                mia.attr_value line_number,
+                mi.instruction_status as instructionStatus
+            FROM
+                mt_instruction_doc mid,
+                mt_instruction mi,
+                mt_instruction_attr mia
+            WHERE
+                1 = 1
+                AND mid.instruction_doc_id = mi.source_doc_id
+                AND mi.instruction_id = mia.instruction_id
+                AND mia.attr_name = 'INSTRUCTION_LINE_NUM'
+                 and mia.attr_value = #{lineNumber}
+                 and mid.instruction_doc_num =#{instructionDocNumList}
+ </select>
+
+    <select id="selectAttrValue" resultType="java.lang.String">
+        SELECT
+            mia.ATTR_VALUE
+        FROM
+            mt_instruction_attr mia
+        WHERE
+            mia.TENANT_ID = #{tenantId}
+            AND mia.INSTRUCTION_ID = #{instructionId}
+            AND mia.ATTR_NAME = #{attrName}
+    </select>
+
+    <select id="selectByMaterial" resultMap="BaseResultMap">
+        SELECT
+            *
+        FROM
+            mt_instruction mi,
+            mt_material mm
+            LEFT JOIN mt_material_attr mma ON mm.MATERIAL_ID = mma.MATERIAL_ID AND mma.ATTR_NAME = 'MATERIAL_VERSION'
+        WHERE
+            mi.MATERIAL_ID = mm.MATERIAL_ID
+        AND mi.TENANT_ID = #{tenantId}
+        AND mi.SOURCE_DOC_ID = #{instructionDocId}
+        AND mi.MATERIAL_ID = #{materialId}
+        AND mi.SITE_ID = #{siteId}
+        AND mi.INSTRUCTION_TYPE = #{instructionType}
+        <choose>
+            <when test='materialVersion!=null and materialVersion!="" '>
+                AND mma.ATTR_VALUE = #{materialVersion}
+            </when>
+            <when test='materialVersion =null or materialVersion =""'>
+                AND (mma.ATTR_VALUE = '' or mma.ATTR_VALUE is null)
+            </when>
+        </choose>
+    </select>
+
+    <select id="selectBySourceDocId" resultMap="BaseResultMap">
+        select
+        *
+        from
+        mt_instruction
+        where
+        TENANT_ID = #{tenantId}
+        and SOURCE_DOC_ID IN
+        <foreach collection="deliveryInstructionDocIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByDocCodeForJudgeList" resultType="com.ruike.itf.api.dto.ItfSendOutReturnDTO2">
+        SELECT
+                mid.instruction_doc_num,
+                mi.instruction_id,
+                mi.material_id,
+                mia.attr_value line_number,
+                mi.instruction_status as instructionStatus
+            FROM
+                mt_instruction_doc mid,
+                mt_instruction mi,
+                mt_instruction_attr mia
+            WHERE
+                1 = 1
+                AND mid.instruction_doc_id = mi.source_doc_id
+                AND mi.instruction_id = mia.instruction_id
+                AND mia.attr_name = 'INSTRUCTION_LINE_NUM'
+                and mia.attr_value in
+                <foreach collection="lineNumber" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+                and mid.instruction_doc_num =#{instructionDocNum}
+    </select>
+</mapper>

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfAtpCollectIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfAtpCollectIface">
+        <result column="INTERFACE_ID" property="interfaceId" jdbcType="VARCHAR"/>
+        <result column="ASSET_ENCODING" property="assetEncoding" jdbcType="VARCHAR"/>
+        <result column="SN" property="sn" jdbcType="VARCHAR"/>
+        <result column="ATP_HR_YB_RDT" property="atpHrYbRdt" jdbcType="DECIMAL"/>
+        <result column="ATP_YB_OC_RDT" property="atpYbOcRdt" jdbcType="DECIMAL"/>
+        <result column="ATP_OC_61_RDT" property="atpOc61Rdt" jdbcType="DECIMAL"/>
+        <result column="ATP_HR_R61_RDT" property="atpHrR61Rdt" jdbcType="DECIMAL"/>
+        <result column="ATP_61_CMS1_RDT" property="atp61Cms1Rdt" jdbcType="DECIMAL"/>
+        <result column="ATP_CMS1_CMS2_RDT" property="atpCms1Cms2Rdt" jdbcType="DECIMAL"/>
+        <result column="ATP_OTHER_RDT" property="atpOtherRdt" jdbcType="DECIMAL"/>
+        <result column="ATP_HR_SRGXT" property="atpHrSrgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_HR_SQT" property="atpHrSqt" jdbcType="DECIMAL"/>
+        <result column="ATP_HR_SCGXT" property="atpHrScgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_OC_SRGXT" property="atpOcSrgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_OC_SQT" property="atpOcSqt" jdbcType="DECIMAL"/>
+        <result column="ATP_OC_SCGXT" property="atpOcScgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_R61_SRGXT" property="atpR61Srgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_R61_SQT" property="atpR61Sqt" jdbcType="DECIMAL"/>
+        <result column="ATP_R61_SCGXT" property="atpR61Scgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_61_SRGXT" property="atp61Srgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_61_SQT" property="atp61Sqt" jdbcType="DECIMAL"/>
+        <result column="ATP_61_SCGXT" property="atp61Scgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_CMS1_SRGXT" property="atpCms1Srgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_CMS1_SQT" property="atpCms1Sqt" jdbcType="DECIMAL"/>
+        <result column="ATP_CMS1_SCGXT" property="atpCms1Scgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_YB_GXPT" property="atpYbGxpt" jdbcType="DECIMAL"/>
+        <result column="ATP_OTHER_QJT" property="atpOtherQjt" jdbcType="DECIMAL"/>
+        <result column="ATP_RED_POWER" property="atpRedPower" jdbcType="DECIMAL"/>
+        <result column="ATP_RED_VOLTAGE" property="atpRedVoltage" jdbcType="DECIMAL"/>
+        <result column="ATP_LEAKAGE" property="atpLeakage" jdbcType="DECIMAL"/>
+        <result column="ATP_SPECTRAL_IMAGE" property="atpSpectralImage" jdbcType="DECIMAL"/>
+        <result column="ATP_POWER" property="atpPower" jdbcType="DECIMAL"/>
+        <result column="ATP_CURRENT" property="atpCurrent" jdbcType="DECIMAL"/>
+        <result column="ATP_SLT" property="atpSlt" jdbcType="DECIMAL"/>
+        <result column="ATP_OPERATOR" property="atpOperator" jdbcType="VARCHAR"/>
+        <result column="ATP_OPERATION_TIME" property="atpOperationTime" jdbcType="DATE"/>
+        <result column="PRIMARY_KEY" property="primaryKey" jdbcType="VARCHAR"/>
+        <result column="PROCESS_DATE" property="processDate" jdbcType="DATE"/>
+        <result column="PROCESS_MESSAGE" property="processMessage" jdbcType="VARCHAR"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE1" property="atpAttribute1" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE2" property="atpAttribute2" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE3" property="atpAttribute3" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE4" property="atpAttribute4" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE5" property="atpAttribute5" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE6" property="atpAttribute6" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE7" property="atpAttribute7" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE8" property="atpAttribute8" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE9" property="atpAttribute9" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE10" property="atpAttribute10" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE11" property="atpAttribute11" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE12" property="atpAttribute12" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE13" property="atpAttribute13" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE14" property="atpAttribute14" jdbcType="VARCHAR"/>
+        <result column="ATP_ATTRIBUTE15" property="atpAttribute15" jdbcType="VARCHAR"/>
+
+        <result column="ATP_HR_MOYB_RDT" property="atpHrMoybRdt" jdbcType="DECIMAL"/>
+        <result column="ATP_MOYB_OC_RDT" property="atpMoybOcRdt" jdbcType="DECIMAL"/>
+        <result column="ATP_OC_PAYB_RDT" property="atpOcPaybRdt" jdbcType="DECIMAL"/>
+        <result column="ATP_PAYB_61_RDT" property="atpPayb61Rdt" jdbcType="DECIMAL"/>
+        <result column="ATP_BLOCK_U_T" property="atpBlockUT" jdbcType="DECIMAL"/>
+        <result column="ATP_BLOCK_D_T" property="atpBlockDT" jdbcType="DECIMAL"/>
+        <result column="ATP_NON_LINEAR" property="atpNonLinear" jdbcType="DECIMAL"/>
+        <result column="ATP_CMS_JUMPER_RDT" property="atpCmsJumperRdt" jdbcType="DECIMAL"/>
+        <result column="ATP_FIBER1_T" property="atpFiber1T" jdbcType="DECIMAL"/>
+        <result column="ATP_FIBER2_T" property="atpFiber2T" jdbcType="DECIMAL"/>
+        <result column="ATP_CMS2_SRGXT" property="atpCms2Srgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_CMS2_SQT" property="atpCms2Sqt" jdbcType="DECIMAL"/>
+        <result column="ATP_CMS2_SCGXT" property="atpCms2Scgxt" jdbcType="DECIMAL"/>
+        <result column="ATP_TEMPERATURE" property="atpTemperature" jdbcType="DECIMAL"/>
+        <result column="ATP_HUMIDITY" property="atpHumidity" jdbcType="DECIMAL"/>
+        <result column="ATP_CASE_T" property="atpCaseT" jdbcType="DECIMAL"/>
+    </resultMap>
+    <insert id="insertIface">
+        INSERT INTO itf_atp_collect_iface
+        (
+        INTERFACE_ID,
+        ASSET_ENCODING,
+        SN,
+        ATP_HR_YB_RDT,
+        ATP_YB_OC_RDT,
+        ATP_OC_61_RDT,
+        ATP_HR_R61_RDT,
+        ATP_61_CMS1_RDT,
+        ATP_CMS1_CMS2_RDT,
+        ATP_OTHER_RDT,
+        ATP_HR_SRGXT,
+        ATP_HR_SQT,
+        ATP_HR_SCGXT,
+        ATP_OC_SRGXT,
+        ATP_OC_SQT,
+        ATP_OC_SCGXT,
+        ATP_R61_SRGXT,
+        ATP_R61_SQT,
+        ATP_R61_SCGXT,
+        ATP_61_SRGXT,
+        ATP_61_SQT,
+        ATP_61_SCGXT,
+        ATP_CMS1_SRGXT,
+        ATP_CMS1_SQT,
+        ATP_CMS1_SCGXT,
+        ATP_YB_GXPT,
+        ATP_OTHER_QJT,
+        ATP_RED_POWER,
+        ATP_RED_VOLTAGE,
+        ATP_LEAKAGE,
+        ATP_SPECTRAL_IMAGE,
+        ATP_POWER,
+        ATP_CURRENT,
+        ATP_SLT,
+        ATP_OPERATOR,
+        ATP_OPERATION_TIME,
+        PRIMARY_KEY,
+        PROCESS_DATE,
+        PROCESS_MESSAGE,
+        PROCESS_STATUS,
+        tenant_id,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        ATTRIBUTE_CATEGORY,
+        ATP_ATTRIBUTE1,
+        ATP_ATTRIBUTE2,
+        ATP_ATTRIBUTE3,
+        ATP_ATTRIBUTE4,
+        ATP_ATTRIBUTE5,
+        ATP_ATTRIBUTE6,
+        ATP_ATTRIBUTE7,
+        ATP_ATTRIBUTE8,
+        ATP_ATTRIBUTE9,
+        ATP_ATTRIBUTE10,
+        ATP_ATTRIBUTE11,
+        ATP_ATTRIBUTE12,
+        ATP_ATTRIBUTE13,
+        ATP_ATTRIBUTE14,
+        ATP_ATTRIBUTE15,
+        ATP_HR_MOYB_RDT,
+        ATP_MOYB_OC_RDT,
+        ATP_OC_PAYB_RDT,
+        ATP_PAYB_61_RDT,
+        ATP_BLOCK_U_T,
+        ATP_BLOCK_D_T,
+        ATP_NON_LINEAR,
+        ATP_CMS_JUMPER_RDT,
+        ATP_FIBER1_T,
+        ATP_FIBER2_T,
+        ATP_CMS2_SRGXT,
+        ATP_CMS2_SQT,
+        ATP_CMS2_SCGXT,
+        ATP_TEMPERATURE,
+        ATP_HUMIDITY,
+        ATP_CASE_T
+        )
+        VALUES
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.interfaceId},
+            #{item.assetEncoding},
+            #{item.sn},
+            #{item.atpHrYbRdt},
+            #{item.atpYbOcRdt},
+            #{item.atpOc61Rdt},
+            #{item.atpHrR61Rdt},
+            #{item.atp61Cms1Rdt},
+            #{item.atpCms1Cms2Rdt},
+            #{item.atpOtherRdt},
+            #{item.atpHrSrgxt},
+            #{item.atpHrSqt},
+            #{item.atpHrScgxt},
+            #{item.atpOcSrgxt},
+            #{item.atpOcSqt},
+            #{item.atpOcScgxt},
+            #{item.atpR61Srgxt},
+            #{item.atpR61Sqt},
+            #{item.atpR61Scgxt},
+            #{item.atp61Srgxt},
+            #{item.atp61Sqt},
+            #{item.atp61Scgxt},
+            #{item.atpCms1Srgxt},
+            #{item.atpCms1Sqt},
+            #{item.atpCms1Scgxt},
+            #{item.atpYbGxpt},
+            #{item.atpOtherQjt},
+            #{item.atpRedPower},
+            #{item.atpRedVoltage},
+            #{item.atpLeakage},
+            #{item.atpSpectralImage},
+            #{item.atpPower},
+            #{item.atpCurrent},
+            #{item.atpSlt},
+            #{item.atpOperator},
+            #{item.atpOperationTime},
+            #{item.primaryKey},
+            #{item.processDate},
+            #{item.processMessage},
+            #{item.processStatus},
+            #{item.tenantId},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.atpAttribute1},
+            #{item.atpAttribute2},
+            #{item.atpAttribute3},
+            #{item.atpAttribute4},
+            #{item.atpAttribute5},
+            #{item.atpAttribute6},
+            #{item.atpAttribute7},
+            #{item.atpAttribute8},
+            #{item.atpAttribute9},
+            #{item.atpAttribute10},
+            #{item.atpAttribute11},
+            #{item.atpAttribute12},
+            #{item.atpAttribute13},
+            #{item.atpAttribute14},
+            #{item.atpAttribute15},
+            #{item.atpHrMoybRdt},
+            #{item.atpMoybOcRdt},
+            #{item.atpOcPaybRdt},
+            #{item.atpPayb61Rdt},
+            #{item.atpBlockUT},
+            #{item.atpBlockDT},
+            #{item.atpNonLinear},
+            #{item.atpCmsJumperRdt},
+            #{item.atpFiber1T},
+            #{item.atpFiber2T},
+            #{item.atpCms2Srgxt},
+            #{item.atpCms2Sqt},
+            #{item.atpCms2Scgxt},
+            #{item.atpTemperature},
+            #{item.atpHumidity},
+            #{item.atpCaseT}
+            )
+        </foreach>
+    </insert>
+    <update id="updateIface">
+        UPDATE itf_atp_collect_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = -1,
+            last_update_date = CURRENT_TIMESTAMP,
+            process_date=CURRENT_TIMESTAMP,
+            process_message =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processMessage}
+            </foreach>,
+            process_status =
+            <foreach collection="domains" item="item" index="index"
+                     separator=" " open="case interface_id" close="end">
+                when #{item.interfaceId} then #{item.processStatus}
+            </foreach>
+        </set>
+        <where>
+            interface_id in
+            <foreach collection="domains" item="item"
+                     separator="," open="(" close=")">
+                #{item.interfaceId}
+            </foreach>
+        </where>
+    </update>
+</mapper>

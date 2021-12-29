@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterOperationMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterOperation">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_OPERATION_ID" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="MAX_LOOP" property="maxLoop" jdbcType="DECIMAL"/>
+        <result column="SPECIAL_INTRUCTION" property="specialIntruction" jdbcType="VARCHAR"/>
+        <result column="REQUIRED_TIME_IN_PROCESS" property="requiredTimeInProcess" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseTLResultMap" type="tarzan.method.domain.vo.MtRouterOperationVO2">
+        <result column="ROUTER_OPERATION_ID" property="routerOperationId" jdbcType="VARCHAR"/>
+        <result column="LANG" property="lang" jdbcType="VARCHAR"/>
+        <result column="SPECIAL_INTRUCTION" property="specialIntruction" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="RouterStepOpResultMap" type="tarzan.method.domain.vo.MtRouterStepVO5">
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_NAME" property="operationName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_TYPE" property="routerStepType" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRouterOperationTL" resultMap="BaseTLResultMap">
+        select t.ROUTER_OPERATION_ID, t.LANG, t.SPECIAL_INTRUCTION from mt_router_operation_tl t where
+        t.ROUTER_OPERATION_ID = #{routerOperationId}
+    </select>
+
+    <select id="selectRouterOperationByIds" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select t1.TENANT_ID,
+        t1.ROUTER_OPERATION_ID,
+        t1.ROUTER_STEP_ID,
+        t1.OPERATION_ID,
+        t1.MAX_LOOP,
+        t2.SPECIAL_INTRUCTION,
+        t1.REQUIRED_TIME_IN_PROCESS,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_router_operation t1,
+        mt_router_operation_tl t2
+        where t1.ROUTER_OPERATION_ID = t2.ROUTER_OPERATION_ID
+        and t2.LANG = #{locale}
+        and t1.TENANT_ID = ${tenantId}
+        and t1.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        Order By t1.CREATION_DATE DESC
+    </select>
+    <select id="routerOperationBatch" resultMap="RouterStepOpResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        rob.ROUTER_STEP_ID,
+        rob.OPERATION_ID,
+        ob.OPERATION_NAME,
+        ot.DESCRIPTION
+        from mt_router_operation rob
+        JOIN mt_operation ob ON rob.OPERATION_ID = ob.OPERATION_ID
+        inner JOIN mt_operation_tl ot ON (ob.OPERATION_ID = ot.OPERATION_ID AND ot.LANG = #{locale})
+        where rob.TENANT_ID=#{tenantId}
+        and ob.TENANT_ID=#{tenantId}
+        and rob.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

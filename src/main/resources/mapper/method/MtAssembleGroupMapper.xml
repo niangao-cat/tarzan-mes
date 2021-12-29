@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtAssembleGroupMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtAssembleGroup">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ASSEMBLE_GROUP_ID" property="assembleGroupId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_GROUP_CODE" property="assembleGroupCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="AUTO_INSTALL_POINT_FLAG" property="autoInstallPointFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_CONTROL_FLAG" property="assembleControlFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_SEQUENCE_FLAG" property="assembleSequenceFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_GROUP_STATUS" property="assembleGroupStatus" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT b.ASSEMBLE_GROUP_ID,
+        b.SITE_ID,
+        b.ASSEMBLE_GROUP_CODE,
+        t.DESCRIPTION,
+        b.AUTO_INSTALL_POINT_FLAG,
+        b.ASSEMBLE_CONTROL_FLAG,
+        b.ASSEMBLE_SEQUENCE_FLAG,
+        b.ASSEMBLE_GROUP_STATUS,
+        b.CID
+        FROM mt_assemble_group b,
+        mt_assemble_group_tl t
+        WHERE b.TENANT_ID = ${tenantId}
+        AND b.ASSEMBLE_GROUP_ID = t.ASSEMBLE_GROUP_ID
+        AND t.LANG = #{locale}
+        AND b.ASSEMBLE_GROUP_ID IN
+        <foreach collection="assembleGroupIds" item="item" index="i" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="mySelect" resultMap="BaseResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT b.ASSEMBLE_GROUP_ID,
+        b.SITE_ID,
+        b.ASSEMBLE_GROUP_CODE,
+        t.DESCRIPTION,
+        b.AUTO_INSTALL_POINT_FLAG,
+        b.ASSEMBLE_CONTROL_FLAG,
+        b.ASSEMBLE_SEQUENCE_FLAG,
+        b.ASSEMBLE_GROUP_STATUS,
+        b.CID
+        FROM mt_assemble_group b,
+        mt_assemble_group_tl t
+        WHERE b.TENANT_ID = ${tenantId}
+        AND b.ASSEMBLE_GROUP_ID = t.ASSEMBLE_GROUP_ID
+        AND t.LANG = #{locale}
+            <if test="dto.assembleGroupId != null">
+                and b.ASSEMBLE_GROUP_ID = #{dto.assembleGroupId}
+            </if>
+            <if test="dto.siteId != null">
+                and b.SITE_ID = #{dto.siteId}
+            </if>
+            <if test="dto.assembleGroupCode != null">
+                and b.ASSEMBLE_GROUP_CODE = #{dto.assembleGroupCode}
+            </if>
+            <if test="dto.description != null">
+                and t.DESCRIPTION like CONCAT('%',CONCAT(#{dto.description},'%'))
+            </if>
+            <if test="dto.autoInstallPointFlag != null">
+                and b.AUTO_INSTALL_POINT_FLAG = #{dto.autoInstallPointFlag}
+            </if>
+            <if test="dto.assembleControlFlag != null">
+                and b.ASSEMBLE_CONTROL_FLAG = #{dto.assembleControlFlag}
+            </if>
+            <if test="dto.assembleSequenceFlag != null">
+                and b.ASSEMBLE_SEQUENCE_FLAG = #{dto.assembleSequenceFlag}
+            </if>
+            <if test="dto.assembleGroupStatus != null">
+                and b.ASSEMBLE_GROUP_STATUS = #{dto.assembleGroupStatus}
+            </if>
+    </select>
+</mapper>

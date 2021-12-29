@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeOperationInstructionMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeOperationInstruction">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="operation_ins_id" property="operationInsId" jdbcType="VARCHAR"/>
+        <result column="operation_id" property="operationId" jdbcType="VARCHAR"/>
+        <result column="attachment_uuid" property="attachmentUuid" jdbcType="VARCHAR"/>
+        <result column="attachment_name" property="attachmentName" jdbcType="VARCHAR"/>
+        <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+        <result column="material_version_id" property="materialVersionId" jdbcType="VARCHAR"/>
+        <result column="material_category_id" property="materialCategoryId" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="operationInsQuery" resultType="com.ruike.hme.domain.entity.HmeOperationInstruction">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        hoi.operation_ins_id,
+        hoi.ins_header_id,
+        hoi.operation_id,
+        mo.OPERATION_NAME,
+        motl.DESCRIPTION,
+        hoi.material_id,
+        mm.MATERIAL_CODE,
+        mmtl.MATERIAL_NAME,
+        hoi.material_version_id,
+        hmv.MATERIAL_VERSION,
+        hoi.material_category_id,
+        wig.item_group_code AS material_category_code,
+        wig.item_group_description AS material_category_desc,
+        hoi.created_by,
+        iu.real_name AS created_by_name,
+        hoi.creation_date,
+        hoi.last_updated_by,
+        iu2.real_name AS last_updated_by_name,
+        hoi.last_update_date,
+        hoi.enable_flag,
+        mo.DESCRIPTION AS operation_des
+        FROM
+        hme_operation_instruction hoi
+        LEFT JOIN mt_material mm ON hoi.material_id = mm.MATERIAL_ID
+        LEFT JOIN mt_material_tl mmtl ON mm.MATERIAL_ID = mmtl.MATERIAL_ID AND mmtl.LANG = #{lang}
+        LEFT JOIN hme_material_version hmv ON hoi.material_version_id = hmv.MATERIAL_VERSION_ID
+        LEFT JOIN wms_item_group wig ON wig.item_group_id = hoi.material_category_id
+        INNER JOIN hzero_platform.iam_user iu ON hoi.created_by = iu.id
+        INNER JOIN hzero_platform.iam_user iu2 ON hoi.last_updated_by = iu2.id
+        INNER JOIN mt_operation mo ON hoi.operation_id = mo.OPERATION_ID
+        INNER JOIN mt_operation_tl motl ON mo.operation_id = motl.OPERATION_ID AND motl.LANG = #{lang}
+        WHERE
+        hoi.TENANT_ID = #{tenantId}
+        <if test="insHeaderId != null">
+            AND hoi.ins_header_id = #{insHeaderId}
+        </if>
+        ORDER BY hoi.creation_date DESC
+    </select>
+</mapper>

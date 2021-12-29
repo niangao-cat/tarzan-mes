@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtBomComponentHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtBomComponentHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="BOM_COMPONENT_HIS_ID" property="bomComponentHisId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_ID" property="bomComponentId" jdbcType="VARCHAR"/>
+        <result column="BOM_ID" property="bomId" jdbcType="VARCHAR"/>
+        <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="BOM_COMPONENT_TYPE" property="bomComponentType" jdbcType="VARCHAR"/>
+        <result column="DATE_FROM" property="dateFrom" jdbcType="TIMESTAMP"/>
+        <result column="DATE_TO" property="dateTo" jdbcType="TIMESTAMP"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="KEY_MATERIAL_FLAG" property="keyMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_METHOD" property="assembleMethod" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_AS_REQ_FLAG" property="assembleAsReqFlag" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_POLICY" property="attritionPolicy" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_CHANCE" property="attritionChance" jdbcType="DECIMAL"/>
+        <result column="ATTRITION_QTY" property="attritionQty" jdbcType="DECIMAL"/>
+        <result column="COPIED_FROM_COMPONENT_ID" property="copiedFromComponentId" jdbcType="VARCHAR"/>
+        <result column="ISSUED_LOCATOR_ID" property="issuedLocatorId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByEventIds" resultMap="BaseResultMap">
+        select * from mt_bom_component_his where TENANT_ID = ${tenantId} AND EVENT_ID in
+        <foreach collection="eventIds" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectBybomComponentId" resultMap="BaseResultMap">
+       select * from mt_bom_component_his where TENANT_ID = ${tenantId} AND BOM_COMPONENT_ID = #{bomComponentId} ORDER BY EVENT_ID + 0 DESC
+    </select>
+</mapper>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfOperationComponentIfaceMapper">
+
+    <insert id="batchInsertOperaCompIface" parameterType="com.ruike.itf.domain.entity.ItfOperationComponentIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="operaCompIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.plantCode},
+            #{item.routerObjectType},
+            #{item.routerCode},
+            #{item.routerAlternate},
+            #{item.bomObjectType},
+            #{item.bomCode},
+            #{item.bomAlternate},
+            #{item.lineNum},
+            #{item.operationSeqNum},
+            #{item.componentItemNum},
+            #{item.bomUsage},
+            #{item.uom},
+            #{item.enableFlag},
+            #{item.componentStartDate},
+            #{item.componentEndDate},
+            #{item.erpCreationDate},
+            #{item.erpCreatedBy},
+            #{item.erpLastUpdatedBy},
+            #{item.erpLastUpdateDate},
+            #{item.updateMethod},
+            #{item.batchId},
+            #{item.batchDate},
+            #{item.status},
+            #{item.message},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+    <insert id="batchInsertOperaComp" parameterType="com.ruike.itf.domain.entity.ItfOperationComponentIface">
+        INSERT INTO ${tableName}
+        VALUES
+        <foreach collection="operaCompIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.plantCode},
+            #{item.routerObjectType},
+            #{item.routerCode},
+            #{item.routerAlternate},
+            #{item.bomObjectType},
+            #{item.bomCode},
+            #{item.bomAlternate},
+            #{item.lineNum},
+            #{item.operationSeqNum},
+            #{item.componentItemNum},
+            #{item.bomUsage},
+            #{item.uom},
+            #{item.enableFlag},
+            #{item.componentStartDate},
+            #{item.componentEndDate},
+            #{item.erpCreationDate},
+            #{item.erpCreatedBy},
+            #{item.erpLastUpdatedBy},
+            #{item.erpLastUpdateDate},
+            #{item.updateMethod},
+            #{item.batchId},
+            #{item.status},
+            #{item.message},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteDataByTypeAndBatchDate">
+        delete from itf_operation_component_iface where ROUTER_OBJECT_TYPE = #{type} and batch_date = #{batchDate}
+    </delete>
+</mapper>

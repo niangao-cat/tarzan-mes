@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeExceptionHandlePlatformMapper">
+    <!--查询未解决异常数量、本班次异常数量和总数量-->
+    <select id="queryUnresolvedExcQty" resultType="com.ruike.hme.domain.vo.HmeExceptionHandlePlatFormVO">
+        SELECT
+            T1.UNRESOLVED_EXC_QTY,
+            T2.SHIFT_EXC_QTY,
+            T3.TOTAL_EXC_QTY
+        FROM
+            (
+                SELECT
+                    COUNT( * ) UNRESOLVED_EXC_QTY
+                FROM
+                    HME_EXC_WKC_RECORD HEWR
+                    LEFT JOIN HME_EXCEPTION HE ON HEWR.EXCEPTION_ID = HE.EXCEPTION_ID
+                WHERE
+                    1 = 1
+                    AND HEWR.TENANT_ID = #{tenantId}
+                    AND HE.EXCEPTION_TYPE = #{exceptionType}
+                    AND HEWR.WORKCELL_ID = #{workcellId}
+                    AND HEWR.EXCEPTION_STATUS IN ( 'NEW', 'UPGRADE' )
+            ) T1,
+            (
+                SELECT
+                    COUNT( * ) SHIFT_EXC_QTY
+                FROM
+                    HME_EXC_WKC_RECORD HEWR
+                    LEFT JOIN HME_EXCEPTION HE ON HEWR.EXCEPTION_ID = HE.EXCEPTION_ID
+                WHERE
+                    1 = 1
+                    AND HEWR.TENANT_ID = #{tenantId}
+                    AND HE.EXCEPTION_TYPE = #{exceptionType}
+                    AND HEWR.WORKCELL_ID = #{workcellId}
+                    <if test="wkcShiftId != null and wkcShiftId != ''">
+                        AND HEWR.WKC_SHIFT_ID = #{wkcShiftId}
+                    </if>
+                    AND HEWR.EXCEPTION_STATUS IN ( 'NEW', 'UPGRADE' )
+            ) T2,
+            (
+                SELECT
+                    COUNT( * ) TOTAL_EXC_QTY
+                FROM
+                    HME_EXC_WKC_RECORD HEWR
+                    LEFT JOIN HME_EXCEPTION HE ON HEWR.EXCEPTION_ID = HE.EXCEPTION_ID
+                WHERE
+                    1 = 1
+                    AND HEWR.TENANT_ID = #{tenantId}
+                    AND HE.EXCEPTION_TYPE = #{exceptionType}
+                    AND HEWR.WORKCELL_ID = #{workcellId}
+            ) T3
+    </select>
+
+    <!--查询新建异常时的异常标签集合-->
+    <select id="queryExceptionLabelList" resultType="com.ruike.hme.domain.vo.HmeExceptionRecordQueryVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT DISTINCT
+            HE.EXCEPTION_ID,
+            HE.EXCEPTION_CODE,
+            HE.EXCEPTION_NAME,
+            HE.EXCEPTION_TYPE,
+            HEG.EXCEPTION_GROUP_ID,
+            HEGR.EXCEPTION_LEVEL ,
+            <if test="wkcShiftId != null and wkcShiftId != ''">
+                ( SELECT CONCAT( DATE_FORMAT( MWS.SHIFT_DATE, '%m-%d-' ), MWS.SHIFT_CODE ) FROM MT_WKC_SHIFT MWS WHERE MWS.WKC_SHIFT_ID = #{wkcShiftId} ) SHIFT_CODE,
+            </if>
+            ( SELECT
+                MMWT.WORKCELL_NAME
+              FROM
+                MT_MOD_WORKCELL MMW
+                LEFT JOIN MT_MOD_WORKCELL_TL MMWT ON MMW.WORKCELL_ID = MMWT.WORKCELL_ID
+                AND MMWT.LANG = #{lang}
+              WHERE
+                MMW.WORKCELL_ID = #{workcellId}
+            ) WORKCELL_NAME,
+	        ( SELECT IU.REAL_NAME FROM IAM_USER IU WHERE IU.ID = #{userId} ) REAL_NAME,
+            #{workcellId} WORKCELL_ID
+        FROM
+            HME_EXCEPTION_GROUP HEG
+            LEFT JOIN HME_EXC_GROUP_ASSIGN HEGA ON HEG.EXCEPTION_GROUP_ID = HEGA.EXCEPTION_GROUP_ID
+            LEFT JOIN HME_EXCEPTION HE ON HEGA.EXCEPTION_ID = HE.EXCEPTION_ID
+            LEFT JOIN (
+                SELECT
+                    HEGR.EXCEPTION_GROUP_ASSIGN_ID,
+                    MIN(HEGR.EXCEPTION_LEVEL) EXCEPTION_LEVEL
+                FROM HME_EXC_GROUP_ROUTER HEGR
+                GROUP BY HEGR.EXCEPTION_GROUP_ASSIGN_ID
+            )HEGR ON HEGA.EXCEPTION_GROUP_ASSIGN_ID = HEGR.EXCEPTION_GROUP_ASSIGN_ID
+        WHERE
+            1 = 1
+            AND HE.ENABLE_FLAG = 'Y'
+            AND HEGA.ENABLE_FLAG = 'Y'
+            AND HEG.ENABLE_FLAG = 'Y'
+            AND EXISTS (
+                SELECT
+                    HEGWA.EXCEPTION_GROUP_ID
+                FROM
+                    HME_EXC_GROUP_WKC_ASSIGN HEGWA
+                WHERE
+                    1 = 1
+                    AND HEGWA.ENABLE_FLAG = 'Y'
+                    AND HEGWA.WORKCELL_ID = #{parentWorkcellId}
+                    AND HEGWA.EXCEPTION_GROUP_ID = HEG.EXCEPTION_GROUP_ID
+                ORDER BY
+                    HEGWA.SERIAL_NUMBER
+            )
+            AND HE.TENANT_ID = #{tenantId}
+            AND HE.EXCEPTION_TYPE = #{exceptionType}
+    </select>
+
+    <!--查询异常清单内容,关闭状态的只查询两天内的-->
+    <select id="queryExceptionRecordList" resultType="com.ruike.hme.domain.vo.HmeExceptionRecordQueryVO">
+        SELECT
+            HEWR.EXCEPTION_WKC_RECORD_ID,
+            HEWR.WORKCELL_ID,
+            HE.EXCEPTION_NAME,
+            CASE
+            WHEN MWS.SHIFT_DATE IS NOT NULL AND MWS.SHIFT_CODE IS NOT NULL
+            THEN CONCAT( CONCAT( DATE_FORMAT( MWS.SHIFT_DATE, '%m-%d' ), '-' ), MWS.SHIFT_CODE ) ELSE ''
+            END SHIFT_CODE,
+            HEWR.EXCEPTION_LEVEL,
+            HEWR.EXCEPTION_REMARK,
+            DATE_FORMAT( HEWR.CREATION_DATE, '%H:%i') CREATION_DATE,
+            DATE_FORMAT( HEWR.RESPOND_TIME, '%H:%i') RESPOND_TIME,
+            DATE_FORMAT( HEWR.CLOSE_TIME, '%H:%i') CLOSE_TIME,
+            HEWR.EXCEPTION_STATUS
+        FROM
+            HME_EXC_WKC_RECORD HEWR
+            LEFT JOIN HME_EXCEPTION HE ON HEWR.EXCEPTION_ID = HE.EXCEPTION_ID
+            LEFT JOIN MT_WKC_SHIFT MWS ON HEWR.WKC_SHIFT_ID = MWS.WKC_SHIFT_ID
+        WHERE
+            1 = 1
+            AND HEWR.TENANT_ID = #{tenantId}
+            AND HEWR.exception_status != 'CLOSE'
+            <if test="workcellId != null and workcellId !=''">
+                AND HEWR.WORKCELL_ID = #{workcellId}
+            </if>
+            <if test="workcellId == null or workcellId ==''">
+                AND HEWR.WORKCELL_ID IS NULL
+            </if>
+            AND HE.EXCEPTION_TYPE = #{exceptionType}
+            AND NOT EXISTS (
+                SELECT
+                HEWR2.EXCEPTION_WKC_RECORD_ID
+                FROM
+                HME_EXC_WKC_RECORD HEWR2
+                WHERE
+                1 = 1
+                AND HEWR2.EXCEPTION_STATUS = 'CLOSE'
+                AND HEWR2.CREATION_DATE &lt; DATE_SUB( SYSDATE( ), INTERVAL 2 DAY )
+                AND HEWR2.EXCEPTION_WKC_RECORD_ID = HEWR.EXCEPTION_WKC_RECORD_ID
+            )
+        ORDER BY
+            HEWR.CREATION_DATE DESC
+    </select>
+
+    <!--查看异常明细信息-->
+    <select id="queryExceptionRecordDetail" resultType="com.ruike.hme.domain.vo.HmeExceptionRecordQueryVO">
+        SELECT
+            HEWR.EXCEPTION_WKC_RECORD_ID,
+            HE.EXCEPTION_NAME,
+            CASE WHEN MWS.SHIFT_DATE IS NOT NULL AND MWS.SHIFT_CODE IS NOT NULL
+                THEN CONCAT( CONCAT( DATE_FORMAT( MWS.SHIFT_DATE, '%m-%d' ), '-' ), MWS.SHIFT_CODE ) ELSE ''
+                END SHIFT_CODE,
+            MMW.WORKCELL_NAME,
+            IU.REAL_NAME,
+            HEQ.ASSET_ENCODING EQUIPMENT_CODE,
+            HEWR.ATTACHMENT_UUID,
+            HEWR.MATERIAL_LOT_CODE,
+            MM.MATERIAL_CODE,
+            HEWR.EXCEPTION_REMARK,
+            HEWR.RESPOND_REMARK
+        FROM
+            HME_EXC_WKC_RECORD HEWR
+            LEFT JOIN HME_EXCEPTION HE ON HEWR.EXCEPTION_ID = HE.EXCEPTION_ID
+            LEFT JOIN MT_WKC_SHIFT MWS ON HEWR.WKC_SHIFT_ID = MWS.WKC_SHIFT_ID
+            LEFT JOIN MT_MOD_WORKCELL MMW ON HEWR.WORKCELL_ID = MMW.WORKCELL_ID
+            LEFT JOIN IAM_USER IU ON HEWR.CREATED_BY = IU.ID
+            LEFT JOIN HME_EQUIPMENT HEQ ON HEWR.EQUIPMENT_ID = HEQ.EQUIPMENT_ID
+            LEFT JOIN MT_MATERIAL MM ON HEWR.MATERIAL_ID = MM.MATERIAL_ID
+        WHERE 1=1
+            <if test="exceptionWkcRecordId != null and exceptionWkcRecordId!='' ">
+                AND HEWR.EXCEPTION_WKC_RECORD_ID  = #{exceptionWkcRecordId}
+            </if>
+    </select>
+
+    <!--查看异常明细信息中异常状态时间轴列表信息-->
+    <select id="queryStatusHistory" resultType="com.ruike.hme.domain.vo.HmeExceptionStatusHistoryVO">
+        SELECT
+            DATE_FORMAT( HEWRH.CREATION_DATE, '%m-%d %H:%i:%s' ) CREATION_DATE,
+            HEWRH.EXCEPTION_STATUS,
+            CASE HEWRH.CREATED_BY WHEN '-1' THEN US.REAL_NAME
+            ELSE IU.REAL_NAME END REAL_NAME
+        FROM
+            HME_EXC_WKC_RECORD_HIS HEWRH
+            LEFT JOIN IAM_USER IU ON HEWRH.CREATED_BY = IU.ID
+            LEFT JOIN IAM_USER US ON HEWRH.RESPONDED_BY = US.LOGIN_NAME
+        WHERE
+            1 = 1
+            AND HEWRH.TENANT_ID = #{tenantId}
+            AND HEWRH.EXCEPTION_WKC_RECORD_ID = #{exceptionWkcRecordId}
+        ORDER BY HEWRH.CREATION_DATE
+    </select>
+    <select id="selectAreaByUserId" resultType="com.ruike.hme.domain.vo.HmeAreaInfo">
+        SELECT
+            mma.AREA_ID as areaId,
+            mma.AREA_CODE as areaCode,
+            mma.AREA_NAME as areaName
+        FROM
+            mt_user_organization muo
+                JOIN mt_mod_area mma ON mma.AREA_ID = muo.ORGANIZATION_ID
+        WHERE
+            muo.ORGANIZATION_TYPE = 'AREA'
+          AND muo.ENABLE_FLAG = 'Y'
+          AND mma.AREA_CATEGORY = 'SYB'
+          AND muo.TENANT_ID = #{tenantId}
+          AND muo.USER_ID = #{userId}
+        <if test="areaId != null and areaId != ''">
+            AND mma.AREA_ID = #{areaId}
+        </if>
+    </select>
+    <select id="selectWorkshopByUserId" resultType="com.ruike.hme.domain.vo.HmeAreaInfo">
+        SELECT
+            mma.AREA_ID as areaId,
+            mma.AREA_CODE as areaCode,
+            mma.AREA_NAME as areaName
+        FROM
+            mt_user_organization muo
+                JOIN mt_mod_area mma ON mma.AREA_ID = muo.ORGANIZATION_ID
+        WHERE
+            muo.ORGANIZATION_TYPE = 'AREA'
+          AND muo.ENABLE_FLAG = 'Y'
+          AND mma.AREA_CATEGORY = 'CJ'
+          AND muo.TENANT_ID = #{tenantId}
+          AND muo.USER_ID = #{userId}
+          <if test="areaId != null and areaId != ''">
+              AND mma.AREA_ID = #{areaId}
+          </if>
+    </select>
+
+    <select id="selectAreaByWorkShopId" resultType="com.ruike.hme.domain.vo.HmeAreaInfo">
+        SELECT
+        mma.AREA_ID,
+        mma.AREA_CODE,
+        mma.AREA_NAME
+    FROM
+        mt_mod_organization_rel mmor,
+        mt_mod_area mma
+    WHERE
+        mma.AREA_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mma.AREA_CATEGORY = 'SYB'
+        AND mmor.ORGANIZATION_ID = #{areaId}
+    </select>
+
+    <select id="selectProdLineByUserId" resultType="com.ruike.hme.domain.vo.HmeProdLineInfo">
+        SELECT
+            mmpl.PROD_LINE_ID as prodLineId,
+            mmpl.PROD_LINE_CODE as prodLineCode,
+            mmpl.PROD_LINE_NAME as prodLineName
+        FROM
+            mt_user_organization muo
+                JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_ID = muo.ORGANIZATION_ID
+        WHERE
+            muo.ORGANIZATION_TYPE = 'PROD_LINE'
+          AND muo.ENABLE_FLAG = 'Y'
+          AND muo.TENANT_ID = #{tenantId}
+          AND muo.USER_ID = #{userId}
+        <if test="prodLineId != null and prodLineId != ''">
+            AND mmpl.PROD_LINE_ID = #{prodLineId}
+        </if>
+    </select>
+
+    <select id="selectAreaByProdLineId" resultType="com.ruike.hme.domain.vo.HmeAreaInfo">
+            SELECT
+        mma.AREA_ID,
+        mma.AREA_CODE,
+        mma.AREA_NAME
+    FROM
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmorp,
+        mt_mod_area mma
+    WHERE
+        mma.AREA_ID = mmorp.PARENT_ORGANIZATION_ID
+        AND mma.AREA_CATEGORY = 'SYB'
+        AND mmorp.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor.ORGANIZATION_ID = #{prodLineId}
+    </select>
+
+    <select id="selectAreaByWorkcellId" resultType="com.ruike.hme.domain.vo.HmeAreaInfo">
+            SELECT
+        mma.AREA_ID,
+        mma.AREA_CODE,
+        mma.AREA_NAME
+    FROM
+        mt_mod_organization_rel mmor,
+        mt_mod_organization_rel mmorp,
+        mt_mod_organization_rel mmort,
+        mt_mod_organization_rel mmorh,
+        mt_mod_organization_rel mmorth,
+        mt_mod_area mma
+    WHERE
+        mma.AREA_ID = mmorth.PARENT_ORGANIZATION_ID
+        AND mma.AREA_CATEGORY = 'SYB'
+        AND mmorth.ORGANIZATION_ID = mmorh.PARENT_ORGANIZATION_ID
+        AND mmorh.ORGANIZATION_ID = mmort.PARENT_ORGANIZATION_ID
+        AND mmort.ORGANIZATION_ID = mmorp.PARENT_ORGANIZATION_ID
+        AND mmorp.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+        AND mmor.ORGANIZATION_ID = #{workcellId}
+    </select>
+
+    <select id="queryExceptionLabelListByGroupIds"
+            resultType="com.ruike.hme.domain.vo.HmeExceptionRecordQueryVO">
+        SELECT
+            hega.exception_group_id,
+            he.exception_id,
+            he.exception_type,
+            he.exception_code,
+            he.exception_name
+        FROM
+            hme_exc_group_assign hega
+                JOIN hme_exception he ON he.exception_id = hega.exception_id
+        WHERE
+            hega.enable_flag = 'Y'
+          AND he.enable_flag = 'Y'
+          AND he.TENANT_ID = #{tenantId}
+          AND hega.exception_group_id IN
+        <foreach collection="hmeExceptionGroupIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        ORDER BY
+            he.exception_type ASC,
+            he.exception_code ASC
+    </select>
+    <select id="queryExceptionRecordDetailByexceptionWkcRecordId"
+            resultType="com.ruike.hme.domain.vo.HmeExceptionRecordQueryVO">
+        SELECT
+            HEWR.EXCEPTION_WKC_RECORD_ID,
+            HE.EXCEPTION_NAME,
+            MMW.WORKCELL_NAME,
+            IU.REAL_NAME,
+            HEQ.ASSET_ENCODING EQUIPMENT_CODE,
+            HEWR.ATTACHMENT_UUID,
+            HEWR.MATERIAL_LOT_CODE,
+            MM.MATERIAL_CODE,
+            HEWR.EXCEPTION_REMARK,
+            HEWR.RESPOND_REMARK,
+            HEWR.ATTRIBUTE1,
+            HEWR.ATTRIBUTE2
+        FROM
+            HME_EXC_WKC_RECORD HEWR
+
+                LEFT JOIN HME_EXCEPTION HE ON HEWR.EXCEPTION_ID = HE.EXCEPTION_ID
+                LEFT JOIN MT_MOD_WORKCELL MMW ON HEWR.WORKCELL_ID = MMW.WORKCELL_ID
+                LEFT JOIN hzero_platform.IAM_USER IU ON HEWR.CREATED_BY = IU.ID
+                LEFT JOIN HME_EQUIPMENT HEQ ON HEWR.EQUIPMENT_ID = HEQ.EQUIPMENT_ID
+                LEFT JOIN MT_MATERIAL MM ON HEWR.MATERIAL_ID = MM.MATERIAL_ID
+        WHERE
+            1 = 1
+          AND HEWR.EXCEPTION_WKC_RECORD_ID = #{exceptionWkcRecordId}
+    </select>
+    <select id="selectExceptionUnresolvedExcQty" resultType="java.lang.Long">
+        SELECT
+            COUNT( 0 )
+        FROM
+            HME_EXC_WKC_RECORD HEWR
+                LEFT JOIN HME_EXCEPTION HE ON HEWR.EXCEPTION_ID = HE.EXCEPTION_ID
+        WHERE
+            1 = 1
+          AND HEWR.TENANT_ID = #{tenantId}
+          AND HE.EXCEPTION_TYPE = #{typeCode}
+          AND HEWR.WORKCELL_ID IS NULL
+          AND HEWR.EXCEPTION_STATUS IN ( 'NEW', 'UPGRADE' )
+    </select>
+
+</mapper>

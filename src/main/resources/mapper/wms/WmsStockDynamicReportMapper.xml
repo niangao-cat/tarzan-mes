@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsStockDynamicReportMapper">
+
+    <select id="queryListIn" resultType="com.ruike.wms.domain.vo.WmsStockDynamicReportVO">
+        SELECT
+            mms.SITE_CODE,
+            wig.item_group_code,
+            wig.item_group_description,
+            mml1.LOCATOR_CODE,
+            STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d') stockDate,
+            sum(CASE WHEN mij.CHANGE_QUANTITY >= 0 THEN mij.CHANGE_QUANTITY ELSE 0 END) qty
+        FROM
+            mt_inv_journal mij
+            LEFT JOIN mt_material_site mmls ON mij.MATERIAL_ID = mmls.MATERIAL_ID AND mij.SITE_ID =  mmls.SITE_ID
+            LEFT JOIN mt_material_basic mmb ON mmls.material_site_id = mmb.material_site_id
+            LEFT JOIN wms_item_group wig ON mmb.ITEM_GROUP = wig. item_group_code,
+            mt_material mm,
+            mt_mod_site mms,
+            mt_mod_locator mml
+            LEFT JOIN mt_mod_locator mml1 ON mml.PARENT_LOCATOR_ID = mml1.locator_id
+        WHERE
+            mij.TENANT_ID = #{tenantId}
+        and mij.MATERIAL_ID = mm.MATERIAL_ID
+        and mij.SITE_ID = mms.SITE_ID
+        and mij.LOCATOR_ID = mml.LOCATOR_ID
+        and mij.CHANGE_QUANTITY >= 0
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND mms.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.itemGroupId != null and dto.itemGroupId != ''">
+            and wig.item_group_id in
+            <foreach collection="dto.itemGroupIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            and mml1.locator_id in
+            <foreach collection="dto.locatorIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.startDate != null and dto.startDate != ''">
+            AND mij.EVENT_TIME >= #{dto.startDate}
+        </if>
+        <if test="dto.endDate != null and dto.endDate != ''">
+            AND mij.EVENT_TIME &lt;= #{dto.endDate}
+        </if>
+        GROUP BY
+            mms.SITE_CODE,
+            wig.item_group_code,
+            wig.item_group_description,
+            mml1.LOCATOR_CODE,
+            STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d')
+    </select>
+
+    <select id="queryListOut" resultType="com.ruike.wms.domain.vo.WmsStockDynamicReportVO">
+        SELECT
+            mms.SITE_CODE,
+            wig.item_group_code,
+            wig.item_group_description,
+            mml1.LOCATOR_CODE,
+            STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d') stockDate,
+            ABS(sum(CASE WHEN mij.CHANGE_QUANTITY &lt; 0 THEN mij.CHANGE_QUANTITY ELSE 0 END)) qty
+        FROM
+            mt_inv_journal mij
+            LEFT JOIN mt_material_site mmls ON mij.MATERIAL_ID = mmls.MATERIAL_ID AND mij.SITE_ID =  mmls.SITE_ID
+            LEFT JOIN mt_material_basic mmb ON mmls.material_site_id = mmb.material_site_id
+            LEFT JOIN wms_item_group wig ON mmb.ITEM_GROUP = wig. item_group_code,
+            mt_material mm,
+            mt_mod_site mms,
+            mt_mod_locator mml
+            LEFT JOIN mt_mod_locator mml1 ON mml.PARENT_LOCATOR_ID = mml1.locator_id
+        WHERE
+            mij.TENANT_ID = #{tenantId}
+        and mij.MATERIAL_ID = mm.MATERIAL_ID
+        and mij.SITE_ID = mms.SITE_ID
+        and mij.LOCATOR_ID = mml.LOCATOR_ID
+        and mij.CHANGE_QUANTITY &lt; 0
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND mms.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.itemGroupId != null and dto.itemGroupId != ''">
+            and wig.item_group_id in
+            <foreach collection="dto.itemGroupIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            and mml1.locator_id in
+            <foreach collection="dto.locatorIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.startDate != null and dto.startDate != ''">
+            AND mij.EVENT_TIME >= #{dto.startDate}
+        </if>
+        <if test="dto.endDate != null and dto.endDate != ''">
+            AND mij.EVENT_TIME &lt;= #{dto.endDate}
+        </if>
+        GROUP BY
+            mms.SITE_CODE,
+            wig.item_group_code,
+            wig.item_group_description,
+            mml1.LOCATOR_CODE,
+            STR_TO_DATE(mij.EVENT_TIME,'%Y-%m-%d')
+    </select>
+</mapper>

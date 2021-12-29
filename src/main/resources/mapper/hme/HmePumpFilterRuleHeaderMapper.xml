@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmePumpFilterRuleHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmePumpFilterRuleHeader">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="RULE_HEAD_ID" property="ruleHeadId" jdbcType="VARCHAR"/>
+        <result column="RULE_CODE" property="ruleCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="QTY" property="qty" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryFilterRuleList" resultType="com.ruike.hme.domain.vo.HmePumpFilterRuleHeaderVO">
+        SELECT
+        	rh.rule_head_id,
+        	rh.rule_code,
+        	rh.material_id,
+        	mm.MATERIAL_CODE,
+        	mm.MATERIAL_NAME,
+        	rh.qty,
+        	rh.enable_flag
+        FROM
+        	hme_pump_filter_rule_header rh,
+        	mt_material mm
+        WHERE
+            rh.tenant_id = #{tenantId}
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND rh.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.ruleCode != null and dto.ruleCode != ''">
+            AND rh.rule_code = #{dto.ruleCode}
+        </if>
+        AND mm.MATERIAL_ID = rh.material_id
+    </select>
+
+    <select id="queryRuleLineList" resultType="com.ruike.hme.domain.vo.HmePumpFilterRuleHeaderVO2">
+        SELECT
+        	rl.rule_line_id,
+        	rl.rule_head_id,
+        	rl.parameter_code,
+        	rl.tag_id,
+        	mt.tag_code,
+        	mt.tag_description,
+        	rl.calculate_type,
+        	rl.min_value,
+        	rl.max_value,
+        	rl.enable_flag,
+        	rl.formula,
+        	rl.sequence,
+            rl.priority
+        FROM
+        	hme_pump_filter_rule_line rl,
+        	mt_tag mt
+        WHERE
+            rl.tenant_id = #{tenantId}
+        AND rl.rule_head_id = #{ruleHeadId}
+        AND mt.tag_id = rl.tag_id
+        ORDER BY rl.sequence ASC
+    </select>
+
+    <select id="queryRuleHistoryList" resultType="com.ruike.hme.domain.vo.HmePumpFilterRuleHeaderVO3">
+        SELECT
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            rhh.rule_code,
+            rhh.qty,
+            rhh.enable_flag head_enable_flag,
+            iu.REAL_NAME head_REAL_NAME,
+            rhh.last_update_date head_last_update_date,
+            rlh.parameter_code,
+            mt.TAG_CODE,
+            mt.TAG_DESCRIPTION,
+            rlh.calculate_type,
+            rlh.min_value,
+            rlh.max_value,
+            rlh.enable_flag line_enable_flag,
+            rlh.formula,
+            rlh.sequence,
+            rlh.priority,
+            iu2.REAL_NAME line_REAL_NAME,
+            rlh.last_update_date line_last_update_date
+        FROM
+            hme_pump_filter_rule_header_his rhh
+            left join hme_pump_filter_rule_line_his rlh ON rlh.rule_head_his_id = rhh.rule_head_his_id AND rlh.TENANT_ID = #{tenantId}
+            left join mt_tag mt ON mt.TAG_ID = rlh.tag_id
+            left join iam_user iu2 ON iu2.id = rlh.LAST_UPDATED_BY,
+            mt_material mm,
+            iam_user iu
+        WHERE
+            rhh.tenant_id = #{tenantId}
+        AND rhh.rule_head_id = #{ruleHeadId}
+        AND mm.MATERIAL_ID = rhh.material_id
+        AND iu.id = rhh.LAST_UPDATED_BY
+        ORDER BY rhh.last_update_date DESC , rlh.last_update_date DESC
+    </select>
+
+    <update id="myUpdate">
+         update hme_pump_filter_rule_header
+        set object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            rule_code = #{dto.ruleCode},
+            material_id = #{dto.materialId},
+            qty = #{dto.qty},
+            enable_flag = #{dto.enableFlag}
+        where
+            rule_head_id = #{dto.ruleHeadId}
+            AND tenant_id = #{tenantId}
+    </update>
+</mapper>

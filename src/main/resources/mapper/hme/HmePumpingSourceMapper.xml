@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmePumpingSourceMapper">
+    <select id="queryHmePumping" resultType="com.ruike.hme.domain.vo.HmePumpingSourceVO">
+        SELECT mml.material_lot_code AS hmePumpingSourceCombineSn,
+               mmlt.material_lot_code AS hmePumpingSourceSn,
+               hpmpl.position,
+               mmlt.material_id,
+               mes.eo_id
+        FROM hme_pump_mod_position_header hpmph,
+             mt_material_lot mml,
+             mt_eo me,
+             hme_pump_mod_position_line hpmpl,
+             mt_material_lot mmlt,
+             mt_eo mes
+        WHERE hpmph.TENANT_ID = #{tenantId}
+          AND hpmph.comb_material_lot_id = mml.material_lot_id
+          AND me.eo_id = hpmph.eo_id
+          AND hpmpl.position_header_id = hpmph.position_header_id
+          AND mmlt.material_lot_id = hpmpl.material_lot_id
+          AND mes.IDENTIFICATION = mmlt.material_lot_code
+          AND mes.TENANT_ID = #{tenantId}
+          AND me.IDENTIFICATION =#{dto.identification}
+          order by hpmpl.position
+    </select>
+
+
+    <select id="queryWorkcellIdList" resultType="java.lang.String">
+        SELECT
+                mmor.organization_id AS workcellId
+        FROM
+                mt_operation mo,
+                mt_operation_wkc_dispatch_rel mowdr,
+                mt_mod_organization_rel mmor,
+                mt_mod_workcell mmw
+        WHERE
+                mo.operation_id = mowdr.operation_id
+                AND mowdr.workcell_id = mmor.PARENT_ORGANIZATION_ID
+                AND mowdr.workcell_id = mmw.WORKCELL_ID
+                AND mmor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+                AND mmor.ORGANIZATION_TYPE = 'WORKCELL'
+                AND mmw.WORKCELL_TYPE = 'PROCESS'
+                AND mowdr.tenant_id =#{tenantId}
+                AND mmor.tenant_id =#{tenantId}
+                AND mo.operation_name =#{operationName}
+    </select>
+
+    <select id="queryJobId" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        SELECT
+        hejsn.JOB_ID as jobId,
+        hejsn.eo_id,
+        hejsn.site_out_date as siteOutDate
+        FROM
+        hme_eo_job_sn hejsn
+        WHERE
+        hejsn.eo_id in
+        <foreach collection="eoIds" item="eoId" open="(" index="index" separator="," close=")">
+            #{eoId}
+        </foreach>
+        and hejsn.WORKCELL_ID in
+        <foreach collection="workcellId" item="workcellId" open="(" index="index" separator="," close=")">
+            #{workcellId}
+        </foreach>
+        AND hejsn.TENANT_ID =#{tenantId}
+    </select>
+
+    <select id="queryDataRecord" resultType="com.ruike.hme.domain.entity.HmeEoJobDataRecord">
+        SELECT
+        hejdr.tag_id,
+        hejdr.result,
+        hejdr.job_id
+        FROM
+        hme_eo_job_data_record hejdr
+        WHERE
+        hejdr.tenant_id =#{tenantId}
+        and hejdr.tag_id in
+        <foreach collection="tagList" item="tagId" index="index" open="(" separator="," close=")">
+            #{tagId}
+        </foreach>
+        and hejdr.job_id in
+        <foreach collection="newHmeEoJobSn" item="jobId" index="index" open="(" separator="," close=")">
+            #{jobId}
+        </foreach>
+    </select>
+
+    <select id="queryMaterialId" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        SELECT
+                mml.MATERIAL_ID
+        FROM
+                mt_material_lot mml
+        WHERE
+                mml.TENANT_ID =#{tenantId}
+                AND mml.MATERIAL_LOT_CODE =#{dto.identification}
+    </select>
+</mapper>

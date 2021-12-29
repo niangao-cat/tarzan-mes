@@ -1,0 +1,1135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmePreSelectionMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmePreSelection">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PRE_SELECTION_ID" property="preSelectionId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PRE_SELECTION_LOT" property="preSelectionLot" jdbcType="VARCHAR"/>
+        <result column="SETS_NUM" property="setsNum" jdbcType="DECIMAL"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="workOrderQuery" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO">
+        SELECT
+            mm.material_id,
+            mwo.WORK_ORDER_ID,
+            mwo.WORK_ORDER_NUM,
+            mm.MATERIAL_CODE,
+            mmsa.ATTR_VALUE product_type,
+            mm.MATERIAL_NAME,
+            mwo.QTY,
+            mwo.REMARK,
+            mwo.PLAN_END_TIME
+        FROM
+            mt_work_order mwo,
+            mt_material mm,
+            mt_material_site mms,
+            mt_material_site_attr mmsa,
+            mt_mod_production_line mmpl
+        WHERE
+            mwo.material_id = mm.MATERIAL_ID
+        AND mms.MATERIAL_ID = mm.material_id
+        AND mwo.site_id = mms.SITE_ID
+        AND mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        AND mmsa.ATTR_NAME = 'attribute13'
+        and mwo.tenant_id=#{tenantId}
+        AND mmpl.PROD_LINE_ID = mwo.PRODUCTION_LINE_ID
+        and mmpl.PROD_LINE_CODE in
+        <foreach collection="dto.prodLineCodeList" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+        </foreach>
+        <if test='dto.materialId != null and dto.materialId != ""'>
+            and mwo.material_id = #{dto.materialId}
+        </if>
+        <if test='dto.materialCode != null and dto.materialCode != ""'>
+            AND mm.material_code LIKE CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test='dto.materialName != null and dto.materialName != ""'>
+            AND mm.material_name LIKE CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test='dto.productType != null and dto.productType != ""'>
+            and mmsa.ATTR_VALUE = #{dto.productType}
+        </if>
+        <if test='dto.workOrderNum != null and dto.workOrderNum != ""'>
+            AND mwo.WORK_ORDER_NUM LIKE CONCAT('%',#{dto.workOrderNum},'%')
+        </if>
+        <if test='dto.status != null and dto.status != ""'>
+            and mwo.status = #{dto.status}
+        </if>
+        <if test='dto.planEndTimeFrom != null and dto.planEndTimeFrom != ""'>
+            and mwo.PLAN_END_TIME &gt;= DATE_FORMAT(#{dto.planEndTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test='dto.planEndTimeTo != null and dto.planEndTimeTo != ""'>
+            and mwo.PLAN_END_TIME &lt;= DATE_FORMAT(#{dto.planEndTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+
+    <select id="queryLocatorId" resultType="java.lang.String">
+         SELECT
+            mml.LOCATOR_ID
+        FROM
+            mt_mod_locator mml
+        WHERE
+            mml.TENANT_ID = #{tenantId}
+        AND mml.PARENT_LOCATOR_ID = #{locatorId}
+    </select>
+
+    <select id="queryMaterialLot" resultType="com.ruike.hme.api.dto.HmePreSelectionDTO4">
+        SELECT
+            hmll.material_lot_load_id,
+            mml.MATERIAL_LOT_CODE,
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_ID,
+            hmll.load_sequence,
+            hmll.load_row,
+            hmll.load_column,
+            hmll.cos_num,
+            mmla.ATTR_VALUE COS_TYPE,
+            hmll.hot_sink_code,
+            hcf.`current`,
+            hcf.A01,
+            hcf.A02,
+            hcf.A04,
+             mml.MATERIAL_ID
+        FROM
+            mt_material_lot mml,
+            hme_material_lot_load hmll,
+            mt_material_lot_attr mmla,
+            hme_cos_function hcf
+        WHERE
+            hmll.material_lot_id = mml.MATERIAL_LOT_ID
+        AND mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'COS_TYPE'
+        AND hcf.load_sequence = hmll.load_sequence
+        AND hmll.cos_num > 0
+        and (
+            hmll.ATTRIBUTE14 = ''
+            OR hmll.ATTRIBUTE14 != 'Y'
+            OR hmll.ATTRIBUTE14 IS NULL
+        )
+        AND (
+            hmll.`status` = ''
+            OR hmll.`status` != 'Y'
+            OR hmll.`status` IS NULL
+        )
+        AND NOT EXISTS (
+                    SELECT
+                        1
+                    FROM
+                        mt_material_lot_attr mmla1
+                    WHERE
+                        mmla1.ATTR_NAME = 'MF_FLAG'
+                    AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+                    AND mmla1.ATTR_VALUE = 'Y'
+                    )
+        AND mml.MATERIAL_LOT_ID IN
+        <foreach collection="materialLotIdList" index="index" item="materialLotId" open="(" close=")" separator=",">
+            #{materialLotId}
+        </foreach>
+        AND mml.MATERIAL_ID = #{hmeCosRuleType.materialId}
+        AND mmla.ATTR_VALUE = #{hmeCosRuleType.cosType}
+        <if test="limitRuleList!=null and limitRuleList.size()>0">
+            <foreach collection="limitRuleList" separator="" index="index" item="limitRule">
+                <if test='limitRule.countType =="C"'>
+                    AND EXISTS (
+                    SELECT
+                      1
+                    FROM
+                       hme_cos_function t
+                    WHERE
+                        t.`current`=#{limitRule.current}
+                    and hmll.load_sequence = t.load_sequence
+                    and t.${limitRule.collectionItem} ${limitRule.rangeType} #{limitRule.ruleValue})
+                </if>
+                <if test='limitRule.countType =="D"'>
+                    AND NOT EXISTS (
+                    SELECT
+                       1
+                    FROM
+                       hme_cos_function t
+                    WHERE
+                        t.`current`=#{limitRule.current}
+                    and hmll.load_sequence = t.load_sequence
+                    and t.${limitRule.collectionItem} ${limitRule.rangeType} #{limitRule.ruleValue})
+                </if>
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryMaterialLotNew" resultType="com.ruike.hme.api.dto.HmePreSelectionDTO4">
+        SELECT
+        hmll.material_lot_load_id,
+        mml.MATERIAL_LOT_CODE,
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_ID,
+        hmll.load_sequence,
+        hmll.load_row,
+        hmll.load_column,
+        hmll.cos_num,
+        mmla.ATTR_VALUE COS_TYPE,
+        hmll.hot_sink_code,
+        hcf.`current`,
+        hcf.A01,
+        hcf.A02,
+        hcf.A04,
+        mml.MATERIAL_ID
+        FROM
+        mt_material_lot mml,
+        hme_material_lot_load hmll,
+        mt_material_lot_attr mmla,
+        hme_cos_function hcf
+        WHERE
+        hmll.material_lot_id = mml.MATERIAL_LOT_ID
+        AND mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'COS_TYPE'
+        AND hcf.load_sequence = hmll.load_sequence
+        AND hmll.cos_num > 0
+        and (
+        hmll.ATTRIBUTE14 = ''
+        OR hmll.ATTRIBUTE14 != 'Y'
+        OR hmll.ATTRIBUTE14 IS NULL
+        )
+        AND (
+        hmll.`status` = ''
+        OR hmll.`status` != 'Y'
+        OR hmll.`status` IS NULL
+        )
+        AND mml.MATERIAL_LOT_ID IN
+        <foreach collection="materialLotIdList" index="index" item="materialLotId" open="(" close=")" separator=",">
+            #{materialLotId}
+        </foreach>
+        AND mml.MATERIAL_ID = #{hmeCosRuleType.materialId}
+        AND mmla.ATTR_VALUE = #{hmeCosRuleType.cosType}
+        <if test="limitRuleList!=null and limitRuleList.size()>0">
+            <foreach collection="limitRuleList" separator="" index="index" item="limitRule">
+                <if test='limitRule.countType =="C"'>
+                    AND EXISTS (
+                    SELECT
+                    1
+                    FROM
+                    hme_cos_function t
+                    WHERE
+                    t.`current`=#{limitRule.current}
+                    and hmll.load_sequence = t.load_sequence
+                    <foreach collection="limitRule.hmePreSelectionDTO9List" separator="" index="index" item="item">
+                        and t.${limitRule.collectionItem} ${item.rangeType} #{item.ruleValue}
+                    </foreach>
+                    )
+                </if>
+                <if test='limitRule.countType =="D"'>
+                    AND NOT EXISTS (
+                    SELECT
+                    1
+                    FROM
+                    hme_cos_function t
+                    WHERE
+                    t.`current`=#{limitRule.current}
+                    and hmll.load_sequence = t.load_sequence
+                    <foreach collection="limitRule.hmePreSelectionDTO9List" separator="" index="index" item="item">
+                        and t.${limitRule.collectionItem} ${item.rangeType} #{item.ruleValue}
+                    </foreach>
+                    )
+                </if>
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryMaterialLotNew2" resultType="com.ruike.hme.api.dto.HmePreSelectionDTO4">
+        SELECT
+        hmll.material_lot_load_id,
+        mml.MATERIAL_LOT_CODE,
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_ID,
+        hmll.load_sequence,
+        hmll.load_row,
+        hmll.load_column,
+        hmll.cos_num,
+        mmla.ATTR_VALUE COS_TYPE,
+        hmll.hot_sink_code,
+        hcf.`current`,
+        hcf.A01,
+        hcf.A02,
+        hcf.A04,
+        mml.MATERIAL_ID
+        FROM
+        mt_material_lot mml,
+        hme_material_lot_load hmll,
+        mt_material_lot_attr mmla,
+        hme_cos_function_selection hcf
+        WHERE
+        hmll.material_lot_id = mml.MATERIAL_LOT_ID
+        AND mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'COS_TYPE'
+        AND hcf.load_sequence = hmll.load_sequence
+        AND hmll.cos_num > 0
+        and (
+        hmll.ATTRIBUTE14 = ''
+        OR hmll.ATTRIBUTE14 != 'Y'
+        OR hmll.ATTRIBUTE14 IS NULL
+        )
+        AND (
+        hmll.`status` = ''
+        OR hmll.`status` != 'Y'
+        OR hmll.`status` IS NULL
+        )
+        AND mml.MATERIAL_LOT_ID IN
+        <foreach collection="materialLotIdList" index="index" item="materialLotId" open="(" close=")" separator=",">
+            #{materialLotId}
+        </foreach>
+        AND mml.MATERIAL_ID = #{hmeCosRuleType.materialId}
+        AND mmla.ATTR_VALUE = #{hmeCosRuleType.cosType}
+        <if test="limitRuleList!=null and limitRuleList.size()>0">
+            <foreach collection="limitRuleList" separator="" index="index" item="limitRule">
+                <if test='limitRule.countType =="C"'>
+                    AND EXISTS (
+                    SELECT
+                    1
+                    FROM
+                    hme_cos_function_selection t
+                    WHERE
+                    t.`current`=#{limitRule.current}
+                    and hmll.load_sequence = t.load_sequence
+                    <foreach collection="limitRule.hmePreSelectionDTO9List" separator="" index="index" item="item">
+                        and t.${limitRule.collectionItem} ${item.rangeType} #{item.ruleValue}
+                    </foreach>
+                    )
+                </if>
+                <if test='limitRule.countType =="D"'>
+                    AND NOT EXISTS (
+                    SELECT
+                    1
+                    FROM
+                    hme_cos_function_selection t
+                    WHERE
+                    t.`current`=#{limitRule.current}
+                    and hmll.load_sequence = t.load_sequence
+                    <foreach collection="limitRule.hmePreSelectionDTO9List" separator="" index="index" item="item">
+                        and t.${limitRule.collectionItem} ${item.rangeType} #{item.ruleValue}
+                    </foreach>
+                    )
+                </if>
+            </foreach>
+        </if>
+    </select>
+
+    <select id="selectLot" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO3">
+        SELECT
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mmll.LOCATOR_CODE,
+            count(1) num
+        FROM
+            hme_pre_selection hps,
+            hme_selection_details hsd,
+            mt_material_lot mml,
+            mt_mod_locator mmll
+        WHERE
+            1 = 1
+        AND hps.pre_selection_id = hsd.pre_selection_id
+        AND hsd.old_material_lot_id = mml.MATERIAL_LOT_ID
+        AND mml.LOCATOR_ID = mmll.LOCATOR_ID
+        AND hps.pre_selection_lot = #{selectLot}
+        GROUP BY
+        	mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mmll.LOCATOR_CODE
+    </select>
+
+    <select id="materialLot" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO4">
+        SELECT
+            HSD.selection_details_id,
+            hsd.virtual_num,
+            hsd.old_material_lot_id,
+            hps.pre_selection_lot,
+            mml.MATERIAL_LOT_CODE,
+            hsd.old_load,
+            mm.MATERIAL_CODE,
+            hsd.new_material_lot_id,
+            mml1.MATERIAL_LOT_CODE MATERIAL_LOT_CODE1,
+            hsd.cos_type,
+            hsd.load_sequence,
+            hsd.new_load,
+            hsd.rule1,
+            hsd.rule2,
+            hsd.rule3
+        FROM
+            hme_selection_details hsd
+        JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = hsd.old_material_lot_id
+        JOIN mt_material mm ON mm.MATERIAL_ID = hsd.material_id
+        JOIN hme_pre_selection hps ON hsd.pre_selection_id = hps.pre_selection_id
+        LEFT JOIN mt_material_lot mml1 ON mml1.MATERIAL_LOT_ID = hsd.new_material_lot_id
+        where mml.MATERIAL_LOT_CODE=#{materialLotCode}
+    </select>
+
+    <select id="tomaterialLot" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO4">
+        SELECT
+            hsd.virtual_num,
+            hsd.old_material_lot_id,
+            hsd.old_load,
+            hsd.new_load
+        FROM
+            hme_selection_details hsd
+        WHERE
+            hsd.new_material_lot_id = #{materialLotId}
+        ORDER BY
+            LENGTH(hsd.new_load),
+            hsd.new_load
+    </select>
+
+    <select id="selectmaterialLot" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            hme_pre_selection hps,
+         hme_selection_details hsd,
+        mt_material_lot mml
+        where hps.pre_selection_id=hsd.pre_selection_id
+        and hsd.old_material_lot_id=mml.MATERIAL_LOT_ID
+        and mml.MATERIAL_LOT_CODE=#{materialLotCode}
+        and hps.pre_selection_lot=#{selectLot}
+    </select>
+
+    <select id="getOrderBy" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO4">
+        SELECT
+            hsd.old_material_lot_id,
+            mml.MATERIAL_LOT_CODE,
+            hsd.old_load
+        FROM
+            hme_selection_details hsd,
+            mt_material_lot mml
+        WHERE
+            mml.MATERIAL_LOT_ID = hsd.old_material_lot_id
+        and hsd.virtual_num =#{virtualNum}
+        ORDER BY
+            hsd.old_material_lot_id,
+            hsd.old_load
+    </select>
+
+    <select id="selectFunction" resultType="com.ruike.hme.domain.entity.HmeCosFunction">
+        SELECT
+            hcf.load_sequence,
+            hcf.`current`,
+            hcf.A01,
+            hcf.A02,
+            hcf.A03,
+            hcf.A04,
+            hcf.A05,
+            hcf.A06,
+            hcf.A07,
+            hcf.A08,
+            hcf.A09,
+            hcf.A010,
+            hcf.A011,
+            hcf.A012,
+            hcf.A013
+        FROM
+            hme_cos_function hcf,
+            hme_material_lot_load hmll
+        WHERE
+            hcf.load_sequence = hmll.load_sequence
+        AND hmll.material_lot_id  in
+        <foreach collection="materialLotIdList" open="(" close=")" item="data" separator="," index="index">
+            #{data}
+        </foreach>
+    </select>
+    <select id="selectRule" resultType="com.ruike.hme.api.dto.HmeCosRuleLogicDTO">
+         SELECT
+            hcrl.cos_rule_id,
+            hcrl.site_id,
+            hcrl.cos_rule_logic_id,
+            hcrl.rule_number,
+            hcrl.`current`,
+            hcrl.Collection_item,
+            hcrl.count_type,
+            hcrl.Range_type,
+            hcrl.rule_value
+        FROM
+            hme_cos_rule_logic hcrl
+        WHERE
+            hcrl.TENANT_ID =#{tenantId}
+        AND hcrl.cos_rule_id =#{ruleId}
+    </select>
+    <select id="getWarehouse" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT
+            mmlt.*
+        FROM
+            mt_mod_locator mml,
+            mt_mod_locator mmlt
+        WHERE
+            mml.TENANT_ID = #{tenantId}
+            AND mml.ENABLE_FLAG = 'Y'
+            AND mmlt.TENANT_ID = #{tenantId}
+            AND mmlt.ENABLE_FLAG = 'Y'
+            AND mmlt.LOCATOR_CATEGORY = 'INVENTORY'
+            AND mmlt.LOCATOR_TYPE = 'PRE_LOAD'
+            AND mmlt.PARENT_LOCATOR_ID = mml.PARENT_LOCATOR_ID
+            AND mml.LOCATOR_ID = #{locatorId}
+    </select>
+    <select id="getMateriallot" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO5">
+       SELECT
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mmla.ATTR_VALUE COS_TYPE,
+            mml.PRIMARY_UOM_QTY,
+            mml1.locator_CODE,
+            mm.material_code
+        FROM
+            mt_material_lot mml,
+            mt_material_lot_attr mmla,
+            mt_mod_locator mml1,
+            mt_material mm
+        WHERE
+            mml.LOCATOR_ID = mml1.LOCATOR_ID
+        AND mmla.ATTR_NAME = 'COS_TYPE'
+        AND mmla.MATERIAL_LOT_ID=mml.MATERIAL_LOT_ID
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                mt_material_lot_attr mmla1
+            WHERE
+                mmla1.ATTR_NAME = 'MF_FLAG'
+            AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla1.ATTR_VALUE = 'Y'
+        )
+        AND mml1.LOCATOR_CODE =#{locatorCode}
+    </select>
+
+    <select id="selectMaterialLot" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        SELECT
+            mml.*
+        FROM
+            mt_material_lot mml,
+            mt_mod_locator mml1
+        WHERE
+            mml.LOCATOR_ID = mml1.LOCATOR_ID
+        AND mml1.LOCATOR_CODE =#{locatorCode}
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                hme_object_record_lock t
+            WHERE
+                t.object_record_code = mml.MATERIAL_LOT_CODE
+            and t.OBJECT_TYPE ='MATERIAL_LOT'
+        )
+         AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                mt_material_lot_attr mmla1
+            WHERE
+                mmla1.ATTR_NAME = 'MF_FLAG'
+            AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla1.ATTR_VALUE = 'Y'
+        )
+        LIMIT ${materialLotNum}
+    </select>
+
+    <!--查询盒子信息-->
+    <select id="materialLotQuery" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO5">
+        SELECT
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mmla.ATTR_VALUE COS_TYPE,
+            mmla2.ATTR_VALUE WAFER,
+            mml.PRIMARY_UOM_QTY,
+            mml1.locator_CODE,
+            mm.material_code
+        FROM
+            mt_material_lot mml
+            LEFT JOIN mt_material_lot_attr mmla2 ON mmla2.MATERIAL_LOT_ID=mml.MATERIAL_LOT_ID AND mmla2.ATTR_NAME = 'WAFER_NUM',
+            mt_material_lot_attr mmla,
+            mt_mod_locator mml1,
+            mt_material mm
+        WHERE
+            mml.LOCATOR_ID = mml1.LOCATOR_ID
+        AND mmla.ATTR_NAME = 'COS_TYPE'
+        AND mmla.MATERIAL_LOT_ID=mml.MATERIAL_LOT_ID
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND mml.MATERIAL_LOT_CODE =#{materialLotCode}
+    </select>
+
+    <select id="materialLotBatchQuery" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO5">
+        SELECT
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mmla.ATTR_VALUE COS_TYPE,
+        mml.PRIMARY_UOM_QTY,
+        mml1.locator_CODE,
+        mm.material_code
+        FROM
+        mt_material_lot mml,
+        mt_material_lot_attr mmla,
+        mt_mod_locator mml1,
+        mt_material mm
+        WHERE
+        mml.LOCATOR_ID = mml1.LOCATOR_ID
+        AND mmla.ATTR_NAME = 'COS_TYPE'
+        AND mmla.MATERIAL_LOT_ID=mml.MATERIAL_LOT_ID
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND mml.MATERIAL_LOT_CODE IN
+        <foreach collection="materialLotCodeList" index="index" item="materialLotCode" separator="," open="(" close=")">
+            #{materialLotCode}
+        </foreach>
+    </select>
+
+    <select id="selectCosNumByMaterialLotCode" resultType="java.lang.Long">
+        SELECT
+            IFNULL(sum(hmll.cos_num),0)
+        FROM
+            mt_material_lot mml,
+            hme_material_lot_load hmll
+        WHERE
+            mml.TENANT_ID = #{tenantId}
+        AND mml.MATERIAL_LOT_CODE = #{materialLotCode}
+        AND mml.ENABLE_FLAG = 'Y'
+        AND hmll.material_lot_id = mml.material_lot_id
+        and (
+            hmll.ATTRIBUTE14 = ''
+            OR hmll.ATTRIBUTE14 != 'Y'
+            OR hmll.ATTRIBUTE14 IS NULL
+        )
+        AND (
+            hmll.`status` = ''
+            OR hmll.`status` != 'Y'
+            OR hmll.`status` IS NULL
+        )
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                mt_material_lot_attr mmla1
+            WHERE
+                mmla1.ATTR_NAME = 'MF_FLAG'
+            AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla1.ATTR_VALUE = 'Y'
+        )
+    </select>
+
+    <select id="selectBatchCosNumByMaterialLotCode" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO5">
+        SELECT
+        mml.MATERIAL_LOT_ID,
+        IFNULL(sum(hmll.cos_num),0) cosNum
+        FROM
+        mt_material_lot mml,
+        hme_material_lot_load hmll
+        WHERE
+        mml.TENANT_ID = #{tenantId}
+        AND mml.MATERIAL_LOT_CODE IN
+        <foreach collection="materialLotCodeList" index="index" item="materialLotCode" separator="," open="(" close=")">
+            #{materialLotCode}
+        </foreach>
+        AND mml.ENABLE_FLAG = 'Y'
+        AND hmll.material_lot_id = mml.material_lot_id
+        and (
+        hmll.ATTRIBUTE14 = ''
+        OR hmll.ATTRIBUTE14 != 'Y'
+        OR hmll.ATTRIBUTE14 IS NULL
+        )
+        AND (
+        hmll.`status` = ''
+        OR hmll.`status` != 'Y'
+        OR hmll.`status` IS NULL
+        )
+        AND NOT EXISTS (
+        SELECT
+        1
+        FROM
+        mt_material_lot_attr mmla1
+        WHERE
+        mmla1.ATTR_NAME = 'MF_FLAG'
+        AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla1.ATTR_VALUE = 'Y'
+        )
+        GROUP BY mml.MATERIAL_LOT_ID
+    </select>
+
+    <select id="selectMaterialLotByContainerCode" resultType="tarzan.inventory.domain.entity.MtMaterialLot">
+        SELECT
+            mml.*
+        FROM
+            mt_material_lot mml,
+            mt_container mc
+        WHERE
+            mml.CURRENT_CONTAINER_ID = mc.CONTAINER_ID
+        AND mc.CONTAINER_CODE = #{containerCode}
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                mt_material_lot_attr mmla1
+            WHERE
+                mmla1.ATTR_NAME = 'MF_FLAG'
+            AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla1.ATTR_VALUE = 'Y'
+        )
+    </select>
+
+    <select id="selectLotQuery" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO3">
+        SELECT
+            hsd.selection_details_id,
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mml1.MATERIAL_LOT_CODE target_Material_Lot_Code,
+            hsd.old_load,
+            hsd.load_sequence,
+            hmll.hot_sink_code,
+            hsd.virtual_num,
+            hsd.attribute1 status,
+            hsd.new_load,
+            hsd.ATTRIBUTE2 ways
+        FROM
+            hme_pre_selection hps,
+            hme_selection_details hsd
+            LEFT JOIN mt_material_lot mml1 ON
+            mml1.MATERIAL_LOT_ID = hsd.new_material_lot_id,
+            mt_material_lot mml,
+            hme_material_lot_load hmll
+        WHERE
+            1 = 1
+        AND hps.pre_selection_id = hsd.pre_selection_id
+        AND hsd.old_material_lot_id = mml.MATERIAL_LOT_ID
+        AND hmll.load_sequence = hsd.load_sequence
+        AND hps.pre_selection_lot = #{selectLot}
+        ORDER BY
+            hsd.attribute1 desc,
+            hsd.virtual_num,
+            LENGTH(hsd.ATTRIBUTE2) DESC,
+	        hsd.ATTRIBUTE2 desc
+    </select>
+
+    <!--根据容器查询盒子数据-->
+    <select id="materialLotQueryByContainer" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO5">
+        SELECT
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mmla.ATTR_VALUE COS_TYPE,
+            mml.PRIMARY_UOM_QTY,
+            mmloc.LOCATOR_CODE,
+            mm.MATERIAL_CODE
+        FROM
+            mt_material_lot mml,
+            mt_container mc,
+            mt_material_lot_attr mmla,
+            mt_mod_locator mmloc,
+            mt_material mm
+        WHERE
+            mml.CURRENT_CONTAINER_ID = mc.CONTAINER_ID
+        AND mc.CONTAINER_CODE = #{containerCode}
+        AND mmla.ATTR_NAME = 'COS_TYPE'
+        AND mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmloc.LOCATOR_ID = mml.LOCATOR_ID
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND mml.ENABLE_FLAG = 'Y'
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                mt_material_lot_attr mmla1
+            WHERE
+                mmla1.ATTR_NAME = 'MF_FLAG'
+            AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla1.ATTR_VALUE = 'Y'
+        )
+    </select>
+
+    <select id="selectLotQueryAll" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO6">
+        SELECT
+          hps.pre_selection_id,
+            hps.pre_selection_lot,
+            hps.ATTRIBUTE2 product_type,
+            mm.MATERIAL_CODE,
+            hps.ATTRIBUTE1 cos_rule_code,
+            hps.sets_num,
+            hps.`status`
+        FROM
+            hme_pre_selection hps,
+            mt_material mm,
+            hpfm_lov_value hlv
+        WHERE
+            hps.ATTRIBUTE3 = mm.MATERIAL_ID
+        and hps.`status` != 'CLOSED'
+        and hps.`status` = hlv.value
+        AND lov_code = 'HME.SELECT_STATUS'
+        <if test='productTyperesult != null and productTyperesult != ""'>
+            and hps.ATTRIBUTE2 = #{productTyperesult}
+        </if>
+        <if test='ruleCode != null and ruleCode != ""'>
+            AND hps.ATTRIBUTE1 =#{ruleCode}
+        </if>
+        <if test='materialName != null and materialName != ""'>
+            AND mm.material_name LIKE CONCAT('%',#{materialName},'%')
+        </if>
+        <if test='materialCode != null and materialCode != ""'>
+            AND mm.MATERIAL_CODE =#{materialCode}
+        </if>
+        <if test='statusresult != null and statusresult != ""'>
+            and hps.`status` = #{statusresult}
+        </if>
+        order by
+         hlv.order_seq, hps.pre_selection_lot
+    </select>
+
+    <select id="selectLotQueryElse" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO7">
+        SELECT
+            mml.MATERIAL_LOT_CODE,
+            mmla.ATTR_VALUE COS_TYPE,
+            mml.PRIMARY_UOM_QTY
+        FROM
+            mt_material_lot mml,
+            mt_material_lot_attr mmla,
+            mt_container mc
+        WHERE
+            mml.MATERIAL_LOT_ID = mmla.MATERIAL_LOT_ID
+        AND mmla.ATTR_NAME = 'COS_TYPE'
+        AND mml.CURRENT_CONTAINER_ID = mc.CONTAINER_ID
+        AND mc.CONTAINER_CODE=#{containerCode}
+        AND mml.ENABLE_FLAG = 'Y'
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                mt_material_lot_attr mmla1
+            WHERE
+                mmla1.ATTR_NAME = 'MF_FLAG'
+            AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla1.ATTR_VALUE = 'Y'
+        )
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                hme_material_lot_load hmll,
+                hme_selection_details hsd
+            WHERE
+                hmll.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND hmll.load_sequence = hsd.load_sequence
+        )
+    </select>
+    <select id="selectbyDetails" resultType="com.ruike.hme.domain.entity.HmePreSelection">
+        SELECT
+            hps.*
+        FROM
+            hme_pre_selection hps,
+            hme_selection_details hsd
+        WHERE
+            hps.pre_selection_id = hsd.pre_selection_id
+        AND hsd.selection_details_id =#{selectionDetailsId}
+    </select>
+    <select id="selectLotInformation" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO8">
+        SELECT
+            mml1.material_lot_code new_material_lot_code,
+            hsd.virtual_num,
+            mml.material_lot_code old_material_lot_code,
+            hsd.old_load,
+            hmll.hot_sink_code,
+            hcf.a04,
+            hcf.a02,
+            hcf3.a06,
+            mm1.material_code cos_material_code,
+            hmll.attribute2 wafer,
+            hsd.created_by,
+            hsd.creation_date,
+            mm.material_code,
+            mm.material_name,
+            mwo.work_order_num,
+            mwo.qty
+        FROM
+            hme_selection_details hsd,
+            mt_material_lot mml,
+            mt_material_lot mml1,
+            mt_material mm1,
+            hme_cos_function hcf,
+            hme_cos_function hcf1,
+            hme_material_lot_load hmll,
+            hme_pre_selection hps
+        LEFT JOIN mt_work_order mwo ON mwo.WORK_ORDER_ID = hps.work_order_id
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = mwo.MATERIAL_ID
+        LEFT JOIN hme_cos_rule_head hcrh ON hcrh.cos_rule_code = hps.ATTRIBUTE1
+        LEFT JOIN hme_cos_rule_logic hcrl ON hcrl.cos_rule_id = hcrh.cos_rule_id
+        AND hcrl.Collection_item = 'A06'
+        LEFT JOIN hme_cos_function hcf3 ON hcf3.`current` = hcrl.`current`
+        WHERE
+            mml.MATERIAL_LOT_ID = hsd.old_material_lot_id
+        AND mml1.MATERIAL_LOT_ID = hsd.new_material_lot_id
+        AND hcf.load_sequence = hsd.load_sequence
+        AND mm1.MATERIAL_ID = hsd.MATERIAL_ID
+        AND hcf.`current` = '5'
+        AND hcf1.load_sequence = hsd.load_sequence
+        AND hcf1.`current` = '15'
+        AND hmll.load_sequence = hsd.load_sequence
+        AND hps.pre_selection_id = hsd.pre_selection_id
+        AND hcf3.load_sequence = hsd.load_sequence
+        <if test='selectLot != null and selectLot != ""'>
+        AND hps.pre_selection_lot = #{selectLot}
+        </if>
+        order by hsd.virtual_num ,hsd.new_load
+    </select>
+    <select id="qtyQueryByContainer" resultType="java.lang.String">
+        SELECT
+            sum(hmll.cos_num)
+        FROM
+            mt_material_lot mml,
+            mt_container mc,
+            mt_material mm,
+            hme_material_lot_load hmll
+        WHERE
+            mml.CURRENT_CONTAINER_ID = mc.CONTAINER_ID
+        AND mc.CONTAINER_CODE = #{tenantId}
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND mml.ENABLE_FLAG = 'Y'
+        AND hmll.material_lot_id = mml.material_lot_id
+        AND mc.CONTAINER_CODE = #{containerCode}
+        and (
+            hmll.ATTRIBUTE14 = ''
+            OR hmll.ATTRIBUTE14 != 'Y'
+            OR hmll.ATTRIBUTE14 IS NULL
+        )
+        AND (
+            hmll.`status` = ''
+            OR hmll.`status` != 'Y'
+            OR hmll.`status` IS NULL
+        )
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                mt_material_lot_attr mmla1
+            WHERE
+                mmla1.ATTR_NAME = 'MF_FLAG'
+            AND mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND mmla1.ATTR_VALUE = 'Y'
+        )
+    </select>
+    <select id="selectMaterialLotInfo" resultType="com.ruike.wms.domain.vo.WmsLocatorTransferVO">
+        SELECT
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mml.SITE_ID,
+            mml.ENABLE_FLAG,
+            mml.QUALITY_STATUS,
+            mml.LOCATOR_ID,
+            loca.LOCATOR_CODE,
+            loca.LOCATOR_NAME,
+            mml.MATERIAL_ID,
+            mml.PRIMARY_UOM_ID,
+            mml.PRIMARY_UOM_QTY,
+            mml.FREEZE_FLAG,
+            mml.lot,
+            mmla.ATTR_VALUE MATERIAL_VERSION,
+            mmla2.ATTR_VALUE WAREHOUSE_ID,
+            loca2.LOCATOR_CODE WAREHOUSE_CODE,
+            loca2.LOCATOR_NAME WAREHOUSE_NAME,
+            mu.UOM_CODE PRIMARY_UOM_CODE,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            ms.SUPPLIER_CODE,
+            mml.SUPPLIER_ID,
+            mml.SUPPLIER_SITE_ID,
+            mss.SUPPLIER_SITE_CODE,
+            mms.SITE_CODE
+        FROM
+            mt_material_lot mml
+        left join mt_material_lot_attr mmla on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID and mmla.ATTR_NAME = 'MATERIAL_VERSION'
+        left join mt_material_lot_attr mmla2 on mmla2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID and mmla2.ATTR_NAME = 'WAREHOUSE_ID'
+        left join mt_uom mu on mml.PRIMARY_UOM_ID = mu.UOM_ID
+        left join mt_material mm on mml.MATERIAL_ID = mm.MATERIAL_ID
+        left join mt_mod_locator loca on loca.LOCATOR_ID = mml.LOCATOR_ID
+        left join mt_mod_locator loca2 on loca2.LOCATOR_ID = mmla2.ATTR_VALUE
+        left join mt_supplier ms on mml.SUPPLIER_ID = ms.SUPPLIER_ID
+        left join mt_supplier_site mss on mml.SUPPLIER_SITE_ID = mss.SUPPLIER_SITE_ID
+        left join mt_mod_site mms on mml.SITE_ID = mms.SITE_ID
+        where
+            mml.TENANT_ID = #{tenantId}
+        and mml.MATERIAL_LOT_ID =#{materialLotId}
+    </select>
+
+    <select id="selectCosRuleLogicBySelectLot" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO10">
+        select hcrl.current, hcrl.Collection_item
+        from hme_pre_selection hps,
+             hme_cos_rule_head hcrh,
+             hme_cos_rule_logic hcrl
+        where hps.tenant_id = #{tenantId}
+        and hps.pre_selection_lot = #{selectLot}
+        and hcrh.cos_rule_code = hps.ATTRIBUTE1
+        and hcrl.cos_rule_id = hcrh.cos_rule_id
+    </select>
+
+    <select id="recallDataQuery" resultType="com.ruike.hme.api.dto.HmePreSelectionReturnDTO12">
+        SELECT
+            hsd.selection_details_id,
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mml1.MATERIAL_LOT_CODE target_Material_Lot_Code,
+            hsd.old_load,
+            hsd.new_load target_load,
+            hsd.load_sequence,
+            hsd.creation_date,
+            hmll.hot_sink_code,
+            hsd.virtual_num,
+            hps.pre_selection_lot select_lot,
+            hsd.attribute1 status,
+            hsd.ATTRIBUTE2 ways
+        FROM
+            hme_pre_selection hps,
+            hme_selection_details hsd
+            LEFT JOIN mt_material_lot mml1 ON
+            mml1.MATERIAL_LOT_ID = hsd.new_material_lot_id,
+            mt_material_lot mml,
+            hme_material_lot_load hmll
+        WHERE
+            1 = 1
+        AND hps.pre_selection_id = hsd.pre_selection_id
+        AND hsd.old_material_lot_id = mml.MATERIAL_LOT_ID
+        AND hmll.load_sequence = hsd.load_sequence
+        AND hps.tenant_id = #{tenantId}
+        <if test="dto.selectLot != null and dto.selectLot != ''">
+            AND hps.pre_selection_lot = #{dto.selectLot}
+        </if>
+        <if test="dto.virtualNum != null and dto.virtualNum != ''">
+            AND hsd.virtual_num LIKE concat('%', concat(#{dto.virtualNum}, '%'))
+        </if>
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND mml.MATERIAL_LOT_CODE LIKE concat(#{dto.materialLotCode}, '%')
+        </if>
+        <if test="dto.creationDateFrom != null">
+            AND hsd.creation_date &gt;= DATE_FORMAT(#{dto.creationDateFrom}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.creationDateTo != null">
+            AND hsd.creation_date &lt;= DATE_FORMAT(#{dto.creationDateTo}, '%Y-%m-%d %T')
+        </if>
+        <if test="dto.newMaterialLotCode != null and dto.newMaterialLotCode != ''">
+            AND mml1.MATERIAL_LOT_CODE LIKE concat(#{dto.newMaterialLotCode}, '%')
+        </if>
+        ORDER BY
+            hsd.attribute1 desc,
+            hsd.virtual_num,
+            LENGTH(hsd.ATTRIBUTE2) DESC,
+            hsd.ATTRIBUTE2 desc
+    </select>
+
+    <select id="getPreSelectionIdByVirtualNum" resultType="java.lang.String">
+        select DISTINCT(hsd.pre_selection_id)
+        from hme_selection_details hsd
+        where hsd.tenant_id = #{tenantId}
+        and hsd.virtual_num = #{virtualNum}
+        limit 1
+    </select>
+
+    <select id="selectMaterialLotLoadByVirtualNum" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.*
+        from hme_selection_details hsd,
+                 hme_material_lot_load hmll
+        where hsd.tenant_id = #{tenantId}
+        and hsd.virtual_num = #{virtualNum}
+        and hmll.load_sequence = hsd.load_sequence
+    </select>
+
+    <select id="getSingleAttrValueByMaterialLotId" resultType="java.lang.String">
+        select mmla.ATTR_VALUE
+        from mt_material_lot_attr mmla
+        where mmla.MATERIAL_LOT_ID = #{materialLotId}
+        and mmla.ATTR_NAME = #{attrName}
+        and mmla.TENANT_ID = #{tenantId}
+        limit 1
+    </select>
+
+    <insert id="gpDelRecordBatchInsert">
+        INSERT INTO rk_gp_del_record (
+            del_record_id,
+            schema_name,
+            table_name,
+            table_key_id,
+            cid,
+            object_version_number,
+            creation_date,
+            created_by,
+            last_updated_by,
+            last_update_date
+        )
+        VALUES
+        <foreach collection="gpDelRecordList" index="index" item="item" separator=",">
+        (
+            #{item.delRecordId},
+            #{item.schemaName},
+            #{item.tableName},
+            #{item.tableKeyId},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+        )
+        </foreach>
+    </insert>
+
+    <select id="cosTestMonitorHeaderQueryByCosTypeWafer" resultType="com.ruike.hme.api.dto.HmePreSelectionDTO10">
+        select hctmh.cos_monitor_header_id, hctmh.doc_status
+        from hme_cos_test_monitor_header hctmh
+        where hctmh.wafer = #{wafer}
+        and hctmh.cos_type = #{cosType}
+        and hctmh.tenant_id = #{tenantId}
+        order by hctmh.last_update_date desc
+        limit 1
+    </select>
+
+    <select id="getCosTestMonitorLineMaterialLotStatus" resultType="java.lang.String">
+        select hctml.material_lot_status
+        from hme_cos_test_monitor_line hctml
+        where hctml.cos_monitor_header_id = #{cosMonitorHeaderId}
+        and hctml.material_lot_id = #{materialLotId}
+        and hctml.tenant_id = #{tenantId}
+    </select>
+
+    <select id="testSelectCancelCountQueryByWafer" resultType="java.lang.Long">
+        select count(1)
+        from hme_cos_test_select_cancle hctsc
+        where hctsc.wafer = #{wafer}
+        and hctsc.tenant_id = #{tenantId}
+    </select>
+
+    <update id="batchUpdateMaterialLotContainerId">
+        update mt_material_lot
+        <set>
+            CURRENT_CONTAINER_ID = '',
+            TOP_CONTAINER_ID = '',
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP
+        </set>
+        <where>
+            MATERIAL_LOT_ID in
+            <foreach collection="materialLotIdList" item="item"
+                     separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+</mapper>

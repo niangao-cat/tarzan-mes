@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsInstructionExecuteMapper">
+
+    <select id="queryList" resultType="com.ruike.wms.domain.vo.WmsInstructionExecuteVO">
+        SELECT
+            mms.SITE_ID,
+            mms.SITE_CODE,
+            mid.INSTRUCTION_DOC_ID,
+            mid.INSTRUCTION_DOC_NUM,
+            mid.INSTRUCTION_DOC_TYPE,
+            mid.INSTRUCTION_DOC_STATUS,
+            mi.INSTRUCTION_ID,
+            mia.ATTR_VALUE instructionLineNum,
+            mm.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mu.UOM_ID,
+            mu.UOM_CODE,
+            mi.QUANTITY,
+            mi.FROM_LOCATOR_ID,
+            mml.LOCATOR_CODE fromLocatorCode,
+            mi.TO_LOCATOR_ID,
+            mml2.LOCATOR_CODE toLocatorCode,
+            mi.CREATION_DATE,
+            iu.real_name createdBy,
+            mi.LAST_UPDATE_DATE,
+            iu2.real_name lastUpdatedBy,
+            wig.item_group_id,
+            wig.item_group_code,
+            wig.item_group_description,
+            mida.ATTR_VALUE person
+        FROM
+            mt_instruction_doc mid
+            left join mt_instruction_doc_attr mida on mid.INSTRUCTION_DOC_ID = mida.INSTRUCTION_DOC_ID
+            and      mida.ATTR_NAME = 'PERSON',
+            mt_mod_site mms,
+            mt_instruction mi LEFT JOIN mt_instruction_attr mia on mi.instruction_id = mia.instruction_id and mia.attr_name ='INSTRUCTION_LINE_NUM'
+            LEFT JOIN hzero_platform.iam_user iu on mi.CREATED_BY = iu.id
+            LEFT JOIN hzero_platform.iam_user iu2 on mi.LAST_UPDATED_BY = iu2.id
+            LEFT JOIN mt_mod_locator mml ON mi.FROM_LOCATOR_ID = mml.locator_id
+            LEFT JOIN mt_mod_locator mml2 ON mi.TO_LOCATOR_ID = mml2.locator_id
+            LEFT JOIN mt_material_site mmls ON mi.MATERIAL_ID = mmls.MATERIAL_ID AND mi.SITE_ID =  mmls.SITE_ID
+            LEFT JOIN mt_material_basic mmb ON mmls.material_site_id = mmb.material_site_id
+            LEFT JOIN wms_item_group wig ON mmb.ITEM_GROUP = wig. item_group_code,
+            mt_material mm,
+            mt_uom mu
+        WHERE
+            mid.TENANT_ID = #{tenantId}
+            AND mid.SITE_ID =  mms.SITE_ID
+            and mid.INSTRUCTION_DOC_ID = mi.SOURCE_DOC_ID
+            and mi.MATERIAL_ID = mm.MATERIAL_ID
+            and mi.UOM_ID = mu.UOM_ID
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND mid.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+            AND mid.INSTRUCTION_DOC_NUM like CONCAT('%',CONCAT(#{dto.instructionDocNum},'%'))
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and mm.MATERIAL_ID in
+            <foreach collection="dto.materialIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.instructionDocType != null and dto.instructionDocType != ''">
+            and mid.INSTRUCTION_DOC_TYPE in
+            <foreach collection="dto.instructionDocTypeList" item="index" separator="," open="(" close=")">
+                #{index}
+            </foreach>
+        </if>
+        <if test="dto.fromLocatorId != null and dto.fromLocatorId != ''">
+            AND mi.FROM_LOCATOR_ID = #{dto.fromLocatorId}
+        </if>
+        <if test="dto.toLocatorId != null and dto.toLocatorId != ''">
+            AND mi.TO_LOCATOR_ID= #{dto.toLocatorId}
+        </if>
+        <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+            AND mi.CREATION_DATE >= #{dto.creationDateFrom}
+        </if>
+        <if test="dto.creationDateTo != null and dto.creationDateTo != ''">
+            AND mi.CREATION_DATE &lt;= #{dto.creationDateTo}
+        </if>
+        <if test="dto.itemGroupId != null and dto.itemGroupId != ''">
+            AND wig.item_group_id= #{dto.itemGroupId}
+        </if>
+        <if test="dto.createdBy != null and dto.createdBy != ''">
+            AND mi.CREATED_BY= #{dto.createdBy}
+        </if>
+        <if test="dto.person != null and dto.person != ''">
+            AND  mida.ATTR_VALUE like CONCAT('%',CONCAT(#{dto.person},'%'))
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeSsnInspectResultHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeSsnInspectResultHeader">
+        <result column="SSN_INSPECT_RESULT_HEADER_ID" property="ssnInspectResultHeaderId" jdbcType="VARCHAR"/>
+        <result column="STANDARD_SN_CODE" property="standardSnCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="COS_TYPE" property="cosType" jdbcType="VARCHAR"/>
+        <result column="WORK_WAY" property="workWay" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="RESULT" property="result" jdbcType="VARCHAR"/>
+        <result column="SHIFT_DATE" property="shiftDate" jdbcType="DATE"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="querySsnInspectTag" resultType="com.ruike.hme.domain.vo.HmeSsnInspectResultVO2">
+        SELECT
+	        hsil.sequence,
+	        hsil.minimum_value,
+	        hsil.maximal_value,
+	        hsil.judge_flag,
+	        hsil.couple_flag,
+	        hsil.ssn_inspect_line_id,
+	        hsil.allow_differ,
+	        hsil.cos_pos,
+			hsil.cos_couple_flag,
+			hsil.check_allow_differ,
+	        mt.tag_id,
+	        mt.tag_code,
+	        mt.tag_description
+        FROM
+	        hme_ssn_inspect_line hsil,
+	        mt_tag mt
+        WHERE
+        hsil.tenant_id = #{tenantId}
+        AND mt.tenant_id = hsil.tenant_id
+        AND hsil.tag_id = mt.TAG_ID
+        AND hsil.ssn_inspect_header_id = #{ssnInspectHeaderId}
+        ORDER BY hsil.sequence ASC
+    </select>
+
+    <select id="queryTagGroupAssign" resultType="tarzan.general.domain.entity.MtTagGroupAssign">
+        SELECT
+        tga.TAG_GROUP_ASSIGN_ID,
+        tga.TAG_GROUP_ID,
+        tga.TAG_ID,
+        tga.MINIMUM_VALUE,
+        tga.MAXIMAL_VALUE
+        FROM
+        mt_tag_group_assign tga,
+        mt_tag_attr attr,
+        mt_tag mt
+        WHERE
+        1=1
+        AND tga.TAG_GROUP_ID IN
+        <foreach collection="tagGroupIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND tga.TAG_ID = attr.TAG_ID
+        AND attr.ATTR_NAME = 'TAG_TYPE'
+        AND mt.TAG_ID = tga.TAG_ID
+        <if test="cosPos != null and cosPos != ''">
+            AND mt.TAG_CODE LIKE CONCAT('%', #{cosPos}, '%')
+        </if>
+        AND tga.TENANT_ID = #{tenantId}
+        AND tga.TENANT_ID = attr.TENANT_ID
+        <choose>
+            <when test="tagType != null and tagType != ''">
+                AND attr.ATTR_VALUE = #{tagType}
+            </when>
+            <otherwise>
+                AND (attr.ATTR_VALUE is null OR attr.ATTR_VALUE = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <update id="myBatchUpdate">
+        UPDATE mt_tag_group_assign
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            minimum_value =
+            <foreach collection="tagGroupAssignList" item="item" index="index"
+                     separator=" " open="case tag_group_assign_id" close="end">
+                when #{item.tagGroupAssignId} then #{item.minimumValue}
+            </foreach>,
+            maximal_value =
+            <foreach collection="tagGroupAssignList" item="item" index="index"
+                     separator=" " open="case tag_group_assign_id" close="end">
+                when #{item.tagGroupAssignId} then #{item.maximalValue}
+            </foreach>
+        </set>
+        <where>
+            tag_group_assign_id in
+            <foreach collection="tagGroupAssignList" item="item"
+                     separator="," open="(" close=")">
+                #{item.tagGroupAssignId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="querySsnInspectHeader" resultType="com.ruike.hme.domain.entity.HmeSsnInspectHeader">
+        SELECT
+	        sih.ssn_inspect_header_id,
+	        sih.standard_sn_code,
+        sih.material_id,
+        sih.cos_type,
+        sih.work_way,
+        sih.workcell_id,
+        sih.last_update_date
+        FROM
+        hme_ssn_inspect_header sih
+        WHERE sih.tenant_id = #{tenantId}
+        AND sih.standard_sn_code = #{resultVO.standardSnCode}
+        AND sih.workcell_id = #{resultVO.workcellId}
+        AND sih.enable_flag = 'Y'
+        <choose>
+            <when test="resultVO.cosType != null and resultVO.cosType != ''">
+                AND sih.cos_type = #{resultVO.cosType}
+            </when>
+            <otherwise>
+                AND (sih.cos_type is null OR sih.cos_type = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="resultVO.workWay != null and resultVO.workWay != ''">
+                AND sih.work_way = #{resultVO.workWay}
+            </when>
+            <otherwise>
+                AND (sih.work_way is null OR sih.work_way = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="resultVO.materialIdList != null and resultVO.materialIdList.size() > 0">
+                AND sih.material_id IN
+                <foreach collection="resultVO.materialIdList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND (sih.material_id is null OR sih.material_id = '')
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="querySsnInspectResultHeader" resultType="com.ruike.hme.domain.entity.HmeSsnInspectResultHeader">
+        SELECT
+        sirh.ssn_inspect_result_header_id,
+        sirh.standard_sn_code,
+        sirh.MATERIAL_ID,
+        sirh.COS_TYPE,
+        sirh.work_way,
+        sirh.workcell_id,
+        sirh.SHIFT_CODE,
+        sirh.shift_date,
+        sirh.result,
+        sirh.creation_date
+        FROM
+        hme_ssn_inspect_result_header sirh
+        WHERE sirh.tenant_id = #{tenantId}
+        AND sirh.standard_sn_code = #{resultVO.standardSnCode}
+        AND sirh.workcell_id = #{resultVO.workcellId}
+        AND sirh.work_way = #{workWay}
+        <choose>
+            <when test="resultVO.cosType != null and resultVO.cosType != ''">
+                AND sirh.cos_type = #{resultVO.cosType}
+            </when>
+            <otherwise>
+                AND (sirh.cos_type is null OR sirh.cos_type = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="resultVO.materialIdList != null and resultVO.materialIdList.size() > 0">
+                AND  sirh.material_id IN
+                <foreach collection="resultVO.materialIdList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND (sirh.material_id is null OR sirh.material_id = '')
+            </otherwise>
+        </choose>
+        <if test="shiftCode != null and shiftCode != ''">
+            AND sirh.shift_code = #{shiftCode}
+        </if>
+        <if test="shiftDate != null and shiftDate != ''">
+            AND sirh.shift_date = #{shiftDate}
+        </if>
+    </select>
+
+    <select id="queryEoJobSn" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        SELECT
+            ejs.job_id,
+            ejs.material_lot_id,
+            ejs.sn_qty,
+            ejs.work_order_id
+        FROM
+	        hme_eo_job_sn ejs
+        WHERE ejs.tenant_id = #{tenantId}
+        AND ejs.operation_id = #{operationId}
+        AND ejs.workcell_id = #{workcellId}
+        AND ejs.job_type = 'SSN_PROCESS'
+        AND ejs.eo_id = #{eoId}
+        <choose>
+            <when test="reworkFlag != null and reworkFlag != ''">
+                AND ejs.rework_flag = #{reworkFlag}
+            </when>
+            <otherwise>
+                AND (ejs.rework_flag is null OR ejs.rework_flag = '')
+            </otherwise>
+        </choose>
+        AND ejs.site_out_date is NULL
+    </select>
+
+    <select id="querySsnInspectResultHeaderTwo" resultType="com.ruike.hme.domain.entity.HmeSsnInspectResultHeader">
+        SELECT
+        sirh.ssn_inspect_result_header_id,
+        sirh.standard_sn_code,
+        sirh.MATERIAL_ID,
+        sirh.COS_TYPE,
+        sirh.work_way,
+        sirh.workcell_id,
+        sirh.SHIFT_CODE,
+        sirh.shift_date,
+        sirh.result,
+        sirh.creation_date
+        FROM
+        hme_ssn_inspect_result_header sirh
+        WHERE sirh.tenant_id = #{tenantId}
+        AND sirh.workcell_id = #{workcellId}
+        AND sirh.work_way = #{workWay}
+        <if test="shiftCode != null and shiftCode != ''">
+            AND sirh.shift_code = #{shiftCode}
+        </if>
+        <if test="shiftDate != null and shiftDate != ''">
+            AND sirh.shift_date = #{shiftDate}
+        </if>
+    </select>
+
+    <select id="querySiteInList" resultType="com.ruike.hme.domain.entity.HmeEoJobSn">
+        SELECT
+            ejs.job_id,
+            ejs.material_lot_id,
+            ejs.sn_qty,
+            ejs.work_order_id,
+            ejs.sn_material_id
+        FROM
+            hme_eo_job_sn ejs
+        WHERE ejs.tenant_id = #{tenantId}
+        AND ejs.operation_id = #{resultVO.operationId}
+        AND ejs.workcell_id = #{resultVO.workcellId}
+        AND ejs.job_type = 'SSN_PROCESS'
+        AND ejs.eo_id = #{eoId}
+        <choose>
+            <when test="reworkFlag != null and reworkFlag != ''">
+                AND ejs.rework_flag = #{reworkFlag}
+            </when>
+            <otherwise>
+                AND (ejs.rework_flag is null OR ejs.rework_flag = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="resultVO.materialIdList != null and resultVO.materialIdList.size() > 0">
+                AND  ejs.sn_material_id IN
+                <foreach collection="resultVO.materialIdList" index="index" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                AND (ejs.sn_material_id is null OR ejs.sn_material_id = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="resultVO.cosType != null and resultVO.cosType != ''">
+                AND ejs.ATTRIBUTE3 = #{resultVO.cosType}
+            </when>
+            <otherwise>
+                AND (ejs.ATTRIBUTE3 is null OR ejs.ATTRIBUTE3 = '')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="resultVO.workWay != null and resultVO.workWay != ''">
+                AND ejs.ATTRIBUTE4 = #{resultVO.workWay}
+            </when>
+            <otherwise>
+                AND (ejs.ATTRIBUTE4 is null OR ejs.ATTRIBUTE4 = '')
+            </otherwise>
+        </choose>
+        AND ejs.site_out_date is NULL
+    </select>
+</mapper>

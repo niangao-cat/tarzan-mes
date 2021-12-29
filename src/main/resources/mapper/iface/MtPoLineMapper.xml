@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtPoLineMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtPoLine">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PO_LINE_ID" property="poLineId" jdbcType="VARCHAR"/>
+        <result column="PO_HEADER_ID" property="poHeaderId" jdbcType="VARCHAR"/>
+        <result column="LINE_NUM" property="lineNum" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="UOM_ID" property="uomId" jdbcType="VARCHAR"/>
+        <result column="UNIT_PRICE" property="unitPrice" jdbcType="DECIMAL"/>
+        <result column="LINE_TYPE" property="lineType" jdbcType="VARCHAR"/>
+        <result column="LINE_DESCRIPTION" property="lineDescription" jdbcType="VARCHAR"/>
+        <result column="EXPIRATION_DATE" property="expirationDate" jdbcType="TIMESTAMP"/>
+        <result column="QUANTITY_ORDERED" property="quantityOrdered" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_RECEIVED" property="quantityReceived" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_ACCEPTED" property="quantityAccepted" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_DELIVERED" property="quantityDelivered" jdbcType="DECIMAL"/>
+        <result column="QUANTITY_CANCELLED" property="quantityCancelled" jdbcType="DECIMAL"/>
+        <result column="CANCEL_FLAG" property="cancelFlag" jdbcType="VARCHAR"/>
+        <result column="CLOSED_FLAG" property="closedFlag" jdbcType="VARCHAR"/>
+        <result column="NEED_BY_DATE" property="needByDate" jdbcType="TIMESTAMP"/>
+        <result column="CONSIGNED_FLAG" property="consignedFlag" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="ERP_RECEIVING_ROUTING_ID" property="erpReceivingRoutingId" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_HEADER_ID" property="erpPoHeaderId" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_NUM" property="erpPoNum" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_LINE_ID" property="erpPoLineId" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_LINE_NUM" property="erpPoLineNum" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_LOCATION_ID" property="erpPoLocationId" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_SHIPMENT_NUM" property="erpPoShipmentNum" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_DISTRIBUTION_ID" property="erpPoDistributionId" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_DISTRIBUTION_NUM" property="erpPoDistributionNum" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_RELEASE_ID" property="erpPoReleaseId" jdbcType="VARCHAR"/>
+        <result column="ERP_PO_RELEASE_NUM" property="erpPoReleaseNum" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="selectByPoDistributionId" resultMap="BaseResultMap">
+        select t.* from mt_po_line t
+        where
+        t.TENANT_ID=#{tenantId}
+        <if test="poDistributionIds!=null">
+          and ${poDistributionIds}
+        </if>
+        <if test="poDistributionIds==null">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+    <select id="selectByPoLineId" resultMap="BaseResultMap">
+        select t.* from mt_po_line t
+        where
+        t.TENANT_ID=#{tenantId}
+        and t.ERP_PO_DISTRIBUTION_ID IS NULL
+        <if test="poLineIds!=null">
+            and ${poLineIds}
+        </if>
+        <if test="poLineIds==null">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+    <select id="selectByPoNums" resultMap="BaseResultMap">
+        select t.* from mt_po_line t
+        where
+        t.TENANT_ID=#{tenantId}
+        <if test="poLineNums!=null">
+            and ${poLineNums}
+        </if>
+        <if test="poLineNums==null">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+</mapper>

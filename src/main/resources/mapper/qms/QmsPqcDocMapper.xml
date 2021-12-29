@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsPqcDocMapper">
+
+    <select id="selectByConditionForUi" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderQueryVO">
+        SELECT
+            qph.WO_ID,
+            qph.PQC_HEADER_ID,
+            qph.MATERIAL_LOT_ID,
+            qph.PQC_NUMBER,
+            qph.MATERIAL_ID,
+            qph.INSPECTION_STATUS,
+            qph.PROD_LINE_ID,
+            qph.creation_date,
+            DATE_FORMAT(qph.creation_date ,'%Y-%m-%d %H:%i:%S') CREATION_DATE_STR,
+            qph.INSPECTION_RESULT,
+            qph.REMARK,
+            iu.real_name last_updated_by_name,
+            mwo.WORK_ORDER_NUM,
+            mml.MATERIAL_LOT_CODE,
+            mm.MATERIAL_NAME,
+            mmpl.PROD_LINE_NAME,
+            mma.DESCRIPTION workshopName,
+            mma2.DESCRIPTION departmentName,
+            (
+            SELECT mmw.WORKCELL_NAME
+            FROM qms_pqc_line qpl,
+            mt_mod_workcell mmw
+            WHERE qpl.TENANT_ID = #{tenantId}
+            AND qpl.PQC_HEADER_ID = qph.PQC_HEADER_ID
+            AND mmw.WORKCELL_ID = qpl.PROCESS_ID LIMIT 1) PROCESS_NAME
+        FROM
+            qms_pqc_header qph,
+            mt_work_order mwo,
+            mt_material_lot mml,
+            mt_material mm,
+            mt_mod_production_line mmpl,
+            mt_mod_organization_rel mmor,
+            mt_mod_organization_rel mmor2,
+            mt_mod_area mma,
+            mt_mod_area mma2,
+            iam_user iu
+        WHERE
+            qph.WO_ID = mwo.WORK_ORDER_ID
+            AND qph.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+            AND qph.MATERIAL_ID = mm.MATERIAL_ID
+            AND qph.PROD_LINE_ID = mmpl.PROD_LINE_ID
+            AND qph.PROD_LINE_ID = mmor.ORGANIZATION_ID
+            AND mmor.PARENT_ORGANIZATION_TYPE = 'AREA'
+            AND mmor2.ORGANIZATION_ID = mmor.PARENT_ORGANIZATION_ID
+            AND mmor2.ORGANIZATION_TYPE = 'AREA'
+            AND mma.AREA_ID = mmor.PARENT_ORGANIZATION_ID
+            AND mma2.AREA_ID = mmor2.PARENT_ORGANIZATION_ID
+            AND qph.last_updated_by = iu.id
+            AND qph.TENANT_ID = #{tenantId}
+            <if test="dto.departmentId != null">
+                and mma2.AREA_ID = #{dto.departmentId}
+            </if>
+            <if test="dto.workshopId != null">
+                and mma.AREA_ID = #{dto.workshopId}
+            </if>
+            <if test="dto.prodLineId != null">
+                and mmpl.PROD_LINE_ID = #{dto.prodLineId}
+            </if>
+            <if test="dto.workcellId != null">
+                and EXISTS(SELECT 1
+                FROM qms_pqc_line qpl,mt_mod_workcell mmw
+                WHERE qpl.PROCESS_ID=mmw.WORKCELL_ID
+                AND qpl.PQC_HEADER_ID=qph.PQC_HEADER_ID
+                AND mmw.WORKCELL_ID=#{dto.workcellId}
+                )
+            </if>
+            <if test="dto.pqcNumber != null">
+                and qph.PQC_NUMBER  LIKE CONCAT('%',#{dto.pqcNumber},'%')
+            </if>
+            <if test="dto.inspectionStatus != null">
+                and qph.INSPECTION_STATUS = #{dto.inspectionStatus}
+            </if>
+            <if test="dto.materialId != null">
+                and qph.MATERIAL_ID = #{dto.materialId}
+            </if>
+            <if test="dto.materialLotCode != null">
+                and mml.MATERIAL_LOT_CODE LIKE CONCAT('%',#{dto.materialLotCode},'%')
+            </if>
+            <if test="dto.workOrderNum != null">
+                and mwo.WORK_ORDER_NUM LIKE CONCAT('%',#{dto.workOrderNum},'%')
+            </if>
+            <if test="dto.lastUpdatedByName != null">
+                and iu.real_name LIKE CONCAT('%',#{dto.lastUpdatedByName},'%')
+            </if>
+            <if test="dto.inspectionResult != null and dto.inspectionResult != ''">
+                and qph.INSPECTION_RESULT = #{dto.inspectionResult}
+            </if>
+    </select>
+
+    <select id="selectByIdForUi" resultType="com.ruike.qms.domain.vo.QmsPqcLineQueryVO">
+        SELECT
+            qpl.NUMBER,
+            qpl.PQC_LINE_ID,
+            qpl.INSPECTION,
+            qpl.INSPECTION_DESC,
+            qpl.PROCESS_ID,
+            qpl.INSPECTION_METHOD,
+            qpl.STANDARD_TEXT,
+            qpl.STANDARD_FROM,
+            qpl.STANDARD_TO,
+            qpl.STANDARD_UOM,
+            qpl.STANDARD_TYPE,
+            qpl.INSPECTION_TOOL,
+            qpl.INSPECTION_RESULT,
+            mmw.WORKCELL_NAME,
+            qpl.QC_STANDARD
+        FROM
+            qms_pqc_line qpl
+            INNER JOIN mt_mod_workcell mmw ON qpl.PROCESS_ID = mmw.WORKCELL_ID
+        WHERE
+            qpl.TENANT_ID = #{tenantId}
+            and qpl.PQC_HEADER_ID = #{pqcHeaderId}
+    </select>
+
+    <select id="selectDetailsByIdForUi" resultType="com.ruike.qms.domain.vo.QmsPqcLineDetailsVO">
+        SELECT
+            NUMBER,
+            RESULT,
+            REMARK
+        FROM
+            qms_pqc_details
+        WHERE
+            TENANT_ID = #{tenantId}
+            AND PQC_LINE_ID = #{pqcLineId}
+    </select>
+</mapper>

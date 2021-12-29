@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWoDispatchRecodeMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeWoDispatchRecode">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="WO_DISPATCH_ID" property="woDispatchId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="CALENDAR_SHIFT_ID" property="calendarShiftId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_COMPLETED_QTY" property="shiftCompletedQty" jdbcType="DECIMAL"/>
+        <result column="DISPATCH_QTY" property="dispatchQty" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <resultMap id="HmeModAreaMap" type="com.ruike.hme.domain.vo.HmeModAreaVO">
+        <id property="areaId" column="AREA_ID"/>
+        <result property="areaCode" column="AREA_CODE"/>
+        <result property="areaName" column="AREA_NAME"/>
+        <collection property="prodLineIds" ofType="java.lang.String">
+            <id property="prodLineId" column="PROD_LINE_ID"/>
+        </collection>
+    </resultMap>
+
+    <select id="woModAreaQuery" resultMap="HmeModAreaMap">
+        SELECT ma.AREA_ID,
+               ma.AREA_CODE,
+               ma.AREA_NAME,
+               mor.ORGANIZATION_ID PROD_LINE_ID
+        FROM mt_mod_organization_rel mor,
+             mt_mod_organization_rel mor_parent,
+             mt_mod_area ma
+        WHERE mor.PARENT_ORGANIZATION_ID = mor_parent.ORGANIZATION_ID
+          AND mor.PARENT_ORGANIZATION_TYPE = mor_parent.ORGANIZATION_TYPE
+          AND mor.TENANT_ID = mor_parent.TENANT_ID
+          AND mor.TOP_SITE_ID = mor_parent.TOP_SITE_ID
+          AND mor_parent.ORGANIZATION_ID = ma.AREA_ID
+          AND mor_parent.TENANT_ID = ma.TENANT_ID
+          AND mor.ORGANIZATION_TYPE = 'PROD_LINE'
+          AND mor.ORGANIZATION_ID = #{prodLineId}
+          AND mor.TENANT_ID = #{tenantId}
+          AND mor.TOP_SITE_ID = #{topSiteId}
+    </select>
+
+    <select id="woProdQuery" resultType="com.ruike.hme.domain.vo.HmeWoDispatchVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        wo.MATERIAL_ID product_id,
+        CONCAT_WS( '-', tl.MATERIAL_NAME, item.MATERIAL_CODE ) product_name,
+        CONCAT_WS( '/', sum(0 + CAST(woa.COMPLETED_QTY AS CHAR)), sum(0 + CAST(wo.QTY AS CHAR))) complete_total_qty
+        FROM
+        mt_work_order wo
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = wo.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        LEFT JOIN mt_work_order_actual woa ON woa.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        WHERE
+        wo.TENANT_ID = #{tenantId}
+        AND wo.PRODUCTION_LINE_ID = #{prodLineId}
+        AND wo.work_order_id in
+        <foreach collection="workOrderIdList" index="index" item="id" open="("
+                 separator="," close=")">
+            #{id}
+        </foreach>
+        AND wo.MATERIAL_ID IS NOT NULL
+        GROUP BY
+        wo.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME
+    </select>
+
+    <select id="woProdLineQuery" resultType="com.ruike.hme.domain.vo.HmeWoDispatchVO2">
+        select
+        wo.work_order_id,
+        wo.work_order_num,
+        pro_line.prod_line_id,
+        pro_line.prod_line_name,
+        pro_line.description prod_line_desc,
+        woa_del.attr_value as delivery_date
+        from
+        mt_work_order wo
+        LEFT JOIN mt_mod_production_line pro_line ON pro_line.PROD_LINE_ID = wo.PRODUCTION_LINE_ID
+        LEFT JOIN mt_work_order_attr woa_del ON woa_del.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND woa_del.ATTR_NAME = 'attribute9'
+        WHERE
+        wo.TENANT_ID = #{tenantId}
+        AND wo.MATERIAL_ID = #{productId}
+        AND wo.PRODUCTION_LINE_ID = #{prodLineId}
+        AND wo.work_order_id in
+        <foreach collection="workOrderIdList" index="index" item="id" open="("
+                 separator="," close=")">
+            #{id}
+        </foreach>
+        order by wo.cid
+    </select>
+
+    <select id="woWorkCellQuery" resultType="com.ruike.hme.domain.vo.HmeWoDispatchVO3">
+        SELECT mw.WORKCELL_ID,
+               mw.WORKCELL_CODE,
+               mw.WORKCELL_NAME,
+               wo.WORK_ORDER_ID,
+               wo.PRODUCTION_LINE_ID                                                                    PROD_LINE_ID,
+               wo.QTY                                                                                   wo_qty,
+               CONCAT_WS('/', IFNULL(0 + CAST(woa.COMPLETED_QTY AS CHAR), 0), 0 + CAST(wo.QTY AS CHAR)) order_total_qty,
+               wo.QTY - IFNULL(woa.COMPLETED_QTY, 0)                                                    remain_qty,
+               wo.QTY - (SELECT IFNULL(sum(t.DISPATCH_QTY), 0)
+                         FROM hme_wo_dispatch_recode t
+                         WHERE t.WORK_ORDER_ID = wo.WORK_ORDER_ID
+                           AND t.PROD_LINE_ID = wo.PRODUCTION_LINE_ID
+                           AND t.WORKCELL_ID = mw.WORKCELL_ID)                                          UN_DISPATCH_QTY
+        FROM mt_work_order wo
+                 INNER JOIN mt_mod_organization_rel mor ON wo.PRODUCTION_LINE_ID = mor.ORGANIZATION_ID
+            AND mor.ORGANIZATION_TYPE = 'PROD_LINE'
+            AND mor.TOP_SITE_ID = #{topSiteId}
+                 INNER JOIN mt_mod_organization_rel mor_child ON mor_child.PARENT_ORGANIZATION_ID = mor.ORGANIZATION_ID
+            AND mor_child.PARENT_ORGANIZATION_TYPE = mor.ORGANIZATION_TYPE
+            AND mor_child.TENANT_ID = mor.TENANT_ID
+            AND mor_child.TOP_SITE_ID = mor.TOP_SITE_ID
+                 INNER JOIN mt_mod_workcell mw ON mor_child.ORGANIZATION_ID = mw.WORKCELL_ID
+                 LEFT JOIN mt_work_order_actual woa ON woa.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        WHERE wo.TENANT_ID = #{tenantId}
+          AND wo.WORK_ORDER_ID = #{workOrderId}
+          AND wo.PRODUCTION_LINE_ID = #{prodLineId}
+        order by mor_child.sequence
+    </select>
+
+    <select id="shiftDateFromGet" resultType="java.util.Date">
+        SELECT DISTINCT mcs.SHIFT_DATE dateFrom
+        FROM mt_calendar_shift mcs
+        WHERE mcs.SHIFT_DATE = CURRENT_DATE()
+        ORDER BY mcs.SHIFT_DATE DESC
+        LIMIT 1
+    </select>
+
+    <select id="shiftDateToGet" resultType="java.util.Date">
+        SELECT max(t.SHIFT_DATE) dateTo
+        FROM (SELECT DISTINCT mcs.SHIFT_DATE
+              FROM mt_calendar_shift mcs
+              WHERE mcs.SHIFT_DATE &gt;= CURRENT_DATE()
+              ORDER BY mcs.SHIFT_DATE
+              LIMIT 14) t
+    </select>
+
+    <select id="dispatchShiftDateQuery" resultType="com.ruike.hme.domain.vo.HmeWoCalendarShiftVO">
+        select
+        cs.calendar_shift_id,
+        recode.dispatch_qty,
+        recode.work_order_id,
+        recode.workcell_id,
+        1 editable_Flag,
+        exists (select 1
+        from wms_component_demand_record wcdr
+        ,wms_distribution_demand_detail wddd
+        where wcdr.demand_record_id = wddd.demand_record_id
+        and wcdr.wo_dispatch_id = recode.WO_DISPATCH_ID
+        and wddd.instruction_doc_id is not null) doc_created_flag
+        FROM
+        mt_calendar_shift cs
+        , hme_wo_dispatch_recode recode
+        WHERE
+        cs.CALENDAR_ID = #{calendarId}
+        and recode.CALENDAR_SHIFT_ID = cs.CALENDAR_SHIFT_ID
+        AND recode.WORKCELL_ID = #{workcellId}
+        AND cs.TENANT_ID = ${tenantId}
+        AND recode.WORK_ORDER_ID in
+        <foreach collection="workOrderIdList" item="workOrderId" separator="," open="(" close=")">
+            #{workOrderId}
+        </foreach>
+        <if test="dateFrom != null">
+            AND cs.SHIFT_DATE &gt;= DATE_FORMAT(#{dateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="dateTo != null">
+            AND cs.SHIFT_DATE &lt;= DATE_FORMAT(#{dateTo}, '%Y-%m-%d')
+        </if>
+        Order by recode.work_order_id,recode.workcell_id,cs.SHIFT_DATE,cs.SEQUENCE
+    </select>
+
+    <select id="dispatchQtyGet" resultType="java.lang.Double">
+        SELECT IFNULL(sum(recode.DISPATCH_QTY),0) dispatch_qty
+        FROM hme_wo_dispatch_recode recode
+        WHERE recode.WORK_ORDER_ID = #{workOrderId}
+        AND recode.PROD_LINE_ID = #{prodLineId}
+        AND recode.WORKCELL_ID = #{workcellId}
+        <if test="calendarShiftIds != null">
+            AND recode.CALENDAR_SHIFT_ID not in
+            <foreach collection="calendarShiftIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="userModAreaPropertyQuery" resultType="tarzan.modeling.domain.entity.MtModArea">
+        SELECT ma.*
+        FROM mt_user_organization muo,
+             mt_mod_area ma
+        WHERE muo.TENANT_ID = #{tenantId}
+          AND muo.USER_ID = #{userId}
+          AND muo.ORGANIZATION_TYPE = 'AREA'
+          AND muo.ENABLE_FLAG = 'Y'
+          AND muo.ORGANIZATION_ID = ma.AREA_ID
+          AND ma.AREA_CATEGORY = #{areaCategory}
+    </select>
+
+    <select id="prodLineWkcQuery" resultType="com.ruike.hme.domain.vo.HmeWoDispatchVO4">
+        select pl.PROD_LINE_ID,
+               wkc.WORKCELL_ID,
+               CONCAT_WS('-', pl.PROD_LINE_NAME, wkc.WORKCELL_NAME) PROD_LINE_WKC
+        from mt_mod_organization_rel mor,
+             mt_mod_workcell wkc,
+             mt_mod_production_line pl
+        where mor.ORGANIZATION_ID = wkc.WORKCELL_ID
+          and mor.PARENT_ORGANIZATION_ID = pl.PROD_LINE_ID
+          and mor.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+          and mor.ORGANIZATION_TYPE = 'WORKCELL'
+          and mor.TENANT_ID = #{tenantId}
+          and mor.PARENT_ORGANIZATION_ID = #{prodLineId}
+    </select>
+
+    <sql id="hmeDispatchGroupMap">
+        SELECT t.WORK_ORDER_ID,
+               t.PROD_LINE_ID,
+               t.WORKCELL_ID
+        FROM hme_wo_dispatch_recode t
+        GROUP BY t.WORK_ORDER_ID,
+                 t.PROD_LINE_ID,
+                 t.WORKCELL_ID
+    </sql>
+
+    <select id="woProdListQuery" resultType="com.ruike.hme.domain.vo.HmeWoDispatchVO5">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        wo.MATERIAL_ID product_id,
+        item.MATERIAL_CODE product_code,
+        tl.MATERIAL_NAME product_name,
+        wo.WORK_ORDER_ID,
+        wo.WORK_ORDER_NUM
+        FROM
+        mt_work_order wo
+        INNER JOIN (<include refid="hmeDispatchGroupMap"/>)recode ON wo.WORK_ORDER_ID = recode.WORK_ORDER_ID
+        AND recode.recode.PROD_LINE_ID = #{prodLineId}
+        AND recode.WORKCELL_ID = #{workCellId}
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = wo.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        WHERE wo.TENANT_ID = #{tenantId}
+        AND wo.STATUS IN ('EORELEASED', 'RELEASED')
+    </select>
+
+    <select id="limitShiftDateQuery" resultType="com.ruike.hme.domain.vo.HmeWoCalendarShiftVO">
+        SELECT
+        cs.CALENDAR_SHIFT_ID,
+        cs.SHIFT_CODE,
+        cs.SHIFT_DATE,
+        cs.REST_TIME,
+        cs.SHIFT_START_TIME,
+        cs.SHIFT_END_TIME
+        FROM
+        mt_calendar_shift cs
+        WHERE
+        cs.CALENDAR_ID = #{vo.calendarId}
+        AND cs.TENANT_ID = ${tenantId}
+        <if test="vo.shiftDateFrom != null">
+            AND cs.SHIFT_DATE &gt;= DATE_FORMAT(#{vo.shiftDateFrom}, '%Y-%m-%d')
+        </if>
+        <if test="vo.shiftDateTo != null">
+            AND cs.SHIFT_DATE &lt;= DATE_FORMAT(#{vo.shiftDateTo}, '%Y-%m-%d')
+        </if>
+    </select>
+
+    <select id="workcellCompletionQtyQuery" resultType="java.math.BigDecimal">
+        SELECT ifnull(sum(cor.qty), 0)
+        FROM hme_wkc_complete_output_record cor,
+             mt_wkc_shift mws
+        WHERE cor.work_order_id = #{workOrderId}
+          AND mws.WKC_SHIFT_ID = cor.wkc_shift_id
+          AND mws.SHIFT_DATE <![CDATA[<]]> DATE_FORMAT(now(), '%Y-%m-%d')
+          AND cor.workcell_id = #{workcellId}
+    </select>
+
+    <select id="selectDispatchComponentSuiteList"
+            resultType="com.ruike.hme.domain.vo.HmeWoDispatchComponentSuiteVO">
+        select orig.*
+        from (select ifnull(sum(mbc.qty),0) usage_qty,
+        mm.PRIMARY_UOM_ID uom_id,
+        uom.uom_code,
+        mbc.material_id,
+        mm.material_code,
+        mm.material_name,
+        mor.parent_organization_id workcell_id,
+        mor.top_site_id site_id,
+        if(mbca_spec.ATTR_VALUE = 'E',mwoa_so.attr_value,'') so_num,
+        if(mbca_spec.ATTR_VALUE = 'E',mwoa_sol.attr_value,'') so_line_num,
+        ifnull(mbca_ver.ATTR_VALUE,'') material_version
+        FROM mt_mod_organization_rel mor
+        JOIN mt_mod_workcell mmw ON mmw.WORKCELL_ID = mor.ORGANIZATION_ID
+        AND mmw.ENABLE_FLAG = 'Y'
+        AND mmw.WORKCELL_type = 'PROCESS'
+        JOIN mt_operation_wkc_dispatch_rel owdr ON owdr.WORKCELL_ID = mmw.WORKCELL_ID
+        JOIN mt_router_operation mro ON mro.OPERATION_ID = owdr.OPERATION_ID
+        JOIN mt_router_step mrs ON mrs.ROUTER_STEP_ID = mro.ROUTER_STEP_ID
+        JOIN mt_router mt ON mrs.ROUTER_ID = mt.ROUTER_ID
+        AND mt.router_status = 'CAN_RELEASE'
+        JOIN mt_work_order mwo ON mwo.ROUTER_ID = mt.ROUTER_ID
+        LEFT JOIN mt_work_order_attr mwoa_so ON mwoa_so.work_order_id = mwo.WORK_ORDER_ID
+        AND mwoa_so.ATTR_NAME = 'attribute1'
+        LEFT JOIN mt_work_order_attr mwoa_sol ON mwoa_sol.work_order_id = mwo.WORK_ORDER_ID
+        AND mwoa_sol.ATTR_NAME = 'attribute7'
+        JOIN mt_router_operation_component moc ON mro.ROUTER_OPERATION_ID = moc.ROUTER_OPERATION_ID
+        AND moc.enable_flag = 'Y'
+        JOIN mt_bom_component mbc ON mbc.BOM_COMPONENT_ID = moc.BOM_COMPONENT_ID
+        AND mbc.bom_component_type = 'ASSEMBLING'
+        AND mbc.QTY > 0
+        LEFT JOIN mt_bom_component_attr mbca_ver ON mbc.BOM_COMPONENT_ID = mbca_ver.BOM_COMPONENT_ID
+        AND mbca_ver.ATTR_NAME = 'lineAttribute7'
+        LEFT JOIN mt_bom_component_attr mbca_spec ON mbc.BOM_COMPONENT_ID = mbca_spec.BOM_COMPONENT_ID
+        AND mbca_spec.ATTR_NAME = 'lineAttribute11'
+        JOIN mt_material mm ON mm.material_id = mbc.MATERIAL_ID
+        JOIN mt_uom uom ON uom.uom_id = mm.PRIMARY_UOM_ID
+        WHERE mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.TENANT_ID = #{tenantId}
+        AND mor.PARENT_ORGANIZATION_ID = #{dto.workcellId}
+        AND mwo.WORK_ORDER_ID = #{dto.workOrderId}
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            <bind name="materialNameLike" value="'%'+dto.materialName+'%'"/>
+            and mm.material_name like #{materialNameLike}
+        </if>
+        group by uom.uom_code,
+        mbc.MATERIAL_ID,
+        mor.TOP_SITE_ID,
+        mm.material_code,
+        mm.material_name,
+        mmw.workcell_id,
+        mbca_ver.ATTR_VALUE,
+        mbca_spec.ATTR_VALUE,
+        mwoa_so.attr_value,
+        mwoa_sol.attr_value
+        order by mm.material_code) orig
+        JOIN mt_material_site mms ON mms.material_id = orig.material_id
+        AND mms.SITE_ID = orig.SITE_ID
+        AND mms.ENABLE_FLAG = 'Y'
+        LEFT JOIN mt_material_site_attr mmsa ON mms.MATERIAL_SITE_ID = mmsa.MATERIAL_SITE_ID
+        AND mmsa.ATTR_NAME = 'attribute1'
+        where ifnull(mmsa.ATTR_VALUE, '1') != '2'
+    </select>
+
+    <select id="selectDispatchDetailList" resultType="com.ruike.hme.domain.vo.HmeWoDispatchWkcVO">
+        select mwo.material_id product_id
+        , mm.material_code product_code
+        , mm.material_name product_name
+        , mwo.work_order_id
+        , mwo.work_order_num
+        , woa_del.attr_value as delivery_date
+        , mw.workcell_id
+        , mw.workcell_code
+        , mw.workcell_name
+        , IFNULL(woa.completed_qty, 0) completed_qty
+        , mwo.QTY wo_qty
+        , mwo.QTY - IFNULL(woa.completed_qty, 0) remain_qty
+        ,(SELECT
+        ifnull( sum( cor.qty ), 0 )
+        FROM
+        hme_wkc_complete_output_record cor
+        WHERE
+        cor.work_order_id = mwo.WORK_ORDER_ID
+        AND cor.workcell_id = mw.WORKCELL_ID
+        ) workcell_completion_qty ,
+        mwo.QTY - (
+        SELECT
+        IFNULL( sum( t.dispatch_qty ), 0 )
+        FROM
+        hme_wo_dispatch_recode t
+        WHERE
+        t.WORK_ORDER_ID = mwo.WORK_ORDER_ID
+        AND t.PROD_LINE_ID = mwo.PRODUCTION_LINE_ID
+        AND t.WORKCELL_ID = mw.WORKCELL_ID
+        ) un_dispatch_qty
+        from mt_work_order mwo
+        join mt_material mm on mwo.MATERIAL_ID = mm.MATERIAL_ID
+        INNER JOIN mt_mod_organization_rel mor ON mwo.PRODUCTION_LINE_ID = mor.ORGANIZATION_ID
+        AND mor.ORGANIZATION_TYPE = 'PROD_LINE'
+        INNER JOIN mt_mod_organization_rel mor_child ON mor_child.PARENT_ORGANIZATION_ID = mor.ORGANIZATION_ID
+        AND mor_child.PARENT_ORGANIZATION_TYPE = mor.ORGANIZATION_TYPE
+        AND mor_child.TENANT_ID = mor.TENANT_ID
+        AND mor_child.TOP_SITE_ID = mor.TOP_SITE_ID
+        INNER JOIN mt_mod_workcell mw ON mor_child.ORGANIZATION_ID = mw.WORKCELL_ID
+        join mt_user_organization muo on muo.ORGANIZATION_ID = mw.WORKCELL_ID AND muo.ENABLE_FLAG = 'Y'
+        AND muo.ORGANIZATION_TYPE = 'WORKCELL' AND muo.user_id = #{userId}
+        LEFT JOIN mt_work_order_actual woa ON woa.WORK_ORDER_ID = mwo.WORK_ORDER_ID
+        LEFT JOIN mt_work_order_attr woa_del ON woa_del.WORK_ORDER_ID = mwo.WORK_ORDER_ID AND woa_del.ATTR_NAME =
+        'attribute9'
+        where mwo.TENANT_ID = #{tenantId}
+        AND mor.TOP_SITE_ID = #{topSiteId}
+        and mwo.PRODUCTION_LINE_ID = #{prodLineId}
+        and mwo.work_order_id in
+        <foreach collection="workOrderIdList" item="workOrderId" separator="," open="(" close=")">
+            #{workOrderId}
+        </foreach>
+        order by mwo.material_id, mwo.work_order_id, mor_child.sequence
+    </select>
+
+    <select id="selectCalendarShiftByDateRange" resultType="com.ruike.hme.domain.vo.HmeWoCalendarShiftVO">
+        select cs.calendar_shift_id,
+               cs.shift_code,
+               cs.shift_date,
+               cs.shift_start_time,
+               cs.shift_end_time,
+               cs.rest_time,
+               cs.sequence,
+               0 editable_Flag
+        FROM mt_calendar_shift cs
+        where cs.TENANT_ID = #{tenantId}
+          and cs.calendar_Id = #{calendarId}
+          and cs.shift_date between #{dateFrom} and #{dateTo}
+        order by cs.shift_date,
+                 cs.shift_code
+    </select>
+</mapper>

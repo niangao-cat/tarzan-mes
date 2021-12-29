@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtNcGroupMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtNcGroup">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="NC_GROUP_ID" property="ncGroupId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="NC_GROUP_CODE" property="ncGroupCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="CLOSURE_REQUIRED" property="closureRequired" jdbcType="VARCHAR"/>
+        <result column="CONFIRM_REQUIRED" property="confirmRequired" jdbcType="VARCHAR"/>
+        <result column="AUTO_CLOSE_INCIDENT" property="autoCloseIncident" jdbcType="VARCHAR"/>
+        <result column="AUTO_CLOSE_PRIMARY" property="autoClosePrimary" jdbcType="VARCHAR"/>
+        <result column="CAN_BE_PRIMARY_CODE" property="canBePrimaryCode" jdbcType="VARCHAR"/>
+        <result column="VALID_AT_ALL_OPERATIONS" property="validAtAllOperations" jdbcType="VARCHAR"/>
+        <result column="ALLOW_NO_DISPOSITION" property="allowNoDisposition" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_REQUIRED" property="componentRequired" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_ID" property="dispositionGroupId" jdbcType="VARCHAR"/>
+        <result column="MAX_NC_LIMIT" property="maxNcLimit" jdbcType="DECIMAL"/>
+        <result column="SECONDARY_CODE_SP_INSTR" property="secondaryCodeSpInstr" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_REQD_FOR_CLOSE" property="secondaryReqdForClose" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtNcGroupDTO">
+        <result column="NC_GROUP_ID" property="ncGroupId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="NC_GROUP_CODE" property="ncGroupCode" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="PRIORITY" property="priority" jdbcType="DECIMAL"/>
+        <result column="CLOSURE_REQUIRED" property="closureRequired" jdbcType="VARCHAR"/>
+        <result column="CONFIRM_REQUIRED" property="confirmRequired" jdbcType="VARCHAR"/>
+        <result column="AUTO_CLOSE_INCIDENT" property="autoCloseIncident" jdbcType="VARCHAR"/>
+        <result column="AUTO_CLOSE_PRIMARY" property="autoClosePrimary" jdbcType="VARCHAR"/>
+        <result column="CAN_BE_PRIMARY_CODE" property="canBePrimaryCode" jdbcType="VARCHAR"/>
+        <result column="VALID_AT_ALL_OPERATIONS" property="validAtAllOperations" jdbcType="VARCHAR"/>
+        <result column="ALLOW_NO_DISPOSITION" property="allowNoDisposition" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_REQUIRED" property="componentRequired" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_ID" property="dispositionGroupId" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP" property="dispositionGroup" jdbcType="VARCHAR"/>
+        <result column="DISPOSITION_GROUP_DESC" property="dispositionGroupDesc" jdbcType="VARCHAR"/>
+        <result column="MAX_NC_LIMIT" property="maxNcLimit" jdbcType="DECIMAL"/>
+        <result column="SECONDARY_CODE_SP_INSTR" property="secondaryCodeSpInstr" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_REQD_FOR_CLOSE" property="secondaryReqdForClose" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryNcGroupForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mng.NC_GROUP_ID,
+        mng.NC_GROUP_CODE,
+        mngt.DESCRIPTION,
+        mng.SITE_ID,
+        mms.SITE_CODE,
+        mmst.SITE_NAME,
+        mng.PRIORITY,
+        mng.CLOSURE_REQUIRED,
+        mng.CONFIRM_REQUIRED,
+        mng.AUTO_CLOSE_INCIDENT,
+        mng.AUTO_CLOSE_PRIMARY,
+        mng.CAN_BE_PRIMARY_CODE,
+        mng.VALID_AT_ALL_OPERATIONS,
+        mng.ALLOW_NO_DISPOSITION,
+        mng.COMPONENT_REQUIRED,
+        mng.DISPOSITION_GROUP_ID,
+        mdg.DISPOSITION_GROUP,
+        mdgt.DESCRIPTION DISPOSITION_GROUP_DESC,
+        mng.MAX_NC_LIMIT,
+        mng.SECONDARY_CODE_SP_INSTR,
+        mng.SECONDARY_REQD_FOR_CLOSE,
+        mng.ENABLE_FLAG
+        from mt_nc_group mng
+        join mt_nc_group_tl mngt on mng.NC_GROUP_ID = mngt.NC_GROUP_ID and mngt.LANG = #{locale}
+        join mt_mod_site mms on mng.SITE_ID = mms.SITE_ID
+        join mt_mod_site_tl mmst on mms.SITE_ID = mmst.SITE_ID and mmst.LANG = #{locale}
+        left join mt_disposition_group mdg on mng.DISPOSITION_GROUP_ID = mdg.DISPOSITION_GROUP_ID and mdg.TENANT_ID = ${tenantId}
+        left join mt_disposition_group_tl mdgt on mdg.DISPOSITION_GROUP_ID = mdgt.DISPOSITION_GROUP_ID and mdgt.LANG = #{locale}
+        where mng.TENANT_ID = ${tenantId}
+        and mms.TENANT_ID = ${tenantId}
+        <if test="dto.ncGroupId!=null">
+            and mng.NC_GROUP_ID = #{dto.ncGroupId}
+        </if>
+        <if test="dto.siteId!=null">
+            and mng.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.ncGroupCode!=null">
+            and mng.NC_GROUP_CODE like concat('%',concat(#{dto.ncGroupCode},'%'))
+        </if>
+        <if test="dto.description!=null">
+            and mngt.DESCRIPTION like concat('%',concat(#{dto.description},'%'))
+        </if>
+        <if test="dto.operationId!=null">
+            and EXISTS(
+            select 1
+            from mt_nc_valid_oper mnvo
+            where mnvo.NC_OBJECT_ID = mng.NC_GROUP_ID
+            and mnvo.NC_OBJECT_TYPE = 'NC_GROUP'
+            and mnvo.OPERATION_ID = #{dto.operationId}
+            )
+        </if>
+        ORDER BY mng.CREATION_DATE DESC
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.method.domain.vo.MtNcGroupVO1">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        tb.NC_GROUP_ID,
+        tb.NC_GROUP_CODE,
+        tbt.DESCRIPTION,
+        tb.SITE_ID,
+        tb.PRIORITY,
+        tb.CLOSURE_REQUIRED,
+        tb.CONFIRM_REQUIRED,
+        tb.AUTO_CLOSE_INCIDENT,
+        tb.AUTO_CLOSE_PRIMARY,
+        tb.CAN_BE_PRIMARY_CODE,
+        tb.VALID_AT_ALL_OPERATIONS,
+        tb.ALLOW_NO_DISPOSITION,
+        tb.COMPONENT_REQUIRED,
+        tb.DISPOSITION_GROUP_ID,
+        tb.MAX_NC_LIMIT,
+        tb.SECONDARY_CODE_SP_INSTR,
+        tb.SECONDARY_REQD_FOR_CLOSE,
+        tb.ENABLE_FLAG
+        FROM
+        mt_nc_group tb
+        JOIN mt_nc_group_tl tbt ON tb.NC_GROUP_ID = tbt.NC_GROUP_ID AND tbt.LANG = #{locale}
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.ncGroupId != null">
+            AND tb.NC_GROUP_ID = #{dto.ncGroupId}
+        </if>
+        <if test="dto.siteId != null">
+            AND tb.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.ncGroupCode != null">
+            AND tb.NC_GROUP_CODE = #{dto.ncGroupCode}
+        </if>
+        <if test="dto.description != null">
+            AND tbt.DESCRIPTION like CONCAT('%',CONCAT(#{dto.description},'%'))
+        </if>
+        <if test="dto.priority != null">
+            AND tb.PRIORITY = #{dto.priority}
+        </if>
+        <if test="dto.closureRequired != null">
+            AND tb.CLOSURE_REQUIRED = #{dto.closureRequired}
+        </if>
+        <if test="dto.confirmRequired != null">
+            AND tb.CONFIRM_REQUIRED = #{dto.confirmRequired}
+        </if>
+        <if test="dto.autoCloseIncident != null">
+            AND tb.AUTO_CLOSE_INCIDENT = #{dto.autoCloseIncident}
+        </if>
+        <if test="dto.autoClosePrimary != null">
+            AND tb.AUTO_CLOSE_PRIMARY = #{dto.autoClosePrimary}
+        </if>
+        <if test="dto.canBePrimaryCode != null">
+            AND tb.CAN_BE_PRIMARY_CODE = #{dto.canBePrimaryCode}
+        </if>
+        <if test="dto.validAtAllOperations != null">
+            AND tb.VALID_AT_ALL_OPERATIONS = #{dto.validAtAllOperations}
+        </if>
+        <if test="dto.allowNoDisposition != null">
+            AND tb.ALLOW_NO_DISPOSITION = #{dto.allowNoDisposition}
+        </if>
+        <if test="dto.componentRequired != null">
+            AND tb.COMPONENT_REQUIRED = #{dto.componentRequired}
+        </if>
+        <if test="dto.dispositionGroupId != null">
+            AND tb.DISPOSITION_GROUP_ID = #{dto.dispositionGroupId}
+        </if>
+        <if test="dto.maxNcLimit != null">
+            AND tb.MAX_NC_LIMIT = #{dto.maxNcLimit}
+        </if>
+        <if test="dto.secondaryCodeSpInstr != null">
+            AND tb.SECONDARY_CODE_SP_INSTR = #{dto.secondaryCodeSpInstr}
+        </if>
+        <if test="dto.secondaryReqdForClose != null">
+            AND tb.SECONDARY_REQD_FOR_CLOSE = #{dto.secondaryReqdForClose}
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select *
+        from MT_NC_GROUP tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        and tb.NC_GROUP_ID IN
+        <foreach collection="ncGroupList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

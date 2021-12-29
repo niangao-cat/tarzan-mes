@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeLoadJobMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeLoadJob">
+        <result column="LOAD_JOB_ID" property="loadJobId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="LOAD_SEQUENCE" property="loadSequence" jdbcType="VARCHAR"/>
+        <result column="LOAD_JOB_TYPE" property="loadJobType" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="LOAD_ROW" property="loadRow" jdbcType="DECIMAL"/>
+        <result column="LOAD_COLUMN" property="loadColumn" jdbcType="DECIMAL"/>
+        <result column="SOURCE_MATERIAL_LOT_ID" property="sourceMaterialLotId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_LOAD_ROW" property="sourceLoadRow" jdbcType="DECIMAL"/>
+        <result column="SOURCE_LOAD_COLUMN" property="sourceLoadColumn" jdbcType="DECIMAL"/>
+        <result column="COS_NUM" property="cosNum" jdbcType="DECIMAL"/>
+        <result column="HOT_SINK_CODE" property="hotSinkCode" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="WORK_ORDER_ID" property="workOrderId" jdbcType="VARCHAR"/>
+        <result column="WAFER_NUM" property="waferNum" jdbcType="VARCHAR"/>
+        <result column="COS_TYPE" property="cosType" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="BOM_MATERIAL_ID" property="bomMaterialId" jdbcType="VARCHAR"/>
+        <result column="BOM_MATERIAL_LOT_ID" property="bomMaterialLotId" jdbcType="VARCHAR"/>
+        <result column="BOM_MATERIAL_LOT_SUPPLIER" property="bomMaterialLotSupplier" jdbcType="VARCHAR"/>
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="pageList" resultType="com.ruike.hme.api.dto.HmeLoadJobDTO">
+        select hlj.load_job_id, hlj.load_sequence, hlj.load_job_type, hlj.material_id, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+               hlj.material_lot_id, mml.MATERIAL_LOT_CODE, hlj.load_row, hlj.load_column, hlj.source_material_lot_id,
+               mml_sou.MATERIAL_LOT_CODE as source_material_lot_code, hlj.source_load_row, hlj.source_load_column,
+               hlj.cos_num, hlj.hot_sink_code, hlj.status, hlj.operation_id, mo.OPERATION_NAME, mo.DESCRIPTION,
+               hlj.workcell_id, mmw.WORKCELL_CODE, hlj.work_order_id, mwo.WORK_ORDER_NUM, hlj.wafer_num, hlj.cos_type,
+               hlj.remark, hlj.bom_material_id, mm_bom.MATERIAL_CODE as bom_material_code, hlj.bom_material_lot_id,
+               mml_bom.MATERIAL_LOT_CODE as bom_material_lot_code, hlj.bom_material_lot_supplier, ms.SUPPLIER_CODE,
+               ms.SUPPLIER_NAME, hmll.ATTRIBUTE13, hmll.ATTRIBUTE10, iu.real_name, hlj.creation_date, iu2.real_name last_update_by_name,
+               hlj.last_update_date
+        from hme_load_job hlj
+        left join mt_material mm on mm.MATERIAL_ID = hlj.material_id
+        left join mt_material_lot mml on mml.MATERIAL_LOT_ID = hlj.material_lot_id
+        left join mt_material_lot mml_sou on  mml_sou.MATERIAL_LOT_ID = hlj.source_material_lot_id
+        left join mt_operation mo on mo.OPERATION_ID = hlj.operation_id
+        left join mt_mod_workcell mmw on mmw.WORKCELL_ID = hlj.workcell_id
+        left join mt_work_order mwo on mwo.WORK_ORDER_ID = hlj.work_order_id
+        left join mt_material mm_bom on mm_bom.MATERIAL_ID = hlj.bom_material_id
+        left join mt_material_lot mml_bom on mml_bom.MATERIAL_LOT_ID = hlj.bom_material_lot_id
+        left join mt_supplier ms on ms.SUPPLIER_ID = hlj.bom_material_lot_supplier
+        inner join hme_material_lot_load hmll on hlj.tenant_id = hmll.tenant_id and hlj.load_sequence = hmll.load_sequence
+        inner join iam_user iu on hlj.created_by = iu.id
+        inner join iam_user iu2 on hlj.last_updated_by = iu2.id
+        where hlj.tenant_id = #{tenantId}
+        <if test="dto.loadJobType != null and dto.loadJobType != ''">
+            and hlj.load_job_type = #{dto.loadJobType}
+        </if>
+        <if test="dto.materialCodeList!=null and dto.materialCodeList.size>0">
+            and mm.MATERIAL_CODE in
+            <foreach collection="dto.materialCodeList" index="in" item="i" open="(" close=")" separator=",">
+                #{i}
+            </foreach>
+        </if>
+        <if test="dto.materialLotCodeList!=null and dto.materialLotCodeList.size>0">
+            and mml.MATERIAL_LOT_CODE in
+            <foreach collection="dto.materialLotCodeList" index="in" item="i" open="(" close=")" separator=",">
+                #{i}
+            </foreach>
+        </if>
+        <if test="dto.hotSinkCodeList!=null and dto.hotSinkCodeList.size>0">
+            and hlj.hot_sink_code in
+            <foreach collection="dto.hotSinkCodeList" index="in" item="i" open="(" close=")" separator=",">
+                #{i}
+            </foreach>
+        </if>
+        <if test="dto.status != null and dto.status != ''">
+            and hlj.status = #{dto.status}
+        </if>
+        <if test="dto.operationId != null and dto.operationId != ''">
+            and hlj.operation_id = #{dto.operationId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and hlj.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.workNumList!=null and dto.workNumList.size>0">
+            and mwo.WORK_ORDER_NUM in
+            <foreach collection="dto.workNumList" index="in" item="i" open="(" close=")" separator=",">
+                #{i}
+            </foreach>
+        </if>
+        <if test="dto.waferList!=null and dto.waferList.size>0">
+            and hlj.wafer_num in
+            <foreach collection="dto.waferList" index="in" item="i" open="(" close=")" separator=",">
+                #{i}
+            </foreach>
+        </if>
+        <if test="dto.cosType != null and dto.cosType != ''">
+            and hlj.cos_type = #{dto.cosType}
+        </if>
+        <if test="dto.bomMaterialLotCode != null and dto.bomMaterialLotCode != ''">
+            and mml_bom.MATERIAL_LOT_CODE LIKE CONCAT('%',#{dto.bomMaterialLotCode},'%')
+        </if>
+        <if test="dto.id != null and dto.id != ''">
+            and iu.id = #{dto.id}
+        </if>
+        <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+            and hlj.creation_date &gt;= #{dto.creationDateFrom}
+        </if>
+        <if test="dto.creationDateTo != null and dto.creationDateTo != ''">
+            and hlj.creation_date &lt;= #{dto.creationDateTo}
+        </if>
+    </select>
+
+    <select id="ncList" resultType="java.lang.String">
+        select mnc.DESCRIPTION
+        from hme_load_job_object hljo,
+        mt_nc_code mnc
+        where hljo.tenant_id = #{tenantId}
+        and hljo.load_job_id = #{loadJobId}
+        and hljo.object_type = 'NC'
+        and mnc.NC_CODE_ID = hljo.object_id
+    </select>
+
+    <select id="equipmentList" resultType="java.lang.String">
+        select he.ASSET_ENCODING
+        from hme_load_job_object hljo,
+        hme_equipment he
+        where hljo.tenant_id = #{tenantId}
+        and hljo.load_job_id = #{loadJobId}
+        and hljo.object_type = 'EQUIPMENT'
+        and he.EQUIPMENT_ID = hljo.object_id
+    </select>
+
+    <select id="ncCodeQuery" resultType="java.lang.String">
+        SELECT mnc.NC_CODE_ID
+        FROM
+            hme_material_lot_nc_load mlnl,
+            hme_material_lot_nc_record mlnr,
+            mt_nc_code mnc
+        WHERE
+            mlnl.tenant_id = #{tenantId}
+        AND mlnl.load_sequence = #{loadSequence}
+        AND mlnl.nc_load_id = mlnr.nc_load_id
+        AND mnc.NC_CODE = mlnr.nc_code
+        group by mnc.NC_CODE_ID
+    </select>
+
+    <insert id="batchInsert" parameterType="com.ruike.hme.domain.entity.HmeLoadJob">
+        insert into hme_load_job
+        (
+        load_job_id,
+        tenant_id,
+        site_id,
+        load_sequence,
+        load_job_type,
+        material_id,
+        material_lot_id,
+        load_row,
+        load_column,
+        source_material_lot_id,
+        source_load_row,
+        source_load_column,
+        cos_num,
+        hot_sink_code,
+        status,
+        nc_code_id,
+        operation_id,
+        workcell_id,
+        work_order_id,
+        wafer_num,
+        cos_type,
+        remark,
+        bom_material_id,
+        bom_material_lot_id,
+        bom_material_lot_supplier,
+        cid,
+        object_version_number,
+        creation_date,
+        created_by,
+        last_updated_by,
+        last_update_date,
+        attribute1,
+        attribute2,
+        attribute3,
+        attribute4,
+        attribute5,
+        attribute6,
+        attribute7,
+        attribute8,
+        attribute9,
+        attribute10,
+        attribute11,
+        attribute12,
+        attribute13,
+        attribute14,
+        attribute15
+        )
+        values
+        <foreach collection="domains" index="index" item="item" separator=",">
+            (
+            #{item.loadJobId},
+            #{item.tenantId},
+            #{item.siteId},
+            #{item.loadSequence},
+            #{item.loadJobType},
+            #{item.materialId},
+            #{item.materialLotId},
+            #{item.loadRow},
+            #{item.loadColumn},
+            #{item.sourceMaterialLotId},
+            #{item.sourceLoadRow},
+            #{item.sourceLoadColumn},
+            #{item.cosNum},
+            #{item.hotSinkCode},
+            #{item.status},
+            #{item.ncCodeId},
+            #{item.operationId},
+            #{item.workcellId},
+            #{item.workOrderId},
+            #{item.waferNum},
+            #{item.cosType},
+            #{item.remark},
+            #{item.bomMaterialId},
+            #{item.bomMaterialLotId},
+            #{item.bomMaterialLotSupplier},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+</mapper>

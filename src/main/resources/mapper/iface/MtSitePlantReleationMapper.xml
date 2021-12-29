@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtSitePlantReleationMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtSitePlantReleation">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="RELEATION_ID" property="releationId" jdbcType="VARCHAR"/>
+        <result column="SITE_TYPE" property="siteType" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PLANT_ID" property="plantId" jdbcType="DECIMAL"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="resultView4" type="tarzan.material.domain.entity.MtMaterialSite">
+        <result column="MATERIAL_SITE_ID" property="materialSiteId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+    </resultMap>
+    <resultMap id="resultView1" type="tarzan.material.domain.entity.MtMaterial">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_DESIGN_CODE" property="materialDesignCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_IDENTIFY_CODE" property="materialIdentifyCode" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="VOLUME" property="volume" jdbcType="DECIMAL"/>
+        <result column="VOLUME_UOM_ID" property="volumeUomId" jdbcType="VARCHAR"/>
+        <result column="WEIGHT" property="weight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="SHELF_LIFE" property="shelfLife" jdbcType="DECIMAL"/>
+        <result column="SHELF_LIFE_UOM_ID" property="shelfLifeUomId" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_ID" property="primaryUomId" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_UOM_ID" property="secondaryUomId" jdbcType="VARCHAR"/>
+        <result column="CONVERSION_RATE" property="conversionRate" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="getMaterialSitelList" resultMap="resultView4">
+        select
+        t.*
+        from
+        MT_MATERIAL_SITE t
+        where
+        t.TENANT_ID = ${tenantId}
+        <if test="dto.materialIds!= null and dto.materialIds.size()>0">
+            and t.MATERIAL_ID in
+            <foreach collection="dto.materialIds" item="item" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.siteIds!= null and dto.siteIds.size()>0">
+            and t.SITE_ID in
+            <foreach collection="dto.siteIds" item="item" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getsiteIdList" resultMap="BaseResultMap" fetchSize="5000">
+        select
+        t.*
+        from
+        mt_site_plant_releation t
+        where
+        t.TENANT_ID = ${tenantId}
+        <if test="dto.plantCodes!= null and dto.plantCodes.size()>0">
+            and t.PLANT_CODE in
+            <foreach collection="dto.plantCodes" item="item" separator="," open="(" close=")" index="index">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.siteType!=null">
+            and t.SITE_TYPE=#{dto.siteType}
+        </if>
+    </select>
+    <select id="getMaterialIdList" resultMap="resultView1" fetchSize="5000">
+        <bind name="lang"
+              value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        item.MATERIAL_ID,
+        item.MATERIAL_CODE
+        FROM mt_material item
+        INNER JOIN mt_material_tl tl on tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        WHERE
+        item.TENANT_ID = ${tenantId}
+        <if test="materialCodes!= null">
+            and ${materialCodes}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosTestPassRateMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosTestPassRate">
+                    <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+                    <result column="test_id" property="testId" jdbcType="VARCHAR"/>
+                    <result column="cos_type" property="cosType" jdbcType="VARCHAR"/>
+                    <result column="target_pass_rate" property="targetPassRate" jdbcType="DECIMAL"/>
+                    <result column="input_pass_rate" property="inputPassRate" jdbcType="DECIMAL"/>
+                    <result column="remark" property="remark" jdbcType="VARCHAR"/>
+                    <result column="cid" property="cid" jdbcType="DECIMAL"/>
+                    <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+                    <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+                    <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+                    <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+                    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+                    <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+                    <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+            </resultMap>
+
+    <select id="queryCosTestPassRate" resultType="com.ruike.hme.domain.vo.HmeCosTestPassRateVO">
+        SELECT
+                hctpr.test_id,
+                hctpr.cos_type,
+                hctpr.target_pass_rate,
+                hctpr.input_pass_rate,
+                hctpr.remark,
+                hctpr.enable_flag,
+                hctpr.last_update_date
+        FROM
+                hme_cos_test_pass_rate hctpr
+        WHERE
+                hctpr.tenant_id =#{tenantId}
+        <if test="dto.cosType !=null and dto.cosType !=''">
+                and hctpr.cos_type LIKE CONCAT('%', #{dto.cosType}, '%')
+        </if>
+        <if test="dto.enableFlag !=null and dto.enableFlag !=''">
+                and hctpr.enable_flag =#{dto.enableFlag}
+        </if>
+        ORDER BY 	hctpr.last_update_date desc
+    </select>
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.iface.infra.mapper.MtRoutingOperationIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.iface.domain.entity.MtRoutingOperationIface">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="IFACE_ID" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OBJECT_TYPE" property="routerObjectType" jdbcType="VARCHAR"/>
+        <result column="ROUTER_OBJECT_CODE" property="routerObjectCode" jdbcType="VARCHAR"/>
+        <result column="PLANT_CODE" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="ROUTER_DESCRIPTION" property="routerDescription" jdbcType="VARCHAR"/>
+        <result column="ROUTER_CODE" property="routerCode" jdbcType="VARCHAR"/>
+        <result column="ROUTER_START_DATE" property="routerStartDate" jdbcType="TIMESTAMP"/>
+        <result column="ROUTER_END_DATE" property="routerEndDate" jdbcType="TIMESTAMP"/>
+        <result column="ROUTER_STATUS" property="routerStatus" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="ROUTING_ALTERNATE" property="routingAlternate" jdbcType="VARCHAR"/>
+        <result column="OPERATION_SEQ_NUM" property="operationSeqNum" jdbcType="VARCHAR"/>
+        <result column="STANDARD_OPERATION_CODE" property="standardOperationCode" jdbcType="VARCHAR"/>
+        <result column="OPERATION_DESCRIPTION" property="operationDescription" jdbcType="VARCHAR"/>
+        <result column="OPERATION_START_DATE" property="operationStartDate" jdbcType="TIMESTAMP"/>
+        <result column="OPERATION_END_DATE" property="operationEndDate" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATION_DATE" property="erpCreationDate" jdbcType="TIMESTAMP"/>
+        <result column="ERP_CREATED_BY" property="erpCreatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATED_BY" property="erpLastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="ERP_LAST_UPDATE_DATE" property="erpLastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="BATCH_ID" property="batchId" jdbcType="DECIMAL"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="MESSAGE" property="message" jdbcType="VARCHAR"/>
+        <result column="UPDATE_METHOD" property="updateMethod" jdbcType="VARCHAR"/>
+        <result column="PROCESS_TIME" property="processTime" jdbcType="DECIMAL"/>
+        <result column="SPECIAL_INTRUCTION" property="specialIntruction" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="HEAD_ATTRIBUTE1" property="headAttribute1" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE2" property="headAttribute2" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE3" property="headAttribute3" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE4" property="headAttribute4" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE5" property="headAttribute5" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE6" property="headAttribute6" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE7" property="headAttribute7" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE8" property="headAttribute8" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE9" property="headAttribute9" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE10" property="headAttribute10" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE11" property="headAttribute11" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE12" property="headAttribute12" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE13" property="headAttribute13" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE14" property="headAttribute14" jdbcType="VARCHAR"/>
+        <result column="HEAD_ATTRIBUTE15" property="headAttribute15" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE1" property="lineAttribute1" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE2" property="lineAttribute2" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE3" property="lineAttribute3" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE4" property="lineAttribute4" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE5" property="lineAttribute5" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE6" property="lineAttribute6" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE7" property="lineAttribute7" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE8" property="lineAttribute8" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE9" property="lineAttribute9" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE10" property="lineAttribute10" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE11" property="lineAttribute11" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE12" property="lineAttribute12" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE13" property="lineAttribute13" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE14" property="lineAttribute14" jdbcType="VARCHAR"/>
+        <result column="LINE_ATTRIBUTE15" property="lineAttribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getUnprocessedList" resultMap="BaseResultMap">
+        select t.* from mt_routing_operation_iface t where t.STATUS in ('N', 'E') AND t.TENANT_ID = ${tenantId}
+    </select>
+
+    <select id="getMyUnprocessedList" resultMap="BaseResultMap">
+        select t.* from mt_routing_operation_iface t where t.STATUS in ('N', 'E') AND t.TENANT_ID = ${tenantId} AND t.BATCH_ID = #{batchId}
+    </select>
+</mapper>

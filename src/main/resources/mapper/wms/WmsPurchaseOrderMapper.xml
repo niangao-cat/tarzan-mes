@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsPurchaseOrderMapper">
+
+    <select id="selectPoDataByCondition" resultType="com.ruike.wms.domain.vo.WmsPurchaseOrderVO"
+            parameterType="com.ruike.wms.api.dto.WmsPurchaseOrderDTO">
+        SELECT
+        mid.INSTRUCTION_DOC_NUM,
+        mid.SITE_ID,
+        mms.SITE_CODE,
+        mms.SITE_NAME,
+        mid.INSTRUCTION_DOC_STATUS,
+        mid.SUPPLIER_ID,
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        mid.CUSTOMER_SITE_ID,
+        mcs.DESCRIPTION ADDRESS,
+        mid.CREATION_DATE,
+        mid.DEMAND_TIME,
+        mid.LAST_UPDATED_BY,
+        mid.REMARK,
+        mid.INSTRUCTION_DOC_ID,
+        mss.SUPPLIER_SITE_NAME,
+        mid.SUPPLIER_SITE_ID,
+        mid.INSTRUCTION_DOC_TYPE
+        FROM
+        mt_instruction_doc mid
+        LEFT JOIN mt_mod_site mms ON mid.SITE_ID = mms.SITE_ID
+        LEFT JOIN mt_supplier ms ON mid.SUPPLIER_ID = ms.SUPPLIER_ID
+        LEFT JOIN mt_customer_site mcs ON mcs.CUSTOMER_SITE_ID = mid.CUSTOMER_SITE_ID
+        LEFT JOIN mt_supplier_site mss ON ms.supplier_id = mss.supplier_id
+        LEFT JOIN mt_instruction mi ON mi.SOURCE_DOC_ID = mid.INSTRUCTION_DOC_ID
+        LEFT JOIN mt_instruction_attr mia ON mi.INSTRUCTION_ID = mia.INSTRUCTION_ID AND mia.ATTR_NAME = 'PO_RETURN_FLAG'
+        where 1=1
+            AND (mia.ATTR_VALUE !='X' OR mia.ATTR_VALUE is null )
+        <if test="codition.instructionNum != null and codition.instructionNum != ''">
+            and mid.INSTRUCTION_DOC_NUM like CONCAT(CONCAT('%', #{codition.instructionNum}), '%')
+        </if>
+        <choose>
+            <when test="codition.instructionDocType==null or codition.instructionDocType==''">
+                and mid.INSTRUCTION_DOC_TYPE in
+                <foreach collection="valueList" separator="," open="(" close=")" item="value" index="index">
+                    #{value}
+                </foreach>
+            </when>
+            <when test="codition.instructionDocType != null and codition.instructionDocType != ''">
+                and mid.INSTRUCTION_DOC_TYPE = #{codition.instructionDocType}
+            </when>
+        </choose>
+
+        <if test="codition.instructionStatus != null and codition.instructionStatus != ''">
+            and mid.INSTRUCTION_DOC_STATUS = #{codition.instructionStatus}
+        </if>
+        <if test="codition.siteId != null and codition.siteId != ''">
+            and mid.SITE_ID = #{codition.siteId}
+        </if>
+        <if test="codition.supplierId != null and codition.supplierId != ''">
+            and mid.SUPPLIER_ID = #{codition.supplierId}
+        </if>
+        <if test="codition.demandTimeFrom != null and codition.demandTimeFrom != ''">
+            and mid.DEMAND_TIME >= STR_TO_DATE(#{codition.demandTimeFrom},'%Y-%m-%d %H:%i:%s')
+        </if>
+        <if test="codition.demandTimeTo != null and codition.demandTimeTo != ''">
+            and mid.DEMAND_TIME &lt;= STR_TO_DATE(#{codition.demandTimeTo},'%Y-%m-%d %H:%i:%s')
+        </if>
+        <if test="codition.deliveryDocNum != null and codition.deliveryDocNum != ''">
+            AND EXISTS (
+            SELECT
+                1
+            FROM
+            wms_po_delivery_rel mdpl
+            JOIN mt_instruction_doc mid2 ON mdpl.delivery_doc_id = mid2.INSTRUCTION_DOC_ID
+            AND mid2.INSTRUCTION_DOC_TYPE = 'DELIVERY_DOC'
+            WHERE
+            mdpl.po_id = mid.INSTRUCTION_DOC_ID
+            AND mid2.INSTRUCTION_DOC_NUM LIKE  CONCAT(CONCAT('%',#{codition.deliveryDocNum}),'%')
+            )
+        </if>
+        <choose>
+            <when test="codition.materialId != null and codition.materialId != '' and codition.poType != null and codition.poType != ''">
+                and exists (select 1
+                              from mt_instruction mi,
+                                   mt_instruction_attr mia
+                             where mi.source_doc_id = mid.instruction_doc_id
+                               and mi.tenant_id = mid.tenant_id
+                               and mi.instruction_id = mia.instruction_id
+                               and mi.tenant_id = mia.tenant_id
+                               and mia.attr_name = 'PO_TYPE'
+                               and mia.attr_value = #{codition.poType}
+                               and mi.material_id = #{codition.materialId})
+            </when>
+            <otherwise>
+                <if test="codition.materialId != null and codition.materialId != ''">
+                    and exists (select 1
+                                  from mt_instruction mi
+                                 where mi.source_doc_id = mid.instruction_doc_id
+                                   and mi.tenant_id = mid.tenant_id
+                                   and mi.material_id = #{codition.materialId})
+                </if>
+                <if test="codition.poType != null and codition.poType != ''">
+                    and exists (select 1
+                                  from mt_instruction mi,
+                                       mt_instruction_attr mia
+                                 where mi.source_doc_id = mid.instruction_doc_id
+                                   and mi.tenant_id = mid.tenant_id
+                                   and mi.instruction_id = mia.instruction_id
+                                   and mi.tenant_id = mia.tenant_id
+                                   and mia.attr_name = 'PO_TYPE'
+                                   and mia.attr_value = #{codition.poType})
+                </if>
+            </otherwise>
+        </choose>
+        GROUP BY
+            mid.INSTRUCTION_DOC_NUM,
+            mid.SITE_ID,
+            mms.SITE_CODE,
+            mms.SITE_NAME,
+            mid.INSTRUCTION_DOC_STATUS,
+            mid.SUPPLIER_ID,
+            ms.SUPPLIER_CODE,
+            ms.SUPPLIER_NAME,
+            mid.CUSTOMER_SITE_ID,
+            mcs.DESCRIPTION,
+            mid.CREATION_DATE,
+            mid.DEMAND_TIME,
+            mid.LAST_UPDATED_BY,
+            mid.REMARK,
+            mid.INSTRUCTION_DOC_ID,
+            mss.SUPPLIER_SITE_NAME,
+            mid.SUPPLIER_SITE_ID,
+            mid.INSTRUCTION_DOC_TYPE
+        ORDER BY mid.CREATION_DATE DESC
+    </select>
+
+    <select id="queryMtInstructionList" resultType="tarzan.instruction.domain.entity.MtInstruction">
+        SELECT
+	        mi.*
+        FROM
+	        mt_instruction mi
+	        LEFT JOIN mt_instruction_attr mia ON mi.INSTRUCTION_ID = mia.INSTRUCTION_ID AND mia.ATTR_NAME = 'PO_RETURN_FLAG'
+        WHERE
+	        mi.SOURCE_DOC_ID = #{sourceInstructionId}
+	    AND (mi.SOURCE_INSTRUCTION_ID = '' OR  mi.SOURCE_INSTRUCTION_ID is NULL )
+	    AND (mia.ATTR_VALUE != 'X' OR mia.ATTR_VALUE is null)
+    </select>
+
+</mapper>

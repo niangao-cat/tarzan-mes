@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeInspectorItemGroupRelMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeInspectorItemGroupRel">
+        <result column="rel_id" property="relId" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="DECIMAL"/>
+        <result column="privilege_type" property="privilegeType" jdbcType="VARCHAR"/>
+        <result column="item_group_id" property="itemGroupId" jdbcType="VARCHAR"/>
+        <result column="enable_flag" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="relPageQuery" resultType="com.ruike.hme.domain.vo.HmeInspectorItemGroupRelVO">
+        select hiigr.rel_id, hiigr.user_id, iu.login_name, iu.real_name, hiigr.privilege_type,
+               hiigr.item_group_id, wig.item_group_code, wig.item_group_description, hiigr.enable_flag
+        from hme_inspector_item_group_rel hiigr,
+             hzero_platform.iam_user iu,
+             wms_item_group wig
+        where hiigr.tenant_id = #{tenantId}
+        and iu.id = hiigr.user_id
+        and wig.tenant_id = hiigr.tenant_id
+        and wig.item_group_code = hiigr.item_group_id
+        <if test="dto.loginName != null and dto.loginName != ''">
+            and iu.login_name like CONCAT('%',#{dto.loginName},'%')
+        </if>
+        <if test="dto.inspectPowerType != null and dto.inspectPowerType != ''">
+            and hiigr.privilege_type = #{dto.inspectPowerType}
+        </if>
+        <if test="dto.itemGroup != null and dto.itemGroup != ''">
+            and hiigr.item_group_id like CONCAT('%',#{dto.itemGroup},'%')
+        </if>
+        <if test="dto.enableFlag != null and dto.enableFlag != ''">
+            and hiigr.enable_flag = #{dto.enableFlag}
+        </if>
+        order by hiigr.last_update_date desc
+    </select>
+
+    <select id="getUserIdByLoginName" resultType="java.lang.Long">
+        select iu.id
+        from hzero_platform.iam_user iu
+        where iu.login_name = #{loginName}
+        limit 1
+    </select>
+</mapper>

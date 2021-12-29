@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEquipmentWkcRelMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEquipmentWkcRel">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="EQUIPMENT_WKC_REL_ID" property="equipmentWkcRelId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="equipment_id" property="equipmentId" jdbcType="VARCHAR"/>
+        <result column="business_id" property="businessId" jdbcType="VARCHAR"/>
+        <result column="work_shop_id" property="workShopId" jdbcType="VARCHAR"/>
+        <result column="prod_line_id" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="line_id" property="lineId" jdbcType="VARCHAR"/>
+        <result column="process_id" property="processId" jdbcType="VARCHAR"/>
+        <result column="station_id" property="stationId" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+    <select id="queryBaseData" resultType="com.ruike.hme.domain.vo.HmeEquipWkcRelReturnVO">
+        SELECT
+            EWR.TENANT_ID,
+            EWR.EQUIPMENT_WKC_REL_ID,
+            EWR.EQUIPMENT_ID,
+            ewr.SITE_ID,
+            mms.SITE_CODE,
+            mms.SITE_NAME,
+            HE.ASSET_ENCODING,
+            HE.ASSET_NAME ASSET_DESC,
+            EWR.BUSINESS_ID,
+            MMA.AREA_CODE BUSINESS_CODE,
+            MMA.DESCRIPTION BUSINESS_DESC,
+            EWR.WORK_SHOP_ID,
+            MMA2.AREA_CODE WORK_SHOP_CODE,
+            MMA2.DESCRIPTION WORK_SHOP_DESC,
+            EWR.PROD_LINE_ID,
+            MPL.PROD_LINE_CODE,
+            MPL.DESCRIPTION PRO_LINE_DESC,
+            EWR.LINE_ID,
+            MMW.WORKCELL_CODE LINE_WORKCELL_CODE,
+            MMW.WORKCELL_NAME LINE_WORKCELL_NAME,
+            EWR.PROCESS_ID,
+            MMW2.WORKCELL_CODE PROCESS_WORKCELL_CODE,
+            MMW2.WORKCELL_NAME PROCESS_WORKCELL_NAME,
+            EWR.STATION_ID,
+            MMW3.WORKCELL_CODE STATION_WORKCELL_CODE,
+            MMW3.WORKCELL_NAME STATION_WORKCELL_NAME,
+            EWR.ENABLE_FLAG,
+            ewr.OBJECT_VERSION_NUMBER
+        FROM
+            HME_EQUIPMENT_WKC_REL EWR
+            LEFT JOIN HME_EQUIPMENT HE ON HE.EQUIPMENT_ID = EWR.EQUIPMENT_ID
+            LEFT JOIN MT_MOD_AREA MMA ON EWR.BUSINESS_ID = MMA.AREA_ID AND MMA.AREA_CATEGORY = 'SYB' AND MMA.ENABLE_FLAG = 'Y'
+            LEFT JOIN MT_MOD_AREA MMA2 ON MMA2.AREA_ID = EWR.WORK_SHOP_ID
+            LEFT JOIN MT_MOD_PRODUCTION_LINE MPL ON MPL.PROD_LINE_ID = EWR.PROD_LINE_ID
+            LEFT JOIN MT_MOD_WORKCELL MMW ON EWR.LINE_ID = MMW.WORKCELL_ID AND MMW.WORKCELL_TYPE = 'LINE'
+            LEFT JOIN MT_MOD_WORKCELL MMW2 ON EWR.PROCESS_ID = MMW2.WORKCELL_ID AND MMW2.WORKCELL_TYPE = 'PROCESS'
+            LEFT JOIN MT_MOD_WORKCELL MMW3 ON EWR.STATION_ID = MMW3.WORKCELL_ID AND MMW3.WORKCELL_TYPE = 'STATION'
+            LEFT JOIN mt_mod_site mms on mms.SITE_ID = ewr.SITE_ID
+        where ewr.TENANT_ID = #{tenantId}
+            <if test="dto.assetEncoding!=null and dto.assetEncoding != ''">
+                and he.ASSET_ENCODING LIKE CONCAT('%',#{dto.assetEncoding},'%')
+            </if>
+            <if test="dto.stationId!=null and dto.stationId != ''">
+                and ewr.station_id = #{dto.stationId}
+            </if>
+            <if test="dto.businessId!=null and dto.businessId != ''">
+                and ewr.BUSINESS_ID = #{dto.businessId}
+            </if>
+            <if test="dto.workShopId!=null and dto.workShopId != ''">
+                and ewr.work_shop_id = #{dto.workShopId}
+            </if>
+            <if test="dto.prodLineId!=null and dto.prodLineId != ''">
+                and ewr.PROD_LINE_ID = #{dto.prodLineId}
+            </if>
+            <if test="dto.lineId!=null and dto.lineId != ''">
+                and ewr.LINE_ID = #{dto.lineId}
+            </if>
+            <if test="dto.processId!=null and dto.processId != ''">
+                and ewr.process_id = #{dto.processId}
+            </if>
+    </select>
+</mapper>

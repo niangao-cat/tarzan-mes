@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsPqcHeaderMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.qms.domain.entity.QmsPqcHeader">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="PQC_HEADER_ID" property="pqcHeaderId" jdbcType="VARCHAR"/>
+        <result column="PQC_NUMBER" property="pqcNumber" jdbcType="VARCHAR"/>
+        <result column="WO_ID" property="woId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="QC_BY" property="qcBy" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_VERSION" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="INSPECTION_STATUS" property="inspectionStatus" jdbcType="VARCHAR"/>
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="SHIFT_CODE" property="shiftCode" jdbcType="VARCHAR"/>
+        <result column="CREATED_DATE" property="createdDate" jdbcType="DATE"/>
+        <result column="INSPECTION_START_DATE" property="inspectionStartDate" jdbcType="DATE"/>
+        <result column="INSPECTION_FINISH_DATE" property="inspectionFinishDate" jdbcType="DATE"/>
+        <result column="INSPECTION_TIME" property="inspectionTime" jdbcType="DECIMAL"/>
+        <result column="INSPECTION_RESULT" property="inspectionResult" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="DATE"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="prodLineQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO">
+        select pl.PROD_LINE_ID, pl.PROD_LINE_NAME, 'PRODLINE' as type, pl.PROD_LINE_ID as id
+        from mt_mod_production_line pl
+        where pl.TENANT_ID = #{tenantId}
+        <if test="prodLineId != null">
+            and pl.PROD_LINE_ID = #{prodLineId}
+        </if>
+    </select>
+
+    <select id="processQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO2">
+        select mmw.WORKCELL_ID as PROCESS_ID, mmw.WORKCELL_NAME as PROCESS_NAME, 'PROCESS' as type, mmw.WORKCELL_ID as id
+        from mt_mod_workcell mmw
+        where mmw.TENANT_ID = #{tenantId}
+        and mmw.WORKCELL_ID = #{workcellId}
+        and mmw.WORKCELL_TYPE = 'PROCESS'
+    </select>
+
+    <select id="getWoIdBySn" resultType="java.lang.String">
+        select me.WORK_ORDER_ID
+        from mt_material_lot mml
+        left join mt_eo me
+        on me.EO_ID = mml.EO_ID
+        where mml.TENANT_ID = #{tenantId}
+        and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+    </select>
+
+    <select id="pqcListQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO3">
+        <if test="dto.type == 'PRODLINE'">
+            select qph.PQC_HEADER_ID, qph.PQC_NUMBER, qph.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+                   qph.WO_ID as work_order_id,mwo.WORK_ORDER_NUM, qph.INSPECTION_RESULT, qph.INSPECTION_STATUS,
+                   qph.INSPECTION_FINISH_DATE
+            from mt_work_order mwo
+            left join qms_pqc_header qph
+            on qph.TENANT_ID = mwo.TENANT_ID
+            and qph.WO_ID = mwo.WORK_ORDER_ID
+            left join mt_material mm
+            on mm.MATERIAL_ID = qph.MATERIAL_ID
+            where mwo.TENANT_ID = #{tenantId}
+            and mwo.PRODUCTION_LINE_ID = #{dto.prodLineId}
+            and mwo.`STATUS` in ('RELEASED', 'EORELEASED')
+            and qph.PQC_HEADER_ID is not null
+            order by qph.CREATED_DATE desc
+        </if>
+        <if test="dto.type == 'PROCESS'">
+            select qph.PQC_HEADER_ID, qph.PQC_NUMBER, mm.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+                   mwo.WORK_ORDER_ID,mwo.WORK_ORDER_NUM, qph.INSPECTION_RESULT, qph.INSPECTION_STATUS,
+                   qph.INSPECTION_FINISH_DATE
+            from mt_work_order mwo
+            left join qms_pqc_header qph
+            on qph.TENANT_ID = mwo.TENANT_ID
+            and qph.WO_ID = mwo.WORK_ORDER_ID
+            left join mt_material mm
+            on mm.MATERIAL_ID = qph.MATERIAL_ID
+            left join qms_pqc_line qpl
+            on qpl.PQC_HEADER_ID = qph.PQC_HEADER_ID
+            and qpl.TENANT_ID = mwo.TENANT_ID
+            where mwo.TENANT_ID = #{tenantId}
+            and mwo.PRODUCTION_LINE_ID = #{dto.prodLineId}
+            and mwo.`STATUS` in ('RELEASED', 'EORELEASED')
+            and qpl.PROCESS_ID = #{dto.processId}
+            and qph.PQC_HEADER_ID is not null
+            group by qph.PQC_HEADER_ID, mm.MATERIAL_ID, mwo.WORK_ORDER_ID
+            order by qph.CREATED_DATE desc
+        </if>
+    </select>
+
+    <select id="pqcListQueryPda" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO3">
+        <if test="dto.type == 'PRODLINE'">
+            select qph.PQC_HEADER_ID, qph.PQC_NUMBER, qph.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+            qph.WO_ID as work_order_id,mwo.WORK_ORDER_NUM, qph.INSPECTION_RESULT, qph.INSPECTION_STATUS,
+            qph.INSPECTION_FINISH_DATE
+            from mt_work_order mwo
+            left join qms_pqc_header qph
+            on qph.TENANT_ID = mwo.TENANT_ID
+            and qph.WO_ID = mwo.WORK_ORDER_ID
+            left join mt_material mm
+            on mm.MATERIAL_ID = qph.MATERIAL_ID
+            where mwo.TENANT_ID = #{tenantId}
+            and mwo.PRODUCTION_LINE_ID = #{dto.prodLineId}
+            and mwo.`STATUS` in ('RELEASED', 'EORELEASED')
+            and qph.PQC_HEADER_ID is not null
+            <if test="dateFrom != null">
+                and qph.CREATION_DATE &gt;= DATE_FORMAT(#{dateFrom}, '%Y-%m-%d %T')
+            </if>
+            <if test="dateTo != null">
+                and qph.CREATION_DATE &lt;= DATE_FORMAT(#{dateTo}, '%Y-%m-%d %T')
+            </if>
+            order by qph.CREATED_DATE desc
+        </if>
+        <if test="dto.type == 'PROCESS'">
+            select qph.PQC_HEADER_ID, qph.PQC_NUMBER, mm.MATERIAL_ID, mm.MATERIAL_CODE, mm.MATERIAL_NAME,
+            mwo.WORK_ORDER_ID,mwo.WORK_ORDER_NUM, qph.INSPECTION_RESULT, qph.INSPECTION_STATUS,
+            qph.INSPECTION_FINISH_DATE
+            from mt_work_order mwo
+            left join qms_pqc_header qph
+            on qph.TENANT_ID = mwo.TENANT_ID
+            and qph.WO_ID = mwo.WORK_ORDER_ID
+            left join mt_material mm
+            on mm.MATERIAL_ID = qph.MATERIAL_ID
+            left join qms_pqc_line qpl
+            on qpl.PQC_HEADER_ID = qph.PQC_HEADER_ID
+            and qpl.TENANT_ID = mwo.TENANT_ID
+            where mwo.TENANT_ID = #{tenantId}
+            and mwo.PRODUCTION_LINE_ID = #{dto.prodLineId}
+            and mwo.`STATUS` in ('RELEASED', 'EORELEASED')
+            and qpl.PROCESS_ID = #{dto.processId}
+            and qph.PQC_HEADER_ID is not null
+            <if test="dateFrom != null">
+                and qph.CREATION_DATE &gt;= DATE_FORMAT(#{dateFrom}, '%Y-%m-%d %T')
+            </if>
+            <if test="dateTo != null">
+                and qph.CREATION_DATE &lt;= DATE_FORMAT(#{dateTo}, '%Y-%m-%d %T')
+            </if>
+            group by qph.PQC_HEADER_ID, mm.MATERIAL_ID, mwo.WORK_ORDER_ID
+            order by qph.CREATED_DATE desc
+        </if>
+    </select>
+
+    <select id="headDataQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO4">
+        SELECT
+            qph.PQC_HEADER_ID,
+            qph.PROD_LINE_ID,
+            mmpl.PROD_LINE_NAME,
+            qph.MATERIAL_ID,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            qph.WO_ID AS work_order_id,
+            mwo.WORK_ORDER_NUM,
+            qph.PQC_NUMBER,
+            qph.INSPECTION_FINISH_DATE,
+            qph.QC_BY,
+            qph.INSPECTION_RESULT,
+            qph.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            qph.SHIFT_CODE,
+            qph.INSPECTION_STATUS,
+            qph.REMARK
+        FROM
+            qms_pqc_header qph
+        LEFT JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_ID = qph.PROD_LINE_ID
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = qph.MATERIAL_ID
+        LEFT JOIN mt_work_order mwo ON mwo.work_order_id = qph.WO_ID
+        LEFT JOIN mt_material_lot mml ON mml.MATERIAL_LOT_ID = qph.MATERIAL_LOT_ID
+        WHERE qph.TENANT_ID = #{tenantId}
+        and qph.PQC_HEADER_ID = #{pqcHeaderId}
+    </select>
+
+    <select id="lineDataQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO5">
+        select qpl.PQC_LINE_ID, qpl.NUMBER, qpl.INSPECTION_TYPE, qpl.INSPECTION, qpl.STANDARD_FROM, qpl.STANDARD_TO,
+               qpl.STANDARD_UOM as UOM_CODE, qpl.STANDARD_TEXT, qpl.INSPECTION_TOOL, qpl.INSPECTION_RESULT, qpl.STANDARD_TYPE,
+               qpl.ATTACHMENT_UUID
+        from qms_pqc_line qpl
+        where qpl.TENANT_ID = #{tenantId}
+        and qpl.PQC_HEADER_ID = #{pqcHeaderId}
+    </select>
+
+    <select id="pqcResultQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO7">
+        select qpd.NUMBER, qpd.PQC_DETAILS_ID, qpd.RESULT, qpd.REMARK
+        from qms_pqc_details qpd
+        where qpd.TENANT_ID = #{tenantId}
+        and qpd.PQC_LINE_ID = #{pqcLineId}
+    </select>
+
+    <select id="maxDetailsNum" resultType="java.lang.Integer">
+        select IFNULL(max(qpd.NUMBER),0)
+        from qms_pqc_details qpd
+        where qpd.TENANT_ID = #{tenantId}
+        and qpd.PQC_HEADER_ID = #{pqcHeaderId}
+        and qpd.PQC_LINE_ID = #{pqcLineId}
+    </select>
+
+    <select id="areaLovQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO10">
+        SELECT
+            MMA.AREA_ID,
+            MMA.AREA_CODE,
+            MMAT.DESCRIPTION,
+            MMA.AREA_CATEGORY
+        FROM
+            MT_MOD_AREA MMA
+        LEFT JOIN MT_MOD_AREA_TL MMAT ON MMA.AREA_ID = MMAT.AREA_ID
+        AND MMAT.LANG = 'zh_CN'
+        WHERE
+            MMA.TENANT_ID = #{tenantId}
+        AND MMA.AREA_CATEGORY = 'SYB'
+        AND MMA.ENABLE_FLAG = 'Y'
+        <if test="queryInfo != null">
+            AND (
+            MMA.AREA_CODE LIKE CONCAT('%',#{queryInfo},'%')
+            OR MMAT.DESCRIPTION LIKE CONCAT('%',#{queryInfo},'%') )
+        </if>
+    </select>
+
+    <select id="workshopLovQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO11">
+        SELECT
+            mma.AREA_ID,
+            mma.AREA_CODE,
+            mma.DESCRIPTION,
+            mor.PARENT_ORGANIZATION_ID
+        FROM
+            mt_mod_organization_rel mor
+        LEFT JOIN mt_mod_area mma ON mma.area_id = mor.ORGANIZATION_ID
+        AND mma.ENABLE_FLAG = 'Y'
+        WHERE
+            mma.TENANT_ID = #{tenantId}
+        AND mor.PARENT_ORGANIZATION_TYPE = 'AREA'
+        AND mor.ORGANIZATION_TYPE = 'AREA'
+        <if test="queryInfo != null">
+            AND (
+            mma.AREA_CODE LIKE CONCAT('%',#{queryInfo},'%')
+            OR mma.DESCRIPTION LIKE CONCAT('%',#{queryInfo},'%') )
+        </if>
+    </select>
+
+    <select id="prodLineLovQuery" resultType="com.ruike.qms.domain.vo.QmsPqcHeaderVO12">
+        SELECT
+            MMPL.PROD_LINE_ID,
+            MMPL.PROD_LINE_CODE,
+            MMPL.PROD_LINE_NAME
+        FROM
+            mt_mod_production_line MMPL
+            LEFT JOIN mt_mod_organization_rel MMOR ON MMOR.PARENT_ORGANIZATION_TYPE = 'SITE'
+            AND MMOR.ORGANIZATION_TYPE = 'PROD_LINE'
+            AND MMOR.ORGANIZATION_ID = MMPL.PROD_LINE_ID
+            LEFT JOIN mt_user_organization MUO ON MUO.ORGANIZATION_TYPE = 'SITE'
+            AND MUO.ORGANIZATION_ID = MMOR.PARENT_ORGANIZATION_ID
+            AND MMOR.TOP_SITE_ID = MUO.ORGANIZATION_ID
+        LEFT JOIN mt_mod_organization_rel MMOR2 ON MMOR2.PARENT_ORGANIZATION_TYPE = 'AREA'
+            AND MMOR2.ORGANIZATION_TYPE = 'PROD_LINE'
+            AND MMOR2.ORGANIZATION_ID = MMPL.PROD_LINE_ID
+        WHERE
+        MMPL.TENANT_ID = #{tenantId}
+        <if test="queryInfo != null">
+            AND (MMPL.PROD_LINE_CODE Like CONCAT('%',#{queryInfo},'%')
+            OR MMPL.PROD_LINE_NAME Like CONCAT('%',#{queryInfo},'%'))
+        </if>
+        GROUP BY
+            MMPL.PROD_LINE_ID,
+            MMPL.PROD_LINE_CODE,
+            MMPL.PROD_LINE_NAME
+    </select>
+    <select id="queryEoIdByMaterialLotCode" resultType="java.lang.String">
+        select
+            mml.EO_ID
+        from mt_material_lot mml
+        where mml.TENANT_ID = #{tenantId}
+            and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+    </select>
+    <select id="getWoIdBySnSupplement" resultType="java.lang.String">
+        select
+            mmla.ATTR_VALUE
+        from mt_material_lot mml
+            left join mt_material_lot_attr mmla
+                on mmla.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+                and mmla.ATTR_NAME = 'WORK_ORDER_ID'
+        where mml.TENANT_ID = #{tenantId}
+            and mml.MATERIAL_LOT_CODE = #{materialLotCode}
+    </select>
+</mapper>

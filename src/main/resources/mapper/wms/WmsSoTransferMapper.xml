@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsSoTransferMapper">
+
+
+    <select id="querySo" resultType="com.ruike.wms.api.dto.WmsSoTransferReturnDTO">
+        SELECT
+            mml.MATERIAL_LOT_ID,
+            mml.MATERIAL_LOT_CODE,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mmla1.ATTR_VALUE MATERIAL_VERSION,
+            mmla2.ATTR_VALUE STATUS,
+            mml.PRIMARY_UOM_QTY qty,
+            mu.UOM_CODE,
+            mml.LOT,
+            mml.QUALITY_STATUS,
+            mms.SITE_NAME,
+            mmlo1.LOCATOR_CODE warehouse_code,
+            mmlo.LOCATOR_CODE,
+            mmla3.ATTR_VALUE SO_NUM,
+            mmla4.ATTR_VALUE SO_LINE_NUM
+        FROM
+            mt_material_lot mml
+        LEFT JOIN mt_material mm ON mml.MATERIAL_ID = mm.MATERIAL_ID
+        AND mml.TENANT_ID = mm.TENANT_ID
+        LEFT JOIN mt_material_lot_attr mmla1 ON mmla1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla1.TENANT_ID = mml.TENANT_ID
+        AND mmla1.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr mmla2 ON mmla2.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla2.TENANT_ID = mml.TENANT_ID
+        AND mmla2.ATTR_NAME = 'STATUS'
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = mml.PRIMARY_UOM_ID
+        AND mu.TENANT_ID = mml.TENANT_ID
+        LEFT JOIN mt_mod_site mms ON mms.SITE_ID = mml.SITE_ID
+        LEFT JOIN mt_mod_locator mmlo ON mmlo.LOCATOR_ID = mml.LOCATOR_ID
+        LEFT JOIN mt_mod_locator mmlo1 ON mmlo.PARENT_LOCATOR_ID = mmlo1.LOCATOR_ID
+        LEFT JOIN mt_material_lot_attr mmla3 ON mmla3.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla3.TENANT_ID = mml.TENANT_ID
+        AND mmla3.ATTR_NAME = 'SO_NUM'
+        LEFT JOIN mt_material_lot_attr mmla4 ON mmla4.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mmla4.TENANT_ID = mml.TENANT_ID
+        AND mmla4.ATTR_NAME = 'SO_LINE_NUM'
+        where mml.TENANT_ID=#{tenantId}
+        <if test="dto.materialLotCode != null and dto.materialLotCode != ''">
+            AND mml.MATERIAL_LOT_CODE LIKE CONCAT(#{dto.materialLotCode},"%")
+        </if>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            AND mml.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            AND mm.MATERIAL_CODE LIKE CONCAT(#{dto.materialCode},"%")
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            AND mm.MATERIAL_NAME LIKE CONCAT(#{dto.materialName},"%")
+        </if>
+        <if test="dto.soNum != null and dto.soNum != ''">
+            AND mmla3.ATTR_VALUE LIKE CONCAT(#{dto.soNum},"%")
+        </if>
+        <if test="dto.soLineNum != null and dto.soLineNum != ''">
+            AND mmla4.ATTR_VALUE LIKE CONCAT(#{dto.soLineNum},"%")
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion != ''">
+            AND mmla1.ATTR_VALUE LIKE CONCAT(#{dto.materialVersion},"%")
+        </if>
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND mml.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.siteIds != null and dto.siteIds.size > 0 ">
+            AND mml.site_id IN
+            <foreach collection="dto.siteIds" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dto.warehouseId != null and dto.warehouseId != ''">
+            AND mmlo1.locator_id = #{dto.warehouseId}
+        </if>
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            AND mmlo.locator_id = #{dto.locatorId}
+        </if>
+        <if test="dto.status != null and dto.status != ''">
+            AND mmla2.ATTR_VALUE = #{dto.status}
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            AND mml.QUALITY_STATUS = #{dto.qualityStatus}
+        </if>
+        <if test="dto.lot != null and dto.lot != ''">
+            AND mml.LOT LIKE CONCAT(#{dto.lot},"%")
+        </if>
+    </select>
+</mapper>

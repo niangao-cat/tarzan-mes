@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeSelfMadeRepairMapper">
+
+    <select id="querySelfMadeRepairByCode" resultType="com.ruike.hme.domain.vo.HmeSelfMadeRepairVO">
+        SELECT
+            wo.WORK_ORDER_NUM,
+            wo.WORK_ORDER_ID,
+            wo.SITE_ID,
+            wo.PRODUCTION_LINE_ID,
+            eo.EO_NUM,
+            eo.EO_ID,
+            eo.status,
+            ea.ATTR_VALUE REWORK_MATERIAL_LOT,
+            IFNULL(mmla.ATTR_VALUE, 'N') AF_FLAG,
+            mm.MATERIAL_CODE,
+			mm.MATERIAL_NAME,
+			wo.PRODUCTION_VERSION VERSION
+        FROM
+            mt_eo eo,
+            mt_eo_attr ea,
+            mt_work_order wo,
+            mt_material_lot mml
+            LEFT JOIN mt_material_lot_attr mmla ON mmla.material_lot_id = mml.material_lot_id AND mmla.attr_name = 'AF_FLAG',
+            mt_material mm
+        WHERE
+            eo.TENANT_ID = #{tenantId}
+        AND eo.EO_ID = ea.EO_ID
+        AND eo.`STATUS` = 'WORKING'
+        AND ea.ATTR_NAME = 'REWORK_MATERIAL_LOT'
+        AND eo.WORK_ORDER_ID = wo.WORK_ORDER_ID
+        AND mml.TENANT_ID = ea.TENANT_ID
+        AND mml.MATERIAL_LOT_CODE = ea.ATTR_VALUE
+        AND mm.MATERIAL_ID = mml.MATERIAL_ID
+        AND ea.ATTR_VALUE = #{materialLotCode}
+    </select>
+
+    <select id="queryProItemType" resultType="java.lang.String">
+        SELECT
+            attr.ATTR_VALUE
+        FROM
+            mt_material_site ms
+        LEFT JOIN mt_work_order wo ON ms.MATERIAL_ID = wo.MATERIAL_ID
+        LEFT JOIN mt_material_site_attr attr ON attr.MATERIAL_SITE_ID = ms.MATERIAL_SITE_ID AND attr.ATTR_NAME = 'attribute18'
+        WHERE
+            ms.TENANT_ID = #{tenantId}
+        AND ms.SITE_ID = #{siteId}
+        AND wo.WORK_ORDER_ID = #{workOrderId}
+    </select>
+
+    <select id="querySuggestSnCode" resultType="java.lang.String">
+        SELECT
+            me.IDENTIFICATION
+        FROM
+            mt_eo me,
+            mt_material_lot mml
+        WHERE me.TENANT_ID = #{tenantId}
+        AND mml.MATERIAL_LOT_CODE = me.IDENTIFICATION
+        AND mml.TENANT_ID = mml.TENANT_ID
+        AND mml.ENABLE_FLAG = 'Y'
+        AND me.eo_id = #{eoId}
+    </select>
+
+    <select id="querySelfReworkWorkOrder" resultType="tarzan.order.domain.entity.MtWorkOrder">
+        SELECT
+            mwo.WORK_ORDER_NUM,
+            mwo.WORK_ORDER_ID,
+            mwo.`STATUS`
+        FROM
+            hme_repair_work_order_create woc,
+            mt_work_order mwo
+        WHERE
+		    woc.tenant_id = #{tenantId}
+		AND woc.`STATUS` = 'S'
+		AND woc.MATERIAL_LOT_CODE = #{materialLotCode}
+		AND mwo.WORK_ORDER_NUM = woc.WORK_ORDER_NUM
+		AND mwo.TENANT_ID = woc.tenant_id
+    </select>
+
+</mapper>

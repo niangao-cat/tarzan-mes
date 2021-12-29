@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEquipmentStocktakeDocMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEquipmentStocktakeDoc">
+        <result column="stocktake_id" property="stocktakeId" jdbcType="VARCHAR"/>
+        <result column="stocktake_num" property="stocktakeNum" jdbcType="VARCHAR"/>
+        <result column="stocktake_status" property="stocktakeStatus" jdbcType="VARCHAR"/>
+        <result column="stocktake_type" property="stocktakeType" jdbcType="VARCHAR"/>
+        <result column="stocktake_range" property="stocktakeRange" jdbcType="DECIMAL"/>
+        <result column="business_id" property="businessId" jdbcType="VARCHAR"/>
+        <result column="posting_date_from" property="postingDateFrom" jdbcType="DATE"/>
+        <result column="posting_date_to" property="postingDateTo" jdbcType="DATE"/>
+        <result column="ledger_type" property="ledgerType" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRepresentationList"
+            resultType="com.ruike.hme.api.dto.representation.HmeEquipmentStocktakeDocRepresentation">
+        select esd.tenant_id
+        ,esd.stocktake_id
+        ,esd.stocktake_num
+        ,esd.stocktake_status
+        ,esd.stocktake_range
+        ,esd.stocktake_type
+        ,esd.business_id
+        ,mma.area_name business_name
+        ,esd.posting_date_from
+        ,esd.posting_date_to
+        ,esd.ledger_type
+        ,esd.remark
+        ,esd.creation_date
+        from hme_equipment_stocktake_doc esd
+        left join mt_mod_area mma on esd.business_id = mma.AREA_ID
+        where esd.tenant_id = #{query.tenantId}
+        <if test="query.stocktakeId != null">
+            and esd.stocktake_id = #{query.stocktakeId}
+        </if>
+        <if test="query.stocktakeNum != null">
+            <bind name="stocktakeNumLike" value="'%'+query.stocktakeNum+'%'"/>
+            and esd.stocktake_num like #{stocktakeNumLike}
+        </if>
+        <if test="query.stocktakeStatus != null">
+            and FIND_IN_SET(esd.stocktake_status,#{query.stocktakeStatus})
+        </if>
+        <if test="query.stocktakeType != null">
+            and esd.stocktake_type = #{query.stocktakeType}
+        </if>
+        <if test="query.stocktakeRange != null">
+            and esd.stocktake_range = #{query.stocktakeRange}
+        </if>
+        <if test="query.businessId != null">
+            and esd.business_id = #{query.businessId}
+        </if>
+        <if test="query.postingDateFrom != null">
+            and esd.posting_date_from = #{query.postingDateFrom}
+        </if>
+        <if test="query.postingDateTo != null">
+            and esd.posting_date_to = #{query.postingDateTo}
+        </if>
+        <if test="query.creationDateFrom != null">
+            and esd.creation_date &gt;= #{query.creationDateFrom}
+        </if>
+        <if test="query.creationDateTo != null">
+            and esd.creation_date &lt;= #{query.creationDateTo}
+        </if>
+        <if test="query.ledgerType != null">
+            and esd.ledger_type = #{query.ledgerType}
+        </if>
+        order by esd.creation_date desc
+    </select>
+
+    <select id="selectExportList" resultType="com.ruike.hme.domain.vo.HmeEquipmentStocktakeExportVO">
+        select esd.stocktake_num
+        , esd.stocktake_status
+        , esd.stocktake_type
+        , esd.stocktake_range
+        , mma.area_name business_name
+        , esd.posting_date_from
+        , esd.posting_date_to
+        , esd.remark doc_remark
+        , eq.asset_encoding
+        , eq.asset_name
+        , eq.frequency
+        , eq.equipment_status
+        , eq.location
+        , hesa.stocktake_date
+        , hesa.stocktake_flag
+        , hesa.remark
+        , mmaq.DESCRIPTION asset_business_name
+        , esd.ledger_type
+        from hme_equipment_stocktake_doc esd
+        left join mt_mod_area mma on esd.business_id = mma.AREA_ID
+        , hme_equipment_stocktake_actual hesa
+        , hme_equipment eq
+        left join mt_mod_area mmaq on mmaq.AREA_ID = eq.business_id
+        where esd.stocktake_id = hesa.stocktake_id
+        and hesa.equipment_id = eq.EQUIPMENT_ID
+        and esd.tenant_id = #{query.tenantId}
+        <if test="query.stocktakeId != null">
+            and esd.stocktake_id = #{query.stocktakeId}
+        </if>
+        <if test="query.stocktakeNum != null">
+            <bind name="stocktakeNumLike" value="'%'+query.stocktakeNum+'%'"/>
+            and esd.stocktake_num like #{stocktakeNumLike}
+        </if>
+        <if test="query.stocktakeStatus != null">
+            and FIND_IN_SET(esd.stocktake_status,#{query.stocktakeStatus})
+        </if>
+        <if test="query.stocktakeType != null">
+            and esd.stocktake_type = #{query.stocktakeType}
+        </if>
+        <if test="query.stocktakeRange != null">
+            and esd.stocktake_range = #{query.stocktakeRange}
+        </if>
+        <if test="query.businessId != null">
+            and esd.business_id = #{query.businessId}
+        </if>
+        <if test="query.postingDateFrom != null">
+            and esd.posting_date_from = #{query.postingDateFrom}
+        </if>
+        <if test="query.postingDateTo != null">
+            and esd.posting_date_to = #{query.postingDateTo}
+        </if>
+        <if test="query.creationDateFrom != null">
+            and esd.creation_date &gt;= #{query.creationDateFrom}
+        </if>
+        <if test="query.creationDateTo != null">
+            and esd.creation_date &lt;= #{query.creationDateTo}
+        </if>
+        <if test="query.ledgerType != null">
+            and esd.ledger_type = #{query.ledgerType}
+        </if>
+    </select>
+
+</mapper>

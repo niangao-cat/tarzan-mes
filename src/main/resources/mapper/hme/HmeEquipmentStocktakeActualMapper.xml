@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeEquipmentStocktakeActualMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeEquipmentStocktakeActual">
+        <result column="stocktake_actual_id" property="stocktakeActualId" jdbcType="VARCHAR"/>
+        <result column="stocktake_id" property="stocktakeId" jdbcType="VARCHAR"/>
+        <result column="equipment_id" property="equipmentId" jdbcType="VARCHAR"/>
+        <result column="stocktake_flag" property="stocktakeFlag" jdbcType="VARCHAR"/>
+        <result column="stocktake_date" property="stocktakeDate" jdbcType="DATE"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="selectList"
+            resultType="com.ruike.hme.api.dto.representation.HmeEquipmentStocktakeActualRepresentation">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select esa.stocktake_actual_id,
+        esa.stocktake_id,
+        esa.stocktake_flag,
+        esa.stocktake_date,
+        esa.remark,
+        he.tenant_id,
+        he.equipment_id,
+        he.asset_encoding,
+        he.asset_name,
+        he.asset_class,
+        he.descriptions,
+        he.sap_num,
+        he.equipment_body_num,
+        he.equipment_config,
+        he.oa_check_num,
+        he.equipment_category,
+        he.equipment_type,
+        he.apply_type,
+        he.equipment_status,
+        he.deal_num,
+        he.deal_reason,
+        he.business_id,
+        he.user,
+        he.preserver,
+        he.location,
+        he.measure_flag,
+        he.frequency,
+        he.belong_to,
+        he.posting_date,
+        he.supplier,
+        he.brand,
+        he.model,
+        he.unit,
+        he.quantity,
+        he.amount,
+        he.currency,
+        he.contract_num,
+        he.recruitement,
+        he.recruitement_num,
+        he.warranty_date,
+        he.site_id,
+        mms.site_code,
+        group_concat(hewr.station_id separator '/') as station_id,
+        group_concat(mmw.workcell_code separator '/') as workcell_code,
+        group_concat(mmwt.workcell_name separator '/') as workcell_name,
+        he.attribute1,
+        mma.description as business_name,
+        he.attribute2 as ledger_type
+        FROM hme_equipment_stocktake_actual esa,
+        HME_EQUIPMENT HE
+        LEFT JOIN MT_MOD_SITE MMS ON HE.SITE_ID = MMS.SITE_ID
+        LEFT JOIN HME_EQUIPMENT_WKC_REL HEWR ON HE.EQUIPMENT_ID = HEWR.EQUIPMENT_ID AND HEWR.ENABLE_FLAG = 'Y'
+        LEFT JOIN MT_MOD_WORKCELL MMW ON HEWR.STATION_ID = MMW.WORKCELL_ID
+        LEFT JOIN MT_MOD_WORKCELL_TL MMWT ON MMW.WORKCELL_ID = MMWT.WORKCELL_ID AND MMWT.LANG = #{lang}
+        LEFT JOIN MT_MOD_AREA MMA ON MMA.AREA_ID = HE.BUSINESS_ID
+        WHERE esa.equipment_id = he.equipment_id
+        and esa.stocktake_id = #{stocktakeId}
+        group by esa.stocktake_actual_id,
+        he.equipment_id,
+        mms.site_code,
+        mma.description
+    </select>
+
+    <select id="queryStocktakeEquipment" resultType="java.lang.String">
+        SELECT
+        	esa.equipment_id
+        FROM
+        	hme_equipment_stocktake_actual esa
+        WHERE esa.tenant_id = #{tenantId}
+        AND esa.stocktake_id = #{stocktakeId}
+    </select>
+</mapper>

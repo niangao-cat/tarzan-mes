@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtMaterialMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtMaterial">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_DESIGN_CODE" property="materialDesignCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_IDENTIFY_CODE" property="materialIdentifyCode" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="VOLUME" property="volume" jdbcType="DECIMAL"/>
+        <result column="VOLUME_UOM_ID" property="volumeUomId" jdbcType="VARCHAR"/>
+        <result column="WEIGHT" property="weight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="SHELF_LIFE" property="shelfLife" jdbcType="DECIMAL"/>
+        <result column="SHELF_LIFE_UOM_ID" property="shelfLifeUomId" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_ID" property="primaryUomId" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_UOM_ID" property="secondaryUomId" jdbcType="VARCHAR"/>
+        <result column="CONVERSION_RATE" property="conversionRate" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <insert id="batchInsert">
+        insert into mt_material values
+        <foreach collection="materials" item="item" separator="," index="index">
+            (
+            #{item.tenantId},
+            #{item.materialId},
+            #{item.materialCode},
+            #{item.materialName},
+            #{item.materialDesignCode},
+            #{item.materialIdentifyCode},
+            #{item.length},
+            #{item.width},
+            #{item.height},
+            #{item.sizeUomId},
+            #{item.model},
+            #{item.volume},
+            #{item.volumeUomId},
+            #{item.weight},
+            #{item.weightUomId},
+            #{item.shelfLife},
+            #{item.shelfLifeUomId},
+            #{item.primaryUomId},
+            #{item.secondaryUomId},
+            #{item.conversionRate},
+            #{item.enableFlag},
+            #{item.cid},
+            #{item.objectVersionNumber},
+            #{item.createdBy},
+            #{item.creationDate},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate}
+            )
+        </foreach>
+    </insert>
+    <insert id="batchInsertTl">
+        insert into mt_material_tl values
+        <foreach collection="materials" item="item" separator="," index="index">
+            (
+            #{item.materialId},
+            'zh_CN',
+            #{item.materialCode}
+            ),
+            (
+            #{item.materialId},
+            'en_US',
+            #{item.materialCode}
+            )
+        </foreach>
+    </insert>
+
+    <resultMap id="BaseResultViewMap" type="tarzan.material.domain.vo.MtMaterialVO">
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_DESIGN_CODE" property="materialDesignCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_IDENTIFY_CODE" property="materialIdentifyCode" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MODEL" property="model" jdbcType="VARCHAR"/>
+        <result column="VOLUME" property="volume" jdbcType="DECIMAL"/>
+        <result column="VOLUME_UOM_ID" property="volumeUomId" jdbcType="VARCHAR"/>
+        <result column="WEIGHT" property="weight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="SHELF_LIFE" property="shelfLife" jdbcType="DECIMAL"/>
+        <result column="SHELF_LIFE_UOM_ID" property="shelfLifeUomId" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_ID" property="primaryUomId" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_UOM_ID" property="secondaryUomId" jdbcType="VARCHAR"/>
+        <result column="CONVERSION_RATE" property="conversionRate" jdbcType="DECIMAL"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_CODE" property="sizeUomCode" jdbcType="VARCHAR"/>
+        <result column="SIZE_UOM_NAME" property="sizeUomName" jdbcType="VARCHAR"/>
+        <result column="VOLUME_UOM_CODE" property="volumeUomCode" jdbcType="VARCHAR"/>
+        <result column="VOLUME_UOM_NAME" property="volumeUomName" jdbcType="VARCHAR"/>
+        <result column="WEIGHT_UOM_CODE" property="weightUomCode" jdbcType="VARCHAR"/>
+        <result column="WEIGHT_UOM_NAME" property="weightUomName" jdbcType="VARCHAR"/>
+        <result column="SHELF_LIFE_UOM_CODE" property="shelfLifeUomCode" jdbcType="VARCHAR"/>
+        <result column="SHELF_LIFE_UOM_NAME" property="shelfLifeUomName" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_CODE" property="primaryUomCode" jdbcType="VARCHAR"/>
+        <result column="PRIMARY_UOM_NAME" property="primaryUomName" jdbcType="VARCHAR"/>
+        <result column="SECONDARY_UOM_CODE" property="secondaryUomCode" jdbcType="DECIMAL"/>
+        <result column="SECONDARY_UOM_NAME" property="secondaryUomName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectMaterialView" resultMap="BaseResultViewMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        item.MATERIAL_DESIGN_CODE,
+        item.MATERIAL_IDENTIFY_CODE,
+        item.LENGTH,
+        item.WIDTH,
+        item.HEIGHT,
+        item.SIZE_UOM_ID,
+        item.MODEL,
+        item.VOLUME,
+        item.VOLUME_UOM_ID,
+        item.WEIGHT,
+        item.WEIGHT_UOM_ID,
+        item.SHELF_LIFE,
+        item.SHELF_LIFE_UOM_ID,
+        item.PRIMARY_UOM_ID,
+        item.SECONDARY_UOM_ID,
+        item.CONVERSION_RATE,
+        item.ENABLE_FLAG,
+        item.CID,
+        b1.UOM_CODE SIZE_UOM_CODE,
+        l1.UOM_NAME SIZE_UOM_NAME,
+        b2.UOM_CODE VOLUME_UOM_CODE,
+        l2.UOM_NAME VOLUME_UOM_NAME,
+        b3.UOM_CODE WEIGHT_UOM_CODE,
+        l3.UOM_NAME WEIGHT_UOM_NAME,
+        b4.UOM_CODE SHELF_LIFE_UOM_CODE,
+        l4.UOM_NAME SHELF_LIFE_UOM_NAME,
+        b5.UOM_CODE PRIMARY_UOM_CODE,
+        l5.UOM_NAME PRIMARY_UOM_NAME,
+        b6.UOM_CODE SECONDARY_UOM_CODE,
+        l6.UOM_NAME SECONDARY_UOM_NAME
+        FROM
+        mt_material item
+        INNER JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{locale}
+        LEFT JOIN mt_uom b1 ON b1.UOM_ID = item.SIZE_UOM_ID
+        AND b1.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l1 ON l1.UOM_ID = b1.UOM_ID
+        AND l1.LANG = #{locale}
+        LEFT JOIN mt_uom b2 ON b2.UOM_ID = item.VOLUME_UOM_ID
+        AND b2.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l2 ON l2.UOM_ID = b2.UOM_ID
+        AND l2.LANG = #{locale}
+        LEFT JOIN mt_uom b3 ON b3.UOM_ID = item.WEIGHT_UOM_ID
+        AND b3.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l3 ON l3.UOM_ID = b3.UOM_ID
+        AND l3.LANG = #{locale}
+        LEFT JOIN mt_uom b4 ON b4.UOM_ID = item.SHELF_LIFE_UOM_ID
+        AND b4.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l4 ON l4.UOM_ID = b4.UOM_ID
+        AND l4.LANG = #{locale}
+        LEFT JOIN mt_uom b5 ON b5.UOM_ID = item.PRIMARY_UOM_ID
+        AND b5.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l5 ON l5.UOM_ID = b5.UOM_ID
+        AND l5.LANG = #{locale}
+        LEFT JOIN mt_uom b6 ON b6.UOM_ID = item.SECONDARY_UOM_ID
+        AND b6.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l6 ON l6.UOM_ID = b6.UOM_ID
+        AND l6.LANG = #{locale}
+        WHERE
+        1 = 1
+        AND item.TENANT_ID = ${tenantId}
+        <if test="dto.materialId!=null">
+            and item.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode!=null">
+            and item.MATERIAL_CODE = #{dto.materialCode}
+        </if>
+        <if test="dto.materialName!=null">
+            and tl.MATERIAL_NAME = #{dto.materialName}
+        </if>
+        <if test="dto.materialDesignCode!=null">
+            and item.MATERIAL_DESIGN_CODE = #{dto.materialDesignCode}
+        </if>
+        <if test="dto.materialIdentifyCode!=null">
+            and item.MATERIAL_IDENTIFY_CODE = #{dto.materialIdentifyCode}
+        </if>
+        <if test="dto.primaryUomId!=null">
+            and item.PRIMARY_UOM_ID = #{dto.primaryUomId}
+        </if>
+        <if test="dto.secondaryUomId!=null">
+            and item.SECONDARY_UOM_ID = #{dto.secondaryUomId}
+        </if>
+        <if test="dto.primaryUomCode!=null">
+            and b5.UOM_CODE = #{dto.primaryUomCode}
+        </if>
+        <if test="dto.secondaryUomCode!=null">
+            and b6.UOM_CODE = #{dto.secondaryUomCode}
+        </if>
+        <if test="dto.model!=null">
+            and item.MODEL = #{dto.model}
+        </if>
+        <if test="dto.enableFlag!=null">
+            and item.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+    </select>
+
+    <select id="selectMaterialViewForUi" resultMap="BaseResultViewMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        item.MATERIAL_DESIGN_CODE,
+        item.MATERIAL_IDENTIFY_CODE,
+        item.LENGTH,
+        item.WIDTH,
+        item.HEIGHT,
+        item.SIZE_UOM_ID,
+        item.MODEL,
+        item.VOLUME,
+        item.VOLUME_UOM_ID,
+        item.WEIGHT,
+        item.WEIGHT_UOM_ID,
+        item.SHELF_LIFE,
+        item.SHELF_LIFE_UOM_ID,
+        item.PRIMARY_UOM_ID,
+        item.SECONDARY_UOM_ID,
+        item.CONVERSION_RATE,
+        item.ENABLE_FLAG,
+        item.CID,
+        b1.UOM_CODE SIZE_UOM_CODE,
+        l1.UOM_NAME SIZE_UOM_NAME,
+        b2.UOM_CODE VOLUME_UOM_CODE,
+        l2.UOM_NAME VOLUME_UOM_NAME,
+        b3.UOM_CODE WEIGHT_UOM_CODE,
+        l3.UOM_NAME WEIGHT_UOM_NAME,
+        b4.UOM_CODE SHELF_LIFE_UOM_CODE,
+        l4.UOM_NAME SHELF_LIFE_UOM_NAME,
+        b5.UOM_CODE PRIMARY_UOM_CODE,
+        l5.UOM_NAME PRIMARY_UOM_NAME,
+        b6.UOM_CODE SECONDARY_UOM_CODE,
+        l6.UOM_NAME SECONDARY_UOM_NAME
+        FROM
+        mt_material item
+        INNER JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{locale}
+        LEFT JOIN mt_uom b1 ON b1.UOM_ID = item.SIZE_UOM_ID
+        AND b1.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l1 ON l1.UOM_ID = b1.UOM_ID
+        AND l1.LANG = #{locale}
+        LEFT JOIN mt_uom b2 ON b2.UOM_ID = item.VOLUME_UOM_ID
+        AND b2.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l2 ON l2.UOM_ID = b2.UOM_ID
+        AND l2.LANG = #{locale}
+        LEFT JOIN mt_uom b3 ON b3.UOM_ID = item.WEIGHT_UOM_ID
+        AND b3.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l3 ON l3.UOM_ID = b3.UOM_ID
+        AND l3.LANG = #{locale}
+        LEFT JOIN mt_uom b4 ON b4.UOM_ID = item.SHELF_LIFE_UOM_ID
+        AND b4.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l4 ON l4.UOM_ID = b4.UOM_ID
+        AND l4.LANG = #{locale}
+        LEFT JOIN mt_uom b5 ON b5.UOM_ID = item.PRIMARY_UOM_ID
+        AND b5.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l5 ON l5.UOM_ID = b5.UOM_ID
+        AND l5.LANG = #{locale}
+        LEFT JOIN mt_uom b6 ON b6.UOM_ID = item.SECONDARY_UOM_ID
+        AND b6.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l6 ON l6.UOM_ID = b6.UOM_ID
+        AND l6.LANG = #{locale}
+        WHERE
+        1 = 1
+        AND item.TENANT_ID = ${tenantId}
+        <if test="dto.materialId!=null">
+            and item.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode!=null">
+            and item.MATERIAL_CODE LIKE CONCAT('%',#{dto.materialCode},'%')
+        </if>
+        <if test="dto.materialName!=null">
+            and tl.MATERIAL_NAME LIKE CONCAT('%',#{dto.materialName},'%')
+        </if>
+        <if test="dto.materialDesignCode!=null">
+            and item.MATERIAL_DESIGN_CODE LIKE CONCAT('%',#{dto.materialDesignCode},'%')
+        </if>
+        <if test="dto.materialIdentifyCode!=null">
+            and item.MATERIAL_IDENTIFY_CODE LIKE CONCAT('%',#{dto.materialIdentifyCode},'%')
+        </if>
+        <if test="dto.primaryUomId!=null">
+            and item.PRIMARY_UOM_ID = #{dto.primaryUomId}
+        </if>
+        <if test="dto.secondaryUomId!=null">
+            and item.SECONDARY_UOM_ID = #{dto.secondaryUomId}
+        </if>
+        <if test="dto.primaryUomCode!=null">
+            and b5.UOM_CODE = #{dto.primaryUomCode}
+        </if>
+        <if test="dto.secondaryUomCode!=null">
+            and b6.UOM_CODE = #{dto.secondaryUomCode}
+        </if>
+        <if test="dto.model!=null">
+            and item.MODEL = #{dto.model}
+        </if>
+        <if test="dto.enableFlag!=null">
+            and item.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        ORDER  BY item.CREATION_DATE  DESC
+    </select>
+
+    <select id="selectMaterialByIds" resultMap="BaseResultViewMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        item.MATERIAL_DESIGN_CODE,
+        item.MATERIAL_IDENTIFY_CODE,
+        item.LENGTH,
+        item.WIDTH,
+        item.HEIGHT,
+        item.SIZE_UOM_ID,
+        item.MODEL,
+        item.VOLUME,
+        item.VOLUME_UOM_ID,
+        item.WEIGHT,
+        item.WEIGHT_UOM_ID,
+        item.SHELF_LIFE,
+        item.SHELF_LIFE_UOM_ID,
+        item.PRIMARY_UOM_ID,
+        item.SECONDARY_UOM_ID,
+        item.CONVERSION_RATE,
+        item.ENABLE_FLAG,
+        item.CID,
+        b1.UOM_CODE SIZE_UOM_CODE,
+        l1.UOM_NAME SIZE_UOM_NAME,
+        b2.UOM_CODE VOLUME_UOM_CODE,
+        l2.UOM_NAME VOLUME_UOM_NAME,
+        b3.UOM_CODE WEIGHT_UOM_CODE,
+        l3.UOM_NAME WEIGHT_UOM_NAME,
+        b4.UOM_CODE SHELF_LIFE_UOM_CODE,
+        l4.UOM_NAME SHELF_LIFE_UOM_NAME,
+        b5.UOM_CODE PRIMARY_UOM_CODE,
+        l5.UOM_NAME PRIMARY_UOM_NAME,
+        b6.UOM_CODE SECONDARY_UOM_CODE,
+        l6.UOM_NAME SECONDARY_UOM_NAME
+        FROM mt_material item
+        INNER JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{locale}
+        LEFT JOIN mt_uom b1 ON b1.UOM_ID = item.SIZE_UOM_ID
+        AND b1.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l1 ON l1.UOM_ID = b1.UOM_ID
+        AND l1.LANG = #{locale}
+        LEFT JOIN mt_uom b2 ON b2.UOM_ID = item.VOLUME_UOM_ID
+        AND b2.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l2 ON l2.UOM_ID = b2.UOM_ID
+        AND l2.LANG = #{locale}
+        LEFT JOIN mt_uom b3 ON b3.UOM_ID = item.WEIGHT_UOM_ID
+        AND b3.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l3 ON l3.UOM_ID = b3.UOM_ID
+        AND l3.LANG = #{locale}
+        LEFT JOIN mt_uom b4 ON b4.UOM_ID = item.SHELF_LIFE_UOM_ID
+        AND b4.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l4 ON l4.UOM_ID = b4.UOM_ID
+        AND l4.LANG = #{locale}
+        LEFT JOIN mt_uom b5 ON b5.UOM_ID = item.PRIMARY_UOM_ID
+        AND b5.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l5 ON l5.UOM_ID = b5.UOM_ID
+        AND l5.LANG = #{locale}
+        LEFT JOIN mt_uom b6 ON b6.UOM_ID = item.SECONDARY_UOM_ID
+        AND b6.TENANT_ID = ${tenantId}
+        LEFT JOIN mt_uom_tl l6 ON l6.UOM_ID = b6.UOM_ID
+        AND l6.LANG = #{locale}
+        WHERE 1=1
+        AND item.TENANT_ID=${tenantId}
+        AND item.MATERIAL_ID IN
+        <foreach collection="materialIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryMaterialByCode" resultMap="BaseResultMap">
+        <bind name="locale" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select
+        b.TENANT_ID,
+        b.MATERIAL_ID,
+        b.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        b.MATERIAL_DESIGN_CODE,
+        b.MATERIAL_IDENTIFY_CODE,
+        b.LENGTH,
+        b.WIDTH,
+        b.HEIGHT,
+        b.SIZE_UOM_ID,
+        b.MODEL,
+        b.VOLUME,
+        b.VOLUME_UOM_ID,
+        b.WEIGHT,
+        b.WEIGHT_UOM_ID,
+        b.SHELF_LIFE,
+        b.SHELF_LIFE_UOM_ID,
+        b.PRIMARY_UOM_ID,
+        b.SECONDARY_UOM_ID,
+        b.CONVERSION_RATE,
+        b.ENABLE_FLAG,
+        b.CID,
+        b.OBJECT_VERSION_NUMBER,
+        b.CREATED_BY,
+        b.CREATION_DATE,
+        b.LAST_UPDATED_BY,
+        b.LAST_UPDATE_DATE
+        from mt_material b join mt_material_tl tl on b.MATERIAL_ID = tl.MATERIAL_ID and tl.LANG = #{locale}
+        where
+        b.TENANT_ID = ${tenantId}
+        and ${materialCodeList}
+    </select>
+    <select id="selectCondition" resultType="tarzan.material.domain.vo.MtMaterialVO5">
+        SELECT tb.*
+        FROM MT_MATERIAL tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.materialId != null">
+            AND tb.MATERIAL_ID = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null">
+            AND tb.MATERIAL_CODE = #{dto.materialCode}
+        </if>
+        <if test="dto.materialName != null">
+            AND tb.MATERIAL_NAME like concat('%',concat(#{dto.materialName},'%'))
+        </if>
+        <if test="dto.materialDesignCode != null">
+            AND tb.MATERIAL_DESIGN_CODE = #{dto.materialDesignCode}
+        </if>
+        <if test="dto.materialIdentifyCode != null">
+            AND tb.MATERIAL_IDENTIFY_CODE = #{dto.materialIdentifyCode}
+        </if>
+        <if test="dto.model != null">
+            AND tb.MODEL = #{dto.model}
+        </if>
+        <if test="dto.primaryUomId != null">
+            AND tb.PRIMARY_UOM_ID = #{dto.primaryUomId}
+        </if>
+        <if test="dto.secondaryUomId != null">
+            AND tb.SECONDARY_UOM_ID = #{dto.secondaryUomId}
+        </if>
+        <if test="dto.enableFlag != null">
+            AND tb.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+    </select>
+
+    <select id="materialBasicInfoBatchGetByIdList" resultMap="BaseResultViewMap" fetchSize="5000">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        item.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        item.MATERIAL_DESIGN_CODE,
+        item.MATERIAL_IDENTIFY_CODE,
+        item.LENGTH,
+        item.WIDTH,
+        item.HEIGHT,
+        item.SIZE_UOM_ID,
+        item.MODEL,
+        item.VOLUME,
+        item.VOLUME_UOM_ID,
+        item.WEIGHT,
+        item.WEIGHT_UOM_ID,
+        item.SHELF_LIFE,
+        item.SHELF_LIFE_UOM_ID,
+        item.PRIMARY_UOM_ID,
+        item.SECONDARY_UOM_ID,
+        item.CONVERSION_RATE,
+        item.ENABLE_FLAG,
+        item.CID
+        FROM mt_material item
+        inner join mt_material_tl tl on item.MATERIAL_ID = tl.MATERIAL_ID and tl.LANG = #{locale}
+        WHERE 1=1
+        AND item.TENANT_ID=${tenantId}
+        AND ${materialIds}
+    </select>
+</mapper>

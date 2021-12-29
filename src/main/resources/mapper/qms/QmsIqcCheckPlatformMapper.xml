@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.qms.infra.mapper.QmsIqcCheckPlatformMapper">
+
+    <select id="mainQuery" resultType="com.ruike.qms.api.dto.QmsIqcCheckPlatformMainReturnDTO">
+        SELECT
+        QIH.IQC_HEADER_ID,
+        QIH.DOC_TYPE,
+        QIH.DOC_HEADER_ID,
+        QIH.DOC_LINE_ID,
+        ATTR.ATTR_VALUE IQC_VERSION,
+        QIH.AUDIT_OPINION,
+        mml.locator_code,
+        mml.locator_name,
+        CASE
+        WHEN QIH.DOC_TYPE = 'IQC_DOC' THEN
+        H.IQC_NUMBER
+        WHEN MIA.ATTR_VALUE IS NOT NULL
+        AND QIH.DOC_TYPE NOT IN ( 'IQC_DOC' ) THEN
+        CONCAT( MID.INSTRUCTION_DOC_NUM, '#', MIA.ATTR_VALUE )
+        WHEN MIA.ATTR_VALUE IS NULL
+        AND QIH.DOC_TYPE NOT IN ( 'IQC_DOC' ) THEN
+        MID.INSTRUCTION_DOC_NUM
+        END instructionDocNum,
+        CASE
+        WHEN QIH.DOC_TYPE = 'IQC_DOC' THEN
+        (
+        SELECT ih.DOC_LINE_ID FROM qms_iqc_header ih
+        WHERE ih.iqc_header_id = QIH.DOC_HEADER_ID
+        LIMIT 1
+        )
+        ELSE
+        QIH.DOC_LINE_ID
+        END INSTRUCTION_ID,
+        QIH.IQC_NUMBER,
+        QIH.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        QIH.MATERIAL_VERSION,
+        QIH.QUANTITY,
+        QIH.SUPPLIER_ID,
+        MS.SUPPLIER_CODE,
+        MS.SUPPLIER_NAME,
+        QIH.RECEIPT_LOT,
+        QIH.INSPECTION_TYPE,
+        QIH.REMARK,
+        iam.real_name realName,
+        CASE WHEN QIH.INSPECTION_RESULT = 'NG' THEN
+        QIH.INSPECTION_FINISH_DATE ELSE NULL
+        END inspectionUnqualifiedDate,
+        QIH.creation_date as createdDate,
+        QIH.RECEIPT_BY,
+        QIH.INSPECTION_STATUS,
+        QIH.IDENTIFICATION,
+        QIH.INSPECTION_RESULT,
+        QIH.INSPECTION_FINISH_DATE,
+        CASE
+        WHEN QIH.INSPECTION_STATUS = "NEW" THEN
+        1
+        ELSE
+        0
+        END INSPECTION_STATUS_NUM,
+        CASE
+        WHEN QIH.INSPECTION_TYPE = 'FIRST_INSPECTION' THEN
+        (select
+        GROUP_CONCAT(CONCAT(IFNULL(imid.INSTRUCTION_DOC_NUM,'null'),'-',IFNULL(imiaa.ATTR_VALUE,'null'),'-',IFNULL(imia.ATTR_VALUE,'null')))
+        from wms_po_delivery_rel iwpdr
+        left join mt_instruction_attr imia on iwpdr.po_line_id = imia.INSTRUCTION_ID and imia.ATTR_NAME = 'SAMPLE_FLAG'
+        left join mt_instruction_doc imid on imid.INSTRUCTION_DOC_ID = iwpdr.po_id
+        left join mt_instruction_attr imiaa on iwpdr.po_line_id = imiaa.INSTRUCTION_ID and imiaa.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        where
+        iwpdr.delivery_doc_line_id = QIH.DOC_LINE_ID)
+        WHEN QIH.INSPECTION_TYPE = 'SECOND_INSPECTION' THEN
+        (select
+        GROUP_CONCAT(CONCAT(IFNULL(imid.INSTRUCTION_DOC_NUM,'null'),'-',IFNULL(imiaa.ATTR_VALUE,'null'),'-',IFNULL(imia.ATTR_VALUE,'null')))
+        from wms_po_delivery_rel iwpdr
+        left join mt_instruction_attr imia on iwpdr.po_line_id = imia.INSTRUCTION_ID and imia.ATTR_NAME = 'SAMPLE_FLAG'
+        left join mt_instruction_doc imid on imid.INSTRUCTION_DOC_ID = iwpdr.po_id
+        left join mt_instruction_attr imiaa on iwpdr.po_line_id = imiaa.INSTRUCTION_ID and imiaa.ATTR_NAME =
+        'INSTRUCTION_LINE_NUM'
+        where
+        iwpdr.delivery_doc_line_id = QQIH.DOC_LINE_ID)
+        END SAMPLE_FLAG
+        FROM
+        QMS_IQC_HEADER QIH
+        LEFT JOIN MT_INSTRUCTION_DOC MID ON MID.INSTRUCTION_DOC_ID = QIH.DOC_HEADER_ID
+        LEFT JOIN MT_MATERIAL MM ON MM.MATERIAL_ID = QIH.MATERIAL_ID
+        LEFT JOIN MT_SUPPLIER MS ON MS.SUPPLIER_ID = QIH.SUPPLIER_ID
+        LEFT JOIN mt_instruction_attr MIA ON MIA.INSTRUCTION_ID = QIH.DOC_LINE_ID
+        AND MIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN QMS_IQC_HEADER H ON QIH.DOC_HEADER_ID = H.IQC_HEADER_ID
+        LEFT JOIN MT_INSTRUCTION_ATTR ATTR ON ATTR.INSTRUCTION_ID = QIH.DOC_LINE_ID AND ATTR.ATTR_NAME = 'IQC_VERSION'
+        LEFT JOIN QMS_IQC_HEADER QQIH ON QIH.DOC_HEADER_ID = QQIH.IQC_HEADER_ID
+        LEFT JOIN hzero_platform.iam_user iam ON QIH.QC_BY = iam.id
+        LEFT JOIN mt_instruction mi ON mi.INSTRUCTION_ID = QIH.DOC_LINE_ID
+        LEFT JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mi.TO_LOCATOR_ID
+        where QIH.TENANT_ID =#{tenantId}
+        <if test="dto.locatorCode !=null and dto.locatorCode !='' ">
+            AND QIH.DOC_LINE_ID IN (
+            SELECT
+            mi.INSTRUCTION_ID
+            FROM
+            mt_instruction mi
+            WHERE
+            mi.TENANT_ID = #{tenantId}
+            AND mi.to_locator_id IN (
+            SELECT
+            mml.locator_id
+            FROM
+            mt_mod_locator mml
+            WHERE
+            mml.TENANT_ID = #{tenantId}
+            AND mml.locator_code LIKE CONCAT('%',#{dto.locatorCode}, '%')
+            )
+            )
+        </if>
+        <if test="dto.relFlag == 'REL'">
+            and EXISTS(
+            select hiigr.rel_id
+            from mt_material_site mms,
+            mt_material_basic mmb,
+            hme_inspector_item_group_rel hiigr
+            where mms.TENANT_ID = QIH.TENANT_ID
+            and mms.MATERIAL_ID = QIH.MATERIAL_ID
+            and mms.SITE_ID = QIH.SITE_ID
+            and mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+            and hiigr.user_id = #{userId}
+            and hiigr.privilege_type = 'INSPECTOR'
+            and hiigr.item_group_id = mmb.item_group
+            and hiigr.enable_flag = 'Y'
+            )
+        </if>
+        <if test="dto.instructionDocNum != null">
+            AND (
+            CASE
+            WHEN QIH.DOC_TYPE = 'IQC_DOC' THEN
+            H.IQC_NUMBER
+            WHEN MIA.ATTR_VALUE IS NOT NULL
+            AND QIH.DOC_TYPE NOT IN ( 'IQC_DOC' ) THEN
+            CONCAT( MID.INSTRUCTION_DOC_NUM, '#', MIA.ATTR_VALUE )
+            WHEN MIA.ATTR_VALUE IS NULL
+            AND QIH.DOC_TYPE NOT IN ( 'IQC_DOC' ) THEN
+            MID.INSTRUCTION_DOC_NUM
+            END
+            ) LIKE CONCAT('%', CONCAT(#{dto.instructionDocNum}, '%'))
+        </if>
+        <if test="dto.materialCode != null">
+            AND MM.MATERIAL_CODE =#{dto.materialCode}
+        </if>
+        <if test="dto.inspectionStatus != null">
+            AND QIH.INSPECTION_STATUS = #{dto.inspectionStatus}
+        </if>
+        <if test="dto.identification != null">
+            AND QIH.IDENTIFICATION =#{dto.identification}
+        </if>
+        <if test="dto.supplierId != null">
+            AND QIH.SUPPLIER_ID =#{dto.supplierId}
+        </if>
+        <if test="dto.iqcNumber != null">
+            AND QIH.IQC_NUMBER LIKE CONCAT('%', #{dto.iqcNumber}, '%')
+        </if>
+        <if test="dto.createdDateFrom != null">
+            and QIH.creation_date > #{dto.createdDateFrom}
+        </if>
+        <if test="dto.createdDateTo != null">
+            and QIH.creation_date &lt; #{dto.createdDateTo}
+        </if>
+        <if test="dto.inspectionType != null and dto.inspectionType != ''">
+            and QIH.INSPECTION_TYPE = #{dto.inspectionType}
+        </if>
+        ORDER BY INSPECTION_STATUS_NUM DESC
+    </select>
+    <select id="iqcHeadQuery" resultType="com.ruike.qms.api.dto.QmsIqcCheckPlatformIqcReturnDTO">
+        SELECT
+        qih.*,
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        mm.MATERIAL_CODE,
+        mm.MATERIAL_NAME,
+        mu.UOM_CODE,
+        mu.UOM_NAME
+        FROM
+        qms_iqc_header qih
+        LEFT JOIN mt_supplier ms ON ms.SUPPLIER_ID = qih.SUPPLIER_ID
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = qih.MATERIAL_ID
+        LEFT JOIN mt_uom mu on mu.UOM_ID = qih.UOM_ID
+        <where>
+            <if test="dto.iqcNumber != null and dto.iqcNumber != '' ">
+                AND qih.IQC_NUMBER = #{dto.iqcNumber}
+            </if>
+            <if test="dto.instructionId != null">
+                AND qih.DOC_LINE_ID = #{dto.instructionId}
+            </if>
+        </where>
+        ORDER BY qih.CREATED_DATE DESC
+    </select>
+
+    <select id="queryInstructionId" resultType="string">
+        SELECT
+            qih.DOC_LINE_ID
+        FROM
+            mt_material_lot mml
+            LEFT JOIN WMS_MATERIAL_LOT_DOC_REL mldr ON mldr.material_lot_id = mml.MATERIAL_LOT_ID
+            AND mldr.instruction_doc_type = 'DELIVERY_DOC'
+            LEFT JOIN qms_iqc_header qih ON qih.DOC_LINE_ID = mldr.instruction_id
+            and qih.INSPECTION_STATUS in('NEW','EXECUTING')
+        WHERE
+            mml.MATERIAL_LOT_CODE = #{sampleCode}
+            AND qih.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="iqcLineQuery" resultType="com.ruike.qms.api.dto.QmsIqcCheckPlatformIqcReturnLineDTO">
+        SELECT
+        qil.*,
+        mu.UOM_CODE,
+        qst.sample_type_code as sampleTypeCode,
+        CONCAT( qil.AC, "/", qil.RE ) AS acSplitRe,
+        CONCAT( qil.STANDARD_FROM, "~", qil.STANDARD_TO ) AS standardRange
+        FROM
+        qms_iqc_line qil
+        LEFT JOIN mt_uom mu ON mu.UOM_ID = qil.STANDARD_UOM
+        LEFT JOIN qms_sample_type qst ON qst.sample_type_id = qil.SAMPLE_TYPE
+        WHERE
+        qil.TENANT_ID = #{tenantId}
+        AND qil.IQC_HEADER_ID = #{iqcHeaderId}
+        AND qil.ENABLE_FLAG = 'Y'
+        <if test="addedFlag != null">
+            AND qil.ADDED_FLAG = #{addedFlag}
+        </if>
+        ORDER BY qil.NUMBER
+    </select>
+
+    <select id="iqcDetailQuery" resultType="com.ruike.qms.api.dto.QmsIqcCheckPlatformIqcReturnDetailDTO">
+        SELECT
+            qid.IQC_HEADER_ID,
+            qid.IQC_LINE_ID,
+            qid.IQC_DETAILS_ID,
+            qid.NUMBER,
+            qid.RESULT,
+            qid.REMARK
+        FROM
+            qms_iqc_details qid
+        WHERE
+            qid.TENANT_ID = #{tenantId}
+
+            AND qid.IQC_LINE_ID = #{iqcLineId}
+           ORDER BY qid.NUMBER
+    </select>
+
+
+    <select id="lovBringDataQuery" resultType="com.ruike.qms.api.dto.QmsIqcCheckPlatformCreateBringDTO">
+        SELECT
+            TGA.TAG_GROUP_ASSIGN_ID,
+            T.TAG_CODE inspection,
+            T.TAG_DESCRIPTION inspectionDesc,
+            T.REMARK,
+            T.COLLECTION_METHOD,
+            T.VALUE_TYPE As standardType,
+            T.MINIMUM_VALUE standardFrom,
+            T.MAXIMAL_VALUE standardTo,
+            attr1.ATTR_VALUE AS orderKey,
+            attr2.ATTR_VALUE AS inspectionType,
+            attr3.ATTR_VALUE AS accuracy,
+            attr4.ATTR_VALUE AS standardText,
+            attr5.ATTR_VALUE AS inspectionTool,
+			MU.UOM_ID,
+			MU.UOM_CODE,
+			MU.UOM_NAME
+        FROM
+            MT_TAG_GROUP_ASSIGN TGA
+            JOIN MT_TAG T ON T.TAG_ID = TGA.TAG_ID
+            AND T.ENABLE_FLAG = 'Y'
+            LEFT JOIN MT_TAG_ATTR attr1 ON attr1.TAG_ID = T.TAG_ID
+            AND attr1.ATTR_NAME = 'ORDER_KEY'
+            LEFT JOIN MT_TAG_ATTR attr2 ON attr2.TAG_ID = T.TAG_ID
+            AND attr2.ATTR_NAME = 'INSPECTION_TYPE'
+            LEFT JOIN MT_TAG_ATTR attr3 ON attr3.TAG_ID = T.TAG_ID
+            AND attr3.ATTR_NAME = 'ACCURACY'
+            LEFT JOIN MT_TAG_ATTR attr4 ON attr4.TAG_ID = T.TAG_ID
+            AND attr4.ATTR_NAME = 'STANDARD_TEXT'
+            LEFT JOIN MT_TAG_ATTR attr5 ON attr5.TAG_ID = T.TAG_ID
+            AND attr5.ATTR_NAME = 'INSPECTION_TOOL'
+            LEFT JOIN MT_UOM MU ON MU.UOM_ID = T.UNIT
+        WHERE
+            TGA.TAG_GROUP_ID = #{tagGroupId}
+
+            AND TGA.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryLineMaxNum" resultType="long">
+        SELECT
+            MAX( line.NUMBER )
+        FROM
+            qms_iqc_line line
+        WHERE
+            line.TENANT_ID = #{tenantId}
+
+            AND line.IQC_HEADER_ID = #{iqcHeaderId}
+    </select>
+
+    <select id="queryLov" resultType="com.ruike.qms.api.dto.QmsIqcCheckPlatformDTO2">
+        SELECT
+        qst.sample_type_id,
+        qst.sample_type_code,
+        qst.sample_type_desc sampleTypeName
+        FROM
+        qms_sample_type qst
+        WHERE
+        qst.TENANT_ID = #{tenantId}
+
+        <if test="dto.sampleTypeCode != null">
+            AND qst.sample_type_code = #{dto.sampleTypeCode}
+        </if>
+
+    </select>
+
+    <select id="getActualIdByInstruction" resultType="java.lang.String">
+        select mia.ACTUAL_ID
+        from mt_instruction_actual mia
+        where mia.TENANT_ID = #{tenantId}
+        and mia.INSTRUCTION_ID = #{instructionId}
+        and mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+    </select>
+
+    <update id="updateAttr">
+        UPDATE mt_instruct_act_detail_attr attr
+        SET attr.ATTR_VALUE = ''
+        WHERE
+            attr.TENANT_ID = #{tenantId}
+        AND attr.ACTUAL_DETAIL_ID = #{actualDetailId}
+        AND attr.ATTR_NAME = 'NG_QTY'
+    </update>
+
+    <update id="updateAttr2">
+        UPDATE mt_instruct_act_detail_attr attr
+        SET attr.ATTR_VALUE = #{attrValue}
+        WHERE
+            attr.TENANT_ID = #{tenantId}
+          AND attr.ACTUAL_DETAIL_ID = #{actualDetailId}
+          AND attr.ATTR_NAME = 'NG_QTY'
+    </update>
+
+    <select id="getAttrCount" resultType="java.lang.Integer">
+        select count(*)
+        from mt_instruct_act_detail_attr attr
+        where attr.TENANT_ID = #{tenantId}
+          and attr.ACTUAL_DETAIL_ID = #{actualDetailId}
+          and attr.ATTR_NAME = 'NG_QTY'
+    </select>
+
+    <select id="selectMaterialLotListByIqcHeader" resultType="com.ruike.qms.domain.vo.QmsIqcMaterialLotVO">
+        select qih.IQC_HEADER_ID
+        , mia.INSTRUCTION_ID
+        , mia.ACTUAL_ID
+        , miad.ACTUAL_DETAIL_ID
+        , mml.MATERIAL_LOT_ID
+        , mml.MATERIAL_LOT_CODE
+        , mml.PRIMARY_UOM_QTY
+        , mml.LOT
+        , attr.ATTR_VALUE MATERIAL_VERSION
+        , attr1.ATTR_VALUE SUPPLIER_LOT
+        from qms_iqc_header qih
+        , mt_instruction_actual mia
+        , mt_instruction_actual_detail miad
+        , mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'SUPPLIER_LOT'
+        where qih.DOC_LINE_ID = mia.INSTRUCTION_ID
+        and mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        and miad.ACTUAL_ID = mia.ACTUAL_ID
+        and miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and qih.DOC_TYPE = 'DELIVERY_DOC'
+        and qih.IQC_HEADER_ID = #{iqcHeaderId}
+        and qih.tenant_id = #{tenantId}
+        <if test="supplierLot != null and supplierLot != ''">
+            and attr1.ATTR_VALUE LIKE CONCAT("%",#{supplierLot},"%")
+        </if>
+        union all
+        select qih.IQC_HEADER_ID
+        , mia.INSTRUCTION_ID
+        , mia.ACTUAL_ID
+        , miad.ACTUAL_DETAIL_ID
+        , mml.MATERIAL_LOT_ID
+        , mml.MATERIAL_LOT_CODE
+        , mml.PRIMARY_UOM_QTY
+        , mml.LOT
+        , attr.ATTR_VALUE MATERIAL_VERSION
+        , attr1.ATTR_VALUE SUPPLIER_LOT
+        from qms_iqc_header qih
+        , qms_iqc_header qih1
+        , mt_instruction_actual mia
+        , mt_instruction_actual_detail miad
+        , mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_material_lot_attr attr1 ON attr1.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr1.ATTR_NAME = 'SUPPLIER_LOT'
+        where qih.DOC_HEADER_ID = qih1.IQC_HEADER_ID
+        and qih1.DOC_LINE_ID = mia.INSTRUCTION_ID
+        and mia.INSTRUCTION_TYPE = 'RECEIVE_FROM_SUPPLIER'
+        and miad.ACTUAL_ID = mia.ACTUAL_ID
+        and miad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        and qih.DOC_TYPE = 'IQC_DOC'
+        and qih.IQC_HEADER_ID = #{iqcHeaderId}
+        and qih.tenant_id = #{tenantId}
+        <if test="supplierLot != null and supplierLot != ''">
+            and attr1.ATTR_VALUE LIKE CONCAT("%",#{supplierLot},"%")
+        </if>
+    </select>
+
+    <insert id="insertAttr">
+        INSERT INTO mt_instruct_act_detail_attr (TENANT_ID,
+                                                 ATTR_ID,
+                                                 ACTUAL_DETAIL_ID,
+                                                 ATTR_NAME,
+                                                 ATTR_VALUE,
+                                                 CID,
+                                                 CREATED_BY,
+            CREATION_DATE,
+            LAST_UPDATED_BY,
+            LAST_UPDATE_DATE
+        )
+        VALUES
+            (
+                #{tenantId},
+                #{attrId},
+                #{actualDetailId},
+                'NG_QTY',
+                #{attrValue},
+                #{cid},
+                #{userId},
+                CURRENT_TIMESTAMP,
+                #{userId},
+                CURRENT_TIMESTAMP
+            )
+    </insert>
+
+    <select id="getSupplierLotByInstructionId" resultType="java.lang.String">
+        select mmla.ATTR_VALUE
+        from mt_instruction_actual mia
+        left join mt_instruction_actual_detail miad
+        on miad.ACTUAL_ID = mia.ACTUAL_ID
+        and miad.TENANT_ID = mia.TENANT_ID
+        left join mt_material_lot_attr mmla
+        on mmla.MATERIAL_LOT_ID = miad.MATERIAL_LOT_ID
+        and mmla.ATTR_NAME = 'SUPPLIER_LOT'
+        and mmla.TENANT_ID = mia.TENANT_ID
+        where mia.TENANT_ID = #{tenantId}
+        and mia.INSTRUCTION_ID = #{instructionId}
+        and mmla.ATTR_VALUE is not null
+    </select>
+
+    <select id="exportQuery" resultType="com.ruike.qms.domain.vo.QmsIqcCheckPlatformExportVO">
+        SELECT
+        QIH.IQC_HEADER_ID,
+        QIH.DOC_TYPE,
+        QIH.DOC_HEADER_ID,
+        QIH.DOC_LINE_ID,
+        ATTR.ATTR_VALUE IQC_VERSION,
+        QIH.AUDIT_OPINION,
+        QIH.REMARK,
+        mml.locator_code,
+        mml.locator_name,
+        CASE
+        WHEN QIH.DOC_TYPE = 'IQC_DOC' THEN
+        H.IQC_NUMBER
+        WHEN MIA.ATTR_VALUE IS NOT NULL
+        AND QIH.DOC_TYPE NOT IN ( 'IQC_DOC' ) THEN
+        CONCAT( MID.INSTRUCTION_DOC_NUM, '#', MIA.ATTR_VALUE )
+        WHEN MIA.ATTR_VALUE IS NULL
+        AND QIH.DOC_TYPE NOT IN ( 'IQC_DOC' ) THEN
+        MID.INSTRUCTION_DOC_NUM
+        END instructionDocNum,
+        CASE
+        WHEN QIH.DOC_TYPE = 'IQC_DOC' THEN
+        (
+        SELECT ih.DOC_LINE_ID FROM qms_iqc_header ih
+        WHERE ih.iqc_header_id = QIH.DOC_HEADER_ID
+        LIMIT 1
+        )
+        ELSE
+        QIH.DOC_LINE_ID
+        END INSTRUCTION_ID,
+        QIH.IQC_NUMBER,
+        QIH.MATERIAL_ID,
+        MM.MATERIAL_CODE,
+        MM.MATERIAL_NAME,
+        QIH.MATERIAL_VERSION,
+        QIH.QUANTITY,
+        QIH.SUPPLIER_ID,
+        MS.SUPPLIER_CODE,
+        MS.SUPPLIER_NAME,
+        QIH.RECEIPT_LOT,
+        QIH.INSPECTION_TYPE,
+        iam.real_name realName,
+        CASE WHEN QIH.INSPECTION_RESULT = 'NG' THEN
+        QIH.INSPECTION_FINISH_DATE ELSE NULL
+        END inspectionUnqualifiedDate,
+        QIH.creation_date as createdDate,
+        QIH.RECEIPT_BY,
+        QIH.INSPECTION_STATUS,
+        QIH.IDENTIFICATION,
+        QIH.INSPECTION_RESULT,
+        QIH.INSPECTION_FINISH_DATE,
+        CASE
+        WHEN QIH.INSPECTION_STATUS = "NEW" THEN
+        1
+        ELSE
+        0
+        END INSPECTION_STATUS_NUM,
+        CASE
+        WHEN QIH.INSPECTION_TYPE = 'FIRST_INSPECTION' THEN
+        (select
+        GROUP_CONCAT(CONCAT(IFNULL(imid.INSTRUCTION_DOC_NUM,'null'),'-',IFNULL(imiaa.ATTR_VALUE,'null'),'-',IFNULL(imia.ATTR_VALUE,'null')))
+        from wms_po_delivery_rel iwpdr
+        left join mt_instruction_attr imia on iwpdr.po_line_id = imia.INSTRUCTION_ID and imia.ATTR_NAME = 'SAMPLE_FLAG'
+        left join mt_instruction_doc imid on imid.INSTRUCTION_DOC_ID = iwpdr.po_id
+        left join mt_instruction_attr imiaa on iwpdr.po_line_id = imiaa.INSTRUCTION_ID and imiaa.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        where
+        iwpdr.delivery_doc_line_id = QIH.DOC_LINE_ID)
+        WHEN QIH.INSPECTION_TYPE = 'SECOND_INSPECTION' THEN
+        (select
+        GROUP_CONCAT(CONCAT(IFNULL(imid.INSTRUCTION_DOC_NUM,'null'),'-',IFNULL(imiaa.ATTR_VALUE,'null'),'-',IFNULL(imia.ATTR_VALUE,'null')))
+        from wms_po_delivery_rel iwpdr
+        left join mt_instruction_attr imia on iwpdr.po_line_id = imia.INSTRUCTION_ID and imia.ATTR_NAME = 'SAMPLE_FLAG'
+        left join mt_instruction_doc imid on imid.INSTRUCTION_DOC_ID = iwpdr.po_id
+        left join mt_instruction_attr imiaa on iwpdr.po_line_id = imiaa.INSTRUCTION_ID and imiaa.ATTR_NAME =
+        'INSTRUCTION_LINE_NUM'
+        where
+        iwpdr.delivery_doc_line_id = QQIH.DOC_LINE_ID)
+        END SAMPLE_FLAG
+        FROM
+        QMS_IQC_HEADER QIH
+        LEFT JOIN MT_INSTRUCTION_DOC MID ON MID.INSTRUCTION_DOC_ID = QIH.DOC_HEADER_ID
+        LEFT JOIN MT_MATERIAL MM ON MM.MATERIAL_ID = QIH.MATERIAL_ID
+        LEFT JOIN MT_SUPPLIER MS ON MS.SUPPLIER_ID = QIH.SUPPLIER_ID
+        LEFT JOIN mt_instruction_attr MIA ON MIA.INSTRUCTION_ID = QIH.DOC_LINE_ID
+        AND MIA.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+        LEFT JOIN QMS_IQC_HEADER H ON QIH.DOC_HEADER_ID = H.IQC_HEADER_ID
+        LEFT JOIN MT_INSTRUCTION_ATTR ATTR ON ATTR.INSTRUCTION_ID = QIH.DOC_LINE_ID AND ATTR.ATTR_NAME = 'IQC_VERSION'
+        LEFT JOIN QMS_IQC_HEADER QQIH ON QIH.DOC_HEADER_ID = QQIH.IQC_HEADER_ID
+        LEFT JOIN hzero_platform.iam_user iam ON QIH.QC_BY = iam.id
+        LEFT JOIN mt_instruction mi ON mi.INSTRUCTION_ID = QIH.DOC_LINE_ID
+        LEFT JOIN mt_mod_locator mml ON mml.LOCATOR_ID = mi.TO_LOCATOR_ID
+        where QIH.TENANT_ID =#{tenantId}
+        <if test="dto.locatorCode !=null and dto.locatorCode !='' ">
+            AND QIH.DOC_LINE_ID IN (
+            SELECT
+            mi.INSTRUCTION_ID
+            FROM
+            mt_instruction mi
+            WHERE
+            mi.TENANT_ID = #{tenantId}
+            AND mi.to_locator_id IN (
+            SELECT
+            mml.locator_id
+            FROM
+            mt_mod_locator mml
+            WHERE
+            mml.TENANT_ID = #{tenantId}
+            AND mml.locator_code LIKE CONCAT('%',#{dto.locatorCode}, '%')
+            )
+            )
+        </if>
+        <if test="dto.relFlag == 'REL'">
+            and EXISTS(
+            select hiigr.rel_id
+            from mt_material_site mms,
+            mt_material_basic mmb,
+            hme_inspector_item_group_rel hiigr
+            where mms.TENANT_ID = QIH.TENANT_ID
+            and mms.MATERIAL_ID = QIH.MATERIAL_ID
+            and mms.SITE_ID = QIH.SITE_ID
+            and mmb.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+            and hiigr.user_id = #{userId}
+            and hiigr.privilege_type = 'INSPECTOR'
+            and hiigr.item_group_id = mmb.item_group
+            and hiigr.enable_flag = 'Y'
+            )
+        </if>
+        <if test="dto.instructionDocNum != null">
+            AND (
+            CASE
+            WHEN QIH.DOC_TYPE = 'IQC_DOC' THEN
+            H.IQC_NUMBER
+            WHEN MIA.ATTR_VALUE IS NOT NULL
+            AND QIH.DOC_TYPE NOT IN ( 'IQC_DOC' ) THEN
+            CONCAT( MID.INSTRUCTION_DOC_NUM, '#', MIA.ATTR_VALUE )
+            WHEN MIA.ATTR_VALUE IS NULL
+            AND QIH.DOC_TYPE NOT IN ( 'IQC_DOC' ) THEN
+            MID.INSTRUCTION_DOC_NUM
+            END
+            ) LIKE CONCAT('%', CONCAT(#{dto.instructionDocNum}, '%'))
+        </if>
+        <if test="dto.materialCode != null">
+            AND MM.MATERIAL_CODE =#{dto.materialCode}
+        </if>
+        <if test="dto.inspectionStatus != null">
+            AND QIH.INSPECTION_STATUS = #{dto.inspectionStatus}
+        </if>
+        <if test="dto.identification != null">
+            AND QIH.IDENTIFICATION =#{dto.identification}
+        </if>
+        <if test="dto.supplierId != null">
+            AND QIH.SUPPLIER_ID =#{dto.supplierId}
+        </if>
+        <if test="dto.iqcNumber != null">
+            AND QIH.IQC_NUMBER LIKE CONCAT('%', #{dto.iqcNumber}, '%')
+        </if>
+        <if test="dto.createdDateFrom != null">
+            and QIH.creation_date > #{dto.createdDateFrom}
+        </if>
+        <if test="dto.createdDateTo != null">
+            and QIH.creation_date &lt; #{dto.createdDateTo}
+        </if>
+        <if test="dto.inspectionType != null and dto.inspectionType != ''">
+            and QIH.INSPECTION_TYPE = #{dto.inspectionType}
+        </if>
+        ORDER BY INSPECTION_STATUS_NUM DESC
+    </select>
+    <select id="queryTagGroupDescriptionByMaterial" resultType="com.ruike.qms.domain.vo.QmsIqcTagGroupVO">
+        SELECT
+        mtg.TAG_GROUP_CODE,
+        mtgl.TAG_GROUP_DESCRIPTION
+        FROM
+        qms_material_insp_scheme qmis
+        JOIN qms_material_tag_group_rel qmtgr ON qmis.inspection_scheme_id = qmtgr.scheme_id
+        LEFT JOIN mt_tag_group mtg ON qmtgr.tag_group_id = mtg.TAG_GROUP_ID
+        JOIN mt_tag_group_tl mtgl ON mtg.TAG_GROUP_ID = mtgl.TAG_GROUP_ID
+        AND mtgl.LANG = 'zh_CN'
+        WHERE
+        qmis.material_id = #{materialId}
+        <if test="materialVersion != null and materialVersion != ''">
+            AND qmis.material_version = #{materialVersion}
+        </if>
+        <if test="materialVersion == null or materialVersion == ''">
+            AND (qmis.material_version is null or qmis.material_version = '')
+        </if>
+    </select>
+
+    <select id="queryTagGroupDescriptionByMaterial2" resultType="com.ruike.qms.domain.vo.QmsIqcTagGroupVO">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        mtg.TAG_GROUP_CODE,
+        mtgl.TAG_GROUP_DESCRIPTION
+        FROM
+        qms_material_insp_scheme qmis
+        JOIN qms_material_tag_group_rel qmtgr ON qmis.inspection_scheme_id = qmtgr.scheme_id
+        LEFT JOIN mt_tag_group mtg ON qmtgr.tag_group_id = mtg.TAG_GROUP_ID
+        JOIN mt_tag_group_tl mtgl ON mtg.TAG_GROUP_ID = mtgl.TAG_GROUP_ID
+        AND mtgl.LANG = #{locale}
+        WHERE
+        qmis.material_id = #{materialId}
+        <if test="materialVersion != null and materialVersion != ''">
+            AND qmis.material_version = #{materialVersion}
+        </if>
+        <if test="materialVersion == null or materialVersion == ''">
+            AND (qmis.material_version is null or qmis.material_version = '')
+        </if>
+        <if test="inspectionType != null and inspectionType != ''">
+            AND qmis.inspection_type = #{inspectionType}
+        </if>
+    </select>
+
+    <select id="batchQueryGrade" resultType="com.ruike.qms.domain.vo.QmsIqcGradeVO">
+        SELECT
+        GROUP_CONCAT(rs.spliceStr SEPARATOR '/') grade,
+        rs.INSTRUCTION_ID
+        FROM
+        (
+        SELECT
+        mia.INSTRUCTION_ID,
+        CONCAT(0+CAST(IFNULL(SUM( mml.PRIMARY_UOM_QTY ),0) as char) , attr.ATTR_VALUE ) spliceStr,
+        attr.ATTR_VALUE
+        FROM
+        mt_instruction_actual mia,
+        mt_instruction_actual_detail iad,
+        mt_material_lot mml
+        LEFT JOIN mt_material_lot_attr attr ON attr.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID AND attr.ATTR_NAME =
+        'MATERIAL_VERSION'
+        WHERE
+        mia.ACTUAL_ID = iad.ACTUAL_ID
+        AND iad.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID
+        AND mia.INSTRUCTION_ID IN
+        <foreach collection="instructionIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND attr.ATTR_VALUE != ''
+        AND ATTR_VALUE IS NOT NULL
+        AND mml.PRIMARY_UOM_QTY > 0
+        GROUP BY
+        mia.INSTRUCTION_ID,
+        attr.ATTR_VALUE
+        ) rs
+        GROUP BY rs.INSTRUCTION_ID
+    </select>
+
+    <select id="qualityFileQuery" resultType="com.ruike.qms.domain.vo.QmsQualityFileVO">
+        SELECT
+        	pdr.delivery_doc_line_id,
+        	pdr.ATTRIBUTE1 FILE_URL,
+			qai.type IMPORT_TYPE
+        FROM
+        	wms_po_delivery_rel pdr,
+			itf_quality_analyze_iface qai
+        WHERE pdr.tenant_id = #{tenantId}
+        AND pdr.delivery_doc_line_id = #{docLineId}
+        AND pdr.ATTRIBUTE1 is NOT NULL
+        AND pdr.ATTRIBUTE1 != ''
+		AND qai.file_path = pdr.ATTRIBUTE1
+		AND qai.tenant_id = pdr.TENANT_ID
+    </select>
+
+    <select id="qualityFileImportQuery" resultType="com.ruike.qms.domain.vo.QmsQualityFileVO2">
+        SELECT
+        	qal.process_date,
+            qal.process_status,
+            qal.process_message,
+            qal.type,
+            qal.material_lot_code,
+            qal.material_code,
+            mm.material_name,
+        	qal.quantity,
+        	qal.test1,
+        	qal.test2,
+        	qal.test3,
+        	qal.test4,
+        	qal.test5,
+        	qal.test6,
+        	qal.test7,
+        	qal.test8,
+        	qal.test9,
+        	qal.test10,
+        	qal.test11,
+        	qal.test12,
+        	qal.test13,
+        	qal.test14,
+        	qal.test15,
+        	qal.test16,
+        	qal.test17,
+        	qal.test18,
+        	qal.test19,
+        	qal.test20,
+        	qal.test21,
+        	qal.test22,
+        	qal.test23,
+        	qal.test24,
+        	qal.test25,
+        	qal.test26,
+        	qal.test27,
+        	qal.test28,
+        	qal.test29,
+        	qal.test30,
+        	qal.test31,
+        	qal.test32,
+        	qal.test33,
+        	qal.test34,
+        	qal.test35,
+        	qal.test36,
+        	qal.test37,
+        	qal.test38,
+        	qal.test39,
+        	qal.test40,
+        	qal.test41,
+        	qal.test42,
+        	qal.test43,
+        	qal.test44,
+        	qal.test45,
+        	qal.test46,
+        	qal.test47,
+        	qal.test48,
+        	qal.test49,
+        	qal.test50,
+        	qal.test51,
+        	qal.test52,
+        	qal.test53,
+        	qal.test54,
+        	qal.test55,
+        	qal.test56,
+        	qal.test57,
+        	qal.test58,
+        	qal.test59,
+        	qal.test60,
+        	qal.test61,
+        	qal.test62,
+        	qal.test63,
+        	qal.test64,
+        	qal.test65,
+        	qal.test66,
+        	qal.test67,
+        	qal.test68,
+        	qal.test69,
+        	qal.test70,
+        	qal.test71,
+        	qal.test72,
+        	qal.test73,
+        	qal.test74,
+        	qal.test75,
+        	qal.test76,
+        	qal.test77,
+        	qal.test78,
+        	qal.test79,
+        	qal.test80,
+        	qal.test81,
+        	qal.test82,
+        	qal.test83,
+        	qal.test84,
+        	qal.test85,
+        	qal.test86,
+        	qal.test87,
+        	qal.test88,
+        	qal.test89,
+        	qal.test90,
+        	qal.test91,
+        	qal.test92,
+        	qal.test93,
+        	qal.test94,
+        	qal.test95,
+        	qal.test96,
+        	qal.test97,
+        	qal.test98,
+        	qal.test99,
+        	qal.test100,
+        	qal.ATTRIBUTE1,
+        	qal.ATTRIBUTE2,
+        	qal.ATTRIBUTE3,
+        	qal.ATTRIBUTE4,
+        	qal.ATTRIBUTE5,
+        	qal.ATTRIBUTE6,
+        	qal.ATTRIBUTE7,
+        	qal.ATTRIBUTE8,
+        	qal.ATTRIBUTE9,
+        	qal.ATTRIBUTE10,
+        	qal.ATTRIBUTE11,
+        	qal.ATTRIBUTE12,
+        	qal.ATTRIBUTE13,
+        	qal.ATTRIBUTE14,
+        	qal.ATTRIBUTE15,
+        	qal.ATTRIBUTE16,
+        	qal.ATTRIBUTE17,
+        	qal.ATTRIBUTE18,
+        	qal.ATTRIBUTE19,
+        	qal.ATTRIBUTE20,
+        	qal.ATTRIBUTE21,
+        	qal.ATTRIBUTE22,
+        	qal.ATTRIBUTE23,
+        	qal.ATTRIBUTE24,
+        	qal.ATTRIBUTE25,
+        	qal.ATTRIBUTE26,
+        	qal.ATTRIBUTE27,
+        	qal.ATTRIBUTE28,
+        	qal.ATTRIBUTE29,
+        	qal.ATTRIBUTE30,
+        	qal.ATTRIBUTE31,
+        	qal.ATTRIBUTE32,
+        	qal.ATTRIBUTE33,
+        	qal.ATTRIBUTE34,
+        	qal.ATTRIBUTE35,
+        	qal.ATTRIBUTE36,
+        	qal.ATTRIBUTE37,
+        	qal.ATTRIBUTE38,
+        	qal.ATTRIBUTE39,
+        	qal.ATTRIBUTE40,
+        	qal.ATTRIBUTE41,
+        	qal.ATTRIBUTE42,
+        	qal.ATTRIBUTE43,
+        	qal.ATTRIBUTE44,
+        	qal.ATTRIBUTE45,
+        	qal.ATTRIBUTE46,
+        	qal.ATTRIBUTE47,
+        	qal.ATTRIBUTE48,
+        	qal.ATTRIBUTE49,
+        	qal.ATTRIBUTE50
+        FROM
+        itf_quality_analyze_iface qai,
+        itf_quality_analyze_line_iface qal
+        LEFT JOIN mt_material mm ON mm.material_code = qal.material_code AND mm.TENANT_ID = qal.TENANT_ID
+        WHERE qai.tenant_id = #{tenantId}
+        AND qai.file_path = #{fileUrl}
+        AND qal.tenant_id = qai.tenant_id
+        AND qal.interface_id = qai.interface_id
+        AND qal.type = qai.type
+
+    </select>
+</mapper>

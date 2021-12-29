@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeWorkCellDetailsReportMapper">
+
+
+    <select id="queryWorkCellReportList" resultType="com.ruike.hme.domain.vo.HmeWorkCellDetailsReportVO2"
+            parameterType="com.ruike.hme.domain.vo.HmeWorkCellDetailsReportVO">
+        SELECT
+        hjs.job_id AS jobId,
+        hjs.workcell_id AS workcellId,
+        mor.processId,
+        mor.productionLineId,
+        mor.lineWorkcellId,
+        mm.material_code AS snMaterialName,
+        mm.material_name AS materialDesc,
+        mwo.work_order_num AS workOrderNum,
+        mml.material_lot_code AS materialLotCode,
+        hjs.job_type AS jobPlatformCode,
+        hjs.flag,
+        mml.primary_uom_qty AS primaryUomQty,
+        hjs.rework_flag AS reworkFlag,
+        hjs.site_in_by AS siteInBy,
+        hjs.site_out_by AS siteOutBy,
+        hjs.workerTime AS workerTime
+        FROM
+        (
+        <if test="reportVO.siteFlag != null and reportVO.siteFlag != ''">
+            <choose>
+                <when test='reportVO.siteFlag == "Y"'>
+                    SELECT
+                    *, 'Y' AS flag,site_out_date AS workerTime
+                    FROM hme_eo_job_sn
+
+                    WHERE site_in_date IS NOT NULL AND site_out_date IS NOT NULL
+                    AND tenant_id = #{tenantId}
+                    <if test="reportVO.reworkFlag != null and reportVO.reworkFlag != ''">
+                        AND rework_flag = #{reportVO.reworkFlag}
+                    </if>
+                    <if test="reportVO.workcellId != null and reportVO.workcellId != ''">
+                        AND workcell_id = #{reportVO.workcellId}
+                    </if>
+                    <if test="reportVO.snMaterialId != null and reportVO.snMaterialId != ''">
+                        AND sn_material_id = #{reportVO.snMaterialId}
+                    </if>
+                    <if test="reportVO.startTime != null and reportVO.startTime != ''">
+                        AND site_out_date >= #{reportVO.startTime}
+                    </if>
+                    <if test="reportVO.endTime != null and reportVO.endTime != ''">
+                        AND site_out_date <![CDATA[<=]]> #{reportVO.endTime}
+                    </if>
+                </when>
+                <otherwise>
+                    SELECT
+                    *,'N' AS flag,site_in_date AS workerTime
+                    FROM hme_eo_job_sn
+                    WHERE tenant_id = #{tenantId}
+                    <if test="reportVO.reworkFlag != null and reportVO.reworkFlag != ''">
+                        AND rework_flag = #{reportVO.reworkFlag}
+                    </if>
+                    <if test="reportVO.workcellId != null and reportVO.workcellId != ''">
+                        AND workcell_id = #{reportVO.workcellId}
+                    </if>
+                    <if test="reportVO.snMaterialId != null and reportVO.snMaterialId != ''">
+                        AND sn_material_id = #{reportVO.snMaterialId}
+                    </if>
+                    <if test="reportVO.startTime != null and reportVO.startTime != ''">
+                        AND site_in_date >= #{reportVO.startTime}
+                    </if>
+                    <if test="reportVO.endTime != null and reportVO.endTime != ''">
+                        AND site_in_date <![CDATA[<=]]> #{reportVO.endTime}
+                    </if>
+                </otherwise>
+            </choose>
+        </if>
+        <if test='reportVO.siteFlag == null or reportVO.siteFlag == ""'>
+            SELECT
+            *,'N' AS flag,site_in_date AS workerTime
+            FROM hme_eo_job_sn
+            WHERE tenant_id = #{tenantId}
+            <if test="reportVO.reworkFlag != null and reportVO.reworkFlag != ''">
+                AND rework_flag = #{reportVO.reworkFlag}
+            </if>
+            <if test="reportVO.workcellId != null and reportVO.workcellId != ''">
+                AND workcell_id = #{reportVO.workcellId}
+            </if>
+            <if test="reportVO.snMaterialId != null and reportVO.snMaterialId != ''">
+                AND sn_material_id = #{reportVO.snMaterialId}
+            </if>
+            <if test="reportVO.startTime != null and reportVO.startTime != ''">
+                AND site_in_date >= #{reportVO.startTime}
+            </if>
+            <if test="reportVO.endTime != null and reportVO.endTime != ''">
+                AND site_in_date <![CDATA[<=]]> #{reportVO.endTime}
+            </if>
+            UNION ALL
+            ( SELECT
+            *, 'Y' AS flag,site_out_date AS workerTime
+            FROM hme_eo_job_sn
+
+            WHERE site_in_date IS NOT NULL AND site_out_date IS NOT NULL
+            AND tenant_id = #{tenantId}
+            <if test="reportVO.reworkFlag != null and reportVO.reworkFlag != ''">
+                AND rework_flag = #{reportVO.reworkFlag}
+            </if>
+            <if test="reportVO.workcellId != null and reportVO.workcellId != ''">
+                AND workcell_id = #{reportVO.workcellId}
+            </if>
+            <if test="reportVO.snMaterialId != null and reportVO.snMaterialId != ''">
+                AND sn_material_id = #{reportVO.snMaterialId}
+            </if>
+            <if test="reportVO.startTime != null and reportVO.startTime != ''">
+                AND site_out_date >= #{reportVO.startTime}
+            </if>
+            <if test="reportVO.endTime != null and reportVO.endTime != ''">
+                AND site_out_date <![CDATA[<=]]> #{reportVO.endTime}
+            </if>
+            )
+        </if>
+        ) hjs
+        LEFT JOIN mt_material mm ON mm.material_id = hjs.sn_material_id
+        LEFT JOIN mt_work_order mwo ON mwo.work_order_id = hjs.work_order_id
+        LEFT JOIN mt_material_lot mml ON mml.material_lot_id = hjs.material_lot_id
+        LEFT JOIN ( SELECT
+        mor1.ORGANIZATION_ID AS workcellId,
+        mor2.ORGANIZATION_ID AS processId,
+        mor3.ORGANIZATION_ID AS lineWorkcellId,
+        mor4.ORGANIZATION_ID AS productionLineId,
+        mor5.PARENT_ORGANIZATION_ID AS siteId,
+        mor5.ORGANIZATION_ID AS workshopId
+        FROM
+        mt_mod_organization_rel mor1
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = "WORKCELL"
+        LEFT JOIN mt_mod_organization_rel mor3 ON mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.ORGANIZATION_TYPE = "WORKCELL"
+        AND mor3.PARENT_ORGANIZATION_TYPE = "PROD_LINE"
+        LEFT JOIN mt_mod_organization_rel mor4 ON mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+        AND mor4.ORGANIZATION_TYPE = "PROD_LINE"
+        AND mor4.PARENT_ORGANIZATION_TYPE = "AREA"
+        LEFT JOIN mt_mod_organization_rel mor5 ON mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+        AND mor5.ORGANIZATION_TYPE = "AREA" WHERE mor2.ORGANIZATION_ID is NOT NULL
+        AND mor3.ORGANIZATION_ID is NOT NULL
+        AND mor4.ORGANIZATION_ID is NOT NULL
+        AND mor5.ORGANIZATION_ID is NOT NULL) mor ON mor.workcellId = hjs.workcell_id AND mor.productionLineId =
+        mwo.PRODUCTION_LINE_ID
+        WHERE
+        hjs.tenant_id = #{tenantId}
+        <if test="reportVO.siteId != null and reportVO.siteId != ''">
+            AND mor.siteId = #{reportVO.siteId}
+        </if>
+        <if test="reportVO.workshop != null and reportVO.workshop != ''">
+            AND mor.workshopId = #{reportVO.workshop}
+        </if>
+        <if test="reportVO.productionLineId != null and reportVO.productionLineId != ''">
+            AND mor.productionLineId = #{reportVO.productionLineId}
+        </if>
+        <if test="reportVO.lineWorkcellId != null and reportVO.lineWorkcellId != ''">
+            AND mor.lineWorkcellId = #{reportVO.lineWorkcellId}
+        </if>
+        <if test="reportVO.workOrder != null and reportVO.workOrder != ''">
+            AND mwo.work_order_num LIKE CONCAT("%",#{reportVO.workOrder},"%")
+        </if>
+        <if test="reportVO.materialLotCode != null and reportVO.materialLotCode != ''">
+            AND mml.material_lot_code LIKE CONCAT("%",#{reportVO.materialLotCode},"%")
+        </if>
+        <if test="reportVO.processId != null and reportVO.processId != ''">
+            AND mor.processId = #{reportVO.processId}
+        </if>
+        ORDER BY hjs.creation_date DESC,hjs.flag ASC
+    </select>
+
+    <select id="queryProductionLineName" resultType="java.lang.String">
+        SELECT DESCRIPTION
+        FROM mt_mod_production_line
+        WHERE TENANT_ID = #{tenantId}
+          AND PROD_LINE_ID = #{organizationId}
+    </select>
+
+    <select id="queryProductionLineNameById" resultType="java.lang.String">
+        SELECT PROD_LINE_NAME
+        FROM mt_mod_production_line
+        WHERE TENANT_ID = #{tenantId}
+          AND PROD_LINE_ID = #{organizationId}
+    </select>
+
+    <select id="queryLineWorkcellName" resultType="java.lang.String">
+        SELECT WORKCELL_NAME
+        FROM mt_mod_workcell
+        WHERE TENANT_ID = #{tenantId}
+          AND WORKCELL_ID = #{organizationId}
+          AND WORKCELL_TYPE = #{workcellType}
+    </select>
+
+    <select id="queryWorkCellListLikeByCode" resultType="java.lang.String">
+        SELECT WORKCELL_ID
+        FROM mt_mod_workcell
+        WHERE WORKCELL_TYPE = 'LINE'
+          AND WORKCELL_CODE LIKE CONCAT('%', #{workcellCode}, '%')
+    </select>
+
+    <select id="workCellUiQuery" resultType="com.ruike.hme.domain.vo.HmeWorkCellVO">
+        SELECT
+        WORKCELL_ID AS workcellId,
+        WORKCELL_CODE AS workcellCode,
+        WORKCELL_NAME AS workcellName
+        FROM
+        mt_mod_workcell
+        WHERE
+        WORKCELL_TYPE = 'LINE'
+        AND ENABLE_FLAG = 'Y'
+        <if test="cellVO.workcellCode != null and cellVO.workcellCode != ''">
+            AND WORKCELL_CODE LIKE CONCAT('%',#{cellVO.workcellCode},'%')
+        </if>
+        <if test="cellVO.workcellName != null and cellVO.workcellName != ''">
+            AND WORKCELL_NAME LIKE CONCAT('%',#{cellVO.workcellName},'%')
+        </if>
+    </select>
+
+    <select id="queryProcessReportList" resultType="com.ruike.hme.domain.vo.HmeProcessReportVo2"
+            parameterType="com.ruike.hme.domain.vo.HmeProcessReportVo">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        me.eo_id,
+        me.identification,
+        mm.material_code,
+        mm.material_name,
+        wo.work_order_num,
+        ejs.job_id,
+        ejs.site_out_date,
+        ejs.site_in_by,
+        ejs.workcell_id,
+        mor.processId,
+        wc.WORKCELL_NAME workcell_name,
+        pc.WORKCELL_NAME process_workcell_name,
+        wo_mm.material_code wo_material_code,
+        wo_mm.material_name wo_material_name,
+        mml.quality_status,
+        me.status eo_status,
+        mgsl.description eo_status_meaning,
+        ifnull(mml.freeze_flag,'') freeze_flag,
+        mks.shift_date,
+        mks.shift_code,
+        case when me.MATERIAL_ID != wo.MATERIAL_ID then 'Y' else 'N' end transform_flag,
+        (SELECT GROUP_CONCAT(mnct.DESCRIPTION SEPARATOR';')
+        from
+        mt_nc_record nc_p,
+        mt_nc_record nc_s,
+        mt_nc_code mnc,
+        mt_nc_code_tl mnct
+        where me.EO_ID = nc_p.eo_id
+        and nc_p.PARENT_NC_RECORD_ID = ''
+        and nc_s.PARENT_NC_RECORD_ID = nc_p.NC_RECORD_ID
+        and mnc.nc_code_id = nc_s.NC_CODE_ID
+        and mnct.NC_CODE_ID = mnc.NC_CODE_ID
+        and mnct.LANG = #{lang}
+        group by nc_p.NC_RECORD_ID
+        ,nc_p.creation_date
+        order by nc_p.creation_date desc
+        limit 1) latest_nc_tag,
+        (select nc.creation_date
+        from mt_nc_record nc
+        where me.EO_ID = nc.eo_id
+        and nc.PARENT_NC_RECORD_ID = ''
+        order by nc.creation_date desc
+        limit 1) nc_date
+        FROM
+        mt_eo me
+        LEFT JOIN mt_material mm ON mm.material_id = me.material_id
+        LEFT JOIN mt_work_order wo ON wo.work_order_id = me.work_order_id
+        LEFT JOIN mt_material wo_mm ON wo_mm.material_id = wo.material_id
+        LEFT JOIN hme_eo_job_sn ejs ON ejs.eo_id = me.EO_ID
+        LEFT JOIN (
+        SELECT
+        mor1.ORGANIZATION_ID AS workcellId,
+        mor2.ORGANIZATION_ID AS processId,
+        mor3.ORGANIZATION_ID AS lineWorkcellId,
+        mor4.ORGANIZATION_ID AS productionLineId,
+        mor5.PARENT_ORGANIZATION_ID AS siteId,
+        mor5.ORGANIZATION_ID AS workshopId
+        FROM mt_mod_organization_rel mor1
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_organization_rel mor3 ON mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel mor4 ON mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+        AND mor4.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        LEFT JOIN mt_mod_organization_rel mor5 ON mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+        AND mor5.ORGANIZATION_TYPE = 'AREA'
+        WHERE mor2.ORGANIZATION_ID IS NOT NULL
+        AND mor3.ORGANIZATION_ID IS NOT NULL
+        AND mor4.ORGANIZATION_ID IS NOT NULL
+        AND mor5.ORGANIZATION_ID IS NOT NULL
+        ) mor ON mor.workcellId = ejs.workcell_id AND mor.productionLineId = wo.PRODUCTION_LINE_ID
+        LEFT JOIN mt_mod_workcell wc ON wc.WORKCELL_ID = ejs.workcell_id AND wc.WORKCELL_TYPE = 'STATION'
+        LEFT JOIN mt_mod_workcell pc ON pc.WORKCELL_ID = mor.processId AND pc.WORKCELL_TYPE = 'PROCESS'
+        left join mt_material_lot mml on mml.MATERIAL_LOT_CODE = me.IDENTIFICATION and mml.ENABLE_FLAG = 'Y'
+        left join mt_wkc_shift mks on mks.WKC_SHIFT_ID = ejs.shift_id
+        join mt_gen_status mgs on mgs.STATUS_GROUP = 'EO_STATUS' and mgs.status_code = me.status
+        left join mt_gen_status_tl mgsl on mgs.GEN_STATUS_ID = mgsl.GEN_STATUS_ID and mgsl.lang = #{lang}
+        WHERE me.tenant_id = wo.tenant_id
+        and me.tenant_id = mm.tenant_id
+        and me.tenant_id = pc.tenant_id
+        and me.tenant_id = wc.tenant_id
+        and me.tenant_id = #{tenantId}
+        AND ejs.site_in_date between #{dto.startTime} and #{dto.endTime}
+        <if test="dto.workOrderNumList!=null and dto.workOrderNumList.size() > 0">
+            AND wo.work_order_num IN (
+            <foreach collection="dto.workOrderNumList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.materialCodeList!=null and dto.materialCodeList.size() > 0">
+            AND mm.material_code IN (
+            <foreach collection="dto.materialCodeList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.snList!=null and dto.snList.size() > 0">
+            AND me.IDENTIFICATION IN (
+            <foreach collection="dto.snList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.processCodeList!=null and dto.processCodeList.size() > 0">
+            AND pc.workcell_code IN (
+            <foreach collection="dto.processCodeList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.workcellCodeList!=null and dto.workcellCodeList.size() > 0">
+            AND wc.workcell_code IN (
+            <foreach collection="dto.workcellCodeList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.eoStatusList!=null and dto.eoStatusList.size() > 0">
+            AND me.status IN (
+            <foreach collection="dto.eoStatusList" item="i" separator="," index="index">
+                #{i}
+            </foreach>
+            )
+        </if>
+        <if test="dto.siteId != null and dto.siteId != ''">
+            AND wo.site_id = #{dto.siteId}
+        </if>
+        <if test="dto.workShopId != null and dto.workShopId != ''">
+            AND mor.workshopId = #{dto.workShopId}
+        </if>
+        <if test="dto.productLineId != null and dto.productLineId != ''">
+            AND mor.productionLineId = #{dto.productLineId}
+        </if>
+        <if test="dto.lineWorkCellId != null and dto.lineWorkCellId != ''">
+            AND mor.lineWorkcellId = #{dto.lineWorkCellId}
+        </if>
+        <if test="dto.qualityStatus != null and dto.qualityStatus != ''">
+            AND mml.quality_status = #{dto.qualityStatus}
+        </if>
+        <if test="dto.freezeFlag != null and dto.freezeFlag == 'Y'.toString()">
+            and mml.freeze_flag = #{dto.freezeFlag}
+        </if>
+        <if test="dto.freezeFlag != null and dto.freezeFlag == 'N'.toString()">
+            and (
+            mml.freeze_flag = #{dto.freezeFlag}
+            or mml.freeze_flag = ''
+            or mml.freeze_flag = null
+            )
+        </if>
+        <if test="dto.transformFlag != null and dto.transformFlag != ''">
+            <choose>
+                <when test='dto.transformFlag == "Y"'>
+                    and me.MATERIAL_ID != wo.MATERIAL_ID
+                </when>
+                <when test='dto.transformFlag == "N"'>
+                    and me.MATERIAL_ID = wo.MATERIAL_ID
+                </when>
+            </choose>
+        </if>
+        <if test="dto.userId != null">
+            AND ejs.site_in_by = #{dto.userId}
+        </if>
+        <if test="dto.shiftDate != null">
+            AND mks.shift_date = #{dto.shiftDate}
+        </if>
+        <if test="dto.shiftCode != null and dto.shiftCode != ''">
+            <bind name="shiftCodeLike" value="'%'+dto.shiftCode+'%'"/>
+            AND mks.shift_code like #{shiftCodeLike}
+        </if>
+        <if test="dto.productMatch != null">
+            AND substr(me.IDENTIFICATION,3,4) like #{dto.productMatch}
+        </if>
+    </select>
+
+    <select id="queryProcessCollectList" resultType="com.ruike.hme.domain.vo.HmeProcessCollectVO">
+        SELECT jn.job_id          AS jobId,
+               mt.tag_description AS proName,
+               mt.tag_code        AS tagCode,
+               dr.result          AS proResult
+        FROM hme_eo_job_sn jn
+                 LEFT JOIN hme_eo_job_data_record dr ON jn.job_id = dr.job_id
+                 LEFT JOIN mt_tag mt ON mt.tag_id = dr.tag_id
+        WHERE jn.tenant_id = #{tenantId}
+          AND dr.TENANT_ID = #{tenantId}
+          AND jn.job_id = #{jobIds}
+          AND (TAG_CODE is NOT NULL AND TAG_CODE != '')
+          AND (mt.tag_description is NOT NULL AND mt.tag_description != '')
+        ORDER BY mt.creation_date ASC
+    </select>
+
+    <select id="queryBatchProcessCollectList" resultType="com.ruike.hme.domain.vo.HmeProcessCollectVO">
+        SELECT
+        jn.job_id AS jobId,
+        mt.tag_description AS proName,
+        mt.tag_code AS tagCode,
+        dr.result AS proResult
+        FROM
+        hme_eo_job_sn jn
+        LEFT JOIN hme_eo_job_data_record dr ON jn.job_id = dr.job_id
+        LEFT JOIN mt_tag mt ON mt.tag_id = dr.tag_id
+        WHERE
+        jn.tenant_id = #{tenantId}
+        AND dr.TENANT_ID = #{tenantId}
+        AND jn.job_id IN
+        <foreach collection="jobIdList" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND (TAG_CODE is NOT NULL AND TAG_CODE != '')
+        AND (mt.tag_description is NOT NULL AND mt.tag_description != '')
+        ORDER BY mt.creation_date ASC
+    </select>
+
+    <select id="queryExceptionReportList" resultType="com.ruike.hme.domain.vo.HmeExceptionReportVO2"
+            parameterType="com.ruike.hme.domain.vo.HmeExceptionReportVO">
+        SELECT
+        wr.workcell_id AS workcellId,
+        wr.shift_id AS shiftId,
+        wr.material_lot_code AS materialLotCode,
+        wr.exception_remark AS exceptionRemark,
+        wr.exception_status AS exceptionStatus,
+        wr.exception_level AS exceptionLevel,
+        wr.attachment_uuid AS attachmentUuid,
+        wr.created_by AS createdBy,
+        wr.creation_date AS creationDate,
+        wr.responded_by AS respondedBy,
+        wr.respond_time AS respondTime,
+        wr.respond_remark AS respondRemark,
+        wr.closed_by AS closedBy,
+        wr.close_time AS closeTime,
+
+        mw.workcell_name AS workcellName,
+        ws.shift_code AS shiftCode,
+        wr.ATTRIBUTE1 ORGANIZATION_TYPE,
+        wr.ATTRIBUTE2 ORGANIZATION_ID,
+
+        me.identification AS identification,
+        wo.work_order_num AS workOrderNum,
+
+        he.exception_name AS exceptionName,
+        he.exception_type AS exceptionType,
+
+        mm.material_name AS materialName,
+
+        heq.asset_encoding AS assetEncoding,
+
+        mor.ORGANIZATION_ID AS prodLineId,
+        mor.PARENT_ORGANIZATION_ID AS areaId,
+        mor.workshopId
+        FROM
+        hme_exc_wkc_record wr
+        LEFT JOIN mt_mod_workcell mw ON wr.workcell_id = mw.WORKCELL_ID
+        LEFT JOIN mt_wkc_shift ws ON ws.WKC_SHIFT_ID = wr.wkc_shift_id
+        LEFT JOIN mt_eo me ON me.EO_ID = wr.eo_id
+        LEFT JOIN mt_work_order wo ON wo.WORK_ORDER_ID = me.WORK_ORDER_ID
+        LEFT JOIN hme_exception he ON he.exception_id = wr.exception_id
+        LEFT JOIN mt_material mm ON mm.MATERIAL_ID = wr.material_id
+        LEFT JOIN hme_equipment heq ON heq.EQUIPMENT_ID = wr.equipment_id
+        LEFT JOIN (
+        SELECT
+        mor1.ORGANIZATION_ID AS workcellId,
+        mor4.ORGANIZATION_ID,
+        mor5.PARENT_ORGANIZATION_ID,
+        mor5.ORGANIZATION_ID AS workshopId
+        FROM
+        mt_mod_organization_rel mor1
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = "WORKCELL"
+        LEFT JOIN mt_mod_organization_rel mor3 ON mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.ORGANIZATION_TYPE = "WORKCELL"
+        AND mor3.PARENT_ORGANIZATION_TYPE = "PROD_LINE"
+        LEFT JOIN mt_mod_organization_rel mor4 ON mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+        AND mor4.ORGANIZATION_TYPE = "PROD_LINE"
+        AND mor4.PARENT_ORGANIZATION_TYPE = "AREA"
+        LEFT JOIN mt_mod_organization_rel mor5 ON mor5.ORGANIZATION_ID = mor4.PARENT_ORGANIZATION_ID
+        AND mor5.ORGANIZATION_TYPE = "AREA"
+        WHERE mor2.ORGANIZATION_ID is NOT NULL
+        AND mor3.ORGANIZATION_ID is NOT NULL
+        AND mor4.ORGANIZATION_ID is NOT NULL
+        AND mor5.ORGANIZATION_ID is NOT NULL) mor ON mor.workcellId = wr.workcell_id
+        WHERE
+        wr.tenant_id = #{tenantId}
+        <if test="reportVO.startTime != null and reportVO.startTime != ''">
+            AND wr.creation_date >= #{reportVO.startTime}
+        </if>
+        <if test="reportVO.endTime != null and reportVO.endTime != ''">
+            AND wr.creation_date <![CDATA[<=]]> #{reportVO.endTime}
+        </if>
+        <if test="reportVO.shiftId != null and reportVO.shiftId != ''">
+            AND wr.shift_id = #{reportVO.shiftId}
+        </if>
+        <if test="reportVO.shiftCode != null and reportVO.shiftCode != ''">
+            AND ws.SHIFT_CODE LIKE CONCAT("%",#{reportVO.shiftCode},"%")
+        </if>
+        <if test="reportVO.workOrderNum != null and reportVO.workOrderNum != ''">
+            AND wo.WORK_ORDER_NUM = #{reportVO.workOrderNum}
+        </if>
+        <if test="reportVO.identification != null and reportVO.identification != ''">
+            AND me.identification LIKE CONCAT("%",#{reportVO.identification},"%")
+        </if>
+        <if test="reportVO.exceptionType != null and reportVO.exceptionType != ''">
+            AND he.exception_type = #{reportVO.exceptionType}
+        </if>
+        <if test="reportVO.exceptionId != null and reportVO.exceptionId != ''">
+            AND he.exception_id = #{reportVO.exceptionId}
+        </if>
+        <if test="reportVO.exceptionStatus != null and reportVO.exceptionStatus != ''">
+            AND wr.exception_status = #{reportVO.exceptionStatus}
+        </if>
+        <if test="reportVO.productionLineId != null and reportVO.productionLineId != ''">
+            AND ( mor.ORGANIZATION_ID = #{reportVO.productionLineId} OR
+            CASE wr.ATTRIBUTE1 WHEN 'PROD_LINE' THEN wr.ATTRIBUTE2 = #{reportVO.productionLineId} ELSE 1 = 2 END )
+        </if>
+        <if test="reportVO.areaId != null and reportVO.areaId != ''">
+            AND (mor.PARENT_ORGANIZATION_ID = #{reportVO.areaId} OR
+            CASE
+            wr.ATTRIBUTE1
+            WHEN 'PROD_LINE' THEN
+            EXISTS (
+            SELECT
+            1
+            FROM
+            mt_mod_organization_rel mor_s,
+            mt_mod_organization_rel mor_p
+            WHERE
+            mor_s.PARENT_ORGANIZATION_ID = #{reportVO.areaId}
+            AND mor_s.ORGANIZATION_TYPE = 'AREA'
+            AND mor_s.PARENT_ORGANIZATION_TYPE = 'AREA'
+            AND mor_p.PARENT_ORGANIZATION_ID = mor_s.ORGANIZATION_ID
+            AND mor_p.ORGANIZATION_TYPE = 'PROD_LINE'
+            AND mor_p.PARENT_ORGANIZATION_TYPE = 'AREA'
+            AND mor_p.ORGANIZATION_ID = wr.ATTRIBUTE2
+            )
+            WHEN 'WORKSHOP' THEN
+            EXISTS ( SELECT 1 FROM mt_mod_organization_rel
+            WHERE PARENT_ORGANIZATION_ID = #{reportVO.areaId}
+            AND ORGANIZATION_ID = wr.ATTRIBUTE2
+            AND ORGANIZATION_TYPE = 'PROD_LINE'
+            AND PARENT_ORGANIZATION_TYPE = 'AREA' )
+            WHEN 'AREA' THEN
+            wr.ATTRIBUTE2 = #{reportVO.areaId} ELSE 1 = 2
+            END )
+        </if>
+        ORDER BY wr.creation_date DESC
+    </select>
+
+    <select id="queryAreaNameByWorkCellId" resultType="java.lang.String">
+        SELECT AREA_NAME
+        FROM mt_mod_area
+        WHERE TENANT_ID = #{tenantId}
+          AND AREA_CATEGORY = #{areaCategory}
+          AND AREA_ID = #{areaId}
+    </select>
+
+    <select id="queryExceptionTypeName" resultType="java.lang.String">
+        select tl.DESCRIPTION
+        from mt_gen_type t
+                 join mt_gen_type_tl tl on t.GEN_TYPE_ID = tl.GEN_TYPE_ID and tl.LANG = #{lang}
+        where t.TENANT_ID = #{tenantId}
+          and t.TYPE_GROUP = 'EXCEPTION_TYPE'
+          and t.TYPE_CODE = #{typeCode}
+    </select>
+
+    <select id="queryAreaListByWorkCellIdList" resultType="tarzan.modeling.domain.entity.MtModArea">
+        SELECT
+        AREA_ID,
+        AREA_CODE,
+        AREA_NAME,
+        DESCRIPTION,
+        ENABLE_FLAG,
+        AREA_CATEGORY
+        FROM mt_mod_area
+        WHERE
+        TENANT_ID = #{tenantId}
+        <if test="workCellIdList != null and workCellIdList.size() != 0 ">
+            AND AREA_ID IN
+            <foreach collection="workCellIdList" open="(" close=")" separator="," item="cellId" index="index">
+                #{cellId}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryParentLocatorId" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT mml.*
+        FROM mt_mod_locator ml,
+             mt_mod_locator mml
+        WHERE ml.LOCATOR_ID = mml.PARENT_LOCATOR_ID
+          AND ml.TENANT_ID = #{tenantId}
+          AND ml.LOCATOR_ID = #{locatorId}
+          AND mml.LOCATOR_TYPE = "DEFAULT_STORAGE"
+    </select>
+
+    <select id="queryInstructionDocId" resultType="java.lang.String">
+        SELECT
+	        doc.INSTRUCTION_DOC_ID
+        FROM
+	        mt_instruction_detail mid
+	    LEFT JOIN mt_instruction mi ON mi.INSTRUCTION_ID = mid.INSTRUCTION_ID
+	    LEFT JOIN mt_instruction_doc doc ON doc.INSTRUCTION_DOC_ID = mi.SOURCE_DOC_ID AND doc.INSTRUCTION_DOC_TYPE = "PRODUCT_RECEIPT"
+	    WHERE
+	        mid.TENANT_ID = #{tenantId}
+	    AND mid.MATERIAL_LOT_ID = #{materialLotId}
+	    AND (doc.INSTRUCTION_DOC_ID is not NULL OR doc.INSTRUCTION_DOC_ID != '')
+	    AND doc.INSTRUCTION_DOC_STATUS != 'CANCEL'
+    </select>
+
+    <select id="selectProcessJobDetailList" resultType="com.ruike.hme.domain.vo.HmeProcessJobDetailVO">
+        select mml.material_lot_id,
+               mml.material_id,
+               mm.material_code,
+               mml.material_lot_code,
+               mml.lot,
+               la.attr_value suppLIER_LOT,
+               jm.release_qty
+        from hme_eo_job_material jm,
+             mt_material_lot mml
+                 left join mt_material_lot_attr la on la.material_lot_id = mml.material_lot_id
+                 and la.attr_name = 'SUPPLIER_LOT',
+             mt_material mm
+        where jm.material_lot_id = mml.material_lot_id
+          and jm.material_lot_code != ''
+          and jm.material_lot_code is not NULL
+          and mml.material_id = mm.material_id
+          and jm.tenant_id = #{tenantId}
+          and jm.job_id = #{jobId}
+        union
+        select mml.material_lot_id,
+               mml.material_id,
+               mm.material_code,
+               mml.material_lot_code,
+               mml.lot,
+               la.attr_value supplier_lot,
+               slm.release_qty
+        from hme_eo_job_sn_lot_material slm,
+             mt_material_lot mml
+                 left join mt_material_lot_attr la on la.material_lot_id = mml.material_lot_id
+                 and la.attr_name = 'SUPPLIER_LOT',
+             mt_material mm
+        where slm.material_lot_id = mml.material_lot_id
+          and mml.material_id = mm.material_id
+          and slm.tenant_id = #{tenantId}
+          and slm.job_id = #{jobId}
+    </select>
+</mapper>

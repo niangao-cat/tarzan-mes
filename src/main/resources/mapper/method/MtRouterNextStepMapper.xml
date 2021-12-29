@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.method.infra.mapper.MtRouterNextStepMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.method.domain.entity.MtRouterNextStep">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="ROUTER_NEXT_STEP_ID" property="routerNextStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="NEXT_STEP_ID" property="nextStepId" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="NEXT_DECISION_TYPE" property="nextDecisionType" jdbcType="VARCHAR"/>
+        <result column="NEXT_DECISION_VALUE" property="nextDecisionValue" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="DtoResultMap" type="tarzan.method.api.dto.MtRouterNextStepDTO">
+        <result column="ROUTER_NEXT_STEP_ID" property="routerNextStepId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="NEXT_STEP_ID" property="nextStepId" jdbcType="VARCHAR"/>
+        <result column="NEXT_STEP_NAME" property="nextStepName" jdbcType="VARCHAR"/>
+        <result column="NEXT_STEP_DESC" property="nextStepDesc" jdbcType="VARCHAR"/>
+        <result column="SEQUENCE" property="sequence" jdbcType="DECIMAL"/>
+        <result column="NEXT_DECISION_TYPE" property="nextDecisionType" jdbcType="VARCHAR"/>
+        <result column="NEXT_DECISION_VALUE" property="nextDecisionValue" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectRouterNextStepByStepIds" resultMap="BaseResultMap">
+        select * from mt_router_next_step
+        where
+        TENANT_ID = ${tenantId}
+        and ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <resultMap id="KeyStepResultMap" type="tarzan.method.domain.vo.MtRouterNextStepVO" extends="BaseResultMap">
+        <result column="KEY_STEP_FLAG" property="keyStepFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectKeyStepFlagByStepIds" resultMap="KeyStepResultMap">
+        SELECT
+        t.*, step.KEY_STEP_FLAG
+        FROM
+        mt_router_next_step t join mt_router_step step on t.NEXT_STEP_ID = step.ROUTER_STEP_ID
+        WHERE
+        t.TENANT_ID = ${tenantId}
+        and step.TENANT_ID = ${tenantId}
+        AND t.ROUTER_STEP_ID IN
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryRouterNextStepForUi" resultMap="DtoResultMap">
+        <bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        mrns.ROUTER_NEXT_STEP_ID,
+        mrns.ROUTER_STEP_ID,
+        mrns.NEXT_STEP_ID,
+        mrs.STEP_NAME NEXT_STEP_NAME,
+        mrst.DESCRIPTION NEXT_STEP_DESC,
+        mrns.SEQUENCE,
+        mrns.NEXT_DECISION_TYPE,
+        mrns.NEXT_DECISION_VALUE
+        from mt_router_next_step mrns
+        join mt_router_step mrs on mrns.NEXT_STEP_ID = mrs.ROUTER_STEP_ID and mrns.TENANT_ID = ${tenantId}
+        join mt_router_step_tl mrst on mrs.ROUTER_STEP_ID = mrst.ROUTER_STEP_ID and mrst.LANG = #{locale}
+        where mrns.TENANT_ID = ${tenantId}
+        and mrns.ROUTER_STEP_ID in
+        <foreach collection="routerStepIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        Order By mrns.CREATION_DATE DESC
+    </select>
+</mapper>

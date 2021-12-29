@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeInterceptObjectMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeInterceptObject">
+                    <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+                    <result column="intercept_object_id" property="interceptObjectId" jdbcType="VARCHAR"/>
+                    <result column="intercept_id" property="interceptId" jdbcType="VARCHAR"/>
+                    <result column="intercept_object" property="interceptObject" jdbcType="VARCHAR"/>
+                    <result column="material_id" property="materialId" jdbcType="VARCHAR"/>
+                    <result column="status" property="status" jdbcType="VARCHAR"/>
+                    <result column="release_by" property="releaseBy" jdbcType="DECIMAL"/>
+                    <result column="release_date" property="releaseDate" jdbcType="DATE"/>
+                    <result column="cid" property="cid" jdbcType="DECIMAL"/>
+                    <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+                    <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+                    <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+                    <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+                    <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+                    <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+                    <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+            </resultMap>
+
+    <select id="queryInterceptObject" resultType="com.ruike.hme.domain.vo.HmeInterceptObjectVO">
+        SELECT
+                hio.intercept_object_id,
+                hio.intercept_object,
+                mm.MATERIAL_CODE,
+                hio.`status`,
+                hio.release_by
+        FROM
+                hme_intercept_object hio
+                left join mt_material mm on hio.material_id = mm.MATERIAL_ID
+        WHERE
+                hio.tenant_id =#{tenantId}
+                AND hio.intercept_id =#{interceptId}
+
+    </select>
+
+    <select id="selectMaterialType" resultType="com.ruike.hme.domain.vo.HmeInterceptObjectVO">
+        SELECT
+            hio.material_id,
+            mmsa.ATTR_VALUE AS material_type
+        FROM
+            hme_intercept_object hio
+            LEFT JOIN mt_material_site mms ON mms.TENANT_ID = hio.tenant_id
+            AND mms.SITE_ID = #{siteId}
+            AND mms.MATERIAL_ID = hio.material_id
+            LEFT JOIN mt_material_site_attr mmsa ON mmsa.TENANT_ID = mms.TENANT_ID
+            AND mmsa.ATTR_NAME = 'attribute14'
+            AND mmsa.MATERIAL_SITE_ID = mms.MATERIAL_SITE_ID
+        WHERE
+            hio.tenant_id = #{tenantId}
+        AND hio.intercept_id = #{interceptId}
+        GROUP BY
+            hio.material_id,
+            mmsa.ATTR_VALUE
+    </select>
+</mapper>

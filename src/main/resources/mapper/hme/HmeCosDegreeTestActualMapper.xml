@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.hme.infra.mapper.HmeCosDegreeTestActualMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.hme.domain.entity.HmeCosDegreeTestActual">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="degree_test_id" property="degreeTestId" jdbcType="VARCHAR"/>
+        <result column="cos_type" property="cosType" jdbcType="VARCHAR"/>
+        <result column="wafer" property="wafer" jdbcType="VARCHAR"/>
+        <result column="test_object" property="testObject" jdbcType="VARCHAR"/>
+        <result column="test_qty" property="testQty" jdbcType="DECIMAL"/>
+        <result column="target_qty" property="targetQty" jdbcType="DECIMAL"/>
+        <result column="cid" property="cid" jdbcType="DECIMAL"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getLastJobDate" resultType="com.ruike.hme.domain.entity.HmeCosDegreeTestActual">
+        select hcdta.degree_test_id, hcdta.last_update_date
+        from hme_cos_degree_test_actual hcdta
+        where hcdta.cos_type = 'JOB'
+        and hcdta.wafer = 'JOB'
+        and hcdta.test_object = 'JOB'
+        and hcdta.tenant_id = #{tenantId}
+    </select>
+
+    <update id="updateJobDate">
+        UPDATE hme_cos_degree_test_actual
+        <set>
+            last_update_date = #{dto.lastUpdateDate}
+        </set>
+        <where>
+            degree_test_id = #{dto.degreeTestId}
+        </where>
+    </update>
+
+    <select id="codFunctionDataQuery" resultType="com.ruike.hme.domain.entity.HmeCosFunction">
+        select hcf.load_sequence, hcf.A24
+        from hme_cos_function hcf
+        where hcf.LAST_UPDATE_DATE >= DATE_FORMAT(#{lastUpdateDate},'%Y-%m-%d %H:%i:%S')
+        and hcf.TENANT_ID = #{tenantId}
+        group by hcf.load_sequence, hcf.A24
+    </select>
+
+    <select id="cosTypeWaferQuery" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.ATTRIBUTE1, hmll.ATTRIBUTE2
+        from hme_material_lot_load hmll
+        where hmll.load_sequence in
+        <foreach collection="loadSequenceList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and hmll.tenant_id = #{tenantId}
+    </select>
+
+    <select id="materialLotLoadQuery" resultType="com.ruike.hme.domain.entity.HmeMaterialLotLoad">
+        select hmll.load_sequence, hmll.ATTRIBUTE1, hmll.ATTRIBUTE2,
+               hmll.ATTRIBUTE17, hmll.ATTRIBUTE18
+        from hme_material_lot_load hmll
+        where (hmll.ATTRIBUTE2, hmll.ATTRIBUTE1) in
+        <foreach collection="cosTypeWaferList" index="index" item="item" open="(" separator="," close=")">
+            (#{item.wafer} , #{item.cosType})
+        </foreach>
+        and (hmll.ATTRIBUTE17 = 'Y'
+        or hmll.ATTRIBUTE18 = 'Y')
+        and hmll.tenant_id = #{tenantId}
+    </select>
+
+    <select id="cosDegreeTestActualQuery" resultType="com.ruike.hme.domain.entity.HmeCosDegreeTestActual">
+        select hcdta.*
+        from hme_cos_degree_test_actual hcdta
+        where (hcdta.cos_type, hcdta.wafer) in
+        <foreach collection="cosDegreeTestActualQueryList" index="index" item="item" open="(" separator="," close=")">
+            (#{item.cosType} , #{item.wafer})
+        </foreach>
+        and hcdta.tenant_id = #{tenantId}
+    </select>
+
+    <select id="tagPassRateHeaderQuery" resultType="com.ruike.hme.domain.vo.HmeCosDegreeTestActualVO">
+        select htprh.header_id, htprh.cos_type, htprh.pass_rate
+        from hme_tag_pass_rate_header htprh
+        where htprh.cos_type in
+        <foreach collection="cosTypeList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and htprh.test_object = 'POLARIZATION'
+        and htprh.enable_flag = 'Y'
+        and htprh.tenant_id = #{tenantId}
+    </select>
+
+    <select id="tagPassRateLineQuery" resultType="com.ruike.hme.domain.vo.HmeCosDegreeTestActualVO2">
+        select htprl.header_id,  htprl.line_id, htprl.add_pass_rate, htprl.priority, htprl.test_sum_qty
+        from hme_tag_pass_rate_line htprl
+        where htprl.header_id in
+        <foreach collection="headIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and htprl.tenant_id = #{tenantId}
+    </select>
+
+    <select id="cosDegreeTestActualPageQuery" resultType="com.ruike.hme.domain.vo.HmeCosDegreeTestActualVO3">
+        select hcdta.degree_test_id, hcdta.cos_type, hcdta.wafer, hcdta.test_object, hcdta.test_qty, hcdta.target_qty,
+               hcdta.test_rate, hcdta.test_status, hcdta.release_by, hcdta.release_date
+        from hme_cos_degree_test_actual hcdta
+        where hcdta.tenant_id = #{tenantId}
+        <if test='dto.cosType != null and dto.cosType != ""'>
+            and hcdta.cos_type = #{dto.cosType}
+        </if>
+        <if test='dto.wafer != null and dto.wafer != ""'>
+            and hcdta.wafer = #{dto.wafer}
+        </if>
+        <if test='dto.testObject != null and dto.testObject != ""'>
+            and hcdta.test_object = #{dto.testObject}
+        </if>
+        <if test='dto.testStatus != null and dto.testStatus != ""'>
+            and hcdta.test_status = #{dto.testStatus}
+        </if>
+        <if test='dto.releaseDateFrom !=null'>
+            and hcdta.release_date >= DATE_FORMAT(#{dto.releaseDateFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test='dto.releaseDateTo !=null'>
+            and hcdta.release_date &lt;= DATE_FORMAT(#{dto.releaseDateTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtContainerTypeMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtContainerType">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CONTAINER_TYPE_ID" property="containerTypeId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE_CODE" property="containerTypeCode" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE_DESCRIPTION" property="containerTypeDescription" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="PACKING_LEVEL" property="packingLevel" jdbcType="VARCHAR"/>
+        <result column="CAPACITY_QTY" property="capacityQty" jdbcType="DECIMAL"/>
+        <result column="MIXED_MATERIAL_FLAG" property="mixedMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="MIXED_EO_FLAG" property="mixedEoFlag" jdbcType="VARCHAR"/>
+        <result column="MIXED_WO_FLAG" property="mixedWoFlag" jdbcType="VARCHAR"/>
+        <result column="MIXED_OWNER_FLAG" property="mixedOwnerFlag" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="WEIGHT" property="weight" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_LOAD_WEIGHT" property="maxLoadWeight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ENABLED_FLAG" property="locationEnabledFlag" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ROW" property="locationRow" jdbcType="DECIMAL"/>
+        <result column="LOCATION_COLUMN" property="locationColumn" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <resultMap id="mapVO" type="tarzan.inventory.domain.vo.MtContainerTypeAttrVO4">
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE_ID" property="containerTypeId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE_CODE" property="containerTypeCode" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE_DESCRIPTION" property="containerTypeDescription" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="PACKING_LEVEL" property="packingLevel" jdbcType="VARCHAR"/>
+        <result column="CAPACITY_QTY" property="capacityQty" jdbcType="DECIMAL"/>
+        <result column="MIXED_MATERIAL_FLAG" property="mixedMaterialFlag" jdbcType="VARCHAR"/>
+        <result column="MIXED_EO_FLAG" property="mixedEoFlag" jdbcType="VARCHAR"/>
+        <result column="MIXED_WO_FLAG" property="mixedWoFlag" jdbcType="VARCHAR"/>
+        <result column="MIXED_OWNER_FLAG" property="mixedOwnerFlag" jdbcType="VARCHAR"/>
+        <result column="LENGTH" property="length" jdbcType="DECIMAL"/>
+        <result column="WIDTH" property="width" jdbcType="DECIMAL"/>
+        <result column="HEIGHT" property="height" jdbcType="DECIMAL"/>
+        <result column="WEIGHT" property="weight" jdbcType="DECIMAL"/>
+        <result column="SIZE_UOM_ID" property="sizeUomId" jdbcType="VARCHAR"/>
+        <result column="MAX_LOAD_WEIGHT" property="maxLoadWeight" jdbcType="DECIMAL"/>
+        <result column="WEIGHT_UOM_ID" property="weightUomId" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ENABLED_FLAG" property="locationEnabledFlag" jdbcType="VARCHAR"/>
+        <result column="LOCATION_ROW" property="locationRow" jdbcType="DECIMAL"/>
+        <result column="LOCATION_COLUMN" property="locationColumn" jdbcType="DECIMAL"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+    </resultMap>
+    <select id="selectPropertyLimitContainerType" resultMap="BaseResultMap">
+        select * from mt_container_type t
+        where
+        t.TENANT_ID = #{tenantId}
+        <if test="dto.containerTypeId!=null">
+            and t.CONTAINER_TYPE_ID=#{dto.containerTypeId}
+        </if>
+        <if test='dto.containerTypeCode!=null and  "N" == fuzzyQueryFlag'>
+            and t.CONTAINER_TYPE_CODE=#{dto.containerTypeCode}
+        </if>
+        <if test='dto.containerTypeCode!=null and  "Y" == fuzzyQueryFlag'>
+            and t.CONTAINER_TYPE_CODE like concat('%',#{dto.containerTypeCode} ,'%')
+        </if>
+        <if test="dto.containerTypeDescription!=null">
+            and t.CONTAINER_TYPE_DESCRIPTION like concat('%',#{dto.containerTypeDescription},'%')
+        </if>
+        <if test="dto.enableFlag!=null">
+            and t.ENABLE_FLAG=#{dto.enableFlag}
+        </if>
+        <if test="dto.packingLevel!=null">
+            and t.PACKING_LEVEL=#{dto.packingLevel}
+        </if>
+        <if test="dto.mixedMaterialFlag!=null">
+            and t.MIXED_MATERIAL_FLAG=#{dto.mixedMaterialFlag}
+        </if>
+        <if test="dto.mixedEoFlag!=null">
+            and t.MIXED_EO_FLAG=#{dto.mixedEoFlag}
+        </if>
+        <if test="dto.mixedWoFlag!=null">
+            and t.MIXED_WO_FLAG=#{dto.mixedWoFlag}
+        </if>
+        <if test="dto.mixedOwnerFlag!=null">
+            and t.MIXED_OWNER_FLAG=#{dto.mixedOwnerFlag}
+        </if>
+        <if test="dto.locationEnabledFlag!=null">
+            and t.LOCATION_ENABLED_FLAG=#{dto.locationEnabledFlag}
+        </if>
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.inventory.domain.vo.MtContainerTypeVO1">
+        SELECT * FROM MT_CONTAINER_TYPE tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.containerTypeId != null">
+            AND tb.CONTAINER_TYPE_ID = #{dto.containerTypeId}
+        </if>
+        <if test="dto.containerTypeCode != null">
+            AND tb.CONTAINER_TYPE_CODE = #{dto.containerTypeCode}
+        </if>
+        <if test="dto.containerTypeDescription != null">
+            AND tb.CONTAINER_TYPE_DESCRIPTION like CONCAT('%',#{dto.containerTypeDescription},'%')
+        </if>
+        <if test="dto.enableFlag != null">
+            AND tb.ENABLE_FLAG = #{dto.enableFlag}
+        </if>
+        <if test="dto.packingLevel != null">
+            AND tb.PACKING_LEVEL = #{dto.packingLevel}
+        </if>
+        <if test="dto.mixedMaterialFlag != null">
+            AND tb.MIXED_MATERIAL_FLAG = #{dto.mixedMaterialFlag}
+        </if>
+        <if test="dto.mixedEoFlag != null">
+            AND tb.MIXED_EO_FLAG = #{dto.mixedEoFlag}
+        </if>
+        <if test="dto.mixedWoFlag != null">
+            AND tb.MIXED_WO_FLAG = #{dto.mixedWoFlag}
+        </if>
+        <if test="dto.mixedOwnerFlag != null">
+            AND tb.MIXED_OWNER_FLAG = #{dto.mixedOwnerFlag}
+        </if>
+        <if test="dto.locationEnabledFlag != null">
+            AND tb.LOCATION_ENABLED_FLAG = #{dto.locationEnabledFlag}
+        </if>
+        order by tb.CONTAINER_TYPE_ID+0
+    </select>
+    <select id="selectByContainerId" resultMap="mapVO">
+        select t.*,b.CONTAINER_ID from
+        mt_container_type t
+        inner join mt_container b on t.CONTAINER_TYPE_ID=b.CONTAINER_TYPE_ID
+        where
+        t.TENANT_ID = ${tenantId}
+        and b.TENANT_ID = ${tenantId}
+        <if test="containerIds!=null and containerIds.size()>0">
+            and b.CONTAINER_ID IN
+            <foreach collection="containerIds" open="(" close=")" index="in" item="i" separator=",">
+                #{i}
+            </foreach>
+        </if>
+        <if test="containerIds==null or containerIds.size()==0">
+            1&lt;&gt;1
+        </if>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        select *
+        from mt_container_type tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        and tb.CONTAINER_TYPE_ID IN
+        <foreach collection="containerTypeIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

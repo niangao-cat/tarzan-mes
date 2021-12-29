@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfWoSnRelIfaceMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.itf.domain.entity.ItfWoSnRelIface">
+        <result column="tenant_id" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="iface_id" property="ifaceId" jdbcType="VARCHAR"/>
+        <result column="rel_id" property="relId" jdbcType="VARCHAR"/>
+        <result column="site_id" property="siteId" jdbcType="VARCHAR"/>
+        <result column="plant_code" property="plantCode" jdbcType="VARCHAR"/>
+        <result column="work_order_num" property="workOrderNum" jdbcType="VARCHAR"/>
+        <result column="sn_num" property="snNum" jdbcType="VARCHAR"/>
+        <result column="retry_time" property="retryTime" jdbcType="DECIMAL"/>
+        <result column="batch_id" property="batchId" jdbcType="DECIMAL"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="message" property="message" jdbcType="VARCHAR"/>
+        <result column="object_version_number" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="creation_date" property="creationDate" jdbcType="DATE"/>
+        <result column="created_by" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="last_updated_by" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="last_update_date" property="lastUpdateDate" jdbcType="DATE"/>
+        <result column="ATTRIBUTE_CATEGORY" property="attributeCategory" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE1" property="attribute1" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE2" property="attribute2" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE3" property="attribute3" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE4" property="attribute4" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE5" property="attribute5" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE6" property="attribute6" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE7" property="attribute7" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE8" property="attribute8" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE9" property="attribute9" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE10" property="attribute10" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE11" property="attribute11" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE12" property="attribute12" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE13" property="attribute13" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE14" property="attribute14" jdbcType="VARCHAR"/>
+        <result column="ATTRIBUTE15" property="attribute15" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="selectInterfaceData" resultType="com.ruike.itf.domain.entity.ItfWoSnRelIface">
+        SELECT
+            sn.rel_id,
+            sn.sn_num,
+            sn.work_order_num,
+            spr.PLANT_CODE,
+            NULL iface_id,
+            NULL status,
+            NULL object_version_number
+        FROM
+            hme_wo_sn_rel sn,
+            mt_site_plant_releation spr
+        WHERE
+            sn.site_id = spr.SITE_ID
+            AND spr.SITE_TYPE = 'MANUFACTURING'
+            AND sn.rel_id NOT IN (
+            SELECT
+                ri.rel_id
+            FROM
+                itf_wo_sn_rel_iface ri
+            WHERE
+                ri.site_id = sn.site_id
+                AND ri.work_order_num = sn.work_order_num
+                AND ri.sn_num = sn.sn_num
+                AND ri.tenant_id = sn.tenant_id
+            )
+            AND sn.tenant_id = #{tenantId}
+        UNION ALL
+        SELECT
+            ri.rel_id,
+            ri.sn_num,
+            ri.work_order_num,
+            spr.PLANT_CODE,
+            ri.iface_id,
+            ri.status,
+            ri.object_version_number
+        FROM
+            itf_wo_sn_rel_iface ri,
+            mt_site_plant_releation spr
+        WHERE
+            ri.site_id = spr.SITE_ID
+            AND spr.SITE_TYPE = 'MANUFACTURING'
+            AND ri.STATUS IN ( 'E', 'N' )
+            AND ri.retry_time &lt;= 50
+        AND ri.tenant_id = #{tenantId}
+    </select>
+
+    <select id="queryIfaceForReturnWrite" resultType="com.ruike.itf.domain.entity.ItfWoSnRelIface" parameterType="com.ruike.itf.domain.entity.ItfWoSnRelIface">
+        select wsri.iface_id,
+               wsri.rel_id,
+               wsri.site_id,
+               wsri.work_order_num,
+               wsri.sn_num,
+               wsri.retry_time,
+               wsri.`status`,
+               wsri.object_version_number
+          from itf_wo_sn_rel_iface wsri
+         where wsri.site_id = #{siteId}
+            and wsri.work_order_num = #{workOrderNum}
+            and wsri.sn_num = #{snNum}
+            and wsri.tenant_id = #{tenantId}
+        order by wsri.last_update_date desc
+        limit 1
+    </select>
+
+    <insert id="batchInsert" parameterType="com.ruike.itf.domain.entity.ItfWoSnRelIface">
+        INSERT INTO itf_wo_sn_rel_iface VALUES
+        <foreach collection="woSnIfaceList" index="index" item="item" separator=",">
+            (
+            #{item.tenantId},
+            #{item.ifaceId},
+            #{item.relId},
+            #{item.siteId},
+            #{item.workOrderNum},
+            #{item.snNum},
+            #{item.retryTime},
+            #{item.batchId},
+            #{item.status},
+            #{item.message},
+            #{item.objectVersionNumber},
+            #{item.creationDate},
+            #{item.createdBy},
+            #{item.lastUpdatedBy},
+            #{item.lastUpdateDate},
+            #{item.attributeCategory},
+            #{item.attribute1},
+            #{item.attribute2},
+            #{item.attribute3},
+            #{item.attribute4},
+            #{item.attribute5},
+            #{item.attribute6},
+            #{item.attribute7},
+            #{item.attribute8},
+            #{item.attribute9},
+            #{item.attribute10},
+            #{item.attribute11},
+            #{item.attribute12},
+            #{item.attribute13},
+            #{item.attribute14},
+            #{item.attribute15}
+            )
+        </foreach>
+    </insert>
+
+    <update id="batchUpdate" parameterType="com.ruike.itf.domain.entity.ItfWoSnRelIface">
+        update itf_wo_sn_rel_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            status =
+            <foreach collection="woSnIfaceList" item="item" index="index"
+                     separator=" " open="case iface_id" close="end,">
+                when #{item.ifaceId} then #{item.status}
+            </foreach>
+            message =
+            <foreach collection="woSnIfaceList" item="item" index="index"
+                     separator=" " open="case iface_id" close="end,">
+                when #{item.ifaceId} then #{item.message}
+            </foreach>
+            retry_time=
+            <foreach collection="woSnIfaceList" item="item" index="index"
+                     separator=" " open="case iface_id" close="end">
+                when #{item.ifaceId} then #{item.retryTime}
+            </foreach>
+        </set>
+        <where>
+            iface_id in
+            <foreach collection="woSnIfaceList" item="item"
+                     separator="," open="(" close=")">
+                #{item.ifaceId}
+            </foreach>
+        </where>
+    </update>
+
+    <update id="batchUpdateStatus" parameterType="com.ruike.itf.domain.entity.ItfWoSnRelIface">
+        update itf_wo_sn_rel_iface
+        <set>
+            object_version_number = object_version_number + 1,
+            last_updated_by = #{userId},
+            last_update_date = CURRENT_TIMESTAMP,
+            status = #{status}
+        </set>
+        <where>
+            iface_id in
+            <foreach collection="woSnIfaceIdList" item="item"
+                     separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.tarzan.common.infra.mapper.MtNumrangeObjectColumnMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="io.tarzan.common.domain.entity.MtNumrangeObjectColumn">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="OBJECT_COLUMN_ID" property="objectColumnId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_COLUMN_CODE" property="objectColumnCode" jdbcType="VARCHAR"/>
+        <result column="OBJECT_COLUMN_NAME" property="objectColumnName" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="TYPE_GROUP" property="typeGroup" jdbcType="VARCHAR"/>
+        <result column="MODULE" property="module" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    
+    <resultMap id="voResultMap" type="io.tarzan.common.domain.vo.MtNumrangeObjectColumnVO">
+        <result column="OBJECT_COLUMN_ID" property="objectColumnId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_ID" property="objectId" jdbcType="VARCHAR"/>
+        <result column="OBJECT_COLUMN_CODE" property="objectColumnCode" jdbcType="VARCHAR"/>
+        <result column="OBJECT_COLUMN_NAME" property="objectColumnName" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="TYPE_GROUP" property="typeGroup" jdbcType="VARCHAR"/>
+        <result column="MODULE" property="module" jdbcType="VARCHAR"/>
+    </resultMap>
+    
+    <select id="selectByConditionForUi"  resultMap = "voResultMap">
+    	<bind name="locale" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+    	SELECT 
+    		t.OBJECT_COLUMN_ID,
+    		t.OBJECT_ID,
+    		t.OBJECT_COLUMN_CODE,
+    		tl.OBJECT_COLUMN_NAME,
+    		t.TYPE_GROUP,
+    		t.MODULE,
+    		t.ENABLE_FLAG
+    	FROM 
+    		mt_numrange_object_column t
+    		LEFT JOIN mt_numrange_object_column_tl tl ON t.OBJECT_COLUMN_ID = tl.OBJECT_COLUMN_ID
+    		AND tl.LANG = #{locale}
+    	WHERE 
+    		t.TENANT_ID  = #{tenantId}
+    		AND t.OBJECT_ID = #{condition.objectId}
+    		<if test='condition.objectColumnCode != null and condition.objectColumnCode != ""'>
+    				AND t.OBJECT_COLUMN_CODE LIKE CONCAT('%',#{condition.objectColumnCode},'%')
+    		</if>
+    		<if test='condition.objectColumnName != null and condition.objectColumnName != ""'>
+    				AND tl.OBJECT_COLUMN_NAME LIKE CONCAT('%',#{condition.objectColumnName},'%')
+    		</if>
+        ORDER BY t.CREATION_DATE DESC
+    </select>
+    
+</mapper>

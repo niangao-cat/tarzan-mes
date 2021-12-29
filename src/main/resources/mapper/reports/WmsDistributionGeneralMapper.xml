@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.reports.infra.mapper.WmsDistributionGeneralMapper">
+
+    <select id="selectListByCondition" resultType="com.ruike.reports.domain.vo.WmsDistributionGeneralVO">
+        select doc.instruction_doc_num,
+        doc.instruction_doc_id,
+        mms.site_code,
+        doc.instruction_doc_status,
+        ma1.attr_value as production_line_code,
+        ma2.attr_value as workcell_code,
+        mml.locator_code as to_warehouse_code,
+        doc.remark,
+        usr.real_name created_by_name,
+        doc.creation_date,
+        mia_ln.attr_value instruction_line_num,
+        mm.material_code,
+        mm.material_name,
+        mia_ver.attr_value material_version,
+        ins.instruction_status,
+        ins.quantity,
+        ifnull((select sum(mia.actual_qty)
+        from mt_instruction_actual mia
+        where mia.instruction_id = ins.instruction_id), 0) actual_qty,
+        mia_sq.attr_value signed_qty,
+        uom.uom_code,
+        concat(mia_so.attr_value,
+        case when ifnull(mia_sol.attr_value,'') = ''
+        then null
+        else concat('-', mia_sol.attr_value)
+        end) so_line
+        FROM mt_instruction_doc doc
+        LEFT JOIN mt_instruction_doc_attr ma1 ON doc.INSTRUCTION_DOC_ID = ma1.INSTRUCTION_DOC_ID
+        AND ma1.ATTR_NAME = 'PROD_LINE_CODE'
+        LEFT JOIN mt_mod_production_line mmpl ON mmpl.PROD_LINE_CODE = ma1.ATTR_VALUE
+        LEFT JOIN mt_instruction_doc_attr ma2 ON doc.INSTRUCTION_DOC_ID = ma2.INSTRUCTION_DOC_ID
+        AND ma2.ATTR_NAME = 'WORKCELL'
+        LEFT JOIN mt_mod_workcell mmw ON mmw.WORKCELL_CODE = ma2.ATTR_VALUE
+        LEFT JOIN mt_instruction_doc_attr ma3 ON doc.INSTRUCTION_DOC_ID = ma3.INSTRUCTION_DOC_ID
+        AND ma3.ATTR_NAME = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_instruction_doc_attr ma_sf ON doc.INSTRUCTION_DOC_ID = ma_sf.INSTRUCTION_DOC_ID
+        AND ma_sf.ATTR_NAME = 'SUPPLY_FLAG'
+        LEFT JOIN mt_instruction_doc_attr ma_rln ON doc.INSTRUCTION_DOC_ID = ma_rln.INSTRUCTION_DOC_ID
+        AND ma_rln.ATTR_NAME = 'REPLENISHMENT_LIST_NUM'
+        left join mt_instruction_doc rep_doc on rep_doc.INSTRUCTION_DOC_ID = ma_rln.ATTR_VALUE
+        LEFT JOIN mt_mod_locator mml ON ma3.ATTR_VALUE = mml.LOCATOR_ID,
+        mt_mod_site mms,
+        iam_user usr,
+        mt_instruction ins
+        left join mt_instruction_attr mia_ln ON mia_ln.instruction_id = ins.instruction_id
+        and mia_ln.attr_name = 'INSTRUCTION_LINE_NUM'
+        left join mt_instruction_attr mia_ver ON mia_ver.instruction_id = ins.instruction_id
+        and mia_ver.attr_name = 'MATERIAL_VERSION'
+        left join mt_instruction_attr mia_sq ON mia_sq.instruction_id = ins.instruction_id
+        and mia_sq.attr_name = 'SIGNED_QTY'
+        left join mt_instruction_attr mia_so ON mia_so.instruction_id = ins.instruction_id
+        and mia_so.attr_name = 'SO_NUM'
+        left join mt_instruction_attr mia_sol ON mia_sol.instruction_id = ins.instruction_id
+        and mia_sol.attr_name = 'SO_LINE_NUM',
+        mt_material mm,
+        mt_uom uom
+        WHERE doc.site_id = mms.site_id
+        and doc.created_by = usr.id
+        and doc.instruction_doc_id = ins.source_doc_id
+        and ins.material_id = mm.material_id
+        and uom.UOM_ID = ins.UOM_ID
+        AND doc.instruction_doc_type = 'DISTRIBUTION_DOC'
+        and doc.tenant_id = #{tenantId}
+        and doc.creation_date between #{dto.creationDateFrom} and #{dto.creationDateTo}
+        <if test="dto.instructionDocNum != null and dto.instructionDocNum != ''">
+            <bind name="instructionDocNumLike" value="'%'+dto.instructionDocNum+'%'"/>
+            and doc.instruction_doc_num like #{instructionDocNumLike}
+        </if>
+        <if test="dto.instructionDocStatus != null and dto.instructionDocStatus != ''">
+            and doc.instruction_doc_status = #{dto.instructionDocStatus}
+        </if>
+        <if test="dto.prodLineId != null and dto.prodLineId != ''">
+            and mmpl.prod_line_id = #{dto.prodLineId}
+        </if>
+        <if test="dto.workcellId != null and dto.workcellId != ''">
+            and mmw.workcell_id = #{dto.workcellId}
+        </if>
+        <if test="dto.toWarehouseId != null and dto.toWarehouseId != ''">
+            and ma3.ATTR_VALUE = #{dto.toWarehouseId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialVersion != null and dto.materialVersion != ''">
+            and mia_ver.attr_value = #{dto.materialVersion}
+        </if>
+        <if test="dto.suiteFlag != null">
+            <choose>
+                <when test="dto.suiteFlag == 'N'.toString() ">
+                    and doc.instruction_doc_id in (select ins.source_doc_id
+                    from mt_instruction ins
+                    where ins.QUANTITY > (select ifnull(sum(mia.ACTUAL_QTY),0)
+                    from mt_instruction_actual mia
+                    where mia.instruction_id = ins.instruction_id))
+                </when>
+                <when test="dto.suiteFlag == 'Y'.toString() ">
+                    and doc.instruction_doc_id not in (select ins.source_doc_id
+                    from mt_instruction ins
+                    where ins.QUANTITY > (select ifnull(sum(mia.ACTUAL_QTY),0)
+                    from mt_instruction_actual mia
+                    where mia.instruction_id = ins.instruction_id))
+                </when>
+            </choose>
+        </if>
+        <if test="dto.replenishmentFlag != null and dto.replenishmentFlag != ''">
+            and ifnull(ma_sf.ATTR_VALUE,'N') = #{dto.replenishmentFlag}
+        </if>
+        <if test="dto.replenishmentListNum != null and dto.replenishmentListNum != ''">
+            <bind name="replenishmentListNumLike" value="'%'+dto.replenishmentListNum+'%'"/>
+            and rep_doc.instruction_doc_num like #{replenishmentListNumLike}
+        </if>
+        <if test="dto.createdBy != null">
+            and doc.created_by = #{dto.createdBy}
+        </if>
+        order by doc.creation_date desc
+        ,mia_ln.attr_value + 0
+    </select>
+
+</mapper>

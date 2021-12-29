@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.inventory.infra.mapper.MtContainerMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.inventory.domain.entity.MtContainer">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="CONTAINER_ID" property="containerId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_CODE" property="containerCode" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_TYPE_ID" property="containerTypeId" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_NAME" property="containerName" jdbcType="VARCHAR"/>
+        <result column="DESCRIPTION" property="description" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_ID" property="locatorId" jdbcType="VARCHAR"/>
+        <result column="STATUS" property="status" jdbcType="VARCHAR"/>
+        <result column="OWNER_TYPE" property="ownerType" jdbcType="VARCHAR"/>
+        <result column="OWNER_ID" property="ownerId" jdbcType="VARCHAR"/>
+        <result column="RESERVED_FLAG" property="reservedFlag" jdbcType="VARCHAR"/>
+        <result column="RESERVED_OBJECT_TYPE" property="reservedObjectType" jdbcType="VARCHAR"/>
+        <result column="RESERVED_OBJECT_ID" property="reservedObjectId" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="LAST_LOAD_TIME" property="lastLoadTime" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UNLOAD_TIME" property="lastUnloadTime" jdbcType="TIMESTAMP"/>
+        <result column="CURRENT_CONTAINER_ID" property="currentContainerId" jdbcType="VARCHAR"/>
+        <result column="TOP_CONTAINER_ID" property="topContainerId" jdbcType="VARCHAR"/>
+        <result column="LATEST_HIS_ID" property="latestHisId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectLocatorLimitQuery" resultMap="BaseResultMap">
+        select
+        *
+        from
+        mt_container t
+        where
+        t.TENANT_ID = #{tenantId}
+        <if test="dto.locatorIds!=null">
+            and t.LOCATOR_ID in (
+            <foreach collection="dto.locatorIds" item="s" separator="," index="index">
+                #{s}
+            </foreach>
+            )
+        </if>
+        <if test='dto.enableFlag!=null and dto.enableFlag=="N"'>
+            and t.STATUS='ABANDON'
+        </if>
+        <if test='dto.enableFlag!=null and dto.enableFlag!="N"'>
+            and t.STATUS &lt;&gt; 'ABANDON'
+        </if>
+    </select>
+
+    <select id="selectByContainerIds" resultMap="BaseResultMap">
+        select
+        *
+        from
+        mt_container t
+        where
+        t.TENANT_ID = #{tenantId}
+        <if test="containerIds!=null">
+            and t.CONTAINER_ID in (
+            <foreach collection="containerIds" item="s" separator="," index="index">
+                #{s}
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <select id="propertyLimitQuery" resultType="java.lang.String">
+        SELECT
+        t.CONTAINER_ID
+        FROM
+        mt_container t
+        WHERE
+        t.TENANT_ID = #{tenantId}
+        <if test="dto.containerId != null">
+            AND t.CONTAINER_ID = #{dto.containerId}
+        </if>
+        <if test="dto.containerCode != null">
+            AND t.CONTAINER_CODE = #{dto.containerCode}
+        </if>
+        <if test="dto.containerTypeId != null">
+            AND t.CONTAINER_TYPE_ID = #{dto.containerTypeId}
+        </if>
+        <if test="dto.containerName != null">
+            AND t.CONTAINER_NAME = #{dto.containerName}
+        </if>
+        <if test="dto.description != null">
+            AND t.DESCRIPTION like CONCAT('%',CONCAT(#{dto.description},'%'))
+        </if>
+        <if test="dto.siteId != null">
+            AND t.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.locatorId != null">
+            AND t.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.status != null">
+            AND t.STATUS = #{dto.status}
+        </if>
+        <if test="dto.ownerType != null">
+            AND t.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test="dto.ownerId != null">
+            AND t.OWNER_ID = #{dto.ownerId}
+        </if>
+        <if test="dto.reservedFlag != null">
+            AND t.RESERVED_FLAG = #{dto.reservedFlag}
+        </if>
+        <if test="dto.reservedObjectType != null">
+            AND t.RESERVED_OBJECT_TYPE = #{dto.reservedObjectType}
+        </if>
+        <if test="dto.reservedObjectId != null">
+            AND t.RESERVED_OBJECT_ID = #{dto.reservedObjectId}
+        </if>
+        <if test="dto.identification != null">
+            AND t.IDENTIFICATION = #{dto.identification}
+        </if>
+        <if test="dto.lastLoadTimeFrom != null">
+            AND DATE_FORMAT(t.LAST_LOAD_TIME,'%Y-%m-%d %H:%i:%S') &gt;= DATE_FORMAT(#{dto.lastLoadTimeFrom},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="dto.lastLoadTimeTo != null">
+            AND DATE_FORMAT(t.LAST_LOAD_TIME,'%Y-%m-%d %H:%i:%S') &lt;= DATE_FORMAT(#{dto.lastLoadTimeTo},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="dto.lastUnloadTimeFrom != null">
+            AND DATE_FORMAT(t.LAST_UNLOAD_TIME,'%Y-%m-%d %H:%i:%S') &gt;=
+            DATE_FORMAT(#{dto.lastUnloadTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.lastUnloadTimeTo != null">
+            AND DATE_FORMAT(t.LAST_UNLOAD_TIME,'%Y-%m-%d %H:%i:%S') &lt;= DATE_FORMAT(#{dto.lastUnloadTimeTo},'%Y-%m-%d
+            %H:%i:%S')
+        </if>
+        <if test="dto.currentContainerId != null">
+            AND t.CURRENT_CONTAINER_ID = #{dto.currentContainerId}
+        </if>
+        <if test="dto.topContainerId != null">
+            AND t.TOP_CONTAINER_ID = #{dto.topContainerId}
+        </if>
+    </select>
+
+    <select id="containerNextCodeGet" resultType="java.lang.String">
+        select 
+        	max(t.CONTAINER_CODE) 
+        from 
+        	mt_container t 
+        where 
+        	t.TENANT_ID  = #{tenantId}
+        	and t.CONTAINER_CODE like concat(#{siteCode},concat('%'))
+    </select>
+
+    <select id="selectCondition" resultType="tarzan.inventory.domain.vo.MtContainerVO28">
+        SELECT * FROM mt_container tb
+        WHERE tb.TENANT_ID = ${tenantId}
+        <if test="dto.containerId != null">
+            AND tb.CONTAINER_ID = #{dto.containerId}
+        </if>
+        <if test="dto.containerCode != null">
+            AND tb.CONTAINER_CODE = #{dto.containerCode}
+        </if>
+        <if test="dto.containerTypeId != null">
+            AND tb.CONTAINER_TYPE_ID = #{dto.containerTypeId}
+        </if>
+        <if test="dto.contanierName != null">
+            AND tb.CONTAINER_NAME = #{dto.contanierName}
+        </if>
+        <if test="dto.description != null">
+            AND tb.DESCRIPTION LIKE concat('%', concat(#{dto.description}, '%'))
+        </if>
+        <if test="dto.siteId != null">
+            AND tb.SITE_ID = #{dto.siteId}
+        </if>
+        <if test="dto.locatorId != null">
+            AND tb.LOCATOR_ID = #{dto.locatorId}
+        </if>
+        <if test="dto.status != null">
+            AND tb.STATUS = #{dto.status}
+        </if>
+        <if test="dto.ownerType != null">
+            AND tb.OWNER_TYPE = #{dto.ownerType}
+        </if>
+        <if test="dto.ownerId != null">
+            AND tb.OWNER_ID = #{dto.ownerId}
+        </if>
+        <if test="dto.reservedFlag != null">
+            AND tb.RESERVED_FLAG = #{dto.reservedFlag}
+        </if>
+        <if test="dto.reservedObjectType != null">
+            AND tb.RESERVED_OBJECT_TYPE = #{dto.reservedObjectType}
+        </if>
+        <if test="dto.reservedObjectId != null">
+            AND tb.RESERVED_OBJECT_ID = #{dto.reservedObjectId}
+        </if>
+        <if test="dto.identification != null">
+            AND tb.IDENTIFICATION = #{dto.identification}
+        </if>
+        <if test="dto.lastLoadTimeFrom != null">
+            AND tb.LAST_LOAD_TIME &gt;= DATE_FORMAT(#{dto.lastLoadTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.lastLoadTimeTo != null">
+            AND tb.LAST_LOAD_TIME &lt;= DATE_FORMAT(#{dto.lastLoadTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.lastUnloadTimeFrom != null">
+            AND tb.LAST_UNLOAD_TIME &gt;= DATE_FORMAT(#{dto.lastUnloadTimeFrom},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.lastUnloadTimeTo != null">
+            AND tb.LAST_UNLOAD_TIME &lt;= DATE_FORMAT(#{dto.lastUnloadTimeTo},'%Y-%m-%d %H:%i:%S')
+        </if>
+        <if test="dto.currentContainerId != null">
+            AND tb.CURRENT_CONTAINER_ID = #{dto.currentContainerId}
+        </if>
+        <if test="dto.topContainerId != null">
+            AND tb.TOP_CONTAINER_ID = #{dto.topContainerId}
+        </if>
+        <if test="dto.latestHisId!=null">
+            and tb.LATEST_HIS_ID=#{dto.latestHisId}
+        </if>
+        order by CAST( tb.CONTAINER_ID AS DECIMAL ( 36 ) )
+    </select>
+
+    <select id="selectByContainerCodes" resultMap="BaseResultMap">
+        select * from mt_container t where
+        t.TENANT_ID = ${tenantId}
+        <if test="containerCodes!=null and containerCodes.size()>0">
+            and t.CONTAINER_CODE in (
+            <foreach collection="containerCodes" item="s" separator="," index="index">
+                #{s}
+            </foreach>
+            )
+        </if>
+        <if test="containerCodes==null or containerCodes.size()==0">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+    <select id="selectByTopContainerIds" resultMap="BaseResultMap">
+        select * from mt_container t where
+        t.TENANT_ID = ${tenantId}
+        <if test="topContainerIds!=null and topContainerIds.size()>0">
+            and t.TOP_CONTAINER_ID in (
+            <foreach collection="topContainerIds" item="s" separator="," index="index">
+                #{s}
+            </foreach>
+            )
+        </if>
+        <if test="topContainerIds==null or topContainerIds.size()==0">
+            and 1&lt;&gt;1
+        </if>
+    </select>
+</mapper>

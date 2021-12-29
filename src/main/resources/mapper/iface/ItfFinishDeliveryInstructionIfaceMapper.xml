@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfFinishDeliveryInstructionIfaceMapper">
+	<!-- 可根据自己的需求，是否要使用 -->
+
+	<select id="batchQueryDocNumList" resultType="tarzan.instruction.domain.entity.MtInstructionDoc">
+		SELECT
+			mid.INSTRUCTION_DOC_ID,
+		  	mid.INSTRUCTION_DOC_NUM
+		FROM
+			mt_instruction_doc mid
+		WHERE
+		mid.TENANT_ID = #{tenantId}
+		AND mid.INSTRUCTION_DOC_ID IN
+		<foreach collection="instructionDocIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+
+	<select id="batchQueryDocLineNumList" resultType="com.ruike.itf.domain.vo.ItfFinishDeliveryInstructionIfaceVO2">
+		SELECT
+			mi.INSTRUCTION_ID,
+		  	mi.INSTRUCTION_NUM,
+			attr.ATTR_VALUE INSTRUCTION_LINE_NUM
+		FROM
+			mt_instruction mi,
+			mt_instruction_attr attr
+		WHERE mi.TENANT_ID = #{tenantId}
+		AND mi.INSTRUCTION_ID IN
+		<foreach collection="instructionIdList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+		AND attr.INSTRUCTION_ID = mi.INSTRUCTION_ID
+		AND attr.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+	</select>
+
+	<resultMap id="WcsTaskIfaceMap" type="com.ruike.itf.api.dto.ItfFinishDeliveryInstructionIfaceDTO">
+		<result column="IFACE_ID" property="ifaceId"></result>
+		<result column="TASK_NUM" property="taskNum"></result>
+		<result column="INSTRUCTION_DOC_ID" property="instructionDocId"></result>
+		<result column="INSTRUCTION_ID" property="instructionId"></result>
+		<result column="MATERIAL_CODE" property="materialCode"></result>
+		<result column="MATERIAL_VERSION" property="materialVersion"></result>
+		<result column="QTY" property="qty"></result>
+		<result column="SO_NUM" property="soNum"></result>
+		<result column="SO_LINE_NUM" property="soLineNum"></result>
+		<result column="EXIT_NUM" property="exitNum"></result>
+		<result column="WAREHOUSE_CODE" property="warehouseCode"></result>
+		<result column="TASK_STATUS" property="taskStatus"></result>
+		<result column="DOC_NUM" property="docNum"></result>
+		<result column="DOC_LINE_NUM" property="docLineNum"></result>
+		<collection property="materialLotCodeList" ofType="java.lang.String">
+			<result column="MATERIAL_LOT_CODE"></result>
+		</collection>
+	</resultMap>
+
+	<select id="queryWcsTaskIfaceList" resultMap="WcsTaskIfaceMap">
+		SELECT
+			wti.IFACE_ID,
+			wti.TASK_NUM,
+			wti.DOC_ID INSTRUCTION_DOC_ID,
+			wti.DOC_LINE_ID INSTRUCTION_ID,
+			wti.MATERIAL_CODE,
+			wti.MATERIAL_VERSION,
+			wti.QTY,
+			wti.SO_NUM,
+			wti.SO_LINE_NUM,
+			wti.EXIT_NUM,
+			wti.WAREHOUSE_CODE,
+			wti.TASK_STATUS,
+			mid.INSTRUCTION_DOC_NUM DOC_NUM,
+			attr.ATTR_VALUE DOC_LINE_NUM,
+			wtl.MATERIAL_LOT_CODE
+		FROM
+			itf_wcs_task_iface wti
+			LEFT JOIN mt_instruction_doc mid ON mid.INSTRUCTION_DOC_ID = wti.DOC_ID
+			LEFT JOIN mt_instruction_attr attr ON attr.INSTRUCTION_ID = wti.DOC_LINE_ID AND attr.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+		    LEFT JOIN itf_wcs_task_line_iface wtl ON wtl.TASK_NUM = wti.TASK_NUM AND wtl.TENANT_ID = wti.TENANT_ID
+		WHERE wti.TENANT_ID = #{tenantId}
+		AND wti.TASK_NUM IN
+		<foreach collection="taskNumList" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+
+	<insert id="batchInsertTaskIfaces">
+		INSERT INTO itf_wcs_task_iface
+		(
+		TENANT_ID,
+		IFACE_ID,
+		TASK_NUM,
+		DOC_ID,
+		DOC_LINE_ID,
+		MATERIAL_CODE,
+		MATERIAL_VERSION,
+		QTY,
+		SO_NUM,
+		SO_LINE_NUM,
+		EXIT_NUM,
+		WAREHOUSE_CODE,
+		TASK_STATUS,
+		STATUS,
+		MESSAGE,
+		CID,
+		OBJECT_VERSION_NUMBER,
+		creation_date,
+		created_by,
+		last_updated_by,
+		last_update_date,
+		ATTRIBUTE_CATEGORY,
+		ATTRIBUTE1,
+		ATTRIBUTE2,
+		ATTRIBUTE3,
+		ATTRIBUTE4,
+		ATTRIBUTE5,
+		ATTRIBUTE6,
+		ATTRIBUTE7,
+		ATTRIBUTE8,
+		ATTRIBUTE9,
+		ATTRIBUTE10,
+		ATTRIBUTE11,
+		ATTRIBUTE12,
+		ATTRIBUTE13,
+		ATTRIBUTE14,
+		ATTRIBUTE15)
+		VALUES
+		<foreach collection="domains" index="index" item="item" separator=",">
+			(
+			#{item.tenantId},
+			#{item.ifaceId},
+			#{item.taskNum},
+			#{item.docId},
+			#{item.docLineId},
+			#{item.materialCode},
+			#{item.materialVersion},
+			#{item.qty},
+			#{item.soNum},
+			#{item.soLineNum},
+			#{item.exitNum},
+			#{item.warehouseCode},
+			#{item.taskStatus},
+			#{item.status},
+			#{item.message},
+			#{item.cid},
+			#{item.objectVersionNumber},
+			#{item.creationDate},
+			#{item.createdBy},
+			#{item.lastUpdatedBy},
+			#{item.lastUpdateDate},
+			#{item.attributeCategory},
+			#{item.attribute1},
+			#{item.attribute2},
+			#{item.attribute3},
+			#{item.attribute4},
+			#{item.attribute5},
+			#{item.attribute6},
+			#{item.attribute7},
+			#{item.attribute8},
+			#{item.attribute9},
+			#{item.attribute10},
+			#{item.attribute11},
+			#{item.attribute12},
+			#{item.attribute13},
+			#{item.attribute14},
+			#{item.attribute15}
+			)
+		</foreach>
+	</insert>
+
+	<update id="batchUpdateTaskIfaces">
+		UPDATE itf_wcs_task_iface
+		<set>
+			object_version_number = object_version_number + 1,
+			last_updated_by = #{userId},
+			last_update_date = CURRENT_TIMESTAMP,
+			task_status =
+			<foreach collection="taskIfaces" item="item" index="index"
+					 separator=" " open="case IFACE_ID" close="end">
+				<if test="item.taskStatus !=null and item.taskStatus != ''">
+					when #{item.ifaceId} then #{item.taskStatus}
+				</if>
+				<if test="item.taskStatus == null or item.taskStatus == ''">
+					when #{item.ifaceId} then task_status
+				</if>
+			</foreach>,
+			message =
+			<foreach collection="taskIfaces" item="item" index="index"
+					 separator=" " open="case IFACE_ID" close="end">
+				<if test="item.message !=null and item.message != ''">
+					when #{item.ifaceId} then #{item.message}
+				</if>
+				<if test="item.message == null or item.message == ''">
+					when #{item.ifaceId}  then message
+				</if>
+			</foreach>,
+			status =
+			<foreach collection="taskIfaces" item="item" index="index"
+					 separator=" " open="case IFACE_ID" close="end">
+				<if test="item.status !=null and item.status != ''">
+					when #{item.ifaceId} then #{item.status}
+				</if>
+				<if test="item.status == null or item.status == ''">
+					when #{item.ifaceId}  then status
+				</if>
+			</foreach>
+		</set>
+		<where>
+			IFACE_ID in
+			<foreach collection="taskIfaces" item="item"
+					 separator="," open="(" close=")">
+				#{item.ifaceId}
+			</foreach>
+		</where>
+	</update>
+</mapper>

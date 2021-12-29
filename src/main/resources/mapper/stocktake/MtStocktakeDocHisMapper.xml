@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.stocktake.infra.mapper.MtStocktakeDocHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.stocktake.domain.entity.MtStocktakeDocHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="STOCKTAKE_HIS_ID" property="stocktakeHisId" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_ID" property="stocktakeId" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_NUM" property="stocktakeNum" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_STATUS" property="stocktakeStatus" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_LAST_STATUS" property="stocktakeLastStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="AREA_LOCATOR_ID" property="areaLocatorId" jdbcType="VARCHAR"/>
+        <result column="OPEN_FLAG" property="openFlag" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_RANGE_FLAG" property="materialRangeFlag" jdbcType="VARCHAR"/>
+        <result column="ADJUST_TIMELY_FLAG" property="adjustTimelyFlag" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_LOCK_FLAG" property="materialLotLockFlag" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+</mapper>

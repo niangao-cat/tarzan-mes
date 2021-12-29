@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsInstructionDocsMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.api.dto.WmsInstructionDocsDTO">
+        <result column="INSTRUCTION_DOC_ID" property="instructionDocId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_NUM" property="instructionDocNum" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_TYPE" property="instructionDocType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_STATUS" property="instructionDocStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="CREATEDBY" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LASTUPDATEDBY" property="lastUpdatedBy" jdbcType="VARCHAR"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="attrValue" jdbcType="VARCHAR"/>
+    </resultMap>
+    
+    
+    <resultMap id="BaseLinkResultMap" type="com.ruike.wms.api.dto.WmsInstructionIdLineDTO">
+        <result column="INSTRUCTION_ID" property="instructionId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_STATUS" property="instructionStatus" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="UOM_NAME" property="uomId" jdbcType="VARCHAR"/>
+        <result column="FROMLOCATORID" property="fromLocatorId" jdbcType="VARCHAR"/>
+        <result column="LOCATOR_CODE" property="toLocatorId" jdbcType="VARCHAR"/>
+        <result column="QUANTITY" property="quantity" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="CREATEDBY" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LASTUPDATEDBY" property="lastUpdatedBy" jdbcType="VARCHAR"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="MATERIALVERSION" property="materialVersion" jdbcType="VARCHAR"/>
+        <result column="SOLINENUM" property="soLineNum" jdbcType="VARCHAR"/>
+        <result column="BOMRESERVELINENUM" property="bomReserveLineNum" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTIONLINENUM" property="instructionLineNum" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_QTY" property="actualQty" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="BaseAttrResultMap" type="com.ruike.wms.api.dto.WmsInstructionIdAttrDTO">
+        <result column="MATERIAL_LOT_CODE" property="materialLotCode" jdbcType="VARCHAR"/>
+        <result column="ACTUAL_QTY" property="primaryUomQty" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR"/>
+        <result column="LOT" property="lot" jdbcType="VARCHAR"/>
+        <result column="PARENTLOCATORIDCODE" property="parentLocatorIdCode" jdbcType="VARCHAR"/>
+        <result column="LOCATORIDCODE" property="locatorIdCode" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="ATTR_VALUE" property="status" jdbcType="VARCHAR"/>
+        <result column="CONTAINER_CODE" property="containerCode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectByInstructionDocId" resultMap="BaseResultMap">
+        select
+        DISTINCT i1.INSTRUCTION_DOC_ID,
+        i1.INSTRUCTION_DOC_NUM,
+        i1.INSTRUCTION_DOC_TYPE,
+        i1.INSTRUCTION_DOC_STATUS,
+        s1.SITE_CODE,
+        i5.ATTR_VALUE CREATEDBY,
+        u1.REAL_NAME LASTUPDATEDBY,
+        i1.CREATION_DATE,
+        i1.LAST_UPDATE_DATE,
+        i1.REMARK,
+        i3.ATTR_VALUE
+        from mt_instruction_doc i1
+        left join mt_instruction i2 on i1.INSTRUCTION_DOC_ID = i2.SOURCE_DOC_ID
+        left join mt_instruction_doc_attr i3 on i1.INSTRUCTION_DOC_ID = i3.INSTRUCTION_DOC_ID
+        and      i3.ATTR_NAME = 'WORK_ORDER_NUM'
+        left join mt_instruction_attr i4 on i4.INSTRUCTION_ID = i2.INSTRUCTION_ID
+        and      i4.ATTR_NAME = 'MATERIAL_VERSION'
+        left join mt_material m1 on i2.MATERIAL_ID = m1.MATERIAL_ID
+        left join mt_instruction_doc_attr i5 on i1.INSTRUCTION_DOC_ID = i5.INSTRUCTION_DOC_ID
+        and      i5.ATTR_NAME = 'PERSON'
+        left join mt_instruction_doc_attr i6 on i1.INSTRUCTION_DOC_ID = i6.INSTRUCTION_DOC_ID
+        and      i6.ATTR_NAME = 'PERSON'
+        left join mt_mod_site s1 on i1.SITE_ID = s1.SITE_ID
+        left join iam_user u1 on u1.ID = i1.LAST_UPDATED_BY
+        where
+            i1.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+            and i1.INSTRUCTION_DOC_TYPE in
+            <foreach collection="dmType" index="index" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            <if test="dto.instructionDocNum!=null and dto.instructionDocNum !=''">
+                and i1.INSTRUCTION_DOC_NUM like CONCAT('%',#{dto.instructionDocNum},'%')
+            </if>
+            <if test="dto.instructionDocType!=null and dto.instructionDocType !=''">
+                and      i1.INSTRUCTION_DOC_TYPE = #{dto.instructionDocType}
+            </if>
+            <if test="dto.instructionDocStatus!=null and dto.instructionDocStatus !=''">
+                and      i1.INSTRUCTION_DOC_STATUS in
+                <foreach collection="dto.instructionDocStatusList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.materialLotCode!=null and dto.materialLotCode !=''">
+                and      m1.MATERIAL_ID in
+                <foreach collection="dto.materialIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dto.workOrderNumber!=null and dto.workOrderNumber !=''">
+                and      i3.ATTR_VALUE like CONCAT('%',#{dto.workOrderNumber},'%')
+            </if>
+            <if test="dto.materialVersion!=null and dto.materialVersion !=''">
+                and      i4.ATTR_VALUE = #{dto.materialVersion}
+            </if>
+            <if test="dto.siteId!=null and dto.siteId !=''">
+                and      i1.SITE_ID = #{dto.siteId}
+            </if>
+            <if test="dto.locator!=null and dto.locator !=''">
+                <if test="locatorExe.size()>0 and locatorRe.size()>0">
+                    and (CASE i1.INSTRUCTION_DOC_TYPE
+                    <foreach collection="locatorExe" index="index" item="item" separator="  ">
+                        WHEN #{item} THEN i2.FROM_LOCATOR_ID
+                    </foreach>
+                    <foreach collection="locatorRe" index="index" item="item" separator="  ">
+                        WHEN #{item} THEN i2.TO_LOCATOR_ID
+                    </foreach>
+                    end) in
+                    <foreach collection="dto.locatorIdList" item="item" separator="," open="(" close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </if>
+            <if test="dto.lastUpdatedBy!=null and dto.lastUpdatedBy !=''">
+                and  u1.REAL_NAME = #{dto.lastUpdatedBy}
+            </if>
+            <if test="dto.creationDate!= null and dto.creationDate !='' and dto.lastUpdateDate!=null and dto.lastUpdateDate !=''">
+                and      i1.CREATION_DATE >= #{dto.creationDate}
+                and      i1.LAST_UPDATE_DATE <![CDATA[  <=  ]]> #{dto.lastUpdateDate}
+            </if>
+            <if test="dto.creationDate!=null and dto.creationDate !=''">
+                and     i1.CREATION_DATE >= #{dto.creationDate}
+            </if>
+            <if test="dto.lastUpdateDate!=null and dto.lastUpdateDate !=''">
+                and      i1.LAST_UPDATE_DATE <![CDATA[  <=  ]]> #{dto.lastUpdateDate}
+            </if>
+            <if test="dto.createdBy!=null and dto.createdBy !=''">
+                and      i5.ATTR_VALUE like CONCAT('%',#{dto.createdBy},'%')
+            </if>
+            <if test="dto.department!=null and dto.department !=''">
+                and      i1.REMARK in
+                <foreach collection="dto.departmentList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+        ORDER BY i1.CREATION_DATE DESC
+    </select>
+
+
+    <select id="selectByInstructionLinkDoc" resultMap="BaseLinkResultMap">
+        select
+                i1.INSTRUCTION_DOC_TYPE,
+                i2.INSTRUCTION_ID,
+                i2.INSTRUCTION_STATUS,
+                m1.MATERIAL_CODE,
+                m1.MATERIAL_NAME,
+                u1.UOM_NAME,
+                l2.LOCATOR_CODE as FROMLOCATORID,
+                l1.LOCATOR_CODE,
+                i5.ATTR_VALUE CREATEDBY,
+                u2.REAL_NAME LASTUPDATEDBY,
+                i2.QUANTITY,
+                i2.REMARK,
+                i2.CREATION_DATE,
+                i2.LAST_UPDATE_DATE,
+                a1.ATTR_VALUE as MATERIALVERSION,
+                case CONCAT_WS('+',a2.ATTR_VALUE,a3.ATTR_VALUE) when '+' then ''
+                else CONCAT_WS('+',a2.ATTR_VALUE,a3.ATTR_VALUE) end SOLINENUM,
+                case CONCAT_WS('+',a4.ATTR_VALUE,a5.ATTR_VALUE) when '+' then ''
+                else CONCAT_WS('+',a4.ATTR_VALUE,a5.ATTR_VALUE) end BOMRESERVELINENUM,
+                a6.ATTR_VALUE as INSTRUCTIONLINENUM,
+                a7.ACTUAL_QTY
+        from mt_instruction_doc i1
+                join mt_instruction i2 on i1.INSTRUCTION_DOC_ID = i2.SOURCE_DOC_ID
+                left join mt_material m1 on i2.MATERIAL_ID = m1.MATERIAL_ID
+                left join mt_mod_locator l1 on l1.LOCATOR_ID = i2.TO_LOCATOR_ID
+                left join mt_mod_locator l2 on l2.LOCATOR_ID = i2.FROM_LOCATOR_ID
+                left join mt_instruction_attr a1 on a1.INSTRUCTION_ID = i2.INSTRUCTION_ID
+                and a1.ATTR_NAME = 'MATERIAL_VERSION'
+                left join mt_instruction_attr a2 on a2.INSTRUCTION_ID = i2.INSTRUCTION_ID
+                and a2.ATTR_NAME = 'SO_NUM'
+                left join mt_instruction_attr a3 on a3.INSTRUCTION_ID = i2.INSTRUCTION_ID
+                and a3.ATTR_NAME = 'SO_LINE_NUM'
+                left join mt_instruction_attr a4 on a4.INSTRUCTION_ID = i2.INSTRUCTION_ID
+                and a4.ATTR_NAME = 'BOM_RESERVE_NUM'
+                left join mt_instruction_attr a5 on a5.INSTRUCTION_ID = i2.INSTRUCTION_ID
+                and a5.ATTR_NAME = 'BOM_RESERVE_LINE_NUM'
+                left join mt_instruction_attr a6 on a6.INSTRUCTION_ID = i2.INSTRUCTION_ID
+                and a6.ATTR_NAME = 'INSTRUCTION_LINE_NUM'
+                left join mt_instruction_actual a7 on a7.INSTRUCTION_ID = i2.INSTRUCTION_ID
+                left join mt_uom u1 on u1.UOM_ID = i2.UOM_ID
+                left join iam_user u3 on u3.ID = i2.CREATED_BY
+                left join iam_user u2 on u2.ID = i2.LAST_UPDATED_BY
+                left join mt_instruction_doc_attr i5 on i1.INSTRUCTION_DOC_ID = i5.INSTRUCTION_DOC_ID
+                and i5.ATTR_NAME = 'PERSON'
+        where
+                i1.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+        <if test="instructionDocIds!=null and instructionDocIds !=''">
+            and i1.INSTRUCTION_DOC_ID = #{instructionDocIds}
+        </if>
+        ORDER BY a6.ATTR_VALUE
+    </select>
+
+    <select id="selectByInstructionAttrDoc" resultMap="BaseAttrResultMap">
+        select
+                m2.MATERIAL_LOT_CODE,
+                d1.ACTUAL_QTY,
+                m1.MATERIAL_CODE,
+                m1.MATERIAL_NAME,
+                m2.LOT,
+                m3.LOCATOR_CODE as LOCATORIDCODE,
+                m5.LOCATOR_CODE as PARENTLOCATORIDCODE,
+                m3.ENABLE_FLAG,
+                m4.ATTR_VALUE,
+                c1.CONTAINER_CODE
+        from mt_instruction_actual a1
+                left join mt_instruction i1 on i1.INSTRUCTION_ID = a1.INSTRUCTION_ID
+                join mt_instruction_actual_detail d1 on a1.ACTUAL_ID = d1.ACTUAL_ID
+                left join mt_material m1 on m1.MATERIAL_ID = i1.MATERIAL_ID
+                left join mt_material_lot m2  on m2.MATERIAL_LOT_ID = d1.MATERIAL_LOT_ID
+                left join mt_mod_locator m3 on m2.LOCATOR_ID = m3.LOCATOR_ID
+                left join mt_material_lot_attr m4 on m4.MATERIAL_LOT_ID = m2.MATERIAL_LOT_ID
+                and m4.ATTR_NAME = 'STATUS'
+                left join mt_container c1 on c1.CONTAINER_ID = d1.CONTAINER_ID
+                left join mt_mod_locator m5 ON m3.PARENT_LOCATOR_ID = m5.LOCATOR_ID
+        where
+                i1.TENANT_ID = #{tenantId,jdbcType=BIGINT}
+                <if test="instructionIds!=null and instructionIds !=''">
+                    and i1.INSTRUCTION_ID = #{instructionIds}
+                </if>
+    </select>
+
+
+</mapper>

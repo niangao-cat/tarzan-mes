@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.modeling.infra.mapper.MtModSiteMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.modeling.domain.entity.MtModSite">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="SITE_TYPE" property="siteType" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COUNTRY" property="country" jdbcType="VARCHAR"/>
+        <result column="PROVINCE" property="province" jdbcType="VARCHAR"/>
+        <result column="CITY" property="city" jdbcType="VARCHAR"/>
+        <result column="COUNTY" property="county" jdbcType="VARCHAR"/>
+        <result column="ADDRESS" property="address" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMap2" type="tarzan.modeling.domain.vo.MtModSiteVO1">
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="SITE_TYPE" property="siteType" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="COUNTRY" property="country" jdbcType="VARCHAR"/>
+        <result column="PROVINCE" property="province" jdbcType="VARCHAR"/>
+        <result column="CITY" property="city" jdbcType="VARCHAR"/>
+        <result column="COUNTY" property="county" jdbcType="VARCHAR"/>
+        <result column="ADDRESS" property="address" jdbcType="VARCHAR"/>
+        <result column="TYPE_DESC" property="typeDesc" jdbcType="VARCHAR"/>
+        <result column="SITE_SCHEDULE_ID" property="siteScheduleId" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_CALCULATE_STRATEGY" property="attritionCalculateStrategy" jdbcType="VARCHAR"/>
+        <result column="PLAN_START_TIME" property="planStartTime" jdbcType="TIMESTAMP"/>
+        <result column="DEMAND_TIME_FENCE" property="demandTimeFence" jdbcType="DECIMAL"/>
+        <result column="FIX_TIME_FENCE" property="fixTimeFence" jdbcType="DECIMAL"/>
+        <result column="FROZEN_TIME_FENCE" property="frozenTimeFence" jdbcType="DECIMAL"/>
+        <result column="FORWARD_PLANNING_TIME_FENCE" property="forwardPlanningTimeFence" jdbcType="DECIMAL"/>
+        <result column="RELEASE_TIME_FENCE" property="releaseTimeFence" jdbcType="DECIMAL"/>
+        <result column="ORDER_TIME_FENCE" property="orderTimeFence" jdbcType="DECIMAL"/>
+
+    </resultMap>
+
+    <select id="selectSites" resultMap="BaseResultMap">
+        select b.* from mt_mod_site b
+        where
+        b.TENANT_ID = #{tenantId}
+        and b.SITE_ID IN
+        <foreach collection="siteIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectSiteById" resultMap="BaseResultMap2">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        SELECT
+        b.SITE_ID,
+        b.SITE_CODE,
+        l.SITE_NAME,
+        b.SITE_TYPE,
+        b.ENABLE_FLAG,
+        l.COUNTRY,
+        l.PROVINCE,
+        l.ADDRESS,
+        l.COUNTY,
+        l.CITY,
+        l.ADDRESS,
+        s.SITE_SCHEDULE_ID,
+        s.PLAN_START_TIME,
+        s.DEMAND_TIME_FENCE,
+        s.FIX_TIME_FENCE,
+        s.FROZEN_TIME_FENCE,
+        s.FORWARD_PLANNING_TIME_FENCE,
+        s.RELEASE_TIME_FENCE,
+        msm.ATTRITION_CALCULATE_STRATEGY,
+        s.ORDER_TIME_FENCE,
+        (
+        SELECT
+        tl.DESCRIPTION
+        FROM
+        mt_gen_type_tl tl
+        WHERE
+        tl.GEN_TYPE_ID = type.gen_type_id
+        AND tl.LANG =#{lang}
+        ) typeDesc
+        FROM
+        mt_mod_site b
+        INNER JOIN mt_mod_site_tl l ON l.SITE_ID = b.SITE_ID
+        AND l.LANG = #{lang}
+        LEFT JOIN mt_mod_site_schedule s ON b.SITE_ID = s.SITE_ID and s.TENANT_ID = #{tenantId}
+        LEFT JOIN mt_gen_type type ON type.TYPE_GROUP = 'ORGANIZATION_REL_TYPE' and type.TENANT_ID = #{tenantId}
+        AND type.TYPE_CODE = b.SITE_TYPE
+        LEFT JOIN mt_mod_site_manufacturing msm on b.SITE_ID=msm.SITE_ID and msm.TENANT_ID = #{tenantId}
+        where b.TENANT_ID = #{tenantId}
+        <if test="siteId!=null">
+            and b.SITE_ID=#{siteId}
+        </if>
+    </select>
+
+    <select id="selectSitesLimitType" resultMap="BaseResultMap">
+        select b.* from mt_mod_site b
+        where
+        b.TENANT_ID = #{tenantId}
+        and b.SITE_TYPE=#{siteType}
+        and b.SITE_ID IN
+        <foreach collection="siteIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByIdsCustom" resultMap="BaseResultMap">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select t1.TENANT_ID,
+        t1.SITE_ID,
+        t1.SITE_CODE,
+        t2.SITE_NAME,
+        t1.SITE_TYPE,
+        t1.ENABLE_FLAG,
+        t2.COUNTRY,
+        t2.PROVINCE,
+        t2.CITY,
+        t2.COUNTY,
+        t2.ADDRESS,
+        t1.CID,
+        t1.OBJECT_VERSION_NUMBER,
+        t1.CREATED_BY,
+        t1.CREATION_DATE,
+        t1.LAST_UPDATED_BY,
+        t1.LAST_UPDATE_DATE
+        from mt_mod_site t1 INNER join mt_mod_site_tl t2 on (t1.SITE_ID=t2.SITE_ID and t2.LANG=#{lang})
+        where
+        t1.TENANT_ID = #{tenantId}
+        and t1.SITE_ID IN
+        <foreach collection="siteIds" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectForCombination" resultMap="BaseResultMap">
+        <bind name="lang" value="@org.hzero.core.helper.LanguageHelper@language()"/>
+        select
+        t.TENANT_ID,
+        t.SITE_ID,
+        t.SITE_CODE,
+        tl.SITE_NAME,
+        t.SITE_TYPE,
+        t.ENABLE_FLAG,
+        tl.COUNTRY,
+        tl.PROVINCE,
+        tl.CITY,
+        tl.COUNTY,
+        tl.ADDRESS
+        from
+        MT_MOD_SITE t
+        inner join MT_MOD_SITE_TL tl ON t.SITE_ID=tl.SITE_ID and tl.lang=#{lang}
+        where t.TENANT_ID=#{tenantId}
+        <if test="dto.siteId!=null">
+            and t.SITE_ID=#{dto.siteId}
+        </if>
+        <if test="dto.siteCode!=null">
+            and t.SITE_CODE=#{dto.siteCode}
+        </if>
+        <if test="dto.siteName!=null">
+            and tl.SITE_NAME like concat('%',#{dto.siteName},'%')
+        </if>
+        <if test="dto.siteType!=null">
+            and t.SITE_TYPE=#{dto.siteType}
+        </if>
+        <if test="dto.enableFlag!=null">
+            and t.ENABLE_FLAG=#{dto.enableFlag}
+        </if>
+        <if test="dto.country!=null">
+            and tl.COUNTRY like concat('%',#{dto.country},'%')
+        </if>
+        <if test="dto.province!=null">
+            and tl.PROVINCE like concat('%',#{dto.province},'%')
+        </if>
+        <if test="dto.city!=null">
+            and tl.CITY like concat('%',#{dto.city},'%')
+        </if>
+        <if test="dto.county!=null">
+            and tl.COUNTY like concat('%',#{dto.county},'%')
+        </if>
+        <if test="dto.address!=null">
+            and tl.ADDRESS like concat('%',#{dto.address},'%')
+        </if>
+        order By t.SITE_ID+0
+
+    </select>
+</mapper>

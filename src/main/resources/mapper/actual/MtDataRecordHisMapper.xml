@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.actual.infra.mapper.MtDataRecordHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.actual.domain.entity.MtDataRecordHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="DATA_RECORD_HIS_ID" property="dataRecordHisId" jdbcType="VARCHAR"/>
+        <result column="DATA_RECORD_ID" property="dataRecordId" jdbcType="VARCHAR"/>
+        <result column="EO_ID" property="eoId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR"/>
+        <result column="OPERATION_ID" property="operationId" jdbcType="VARCHAR"/>
+        <result column="EO_STEP_ACTUAL_ID" property="eoStepActualId" jdbcType="VARCHAR"/>
+        <result column="ROUTER_STEP_ID" property="routerStepId" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR"/>
+        <result column="COMPONENT_MATERIAL_ID" property="componentMaterialId" jdbcType="VARCHAR"/>
+        <result column="ASSEMBLE_CONFIRM_ID" property="assembleConfirmId" jdbcType="VARCHAR"/>
+        <result column="NC_CODE_ID" property="ncCodeId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_ID" property="tagGroupId" jdbcType="VARCHAR"/>
+        <result column="TAG_ID" property="tagId" jdbcType="VARCHAR"/>
+        <result column="TAG_VALUE" property="tagValue" jdbcType="VARCHAR"/>
+        <result column="TAG_CALCULATE_RESULT" property="tagCalculateResult" jdbcType="VARCHAR"/>
+        <result column="RECORD_REMARK" property="recordRemark" jdbcType="VARCHAR"/>
+        <result column="RECORD_DATE" property="recordDate" jdbcType="TIMESTAMP"/>
+        <result column="USER_ID" property="userId" jdbcType="VARCHAR"/>
+        <result column="TAG_CODE" property="tagCode" jdbcType="VARCHAR"/>
+        <result column="TAG_DESCRIPTION" property="tagDescription" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="TAG_ENABLE_FLAG" property="tagEnableFlag" jdbcType="VARCHAR"/>
+        <result column="VALUE_TYPE" property="valueType" jdbcType="VARCHAR"/>
+        <result column="TRUE_VALUE" property="trueValue" jdbcType="VARCHAR"/>
+        <result column="FALSE_VALUE" property="falseValue" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_METHOD" property="collectionMethod" jdbcType="VARCHAR"/>
+        <result column="VALUE_ALLOW_MISSING" property="valueAllowMissing" jdbcType="VARCHAR"/>
+        <result column="MINIMUM_VALUE" property="minimumValue" jdbcType="DECIMAL"/>
+        <result column="MAXIMAL_VALUE" property="maximalValue" jdbcType="DECIMAL"/>
+        <result column="UNIT" property="unit" jdbcType="VARCHAR"/>
+        <result column="MANDATORY_NUM" property="mandatoryNum" jdbcType="DECIMAL"/>
+        <result column="OPTIONAL_NUM" property="optionalNum" jdbcType="DECIMAL"/>
+        <result column="API_ID" property="apiId" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_CODE" property="tagGroupCode" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_DESCRIPTION" property="tagGroupDescription" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_TYPE" property="tagGroupType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_GROUP_ID" property="sourceGroupId" jdbcType="VARCHAR"/>
+        <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR"/>
+        <result column="TAG_GROUP_STATUS" property="tagGroupStatus" jdbcType="VARCHAR"/>
+        <result column="COLLECTION_TIME_CONTROL" property="collectionTimeControl" jdbcType="VARCHAR"/>
+        <result column="USER_VERIFICATION" property="userVerification" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_ID" property="materialLotId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <select id="dataRecordLatestHisGet" resultType="tarzan.actual.domain.vo.MtNcRecordHisVO">
+      SELECT
+          his.DATA_RECORD_HIS_ID,
+          his.EVENT_ID
+            FROM
+         mt_data_record_his his
+          WHERE
+          his.TENANT_ID=#{tenantId}
+         AND his.DATA_RECORD_ID = #{dataRecordId}
+        ORDER BY
+         CAST( his.DATA_RECORD_HIS_ID AS DECIMAL ( 36 ) ) DESC
+         LIMIT 1
+    </select>
+</mapper>

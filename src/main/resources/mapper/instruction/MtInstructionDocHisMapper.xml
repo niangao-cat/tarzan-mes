@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.instruction.infra.mapper.MtInstructionDocHisMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.instruction.domain.entity.MtInstructionDocHis">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="INSTRUCTION_DOC_HIS_ID" property="instructionDocHisId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_ID" property="instructionDocId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_NUM" property="instructionDocNum" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_TYPE" property="instructionDocType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_STATUS" property="instructionDocStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_TYPE" property="sourceOrderType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_ID" property="sourceOrderId" jdbcType="VARCHAR"/>
+        <result column="DEMAND_TIME" property="demandTime" jdbcType="TIMESTAMP"/>
+        <result column="EXPECTED_ARRIVAL_TIME" property="expectedArrivalTime" jdbcType="TIMESTAMP"/>
+        <result column="COST_CENTER_ID" property="costCenterId" jdbcType="VARCHAR"/>
+        <result column="PERSON_ID" property="personId" jdbcType="DECIMAL"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="REASON" property="reason" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="HistoryResultMap" type="tarzan.instruction.domain.vo.MtInstructionDocHisVO">
+        <result column="INSTRUCTION_DOC_HIS_ID" property="instructionDocHisId" jdbcType="VARCHAR"/>
+        <result column="EVENT_ID" property="eventId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_ID" property="instructionDocId" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_NUM" property="instructionDocNum" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_TYPE" property="instructionDocType" jdbcType="VARCHAR"/>
+        <result column="INSTRUCTION_DOC_STATUS" property="instructionDocStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_ID" property="supplierId" jdbcType="VARCHAR"/>
+        <result column="SUPPLIER_SITE_ID" property="supplierSiteId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="VARCHAR"/>
+        <result column="CUSTOMER_SITE_ID" property="customerSiteId" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_TYPE" property="sourceOrderType" jdbcType="VARCHAR"/>
+        <result column="SOURCE_ORDER_ID" property="sourceOrderId" jdbcType="VARCHAR"/>
+        <result column="DEMAND_TIME" property="demandTime" jdbcType="TIMESTAMP"/>
+        <result column="EXPECTED_ARRIVAL_TIME" property="demandTime" jdbcType="TIMESTAMP"/>
+        <result column="COST_CENTER_ID" property="costCenterId" jdbcType="VARCHAR"/>
+        <result column="PERSON_ID" property="personId" jdbcType="DECIMAL"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="REASON" property="reason" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="event_by" property="eventBy" jdbcType="VARCHAR"/>
+        <result column="EVENT_TIME" property="eventTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByEventIdList" resultMap="HistoryResultMap">
+        SELECT
+        his.instruction_doc_his_id,
+        his.event_id,
+        his.instruction_doc_id,
+        his.instruction_doc_num,
+        his.instruction_doc_type,
+        his.instruction_doc_status,
+        his.site_id,
+        his.supplier_id,
+        his.supplier_site_id,
+        his.customer_id,
+        his.customer_site_id,
+        his.source_order_type,
+        his.source_order_id,
+        his.demand_time,
+        his.expected_arrival_time,
+        his.cost_center_id,
+        his.person_id,
+        his.identification,
+        his.remark,
+        his.reason,
+        his.cid,
+        his.object_version_number,
+        his.created_by,
+        his.creation_date,
+        his.last_updated_by,
+        his.last_update_date,
+        e.event_by,
+        e.event_time
+        FROM
+        mt_instruction_doc_his his
+        join mt_event e on his.EVENT_ID = e.EVENT_ID
+        WHERE
+        his.TENANT_ID = #{tenantId}
+        and e.TENANT_ID = #{tenantId}
+        and his.EVENT_ID IN
+        <foreach collection="eventIdList" index="index" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByProperty" resultMap="HistoryResultMap">
+        SELECT
+        his.instruction_doc_his_id,
+        his.event_id,
+        his.instruction_doc_id,
+        his.instruction_doc_num,
+        his.instruction_doc_type,
+        his.instruction_doc_status,
+        his.site_id,
+        his.supplier_id,
+        his.supplier_site_id,
+        his.customer_id,
+        his.customer_site_id,
+        his.source_order_type,
+        his.source_order_id,
+        his.demand_time,
+        his.expected_arrival_time,
+        his.cost_center_id,
+        his.person_id,
+        his.identification,
+        his.remark,
+        his.reason,
+        his.cid,
+        his.object_version_number,
+        his.created_by,
+        his.creation_date,
+        his.last_updated_by,
+        his.last_update_date,
+        e.event_by,
+        e.event_time
+        FROM
+        mt_instruction_doc_his his
+        join mt_event e on his.EVENT_ID = e.EVENT_ID
+        where
+        his.TENANT_ID = #{tenantId}
+        and e.TENANT_ID = #{tenantId}
+        <if test="property.instructionDocId != null">
+            and his.INSTRUCTION_DOC_ID = #{property.instructionDocId}
+        </if>
+        <if test="property.instructionDocHisId != null">
+            and his.INSTRUCTION_DOC_HIS_ID = #{property.instructionDocHisId}
+        </if>
+        <if test="property.eventId != null">
+            and his.EVENT_ID = #{property.eventId}
+        </if>
+    </select>
+    <select id="selectPropertyLimit" resultMap="BaseResultMap">
+        SELECT his.* FROM
+        mt_instruction_doc_his his
+        where
+        his.TENANT_ID = #{tenantId}
+        <if test="property.instructionDocHisId != null">
+            and his.instruction_doc_his_id = #{property.instructionDocHisId}
+        </if>
+        <if test="property.eventId != null">
+            and his.event_id = #{property.eventId}
+        </if>
+        <if test="property.instructionDocId != null">
+            and his.instruction_doc_id = #{property.instructionDocId}
+        </if>
+        <if test="property.instructionDocNum != null">
+            and his.INSTRUCTION_DOC_NUM = #{property.instructionDocNum}
+        </if>
+        <if test="property.instructionDocType != null">
+            and his.INSTRUCTION_DOC_TYPE = #{property.instructionDocType}
+        </if>
+        <if test="property.instructionDocStatus != null">
+            and his.INSTRUCTION_DOC_STATUS = #{property.instructionDocStatus}
+        </if>
+        <if test="property.siteId != null">
+            and his.SITE_ID = #{property.siteId}
+        </if>
+        <if test="property.supplierId != null">
+            and his.SUPPLIER_ID = #{property.supplierId}
+        </if>
+        <if test="property.supplierSiteId != null">
+            and his.SUPPLIER_SITE_ID = #{property.supplierSiteId}
+        </if>
+        <if test="property.customerId != null">
+            and his.CUSTOMER_ID = #{property.customerId}
+        </if>
+        <if test="property.customerSiteId != null">
+            and his.CUSTOMER_SITE_ID = #{property.customerSiteId}
+        </if>
+        <if test="property.sourceOrderType != null">
+            and his.SOURCE_ORDER_TYPE = #{property.sourceOrderType}
+        </if>
+        <if test="property.sourceOrderId != null">
+            and his.SOURCE_ORDER_ID = #{property.sourceOrderId}
+        </if>
+        <if test="property.costCenterId != null">
+            and his.COST_CENTER_ID = #{property.costCenterId}
+        </if>
+        <if test="property.personId != null">
+            and his.PERSON_ID = #{property.personId}
+        </if>
+        <if test="property.identification != null">
+            and his.IDENTIFICATION = #{property.identification}
+        </if>
+        <if test="property.remark != null">
+            and his.REMARK = #{property.remark}
+        </if>
+        <if test="property.reason != null">
+            and his.REASON = #{property.reason}
+        </if>
+        <if test="property.demandTimeFrom != null">
+            and his.DEMAND_TIME &gt;= #{property.demandTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="property.demandTimeTo != null">
+            and his.DEMAND_TIME &lt;= #{property.demandTimeTo,jdbcType=TIMESTAMP}
+        </if>
+        <if test="property.expectedArrivalTimeFrom != null">
+            and his.EXPECTED_ARRIVAL_TIME &gt;= #{property.expectedArrivalTimeFrom,jdbcType=TIMESTAMP}
+        </if>
+        <if test="property.expectedArrivalTimeTo != null">
+            and his.EXPECTED_ARRIVAL_TIME &lt;= #{property.expectedArrivalTimeTo,jdbcType=TIMESTAMP}
+        </if>
+
+    </select>
+
+    <select id="selectRecent" resultType="tarzan.instruction.domain.vo.MtInstructionDocHisVO2">
+        SELECT INSTRUCTION_DOC_HIS_ID, EVENT_ID FROM
+        ( 
+	      SELECT
+	            his.INSTRUCTION_DOC_HIS_ID,
+	            his.EVENT_ID
+	        FROM
+	            mt_instruction_doc_his his
+	        WHERE
+	            his.INSTRUCTION_DOC_ID= #{instructionDocId}
+	            and his.TENANT_ID = #{tenantId}
+	        ORDER BY  his.INSTRUCTION_DOC_HIS_ID + 0 DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+</mapper>

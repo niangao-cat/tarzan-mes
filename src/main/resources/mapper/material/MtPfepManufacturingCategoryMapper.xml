@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tarzan.material.infra.mapper.MtPfepManufacturingCategoryMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="tarzan.material.domain.entity.MtPfepManufacturingCategory">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="PFEP_MANUFACTURING_CATEGORY_ID" property="pfepManufacturingCategoryId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_SITE_ID" property="materialCategorySiteId" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_BOM_ID" property="defaultBomId" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_ROUTING_ID" property="defaultRoutingId" jdbcType="VARCHAR"/>
+        <result column="ISSUE_CONTROL_TYPE" property="issueControlType" jdbcType="VARCHAR"/>
+        <result column="ISSUE_CONTROL_QTY" property="issueControlQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_CONTROL_TYPE" property="completeControlType" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_CONTROL_QTY" property="completeControlQty" jdbcType="DECIMAL"/>
+        <result column="ATTRITION_CONTROL_TYPE" property="attritionControlType" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_CONTROL_QTY" property="attritionControlQty" jdbcType="DECIMAL"/>
+        <result column="OPERATION_ASSEMBLE_FLAG" property="operationAssembleFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="MtPfepCategoryVOMap" type="tarzan.material.domain.vo.MtPfepInventoryVO2">
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR"/>
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CATEGORY_ID" property="materialCategoryId" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="listVOResultMap" type="tarzan.material.domain.vo.MtPfepManufacturingVO">
+        <result column="kid" property="kid" jdbcType="VARCHAR"/>
+        <result column="KEY_TYPE" property="keyType" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR"/>
+        <result column="CATEGORY_CODE" property="categoryCode" jdbcType="VARCHAR"/>
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR"/>
+        <result column="AREA_NAME" property="areaName" jdbcType="VARCHAR"/>
+        <result column="PRODLINE_NAME" property="prodLineName" jdbcType="VARCHAR"/>
+        <result column="WORKCELL_NAME" property="workcellName" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_BOM_ID" property="defaultBomId" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_BOM_NAME" property="defaultBomName" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_BOM_REVISION" property="defaultBomRevision" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_ROUTING_ID" property="defaultRoutingId" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_ROUTING_NAME" property="defaultRoutingName" jdbcType="VARCHAR"/>
+        <result column="DEFAULT_ROUTING_REVISION" property="defaultRoutingRevision" jdbcType="VARCHAR"/>
+        <result column="ISSUE_CONTROL_TYPE" property="issueControlType" jdbcType="VARCHAR"/>
+        <result column="ISSUE_CONTROL_QTY" property="issueControlQty" jdbcType="DECIMAL"/>
+        <result column="COMPLETE_CONTROL_TYPE" property="completeControlType" jdbcType="VARCHAR"/>
+        <result column="COMPLETE_CONTROL_QTY" property="completeControlQty" jdbcType="DECIMAL"/>
+        <result column="ATTRITION_CONTROL_TYPE" property="attritionControlType" jdbcType="VARCHAR"/>
+        <result column="ATTRITION_CONTROL_QTY" property="attritionControlQty" jdbcType="DECIMAL"/>
+        <result column="OPERATION_ASSEMBLE_FLAG" property="operationAssembleFlag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="UiVOMap" type="tarzan.material.domain.vo.MtPfepManufacturingVO2">
+        <result column="KID" property="kid" jdbcType="VARCHAR" />
+        <result column="KEY_TYPE" property="keyType" jdbcType="VARCHAR" />
+        <result column="MATERIAL_ID" property="materialId" jdbcType="VARCHAR" />
+        <result column="MATERIAL_CODE" property="materialCode" jdbcType="VARCHAR" />
+        <result column="MATERIAL_NAME" property="materialName" jdbcType="VARCHAR" />
+        <result column="MATERIAL_CATEGORY_ID" property="materialCategoryId" jdbcType="VARCHAR" />
+        <result column="CATEGORY_CODE" property="categoryCode" jdbcType="VARCHAR" />
+        <result column="CATEGORY_DESC" property="categoryDesc" jdbcType="VARCHAR" />
+        <result column="CATEGORY_SET_DESC" property="categorySetDesc" jdbcType="VARCHAR" />
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR" />
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR" />
+        <result column="SITE_NAME" property="siteName" jdbcType="VARCHAR" />
+        <result column="AREA_ID" property="areaId" jdbcType="VARCHAR" />
+        <result column="AREA_CODE" property="areaCode" jdbcType="VARCHAR" />
+        <result column="AREA_NAME" property="areaName" jdbcType="VARCHAR" />
+        <result column="PROD_LINE_ID" property="prodLineId" jdbcType="VARCHAR" />
+        <result column="PROD_LINE_CODE" property="prodLineCode" jdbcType="VARCHAR" />
+        <result column="PROD_LINE_NAME" property="prodLineName" jdbcType="VARCHAR" />
+        <result column="WORKCELL_ID" property="workcellId" jdbcType="VARCHAR" />
+        <result column="WORKCELL_CODE" property="workcellCode" jdbcType="VARCHAR" />
+        <result column="WORKCELL_NAME" property="workcellName" jdbcType="VARCHAR" />
+        <result column="DEFAULT_BOM_ID" property="defaultBomId" jdbcType="VARCHAR" />
+        <result column="BOM_CODE" property="bomCode" jdbcType="VARCHAR" />
+        <result column="BOM_VERSION" property="bomVersion" jdbcType="VARCHAR" />
+        <result column="DEFAULT_ROUTING_ID" property="defaultRoutingId" jdbcType="VARCHAR" />
+        <result column="ROUTER_NAME" property="routerName" jdbcType="VARCHAR" />
+        <result column="ROUTE_RVERSION" property="routerVersion" jdbcType="VARCHAR" />
+        <result column="ISSUE_CONTROL_TYPE" property="issueControlType" jdbcType="VARCHAR" />
+        <result column="ISSUE_CONTROL_QTY" property="issueControlQty" jdbcType="DECIMAL" />
+        <result column="COMPLETE_CONTROL_TYPE" property="completeControlType" jdbcType="VARCHAR" />
+        <result column="COMPLETE_CONTROL_QTY" property="completeControlQty" jdbcType="DECIMAL" />
+        <result column="ATTRITION_CONTROL_TYPE" property="attritionControlType" jdbcType="VARCHAR" />
+        <result column="ATTRITION_CONTROL_QTY" property="attritionControlQty" jdbcType="DECIMAL" />
+        <result column="OPERATION_ASSEMBLE_FLAG" property="operationAssembleFlag" jdbcType="VARCHAR"/>
+        <result column="ENABLE_FLAG" property="enableFlag" jdbcType="VARCHAR" />
+
+        <result column="ORGANIZATION_TYPE" property="organizationType" jdbcType="VARCHAR" />
+        <result column="ORGANIZATION_ID" property="organizationId" jdbcType="VARCHAR" />
+        <result column="ORGANIZATION_CODE" property="organizationCode" jdbcType="VARCHAR" />
+        <result column="ORGANIZATION_DESC" property="organizationDesc" jdbcType="VARCHAR" />
+    </resultMap>
+
+
+    <select id="selectByBomId" resultMap="MtPfepCategoryVOMap">
+        SELECT
+        t1.ORGANIZATION_TYPE,
+        t1.ORGANIZATION_ID,
+        t2.MATERIAL_CATEGORY_ID,
+        t2.SITE_ID
+        FROM
+        mt_pfep_manufacturing_category t1,
+        mt_material_category_site t2
+        WHERE
+        t1.DEFAULT_BOM_ID = #{bomId}
+        AND t1.TENANT_ID = ${tenantId}
+        AND t2.TENANT_ID = ${tenantId}
+        AND t1.ENABLE_FLAG = 'Y'
+        AND t1.MATERIAL_CATEGORY_SITE_ID = t2.MATERIAL_CATEGORY_SITE_ID
+    </select>
+
+    <select id="selectByRouterId" resultMap="MtPfepCategoryVOMap">
+        SELECT
+        t1.ORGANIZATION_TYPE,
+        t1.ORGANIZATION_ID,
+        t2.MATERIAL_CATEGORY_ID,
+        t2.SITE_ID
+        FROM
+        mt_pfep_manufacturing_category t1,
+        mt_material_category_site t2
+        WHERE
+        t1.DEFAULT_ROUTING_ID = #{routerId}
+        AND t1.TENANT_ID = ${tenantId}
+        AND t2.TENANT_ID = ${tenantId}
+        AND t1.ENABLE_FLAG = 'Y'
+        AND t1.MATERIAL_CATEGORY_SITE_ID = t2.MATERIAL_CATEGORY_SITE_ID
+    </select>
+
+    <select id="selectByMaterialCategroyIdForUi" resultMap = "listVOResultMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+          SELECT
+            mm.PFEP_MANUFACTURING_CATEGORY_ID KID,
+            'category' KEY_TYPE,
+            m.CATEGORY_CODE,
+            sl.SITE_NAME,
+            a.AREA_NAME,
+            pl.PROD_LINE_NAME,
+            wl.WORKCELL_NAME,
+            mm.ENABLE_FLAG,
+            mm.ISSUE_CONTROL_TYPE,
+            mm.ISSUE_CONTROL_QTY,
+            mm.COMPLETE_CONTROL_TYPE,
+            mm.COMPLETE_CONTROL_QTY,
+            mm.ATTRITION_CONTROL_TYPE,
+            mm.ATTRITION_CONTROL_QTY,
+            mm.OPERATION_ASSEMBLE_FLAG,
+            mm.DEFAULT_BOM_ID,
+            mb.BOM_NAME DEFAULT_BOM_NAME,
+            mb.REVISION DEFAULT_BOM_REVISION,
+            mm.DEFAULT_ROUTING_ID,
+            mr.ROUTER_NAME DEFAULT_ROUTING_NAME,
+            mr.REVISION DEFAULT_ROUTING_REVISION
+          FROM
+            mt_pfep_manufacturing_category mm
+            JOIN mt_material_category_site ms ON mm.MATERIAL_CATEGORY_SITE_ID = ms.MATERIAL_CATEGORY_SITE_ID
+            JOIN mt_material_category m ON ms.MATERIAL_CATEGORY_ID = m.MATERIAL_CATEGORY_ID
+            JOIN mt_material_category_tl ml ON m.MATERIAL_CATEGORY_ID = ml.MATERIAL_CATEGORY_ID
+            AND ml.LANG = #{lang}
+            JOIN mt_mod_site s ON ms.SITE_ID = s.SITE_ID
+            JOIN mt_mod_site_tl sl ON s.SITE_ID = sl.SITE_ID
+            AND sl.LANG = #{lang}
+            LEFT JOIN mt_material_category_set mcs ON m.MATERIAL_CATEGORY_SET_ID = mcs.MATERIAL_CATEGORY_SET_ID
+            and mcs.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_material_category_set_tl mcsl ON mcs.MATERIAL_CATEGORY_SET_ID = mcsl.MATERIAL_CATEGORY_SET_ID
+            AND mcsl.LANG = #{lang}
+            LEFT JOIN mt_mod_area a ON mm.ORGANIZATION_ID = a.AREA_ID
+            AND mm.ORGANIZATION_TYPE = 'AREA' and a.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_mod_area_tl al ON a.AREA_ID = al.AREA_ID
+            AND al.LANG = #{lang}
+            LEFT JOIN mt_mod_production_line p ON mm.ORGANIZATION_ID = p.PROD_LINE_ID
+            AND mm.ORGANIZATION_TYPE = 'PRODUCTIONLINE' and p.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_mod_production_line_tl pl ON p.PROD_LINE_ID = pl.PROD_LINE_ID
+            AND pl.LANG = #{lang}
+            LEFT JOIN mt_mod_workcell w ON mm.ORGANIZATION_ID = w.WORKCELL_ID
+            AND mm.ORGANIZATION_TYPE = 'WORKCELL' and w.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_mod_workcell_tl wl ON w.WORKCELL_ID = wl.WORKCELL_ID
+            AND wl.LANG = #{lang}
+            LEFT JOIN mt_bom mb ON mb.BOM_ID = mm.DEFAULT_BOM_ID AND mb.TENANT_ID = #{tenantId}
+            LEFT JOIN mt_router mr ON mr.ROUTER_ID = mm.DEFAULT_ROUTING_ID AND mb.TENANT_ID = #{tenantId}
+          where 
+                m.MATERIAL_CATEGORY_ID=#{materialCategoryId} 
+                and mm.TENANT_ID = ${tenantId}
+                and ms.TENANT_ID = ${tenantId}
+                and m.TENANT_ID = ${tenantId}
+                and s.TENANT_ID = ${tenantId}
+          ORDER BY mm.CREATION_DATE DESC 
+    </select>
+
+
+    <select id="selectByIdForUi" resultMap = "UiVOMap">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+            mm.PFEP_MANUFACTURING_CATEGORY_ID KID,
+            'category' KEY_TYPE,
+            m.MATERIAL_CATEGORY_ID,
+            m.CATEGORY_CODE,
+            ml.DESCRIPTION CATEGORY_DESC,
+            mcsl.DESCRIPTION CATEGORY_SET_DESC,
+            s.SITE_ID,
+            s.SITE_CODE,
+            sl.SITE_NAME,
+            a.AREA_ID,
+            a.AREA_CODE,
+            a.AREA_NAME,
+            p.PROD_LINE_ID,
+            p.PROD_LINE_CODE,
+            pl.PROD_LINE_NAME,
+            w.WORKCELL_ID,
+            w.WORKCELL_CODE,
+            wl.WORKCELL_NAME,
+            mm.DEFAULT_BOM_ID,
+            b.BOM_NAME BOM_CODE,
+            b.REVISION BOM_VERSION,
+            mm.DEFAULT_ROUTING_ID,
+            r.ROUTER_NAME,
+            r.REVISION ROUTE_RVERSION,
+            mm.ISSUE_CONTROL_TYPE,
+            mm.ISSUE_CONTROL_QTY,
+            mm.COMPLETE_CONTROL_TYPE,
+            mm.COMPLETE_CONTROL_QTY,
+            mm.ATTRITION_CONTROL_TYPE,
+            mm.ATTRITION_CONTROL_QTY,
+            mm.ENABLE_FLAG,
+            mm.ORGANIZATION_TYPE,
+            mm.ORGANIZATION_ID,
+            IFNULL(
+                a.AREA_CODE,
+                IFNULL(
+                    p.PROD_LINE_CODE,
+                    w.WORKCELL_CODE
+                )
+            ) ORGANIZATION_CODE,
+            IFNULL(
+                a.AREA_NAME,
+                IFNULL(
+                    p.PROD_LINE_NAME,
+                    w.WORKCELL_NAME
+                )
+            ) ORGANIZATION_DESC
+        FROM
+            mt_pfep_manufacturing_category mm
+            JOIN mt_material_category_site ms ON mm.MATERIAL_CATEGORY_SITE_ID = ms.MATERIAL_CATEGORY_SITE_ID
+            JOIN mt_material_category m ON ms.MATERIAL_CATEGORY_ID = m.MATERIAL_CATEGORY_ID
+            JOIN mt_material_category_tl ml ON m.MATERIAL_CATEGORY_ID = ml.MATERIAL_CATEGORY_ID
+                AND ml.LANG = #{lang}
+            JOIN mt_mod_site s ON ms.SITE_ID = s.SITE_ID
+            JOIN mt_mod_site_tl sl ON s.SITE_ID = sl.SITE_ID
+                AND sl.LANG = #{lang}
+            LEFT JOIN mt_material_category_set mcs ON m.MATERIAL_CATEGORY_SET_ID = mcs.MATERIAL_CATEGORY_SET_ID
+                AND mcs.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_material_category_set_tl mcsl ON mcs.MATERIAL_CATEGORY_SET_ID = mcsl.MATERIAL_CATEGORY_SET_ID
+                AND mcsl.LANG = #{lang}
+            LEFT JOIN mt_bom b ON mm.DEFAULT_BOM_ID = b.BOM_ID AND b.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_router r ON mm.DEFAULT_ROUTING_ID = r.ROUTER_ID AND r.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_mod_area a ON mm.ORGANIZATION_ID = a.AREA_ID AND a.TENANT_ID = ${tenantId}
+                AND mm.ORGANIZATION_TYPE = 'AREA'
+            LEFT JOIN mt_mod_area_tl al ON a.AREA_ID = al.AREA_ID
+                AND al.LANG = #{lang}
+            LEFT JOIN mt_mod_production_line p ON mm.ORGANIZATION_ID = p.PROD_LINE_ID
+                AND mm.ORGANIZATION_TYPE = 'PRODUCTIONLINE' AND p.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_mod_production_line_tl pl ON p.PROD_LINE_ID = pl.PROD_LINE_ID
+                AND pl.LANG = #{lang}
+            LEFT JOIN mt_mod_workcell w ON mm.ORGANIZATION_ID = w.WORKCELL_ID
+                AND mm.ORGANIZATION_TYPE = 'WORKCELL' AND w.TENANT_ID = ${tenantId}
+            LEFT JOIN mt_mod_workcell_tl wl ON w.WORKCELL_ID = wl.WORKCELL_ID
+                AND wl.LANG = #{lang}
+        WHERE 
+            mm.PFEP_MANUFACTURING_CATEGORY_ID=#{kid}
+            and mm.TENANT_ID = ${tenantId}
+            and ms.TENANT_ID = ${tenantId}
+            and m.TENANT_ID = ${tenantId}
+            and s.TENANT_ID = ${tenantId}
+    </select>
+
+</mapper>

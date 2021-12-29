@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsStocktakeDocMapper">
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap id="BaseResultMap" type="com.ruike.wms.domain.vo.WmsStocktakeDocVO">
+        <result column="TENANT_ID" property="tenantId" jdbcType="DECIMAL"/>
+        <result column="STOCKTAKE_ID" property="stocktakeId" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_NUM" property="stocktakeNum" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_STATUS" property="stocktakeStatus" jdbcType="VARCHAR"/>
+        <result column="STOCKTAKE_LAST_STATUS" property="stocktakeLastStatus" jdbcType="VARCHAR"/>
+        <result column="SITE_ID" property="siteId" jdbcType="VARCHAR"/>
+        <result column="AREA_LOCATOR_ID" property="areaLocatorId" jdbcType="VARCHAR"/>
+        <result column="OPEN_FLAG" property="openFlag" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_RANGE_FLAG" property="materialRangeFlag" jdbcType="VARCHAR"/>
+        <result column="ADJUST_TIMELY_FLAG" property="adjustTimelyFlag" jdbcType="VARCHAR"/>
+        <result column="MATERIAL_LOT_LOCK_FLAG" property="materialLotLockFlag" jdbcType="VARCHAR"/>
+        <result column="IDENTIFICATION" property="identification" jdbcType="VARCHAR"/>
+        <result column="REMARK" property="remark" jdbcType="VARCHAR"/>
+        <result column="CID" property="cid" jdbcType="DECIMAL"/>
+        <result column="OBJECT_VERSION_NUMBER" property="objectVersionNumber" jdbcType="DECIMAL"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="DECIMAL"/>
+        <result column="CREATION_DATE" property="creationDate" jdbcType="TIMESTAMP"/>
+        <result column="LAST_UPDATED_BY" property="lastUpdatedBy" jdbcType="DECIMAL"/>
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" jdbcType="TIMESTAMP"/>
+        <result column="SITE_CODE" property="siteCode" jdbcType="VARCHAR"/>
+        <result column="WAREHOUSE_CODE" property="wareHouseCode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectListByCondition" resultType="com.ruike.wms.domain.vo.WmsStocktakeDocVO">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        select msd.*
+        ,mms.SITE_CODE
+        ,mwh.LOCATOR_CODE WAREHOUSE_CODE
+        ,cu.real_name CREATED_BY_Name
+        ,uu.real_name LAST_UPDATED_BY_Name
+        from mt_stocktake_doc msd
+        ,mt_mod_site mms
+        ,mt_user_organization muo_site
+        ,mt_user_organization muo_wh
+        ,mt_mod_locator mwh
+        ,iam_user cu
+        ,iam_user uu
+        where msd.SITE_ID = mms.SITE_ID
+        and mms.SITE_ID = muo_site.ORGANIZATION_ID
+        and muo_site.ORGANIZATION_TYPE = 'SITE'
+        and muo_site.USER_ID = #{userId}
+        and muo_site.TENANT_ID = #{tenantId}
+        and muo_site.ENABLE_FLAG = 'Y'
+        and msd.area_locator_id = muo_wh.ORGANIZATION_ID
+        and muo_wh.ORGANIZATION_TYPE = 'LOCATOR'
+        and muo_wh.USER_ID = #{userId}
+        and muo_wh.TENANT_ID = #{tenantId}
+        and muo_wh.ENABLE_FLAG = 'Y'
+        and msd.AREA_LOCATOR_ID = mwh.LOCATOR_ID
+        and msd.created_by = cu.id
+        and msd.LAST_UPDATED_BY = uu.id
+        <if test="stocktakeId != null and stocktakeId != ''">
+            and msd.stocktake_Id = #{stocktakeId}
+        </if>
+        <if test="stocktakeNum != null and stocktakeNum != ''">
+            <bind name="stocktakeNumLike" value="'%' +stocktakeNum + '%'"/>
+            and msd.stocktake_num like #{stocktakeNumLike}
+        </if>
+        <if test="stocktakeStatus != null and stocktakeStatus != ''">
+            AND FIND_IN_SET(msd.stocktake_status,#{stocktakeStatus})
+        </if>
+        <if test="openFlag != null and openFlag != ''">
+            and msd.open_Flag = #{openFlag}
+        </if>
+        <if test="siteId != null and siteId != ''">
+            and msd.site_id = #{siteId}
+        </if>
+        <if test="warehouseId != null and warehouseId != ''">
+            and msd.AREA_LOCATOR_ID = #{warehouseId}
+        </if>
+        <if test="locatorId != null and locatorId != ''">
+            and exists (
+            select 1
+            from mt_stocktake_range msr
+            where msr.STOCKTAKE_ID = msd.STOCKTAKE_ID
+            and msr.RANGE_OBJECT_TYPE = 'LOCATOR'
+            and msr.RANGE_OBJECT_ID = #{locatorId}
+            )
+        </if>
+        <if test="materialCode != null and materialCode != '' or materialName != null and materialName != ''">
+            and exists (
+            select 1
+            from mt_stocktake_range msr
+            ,mt_material mm
+            <if test="materialName != null or materialName != ''">
+                ,mt_material_tl mmt
+            </if>
+            where msr.STOCKTAKE_ID = msd.STOCKTAKE_ID
+            and msr.RANGE_OBJECT_TYPE = 'MATERIAL'
+            and msr.RANGE_OBJECT_ID = mm.material_id
+            <if test="materialCode != null and materialCode != ''">
+                <bind name="materialCodeLike" value="'%' +materialCode + '%'"/>
+                and mm.material_Code like #{materialCodeLike}
+            </if>
+            <if test="materialName != null and materialName != ''">
+                <bind name="materialNameLike" value="'%' + materialName + '%'"/>
+                and mm.material_id = mmt.material_id
+                and mmt.lang = #{lang}
+                and mmt.material_Name like #{materialNameLike}
+            </if>
+            )
+        </if>
+        <if test="createUserId != null">
+            and msd.created_by = #{createUserId}
+        </if>
+        <if test="creationDateFrom != null">
+            and msd.creation_date &gt;= #{creationDateFrom}
+        </if>
+        <if test="creationDateTo != null">
+            and msd.creation_date &lt;= #{creationDateTo}
+        </if>
+        order by msd.stocktake_Id desc
+    </select>
+
+    <select id="selectNotNewStocktakeNums" resultType="java.lang.String">
+        select STOCKTAKE_NUM
+        from mt_stocktake_doc
+        where STOCKTAKE_STATUS != 'NEW'
+        and TENANT_ID = #{tenantId}
+        and stocktake_id IN (
+        <foreach collection="idList" item="id" separator=",">
+            #{id}
+        </foreach>)
+    </select>
+
+    <select id="selectNotNewStocktakeIds" resultType="java.lang.String">
+        select STOCKTAKE_ID
+        from mt_stocktake_doc
+        where STOCKTAKE_STATUS != 'NEW'
+        and TENANT_ID = #{tenantId}
+        and stocktake_id IN (
+        <foreach collection="idList" item="id" separator=",">
+            #{id}
+        </foreach>)
+    </select>
+
+    <select id="stocktakeSelectLov" resultType="com.ruike.wms.domain.vo.WmsStocktakeDocSelectVO">
+        select msd.*
+        ,mms.SITE_CODE
+        ,mwh.LOCATOR_CODE WAREHOUSE_CODE
+        from mt_stocktake_doc msd
+        ,mt_mod_site mms
+        ,mt_user_organization muo_site
+        ,mt_mod_locator mwh
+        where msd.SITE_ID = mms.SITE_ID
+        and mms.SITE_ID = muo_site.ORGANIZATION_ID
+        and muo_site.USER_ID = #{userId}
+        and muo_site.TENANT_ID = #{tenantId}
+        and muo_site.ENABLE_FLAG = 'Y'
+        and msd.AREA_LOCATOR_ID = mwh.LOCATOR_ID
+        and msd.stocktake_status = 'RELEASED'
+        and msd.tenant_id = #{tenantId}
+        <if test="stocktakeNum != null and stocktakeNum != ''">
+            <bind name="stocktakeNumLike" value="'%' +stocktakeNum + '%'"/>
+            and msd.stocktake_num like #{stocktakeNumLike}
+        </if>
+        <if test="siteId != null and siteId != ''">
+            and msd.site_id = #{siteId}
+        </if>
+        <if test="warehouseCode != null and warehouseCode != ''">
+            and mwh.locator_code = #{warehouseCode}
+        </if>
+        <if test="creationDate != null">
+            and msd.creation_date between #{startDate} and #{endDate}
+        </if>
+        <if test="locatorCode != null and locatorCode != ''">
+            and exists (select 1
+                        from   mt_stocktake_range msr
+                              ,mt_mod_locator loc
+                        where  msr.stocktake_id = msd.stocktake_id
+                        and    msr.range_object_type = 'LOCATOR'
+                        and    loc.locator_id = msr.range_object_id
+                        and    loc.locator_code = #{locatorCode})
+        </if>
+    </select>
+
+    <select id="selectCostCenterByIds" resultType="com.ruike.wms.domain.vo.WmsStocktakeCostCenterVO">
+        select msd.STOCKTAKE_NUM
+             , msd.STOCKTAKE_ID
+             , mc.COSTCENTER_ID
+             , mc.COSTCENTER_CODE
+        from mt_stocktake_doc msd
+                 left join mt_mod_locator_attr_view mmla on msd.AREA_LOCATOR_ID = mmla.LOCATOR_ID
+                 left join mt_costcenter mc on msd.SITE_ID = mc.SITE_ID and mmla.COSTCENTER_CODE = mc.COSTCENTER_CODE
+        where msd.TENANT_ID = #{tenantId}
+          and msd.stocktake_id = #{stocktakeId}
+    </select>
+
+    <select id="selectMaterialDetailByIds" resultType="com.ruike.wms.domain.vo.WmsStocktakeMaterialDetailVO">
+        select stock.material_id
+        ,stock.material_code
+        ,stock.material_name
+        ,stock.LOT_CODE
+        ,stock.locator_id
+        ,loc.locator_code
+        ,uom.uom_id
+        ,uom.uom_code
+        ,ifnull(sum(stock.current_quantity),0) current_quantity
+        ,ifnull(sum(stock.firstcount_quantity),0) firstcount_quantity
+        ,ifnull(sum(stock.recount_quantity),0) recount_quantity
+        ,ifnull(sum(stock.firstcount_quantity),0) - ifnull(sum(stock.current_quantity),0) firstcount_different_quantity
+        ,ifnull(sum(stock.recount_quantity),0) - ifnull(sum(stock.current_quantity),0) recount_different_quantity
+        from (select msa.material_id
+        ,msa.locator_id
+        ,mm.material_code
+        ,mm.material_name
+        ,msa.LOT_CODE
+        ,mm.PRIMARY_UOM_ID
+        ,msa.current_quantity
+        ,0 firstcount_quantity
+        ,0 recount_quantity
+        from mt_stocktake_actual msa
+        join mt_material mm on msa.material_id = mm.material_id
+        where msa.tenant_id = #{tenantId}
+        and msa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and msa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            <bind name="materialNameLike" value="'%' +dto.materialName + '%'"/>
+            and mm.material_name like #{materialNameLike}
+        </if>
+        <if test="dto.lotCode != null and dto.lotCode != ''">
+            <bind name="lotCodeLike" value="'%' +dto.lotCode + '%'"/>
+            and msa.lot_code like #{lotCodeLike}
+        </if>
+        union all
+        select msa.material_id
+        ,msa.FIRSTCOUNT_LOCATOR_ID locator_id
+        ,mm.material_code
+        ,mm.material_name
+        ,msa.LOT_CODE
+        ,mm.PRIMARY_UOM_ID
+        ,0 current_quantity
+        ,msa.firstcount_quantity
+        ,0 recount_quantity
+        from mt_stocktake_actual msa
+        join mt_material mm on msa.material_id = mm.material_id
+        where msa.tenant_id = #{tenantId}
+        and msa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and msa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            <bind name="materialNameLike" value="'%' +dto.materialName + '%'"/>
+            and mm.material_name like #{materialNameLike}
+        </if>
+        <if test="dto.lotCode != null and dto.lotCode != ''">
+            <bind name="lotCodeLike" value="'%' +dto.lotCode + '%'"/>
+            and msa.lot_code like #{lotCodeLike}
+        </if>
+        union all
+        select msa.material_id
+        ,msa.RECOUNT_LOCATOR_ID LOCATOR_ID
+        ,mm.material_code
+        ,mm.material_name
+        ,msa.LOT_CODE
+        ,mm.PRIMARY_UOM_ID
+        ,0 current_quantity
+        ,0 firstcount_quantity
+        ,msa.recount_quantity
+        from mt_stocktake_actual msa
+        join mt_material mm on msa.material_id = mm.material_id
+        where msa.tenant_id = #{tenantId}
+        and msa.stocktake_id in
+        <foreach collection="dto.stocktakeIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        <if test="dto.materialId != null and dto.materialId != ''">
+            and msa.material_id = #{dto.materialId}
+        </if>
+        <if test="dto.materialCode != null and dto.materialCode != ''">
+            <bind name="materialCodeLike" value="'%'+dto.materialCode+'%'"/>
+            and mm.material_code like #{materialCodeLike}
+        </if>
+        <if test="dto.materialName != null and dto.materialName != ''">
+            <bind name="materialNameLike" value="'%' +dto.materialName + '%'"/>
+            and mm.material_name like #{materialNameLike}
+        </if>
+        <if test="dto.lotCode != null and dto.lotCode != ''">
+            <bind name="lotCodeLike" value="'%' +dto.lotCode + '%'"/>
+            and msa.lot_code like #{lotCodeLike}
+        </if>
+        ) stock
+        join mt_uom uom on uom.uom_id = stock.primary_uom_id
+        join mt_mod_locator loc on stock.locator_id = loc.locator_id
+        where 1=1
+        <if test="dto.locatorId != null and dto.locatorId != ''">
+            and FIND_IN_SET(stock.locator_id, #{dto.locatorId})
+        </if>
+        group by stock.material_id
+        ,stock.material_code
+        ,stock.material_name
+        ,stock.lot_code
+        ,stock.locator_id
+        ,loc.locator_code
+        ,uom.uom_id
+        ,uom.uom_code
+        having 1 = 1
+        <if test="dto.firstcountConsistentFlag != null and dto.firstcountConsistentFlag != ''">
+            <choose>
+                <when test="dto.firstcountConsistentFlag == 'Y'.toString() ">
+                    and ifnull(sum(stock.firstcount_quantity),0) - ifnull(sum(stock.current_quantity),0) = 0
+                </when>
+                <when test="dto.firstcountConsistentFlag == 'N'.toString() ">
+                    and ifnull(sum(stock.firstcount_quantity),0) - ifnull(sum(stock.current_quantity),0) != 0
+                </when>
+            </choose>
+        </if>
+        <if test="dto.recountConsistentFlag != null and dto.recountConsistentFlag != ''">
+            <choose>
+                <when test="dto.recountConsistentFlag == 'Y'.toString() ">
+                    and ifnull(sum(stock.recount_quantity),0) - ifnull(sum(stock.current_quantity),0) = 0
+                </when>
+                <when test="dto.recountConsistentFlag == 'N'.toString() ">
+                    and ifnull(sum(stock.recount_quantity),0) - ifnull(sum(stock.current_quantity),0) != 0
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <select id="selectStocktakeLocator" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        select loc.LOCATOR_ID
+             , loc.LOCATOR_CODE
+             , loc.LOCATOR_NAME
+        from mt_mod_locator loc
+        where loc.LOCATOR_CATEGORY = 'INVENTORY'
+          and loc.LOCATOR_TYPE != 'PRE_LOAD'
+          and loc.tenant_id = #{tenantId}
+          and loc.PARENT_LOCATOR_ID = #{warehouseId}
+    </select>
+
+    <select id="selectStocktakeMaterial" resultType="tarzan.material.domain.entity.MtMaterial">
+        SELECT mm.material_id,
+               mm.MATERIAL_CODE,
+               mm.MATERIAL_NAME
+        FROM mt_inv_onhand_quantity moq,
+             mt_mod_locator loc,
+             mt_material mm
+        WHERE moq.LOCATOR_ID = loc.LOCATOR_ID
+          AND moq.MATERIAL_ID = mm.MATERIAL_ID
+          AND loc.PARENT_LOCATOR_ID = #{warehouseId}
+          AND mm.enable_flag = 'Y'
+          and mm.TENANT_ID = loc.TENANT_ID
+          AND mm.TENANT_ID = #{tenantId}
+        GROUP BY mm.material_id,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME
+        HAVING
+            ifnull( sum( moq.ONHAND_QUANTITY ), 0 ) > 0
+    </select>
+
+    <select id="selectLeakByDoc" resultType="java.lang.Integer">
+        select count(*)
+        from mt_stocktake_actual msa
+        where msa.TENANT_ID = #{tenantId}
+          and msa.stocktake_id = #{stocktakeId}
+          and msa.firstcount_quantity is null
+    </select>
+
+    <select id="selectStocktakeDocByScan" resultType="com.ruike.wms.domain.vo.WmsStocktakeDocSelectVO">
+        select msd.*
+             , mms.SITE_CODE
+             , mwh.LOCATOR_CODE WAREHOUSE_CODE
+        from mt_stocktake_doc msd
+           , mt_mod_site mms
+           , mt_user_organization muo_site
+           , mt_mod_locator mwh
+        where msd.SITE_ID = mms.SITE_ID
+          and mms.SITE_ID = muo_site.ORGANIZATION_ID
+          and muo_site.USER_ID = #{userId}
+          and muo_site.TENANT_ID = #{tenantId}
+          and muo_site.ENABLE_FLAG = 'Y'
+          and msd.AREA_LOCATOR_ID = mwh.LOCATOR_ID
+          and msd.stocktake_status = 'RELEASED'
+          and msd.tenant_id = #{tenantId}
+          and msd.stocktake_num = #{stocktakeNum}
+        limit 1
+    </select>
+
+</mapper>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.reports.infra.mapper.HmeDocSummaryQueryMapper">
+
+    <select id="selectListByCondition" resultType="com.ruike.reports.domain.vo.HmeDocSummaryQueryVO">
+        select
+            mid.INSTRUCTION_DOC_TYPE,
+            mid.INSTRUCTION_DOC_NUM,
+            mid.INSTRUCTION_DOC_STATUS,
+            mc.COSTCENTER_CODE,
+            mc.DESCRIPTION,
+            mid.REMARK,
+            mia_num.ATTR_VALUE line_num,
+            mi.INSTRUCTION_TYPE,
+            mi.INSTRUCTION_STATUS,
+            mm.MATERIAL_CODE,
+            mm.MATERIAL_NAME,
+            mia_m.ATTR_VALUE material_version,
+            mu.UOM_CODE,
+            mmb.ITEM_GROUP,
+            wig.item_group_description,
+            mi.QUANTITY,
+            ifnull( ( SELECT sum( mia.actual_qty ) FROM mt_instruction_actual mia WHERE mia.instruction_id = mi.instruction_id ), 0 ) actual_quantity,
+            from_wh.locator_code from_warehouse_code,
+            from_loc.locator_code from_locator_code,
+            to_wh.locator_code to_warehouse_code,
+            to_loc.locator_code to_locator_code,
+            mia_es.attr_value excess_setting,
+            mia_ev.attr_value excess_value,
+            mia_so.ATTR_VALUE so_num,
+            mia_so_line.ATTR_VALUE so_line,
+            mia_po.ATTR_VALUE po_type,
+            usr.real_name,
+            mid.CREATION_DATE,
+            ms.SUPPLIER_CODE,
+            ms.SUPPLIER_NAME,
+            usr2.real_name excute_Real_Name,
+            mi.LAST_UPDATE_DATE
+        from
+            mt_instruction_doc mid
+        left join mt_costcenter mc on mc.COSTCENTER_ID = mid.COST_CENTER_ID
+        left join mt_supplier ms on ms.supplier_id = mid.SUPPLIER_ID,
+            mt_instruction mi
+        left join mt_instruction_attr mia_num on mia_num.instruction_id = mi.instruction_id
+            and mia_num.attr_name = 'INSTRUCTION_LINE_NUM'
+        left join mt_instruction_attr mia_po on mia_po.instruction_id = mi.instruction_id
+            and mia_po.attr_name = 'PO_TYPE'
+        left join mt_instruction_attr mia_so on mia_so.instruction_id = mi.instruction_id
+            and mia_so.attr_name = 'SO_NUM'
+        left join mt_instruction_attr mia_so_line on mia_so_line.instruction_id = mi.instruction_id
+            and mia_so_line.attr_name = 'SO_LINE_NUM'
+        left join mt_instruction_attr mia_m on mia_m.instruction_id = mi.instruction_id
+            and mia_m.attr_name = 'MATERIAL_VERSION'
+        LEFT JOIN mt_mod_locator from_wh ON from_wh.locator_id = mi.from_locator_id
+        LEFT JOIN mt_instruction_attr mia_fl ON mia_fl.instruction_id = mi.instruction_id
+            AND mia_fl.attr_name = 'FROM_LOCATOR_ID'
+        LEFT JOIN mt_mod_locator from_loc ON from_loc.locator_id = mia_fl.attr_value
+        LEFT JOIN mt_mod_locator to_wh ON to_wh.locator_id = mi.to_locator_id
+        LEFT JOIN mt_instruction_attr mia_tl ON mia_tl.instruction_id = mi.instruction_id
+            AND mia_tl.attr_name = 'TO_LOCATOR_ID'
+        LEFT JOIN mt_mod_locator to_loc ON to_loc.locator_id = mia_tl.attr_value
+        LEFT JOIN mt_instruction_attr mia_es ON mia_es.instruction_id = mi.instruction_id
+            AND mia_es.attr_name = 'EXCESS_SETTING'
+        left join mt_instruction_attr mia_ev on mia_ev.instruction_id = mi.instruction_id
+            and mia_ev.attr_name = 'EXCESS_VALUE',
+            mt_material mm,
+            mt_material_site mms
+        left join mt_material_basic mmb on mmb.material_site_id = mms.material_site_id
+        left join wms_item_group wig on wig.item_group_code = mmb.item_group,
+            mt_uom mu,
+            hzero_platform.iam_user usr,
+            hzero_platform.iam_user usr2
+        where
+            mid.instruction_doc_id = mi.source_doc_id
+        and mm.material_id = mi.material_id
+        and mu.uom_id = mm.primary_uom_id
+        and usr.id = mid.created_by
+        and usr2.id = mi.last_updated_by
+        and mms.material_id = mm.material_id
+        and mms.site_id = mid.site_id
+        <if test="dto.instructionDocType != null and dto.instructionDocType != ''">
+            and mid.INSTRUCTION_DOC_TYPE = #{dto.instructionDocType}
+        </if>
+        <if test="dto.costCenterId != null and dto.costCenterId != ''">
+            and mc.COSTCENTER_ID = #{dto.costCenterId}
+        </if>
+        <if test="dto.userId != null and dto.userId != ''">
+            and mid.created_by = #{dto.userId}
+        </if>
+        <if test="dto.instructionDocStatus != null and dto.instructionDocStatus != ''">
+            and mi.INSTRUCTION_STATUS = #{dto.instructionDocStatus}
+        </if>
+        <if test="dto.itemGroupId != null and dto.itemGroupId != ''">
+            and wig.item_group_id = #{dto.itemGroupId}
+        </if>
+        <if test="dto.instructionDocNumList != null and dto.instructionDocNumList.size() > 0">
+            and mid.INSTRUCTION_DOC_NUM in
+            <foreach collection="dto.instructionDocNumList" item="instructionDocNum" separator="," open="(" close=")">
+                #{instructionDocNum}
+            </foreach>
+        </if>
+        <if test="dto.fromWarehouseCodeList != null and dto.fromWarehouseCodeList.size() > 0">
+            and from_wh.locator_code in
+            <foreach collection="dto.fromWarehouseCodeList" item="fromWarehouseCode" separator="," open="(" close=")">
+                #{fromWarehouseCode}
+            </foreach>
+        </if>
+        <if test="dto.fromLocatorCodeList != null and dto.fromLocatorCodeList.size() > 0">
+            and from_loc.locator_code in
+            <foreach collection="dto.fromLocatorCodeList" item="fromLocatorCode" separator="," open="(" close=")">
+                #{fromLocatorCode}
+            </foreach>
+        </if>
+        <if test="dto.toWarehouseCodeList != null and dto.toWarehouseCodeList.size() > 0">
+            and to_wh.locator_code in
+            <foreach collection="dto.toWarehouseCodeList" item="toWarehouseCode" separator="," open="(" close=")">
+                #{toWarehouseCode}
+            </foreach>
+        </if>
+        <if test="dto.toLocatorCodeList != null and dto.toLocatorCodeList.size() > 0">
+            and to_loc.locator_code in
+            <foreach collection="dto.toLocatorCodeList" item="toLocatorCode" separator="," open="(" close=")">
+                #{toLocatorCode}
+            </foreach>
+        </if>
+        <if test="dto.materialCodeList != null and dto.materialCodeList.size() > 0">
+            and mm.MATERIAL_CODE in
+            <foreach collection="dto.materialCodeList" item="materialCode" separator="," open="(" close=")">
+                #{materialCode}
+            </foreach>
+        </if>
+        <if test="dto.creationDateFrom != null and dto.creationDateFrom != ''">
+            and mid.CREATION_DATE >= #{dto.creationDateFrom}
+        </if>
+        <if test="dto.creationDateFromTo != null and dto.creationDateFromTo != ''">
+            and mid.CREATION_DATE &lt;= #{dto.creationDateFromTo}
+        </if>
+        <if test="dto.lastUpdateDateFrom != null and dto.lastUpdateDateFrom != ''">
+            and mi.LAST_UPDATE_DATE >= #{dto.lastUpdateDateFrom}
+        </if>
+        <if test="dto.lastUpdateDateTo != null and dto.lastUpdateDateTo != ''">
+            and mi.LAST_UPDATE_DATE &lt;= #{dto.lastUpdateDateTo}
+        </if>
+    </select>
+</mapper>

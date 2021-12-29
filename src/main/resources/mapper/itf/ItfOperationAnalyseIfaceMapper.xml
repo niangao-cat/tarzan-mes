@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.itf.infra.mapper.ItfOperationAnalyseIfaceMapper">
+
+    <select id="queryNc" resultType="com.ruike.itf.api.dto.ItfOperationAnalyseDTO$NcDTO">
+        SELECT
+        m.material_lot_code AS sn,
+        prc.WORKCELL_NAME processName,
+        g.DESCRIPTION ncGroup,
+        ncr.nc_code ncCode,
+        ncr.description AS ncDescription
+        FROM
+        mt_nc_record t
+        LEFT JOIN mt_mod_workcell r ON r.WORKCELL_ID = t.WORKCELL_ID
+        AND r.WORKCELL_TYPE = 'STATION'
+        LEFT JOIN mt_material_lot m ON t.MATERIAL_LOT_ID = m.MATERIAL_LOT_ID
+        LEFT JOIN mt_nc_group g ON t.NC_CODE_ID = g.NC_GROUP_ID
+        LEFT JOIN (
+        SELECT
+        nc.nc_code_id,
+        nc.nc_code,
+        nc.description,
+        nr.comments,
+        nr.PARENT_NC_RECORD_ID
+        FROM
+        mt_nc_record nr
+        LEFT JOIN mt_nc_code nc ON nc.NC_CODE_ID = nr.NC_CODE_ID
+        WHERE
+        nr.TENANT_ID = #{tenantId}
+        ) ncr ON ncr.PARENT_NC_RECORD_ID = t.NC_RECORD_ID
+        LEFT JOIN mt_eo o ON t.EO_ID = o.EO_ID
+        LEFT JOIN mt_work_order k ON o.work_order_id = k.work_order_id
+        LEFT JOIN (
+        SELECT
+        mor1.ORGANIZATION_ID AS workcell_id,
+        mor2.ORGANIZATION_ID AS process_id,
+        mor3.ORGANIZATION_ID AS line_workcell_id,
+        mor4.ORGANIZATION_ID AS production_line_id
+        FROM
+        mt_mod_organization_rel mor1
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_organization_rel mor3 ON mor3.ORGANIZATION_ID = mor2.PARENT_ORGANIZATION_ID
+        AND mor3.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor3.PARENT_ORGANIZATION_TYPE = 'PROD_LINE'
+        LEFT JOIN mt_mod_organization_rel mor4 ON mor4.ORGANIZATION_ID = mor3.PARENT_ORGANIZATION_ID
+        AND mor4.ORGANIZATION_TYPE = 'PROD_LINE'
+        AND mor4.PARENT_ORGANIZATION_TYPE = 'AREA'
+        WHERE
+        mor2.ORGANIZATION_ID IS NOT NULL
+        AND mor3.ORGANIZATION_ID IS NOT NULL
+        AND mor4.ORGANIZATION_ID IS NOT NULL
+        ) mor ON mor.workcell_id = r.WORKCELL_ID
+        AND mor.production_line_id = k.PRODUCTION_LINE_ID
+        JOIN mt_mod_workcell wkc ON wkc.workcell_id = t.ROOT_CAUSE_WORKCELL_ID
+        LEFT JOIN mt_mod_workcell prc ON prc.workcell_id = mor.process_id
+        WHERE
+        m.MATERIAL_LOT_CODE IN
+        <foreach collection="materialLotCodes" open="(" close=")" separator="," item="item" index="index">
+            #{item}
+        </foreach>
+        <if test="processNames != null and processNames.size() != 0">
+            AND prc.WORKCELL_NAME IN
+            <foreach collection="processNames" open="(" close=")" separator="," item="item" index="index">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryEoJob" resultType="java.lang.String">
+        select j.job_id
+        from
+        hme_eo_job_sn j
+        where
+        j.TENANT_ID = #{tenantId}
+        <if test="operationIds != null and operationIds.size() != 0">
+            AND j.operation_id IN
+            <foreach collection="operationIds" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="workcellIds != null and workcellIds.size() != 0">
+            AND j.workcell_id IN
+            <foreach collection="workcellIds" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="begda != null and endda != ''">
+            and j.site_out_date &gt; #{begda}
+            and j.site_in_date &lt; #{endda}
+        </if>
+        <if test="materialLotIds != null and materialLotIds.size() != 0">
+            and j.material_lot_id IN
+            <foreach collection="materialLotIds" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryEoJobNcRecord" resultType="com.ruike.itf.api.dto.ItfOperationAnalyseDTO$EoJobNcRecord">
+        select
+        mnr.nc_record_id,
+        mml.material_lot_code sn,
+        j.eo_id,
+        j.workcell_id,
+        mmw.workcell_code,
+        mmw.workcell_name,
+        u.login_name,
+        u.real_name
+        from
+        hme_eo_job_sn j
+        left join mt_material_lot mml on mml.material_lot_id = j.material_lot_id
+        LEFT JOIN hzero_platform.iam_user u ON u.id = j.site_out_by
+        LEFT JOIN mt_mod_workcell mmw on mmw.workcell_id = j.workcell_id
+        left join mt_nc_record mnr on mnr.workcell_id = j.workcell_id
+        and mnr.eo_id = j.eo_id
+        and mnr.TENANT_ID = j.TENANT_ID
+        and (mnr.PARENT_NC_RECORD_ID IS NULL or mnr.PARENT_NC_RECORD_ID = '')
+        where
+        j.TENANT_ID = #{tenantId}
+        <if test="operationIds != null and operationIds.size() != 0">
+            AND j.operation_id IN
+            <foreach collection="operationIds" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="workcellIds != null and workcellIds.size() != 0">
+            AND j.workcell_id IN
+            <foreach collection="workcellIds" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="materialLotIds != null and materialLotIds.size() != 0">
+            and j.material_lot_id IN
+            <foreach collection="materialLotIds" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND j.site_out_date &gt; #{begda}
+        AND j.site_in_date &lt; #{endda}
+    </select>
+
+    <select id="eoMaterialQuery" resultType="com.ruike.itf.api.dto.ItfOperationAnalyseDTO$MaterialData">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mml.material_lot_code sn,
+        prc.WORKCELL_NAME processName,
+        job_lot_mat.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        lot.MATERIAL_LOT_ID,
+        lot.MATERIAL_LOT_CODE,
+        job_lot_mat.release_qty,
+        job_lot_mat.creation_date last_update_date
+        FROM hme_eo_job_sn_lot_material job_lot_mat
+        LEFT JOIN mt_material_lot lot ON lot.material_lot_id = job_lot_mat.material_lot_id
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = job_lot_mat.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        LEFT JOIN hme_eo_job_sn h on h.job_id = job_lot_mat.job_id
+        AND h.workcell_id = job_lot_mat.workcell_id
+        LEFT JOIN mt_material_lot mml ON mml.material_lot_id = h.material_lot_id
+        LEFT JOIN (
+        SELECT
+        mor1.ORGANIZATION_ID AS workcell_id,
+        mor2.ORGANIZATION_ID AS process_id
+        FROM
+        mt_mod_organization_rel mor1
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        WHERE
+        mor2.ORGANIZATION_ID IS NOT NULL
+        ) mor ON mor.workcell_id = h.WORKCELL_ID
+        LEFT JOIN mt_mod_workcell prc ON prc.workcell_id = mor.process_id
+        WHERE job_lot_mat.TENANT_ID = #{tenantId}
+        AND job_lot_mat.job_id IN
+        <foreach collection="jobIds" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        <if test="materialIds != null and materialIds.size() != 0">
+            AND job_lot_mat.material_id IN
+            <foreach collection="materialIds" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        UNION
+        SELECT
+        mml.material_lot_code sn,
+        prc.WORKCELL_NAME processName,
+        job_mat.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        job_mat.MATERIAL_LOT_ID,
+        job_mat.MATERIAL_LOT_CODE,
+        job_mat.release_qty,
+        job_mat.last_update_date
+        FROM hme_eo_job_material job_mat
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = job_mat.MATERIAL_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        LEFT JOIN hme_eo_job_sn h on h.job_id = job_mat.job_id
+        AND h.workcell_id = job_mat.workcell_id
+        LEFT JOIN mt_material_lot mml ON mml.material_lot_id = h.material_lot_id
+        LEFT JOIN (
+        SELECT
+        mor1.ORGANIZATION_ID AS workcell_id,
+        mor2.ORGANIZATION_ID AS process_id
+        FROM
+        mt_mod_organization_rel mor1
+        LEFT JOIN mt_mod_organization_rel mor2 ON mor2.ORGANIZATION_ID = mor1.PARENT_ORGANIZATION_ID
+        AND mor2.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor2.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        WHERE
+        mor2.ORGANIZATION_ID IS NOT NULL
+        ) mor ON mor.workcell_id = h.WORKCELL_ID
+        LEFT JOIN mt_mod_workcell prc ON prc.workcell_id = mor.process_id
+        WHERE job_mat.TENANT_ID = #{tenantId}
+        AND job_mat.job_id IN
+        <foreach collection="jobIds" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        <if test="materialIds != null and materialIds.size() != 0">
+            AND job_mat.material_id IN
+            <foreach collection="materialIds" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND ((job_mat.is_issued = '1' and job_mat.release_qty >0) or ( job_mat.release_qty &lt; 0))
+    </select>
+
+    <select id="eoJobDataQuery" resultType="com.ruike.itf.api.dto.ItfOperationAnalyseDTO$EoJobData">
+        SELECT
+        mml.material_lot_code,
+        mor.PARENT_ORGANIZATION_ID AS parentWorkcellId,
+        cell_parent.WORKCELL_CODE AS parentWorkcellCode,
+        cell_parent.WORKCELL_NAME AS parentWorkcellName,
+        job_data.workcell_id,
+        cell.WORKCELL_CODE,
+        cell.WORKCELL_NAME,
+        '' AS position,
+        '' AS equipment,
+        tag.TAG_CODE,
+        tag.TAG_DESCRIPTION,
+        job_data.maximal_value,
+        '' AS standard_value,
+        job_data.minimum_value,
+        job_data.result
+        FROM hme_eo_job_data_record job_data
+        LEFT JOIN hme_eo_job_sn j on j.job_id = job_data.job_id
+        LEFT JOIN mt_material_lot mml on mml.MATERIAL_LOT_ID = j.material_lot_id
+        LEFT JOIN mt_mod_organization_rel mor ON job_data.workcell_id = mor.ORGANIZATION_ID
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.TOP_SITE_ID = #{topSiteId}
+        LEFT JOIN mt_mod_workcell cell_parent ON cell_parent.WORKCELL_ID = mor.PARENT_ORGANIZATION_ID
+        LEFT JOIN mt_mod_workcell cell ON job_data.WORKCELL_ID = cell.WORKCELL_ID
+        LEFT JOIN mt_tag tag ON job_data.tag_id = tag.tag_id
+        WHERE job_data.TENANT_ID = #{tenantId}
+        AND job_data.job_id IN
+        <foreach collection="jobIds" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        <if test="tagCodes != null and tagCodes.size() != 0">
+            AND tag.tag_code IN
+            <foreach collection="tagCodes" index="index" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY job_data.last_update_date
+    </select>
+
+    <select id="queryCurrentProcess" resultType="com.ruike.itf.api.dto.ItfOperationAnalyseDTO$Process">
+        SELECT
+        mml.material_lot_code sn,
+        cell.workcell_name processName
+        FROM mt_material_lot mml
+        LEFT JOIN hme_eo_job_sn j ON j.material_lot_id = mml.material_lot_id
+        LEFT JOIN mt_mod_organization_rel mor ON j.workcell_id = mor.ORGANIZATION_ID
+        AND mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        LEFT JOIN mt_mod_workcell cell ON cell.WORKCELL_ID = mor.PARENT_ORGANIZATION_ID
+        WHERE j.TENANT_ID = #{tenantId}
+        AND mml.TENANT_ID = #{tenantId}
+        AND mml.material_lot_code IN
+        <foreach collection="materialLotCodes" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        ORDER BY j.material_lot_id,j.site_out_date DESC
+
+    </select>
+
+    <select id="queryOperationByWorkcellName" resultType="com.ruike.itf.api.dto.ItfOperationAnalyseDTO$Process">
+        select distinct
+        mp.site_id,
+        mp.operation_id,
+        mrs.description processName
+        from mt_operation mp
+        left join mt_router_operation mro on mro.operation_id = mp.operation_id
+        left join mt_router_step mrs on mrs.router_step_id = mro.router_step_id
+        where mrs.description IN
+        <foreach collection="processNames" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        and mp.TENANT_ID = #{tenantId}
+        and mro.TENANT_ID = #{tenantId}
+        and mrs.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryWorkcellByProcessName" resultType="com.ruike.itf.api.dto.ItfOperationAnalyseDTO$Process">
+        SELECT
+        mor.top_site_id siteId,
+        mor.ORGANIZATION_ID workcellId,
+        cell.workcell_name processName
+        FROM
+        mt_mod_organization_rel mor
+        LEFT JOIN mt_mod_workcell cell ON cell.WORKCELL_ID = mor.PARENT_ORGANIZATION_ID
+        WHERE
+        mor.ORGANIZATION_TYPE = 'WORKCELL'
+        AND mor.PARENT_ORGANIZATION_TYPE = 'WORKCELL'
+        AND cell.workcell_name IN
+        <foreach collection="processNames" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND mor.TENANT_ID = #{tenantId}
+    </select>
+
+    <select id="queryMaterialBySNs" resultType="com.ruike.itf.api.dto.ItfOperationAnalyseDTO$NcList">
+        SELECT
+        mml.material_lot_code sn,
+        mm.material_code,
+        mm.material_name
+        FROM mt_material_lot mml LEFT JOIN mt_material mm ON mml.material_id = mm.material_id
+        WHERE mml.material_lot_code IN
+        <foreach collection="materialLotCodes" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruike.wms.infra.mapper.WmsMaterialWasteExchangeMapper">
+
+    <select id="selectMaterialLotCondition" resultType="com.ruike.wms.api.dto.WmsMaterialWasteExchangeDTO2">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+        SELECT
+        mml.MATERIAL_LOT_ID,
+        mml.MATERIAL_LOT_CODE,
+        mml.SITE_ID,
+        site.SITE_CODE,
+        mml.ENABLE_FLAG,
+        mml.QUALITY_STATUS,
+        mml.MATERIAL_ID,
+        item.MATERIAL_CODE,
+        tl.MATERIAL_NAME,
+        mml.PRIMARY_UOM_ID,
+        uom.UOM_CODE AS PRIMARY_UOM_CODE,
+        uom_tl.UOM_NAME AS PRIMARY_UOM_NAME,
+        mml.PRIMARY_UOM_QTY,
+        arv.ATTR_VALUE MATERIAL_VERSION,
+        mml.LOCATOR_ID,
+        locator.LOCATOR_CODE,
+        mml.LOT,
+        mml.FREEZE_FLAG,
+        ms.SUPPLIER_ID,
+        ms.SUPPLIER_CODE,
+        ms.SUPPLIER_NAME,
+        mss.SUPPLIER_SITE_CODE
+        FROM
+        mt_material_lot mml
+        LEFT JOIN mt_material item ON item.MATERIAL_ID = mml.MATERIAL_ID and item.TENANT_ID = mml.TENANT_ID
+        LEFT JOIN mt_material_tl tl ON tl.MATERIAL_ID = item.MATERIAL_ID
+        AND tl.LANG = #{lang}
+        LEFT JOIN mt_uom uom ON uom.UOM_ID = mml.PRIMARY_UOM_ID and uom.TENANT_ID = mml.TENANT_ID
+        LEFT JOIN mt_uom_tl uom_tl ON uom_tl.UOM_ID = uom.UOM_ID
+        AND uom_tl.LANG = #{lang}
+        LEFT JOIN mt_mod_site site ON site.SITE_ID = mml.SITE_ID and site.TENANT_ID = mml.TENANT_ID
+        LEFT JOIN mt_mod_locator locator ON locator.LOCATOR_ID = mml.LOCATOR_ID and locator.TENANT_ID = mml.TENANT_ID
+        LEFT JOIN mt_material_lot_attr arv ON arv.TENANT_ID = mml.TENANT_ID and arv.MATERIAL_LOT_ID = mml.MATERIAL_LOT_ID and arv.ATTR_NAME = 'MATERIAL_VERSION'
+        LEFT JOIN mt_supplier ms ON ms.SUPPLIER_ID = mml.SUPPLIER_ID and ms.TENANT_ID = mml.TENANT_ID
+        LEFT JOIN mt_supplier_site mss ON mss.SUPPLIER_ID = ms.SUPPLIER_ID and mss.TENANT_ID = mml.TENANT_ID
+        WHERE mml.TENANT_ID = #{tenantId}
+        <if test="materialLotIds != null">
+            AND mml.MATERIAL_LOT_ID in
+            <foreach collection="materialLotIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="queryPlantCode" resultType="string">
+        SELECT
+            s.SITE_CODE siteCode
+        FROM
+            mt_user_organization uo
+            JOIN mt_mod_site s ON uo.ORGANIZATION_ID = s.SITE_ID
+        WHERE
+            s.SITE_ID = #{siteId}
+            AND uo.TENANT_ID = #{tenantId}
+          LIMIT 1
+    </select>
+
+    <select id="queryLocatorIdBySiteAndCode" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT
+	        ml.*
+        FROM
+	        mt_mod_locator_org_rel lor,
+	        mt_mod_locator ml
+        WHERE lor.LOCATOR_ID = ml.LOCATOR_ID
+        AND lor.TENANT_ID = #{tenantId}
+        AND lor.ORGANIZATION_ID = #{siteId}
+        AND lor.ORGANIZATION_TYPE = "SITE"
+        <if test="locatorType != null and locatorType != ''">
+            AND ml.LOCATOR_TYPE = #{locatorType}
+        </if>
+    </select>
+
+    <select id="queryParentLocatorByLocatorId" resultType="tarzan.modeling.domain.entity.MtModLocator">
+        SELECT
+	        mml.*
+        FROM
+	        mt_mod_locator ml,
+	        mt_mod_locator mml
+        WHERE
+            ml.PARENT_LOCATOR_ID = mml.LOCATOR_ID
+        AND ml.TENANT_ID = #{tenantId}
+        AND  ml.LOCATOR_ID = #{locatorId}
+        <if test="locatorCode != null and locatorCode != ''">
+            AND ml.LOCATOR_CODE = #{locatorCode}
+        </if>
+    </select>
+
+</mapper>
